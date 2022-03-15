@@ -17,10 +17,10 @@ namespace utl {
 	template <typename Container,
 			  std::size_t Dimensions,
 			  typename = make_type_sequence<std::size_t, Dimensions>>
-	class md_array;
+	class mdarray;
 
 	template <typename Container, std::size_t Dimensions, typename... SizeT>
-	class md_array<Container, Dimensions, type_sequence<SizeT...>> {
+	class mdarray<Container, Dimensions, type_sequence<SizeT...>> {
 	public:
 		using container_type = Container;
 		using value_type = typename Container::value_type;
@@ -28,12 +28,12 @@ namespace utl {
 		static constexpr auto dimensions = Dimensions;
 		
 	public:
-		md_array() = default;
-		md_array(size_type size):
+		mdarray() = default;
+		mdarray(size_type size):
 			__size(size),
 			__cont(size.fold(utl::multiplies))
 		{}
-		md_array(SizeT... size): md_array(size_type{ size... }) {}
+		mdarray(SizeT... size): mdarray(size_type{ size... }) {}
 		
 		size_type size() const { return __size; }
 		
@@ -68,7 +68,7 @@ namespace utl {
 		}
 		
 		void resize(size_type new_size) {
-			md_array new_inst(new_size);
+			mdarray new_inst(new_size);
 			for (auto i: utl::iota(mtl::map(__size, new_size, utl::min))) {
 				new_inst(i) = (*this)(i);
 			}
