@@ -11,10 +11,6 @@
 
 namespace utl {
 	
-	static void _throw_runtime_error() {
-		throw std::runtime_error("Assertion Failure");
-	}
-	
 	std::false_type __utl_report_assertion_failure(__utl_assertion_kind kind,
 												   char const* module_name,
 												   source_info data,

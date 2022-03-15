@@ -393,7 +393,7 @@ namespace utl::_private::functionDetails {
 		FunctionVTable const* vTable() const noexcept { return reinterpret_cast<FunctionVTable const*>(&vTableStorage); }
 		
 		void* storagePtr() noexcept {
-			return const_cast<void*>(as_const(*this).storagePtr());
+			return const_cast<void*>(utl::as_const(*this).storagePtr());
 		}
 		
 		void const* storagePtr() const noexcept {

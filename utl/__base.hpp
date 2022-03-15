@@ -20,7 +20,7 @@ _UTL_SYSTEM_HEADER_
 #endif
 
 /// MARK: UTL_CPP
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(__METAL_VERSION__)
 #	define UTL_CPP
 #	if __cplusplus < 202002L
 #		error Requires c++20

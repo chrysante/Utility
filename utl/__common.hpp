@@ -3,9 +3,6 @@
 #include "__base.hpp"
 _UTL_SYSTEM_HEADER_
 
-#include <utility>
-#include <type_traits>
-
 /// MARK: UTL_CONCAT
 #define _UTL_CONCAT_IMPL(A, B) A##B
 #define UTL_CONCAT(A, B) _UTL_CONCAT_IMPL(A, B)
@@ -134,12 +131,15 @@ inline constexpr TYPE operator OP(TYPE a, typename _UTL_NSSTD::underlying_type<T
 	_UTL_ENUM_ASSIGNMENT(TYPE, ^) \
 	_UTL_ENUM_UNARY_PREFIX_OPERATOR(TYPE, TYPE, ~) \
 	_UTL_ENUM_UNARY_PREFIX_OPERATOR(TYPE, bool, !) \
-	constexpr bool test(TYPE value) noexcept { return !!value; }
+	constexpr bool test(TYPE value) { return !!value; }
 
 
 
 
 #ifdef UTL_CPP // Guard here because general purpose header may be included in shader source
+
+#include <utility>
+#include <type_traits>
 
 namespace utl {
 	
