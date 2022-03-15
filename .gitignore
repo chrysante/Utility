@@ -1,0 +1,4 @@
+Build/
+**.xcworkspace
+**.xcodeproj
+**.DS_Store
