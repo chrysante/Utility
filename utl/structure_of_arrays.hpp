@@ -94,7 +94,7 @@ namespace utl {
 		public:
 			explicit reference_t(T&... t) requires(!is_const): m_values(&t...) {}
 			
-			explicit reference_t(T const&... t) requires(!is_const): m_values(&t...) {}
+			explicit reference_t(T const&... t) requires(is_const): m_values(&t...) {}
 			
 			template <typename U>
 			requires(!is_const && contains<U>::value)

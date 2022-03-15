@@ -485,7 +485,7 @@ namespace utl {
 		
 		/// MARK: data
 		__utl_nodiscard __utl_interface_export __utl_always_inline
-		constexpr T* data() noexcept { return as_mutable_ptr(utl::as_const(*this).data()); }
+		constexpr T* data() noexcept { return const_cast<T*>(utl::as_const(*this).data()); }
 		__utl_nodiscard __utl_interface_export __utl_always_inline
 		constexpr T const* data() const noexcept {
 			return _begin();

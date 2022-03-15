@@ -12,7 +12,8 @@ namespace utl {
 	template <typename T>
 	using ref = std::shared_ptr<T>;
 	
-	template <typename T, typename ... Args, UTL_ENABLE_IF(std::is_constructible<T, Args...>::value)>
+	template <typename T, typename ... Args>
+	requires (std::is_constructible<T, Args...>::value)
 	ref<T> make_ref(Args&&... args) {
 		return std::allocate_shared<T>(pmr::polymorphic_allocator<T>(), std::forward<Args>(args)...);
 	}

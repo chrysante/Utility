@@ -32,25 +32,7 @@ objdir("Build/Obj/%{cfg.longname}")
 -----------------------------------------------------------------------------------------
 -- Project Utility
 -----------------------------------------------------------------------------------------
-project "Utility"
-location "."
-kind "StaticLib"
-language "C++"
-filter "system:macosx" 
-    xcodebuildsettings { 
-
-    }
-filter {}
-    
-
-files { 
-    "utl/**.hpp",
-    "utl/**.cpp",
-    "utl/**.cc",
-    "mtl/**.hpp",
-    "mtl/**.cpp",
-    "mtl/**.cc",
-}
+include "utility_project.lua"
 
 -----------------------------------------------------------------------------------------
 -- Project UtilityTest

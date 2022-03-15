@@ -13,6 +13,7 @@ _MTL_SYSTEM_HEADER_
 
 #include "__std_concepts.hpp"
 
+#include <functional>
 #include <iosfwd>
 
 /// MARK: - Synopsis

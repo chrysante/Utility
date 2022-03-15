@@ -14,87 +14,87 @@ _UTL_SYSTEM_HEADER_
 
 namespace utl {
 
-	template <typename T>
-	class iota;
-
-	template <integral T>
-	class iota<T> {
-	public:
-		using value_type = T;
-		using size_type = std::conditional_t<std::is_signed_v<T>, std::ptrdiff_t, std::size_t>;
-
-	protected:
-		template <typename InternalRep, typename ExternalRep>
-		class Iterator {
-			friend class iota;
-			template <typename, typename>
-			friend class Iterator;
-			constexpr explicit Iterator(InternalRep value): _value(value) {}
-			
-		public:
-			template <typename ExternalRepRhs>
-			constexpr Iterator(Iterator<InternalRep, ExternalRepRhs> const& other): _value(other._value) {}
-
-		public:
-			constexpr ExternalRep operator*() const { return static_cast<ExternalRep>(_value); }
-			constexpr Iterator& operator++() {
-				++_value;
-				return *this;
-			}
-			constexpr bool operator!=(Iterator const& rhs) const {
-				return this->_value != rhs._value;
-			}
-
-		private:
-			InternalRep _value;
-		};
-		
-	public:
-		using iterator = Iterator<T, T>;
-
-	public:
-		constexpr iota(T last): _first(0), _last(last) {}
-		constexpr iota(T begin, T last): _first(begin), _last(last) {}
-
-		constexpr iterator begin() const {
-			return iterator(_first);
-		}
-		constexpr iterator end() const {
-			return iterator(_last);
-		}
-
-		constexpr size_type size() const { return _last - _first; }
-
-	private:
-		T _first;
-		T _last;
-	};
-
-	template <typename E>
-	requires(std::is_enum_v<E>)
-	class iota<E>: iota<std::underlying_type_t<E>> {
-		using T = std::underlying_type_t<E>;
-		using _base = iota<T>;
-	public:
-		constexpr iota(E size): _base(static_cast<T>(size)) {}
-		constexpr iota(E first, E last): _base(static_cast<T>(first), static_cast<T>(last) - static_cast<T>(first)) {}
-		using iterator = typename _base::template Iterator<std::underlying_type_t<E>, E>;
-
-		constexpr iterator begin() const {
-			return this->_base::begin();
-		}
-		constexpr iterator end() const {
-			return this->_base::end();
-		}
-
-		using _base::size;
-	};
-	
-	template <integral T>
-	iota(T) -> iota<T>;
-
-	template <integral T, convertible_to<std::conditional_t<std::is_signed_v<T>, std::ptrdiff_t, std::size_t>> S>
-	iota(T, S) -> iota<T>;
+//	template <typename T>
+//	class iota;
+//
+//	template <integral T>
+//	class iota<T> {
+//	public:
+//		using value_type = T;
+//		using size_type = std::conditional_t<std::is_signed_v<T>, std::ptrdiff_t, std::size_t>;
+//
+//	protected:
+//		template <typename InternalRep, typename ExternalRep>
+//		class Iterator {
+//			friend class iota;
+//			template <typename, typename>
+//			friend class Iterator;
+//			constexpr explicit Iterator(InternalRep value): _value(value) {}
+//			
+//		public:
+//			template <typename ExternalRepRhs>
+//			constexpr Iterator(Iterator<InternalRep, ExternalRepRhs> const& other): _value(other._value) {}
+//
+//		public:
+//			constexpr ExternalRep operator*() const { return static_cast<ExternalRep>(_value); }
+//			constexpr Iterator& operator++() {
+//				++_value;
+//				return *this;
+//			}
+//			constexpr bool operator!=(Iterator const& rhs) const {
+//				return this->_value != rhs._value;
+//			}
+//
+//		private:
+//			InternalRep _value;
+//		};
+//		
+//	public:
+//		using iterator = Iterator<T, T>;
+//
+//	public:
+//		constexpr iota(T last): _first(0), _last(last) {}
+//		constexpr iota(T begin, T last): _first(begin), _last(last) {}
+//
+//		constexpr iterator begin() const {
+//			return iterator(_first);
+//		}
+//		constexpr iterator end() const {
+//			return iterator(_last);
+//		}
+//
+//		constexpr size_type size() const { return _last - _first; }
+//
+//	private:
+//		T _first;
+//		T _last;
+//	};
+//
+//	template <typename E>
+//	requires(std::is_enum_v<E>)
+//	class iota<E>: iota<std::underlying_type_t<E>> {
+//		using T = std::underlying_type_t<E>;
+//		using _base = iota<T>;
+//	public:
+//		constexpr iota(E size): _base(static_cast<T>(size)) {}
+//		constexpr iota(E first, E last): _base(static_cast<T>(first), static_cast<T>(last) - static_cast<T>(first)) {}
+//		using iterator = typename _base::template Iterator<std::underlying_type_t<E>, E>;
+//
+//		constexpr iterator begin() const {
+//			return this->_base::begin();
+//		}
+//		constexpr iterator end() const {
+//			return this->_base::end();
+//		}
+//
+//		using _base::size;
+//	};
+//	
+//	template <integral T>
+//	iota(T) -> iota<T>;
+//
+//	template <integral T, convertible_to<std::conditional_t<std::is_signed_v<T>, std::ptrdiff_t, std::size_t>> S>
+//	iota(T, S) -> iota<T>;
 	
 	template <typename T, std::size_t Size>
 	std::size_t array_size(T const(&)[Size]) { return Size; }

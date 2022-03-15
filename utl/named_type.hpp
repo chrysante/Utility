@@ -52,14 +52,13 @@ namespace utl {
 		constexpr named_type<T, Name, _private::named_type_availability::conversion>(T value) noexcept: m_value(value) {}
 		
 		// union constructor
-		template <typename U,
-				  UTL_ENABLE_IF(is_list_initializable<T, U>::value),
-				  UTL_ENABLE_MEMBER_IF(std::is_union<T>::value)>
-		constexpr named_type<T, Name, _private::named_type_availability::conversion>(U&& u): m_value{ std::forward<U>(u) } {}
+		template <typename U>
+		constexpr named_type<T, Name, _private::named_type_availability::conversion>(U&& u)
+			requires (is_list_initializable<T, U>::value && std::is_union<T>::value)
+		: m_value{ std::forward<U>(u) } {}
 		
 		// union member access
-		template <UTL_ENABLE_MEMBER_IF(std::is_union<T>::value)>
-		constexpr T* operator->() noexcept { return &m_value; }
+		constexpr T* operator->() noexcept requires(std::is_union<T>::value) { return &m_value; }
 		constexpr T const* operator->() const noexcept { return &m_value; }
 		
 		// get
