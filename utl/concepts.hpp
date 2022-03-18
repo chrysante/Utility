@@ -109,15 +109,15 @@ namespace utl {
 //		{ lhs = std::forward<RHS>(rhs) } -> std::same_as<LHS>;
 //	  };
 //
-//	template <typename T>
-//	concept move_constructible = constructible_from<T, T> && convertible_to<T, T>;
+	template <typename T>
+	concept move_constructible = constructible_from<T, T> && convertible_to<T, T>;
 //
-//	template <typename T>
-//	concept copy_constructible =
-//		move_constructible<T> &&
-//		constructible_from<T, T&> && convertible_to<T&, T> &&
-//		constructible_from<T, T const&> && convertible_to<T const&, T> &&
-//		constructible_from<T, T const> && convertible_to<T const, T>;
+	template <typename T>
+	concept copy_constructible =
+		move_constructible<T> &&
+		constructible_from<T, T&> && convertible_to<T&, T> &&
+		constructible_from<T, T const&> && convertible_to<T const&, T> &&
+		constructible_from<T, T const> && convertible_to<T const, T>;
 //
 //	template <typename T>
 //	concept movable =

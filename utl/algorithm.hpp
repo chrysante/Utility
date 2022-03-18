@@ -25,8 +25,8 @@ namespace utl {
 	inline constexpr auto forward = direction::forward;
 	inline constexpr auto backward = direction::backward;
 	
-	template <typename Range, UTL_ENABLE_IF(is_range<Range>::value),
-			  typename F>
+	template <typename Range,
+			  typename F> requires (is_range<Range>::value)
 	void for_each(Range& r, F&& f) {
 		auto const end = r.end();
 		for (auto i = r.begin(); i != end; ++i)
@@ -37,8 +37,8 @@ namespace utl {
 	 *	f should return true to break, false to continue, or void to not break at all
 	 *  returns true if loop has been broken
 	 */
-	template <direction dir = forward, typename... Range, UTL_ENABLE_IF((is_range<Range>::value && ...)),
-			  typename F>
+	template <direction dir = forward, typename... Range,
+			  typename F> requires((is_range<Range>::value && ...))
 	auto find_if(F&& f, Range&&... r) {
 		auto const invoke_f = [&](std::size_t index, auto&&... args) {
 			if constexpr (std::is_invocable<F, decltype(args)...>::value) {
@@ -84,8 +84,8 @@ namespace utl {
 		}
 	}
 	
-	template <direction dir = forward, typename... Range, UTL_ENABLE_IF((is_range<Range>::value && ...)),
-			  typename F>
+	template <direction dir = forward, typename... Range,
+			  typename F> requires((is_range<Range>::value && ...))
 	void for_each(F&& f, Range&&... r) {
 		auto const invoke_f = [&](std::size_t index, auto&&... args) {
 			if constexpr (std::is_invocable<F, decltype(args)...>::value) {
@@ -125,14 +125,15 @@ namespace utl {
 			f(*i);
 	}
 	
-	template <typename It, typename F, UTL_ENABLE_IF(is_iterator<It>::value)>
+	template <typename It, typename F> requires(is_iterator<It>::value)
 	void for_each(It begin, It end, F&& f) {
 		for (; begin != end; ++begin) {
 			f(*begin);
 		}
 	}
 	
-	template <typename It1, typename It2, typename F, UTL_ENABLE_IF(is_iterator<It1>::value), UTL_ENABLE_IF(is_iterator<It2>::value)>
+	template <typename It1, typename It2, typename F>
+	requires(is_iterator<It1>::value && is_iterator<It2>::value)
 	void for_each(It1 begin1, It1 end1, It2 begin2, F&& f) {
 		for (; begin1 != end1; ++begin1, ++begin2) {
 			f(*begin1, *begin2);

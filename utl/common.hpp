@@ -81,12 +81,6 @@ _UTL_SYSTEM_HEADER_
 	UTL_INTERNAL_INDEX_SEQ_HELPER_FUNCTION_PARAMS params __VA_ARGS__ \
 	UTL_INTERNAL_INDEX_SEQ_HELPER_FUNCTION_INVOKE params
 
-
-/// MARK: UTL_ENABLE_IF
-#define UTL_ENABLE_IF_IMPL(...) typename std::enable_if<__VA_ARGS__, std::nullptr_t>::type
-#define UTL_ENABLE_IF(...) UTL_ENABLE_IF_IMPL(__VA_ARGS__) = nullptr
-//#define UTL_ENABLE_MEMBER_IF(...) std::nullptr_t UTL_INTERNAL_UNIQUE_NAME(_re2_dummy) = nullptr, typename std::enable_if<!static_cast<void*>(UTL_INTERNAL_UNIQUE_NAME(_re2_dummy)) && (__VA_ARGS__), std::nullptr_t>::type = nullptr
-
 /// MARK: Enum Operators
 #if defined(UTL_CPP)
 #	define _UTL_NSSTD std

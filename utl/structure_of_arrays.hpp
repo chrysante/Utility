@@ -20,7 +20,7 @@ namespace utl {
 	class structure_of_arrays;
 	
 	template <typename... T>
-	requires type_sequence<T...>::unique
+	requires (type_sequence<T...>::unique)
 	class structure_of_arrays<std::tuple<T...>> {
 	public:
 		template <typename U>
@@ -134,7 +134,7 @@ namespace utl {
 		void insert_at(std::size_t index, const_reference elem) {
 			insert_at(index, elem.template get<T>()...);
 		}
-		template <typename... U, UTL_ENABLE_IF(sizeof...(T) == sizeof...(U)), UTL_ENABLE_IF((std::is_convertible<U, T>::value && ...))>
+		template <typename... U> requires (sizeof...(T) == sizeof...(U) && (std::is_convertible<U, T>::value && ...))
 		void insert_at(std::size_t index, U&&... u) {
 			if (this->size() == this->capacity()) {
 				_grow();

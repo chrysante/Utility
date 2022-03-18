@@ -73,39 +73,11 @@ namespace utl {
 	// MARK: - dispatch_group
 	class dispatch_group {
 	public:
-		template <typename F,
-				  UTL_ENABLE_IF(std::is_invocable<F>::value),
-				  UTL_ENABLE_IF(std::is_copy_constructible<F>::value)>
+		template <invocable F> requires copy_constructible<F>
 		void add(F&& function) {
 			m_tasks.emplace_back(std::forward<F>(function));
 		}
-		
-//		template <typename Range> requires(is_range<Range>::value)
-//		void add_for_each(Range&& range, invocable<typename range_traits<Range>::reference_type> auto&& function) {
-//			for (auto&& i: range) {
-//				if constexpr (std::is_copy_constructible<std::remove_reference_t<decltype(i)>>::value) {
-//					this->add([value = i, function]{
-//						function(value);
-//					});
-//				}
-//				else  {
-//					static_assert(std::is_move_constructible<std::remove_reference_t<decltype(i)>>::value,
-//								  "type in range needs to be either copy or move constructible");
-//					this->add([value = std::move(i), function]() mutable {
-//						function(std::move(value));
-//					});
-//				}
-//			}
-//		}
-//		
-//		template <typename Range,
-//				  UTL_ENABLE_IF(is_range<Range>::value),
-//				  typename F,
-//				  UTL_ENABLE_IF(std::is_invocable<F>::value)>
-//		void add_for_each(Range&& range, F const& function) {
-//			add_for_each(UTL_FORWARD(range), [function](auto&&){ function(); });
-//		}
-//		
+			
 		std::size_t size() const { return m_tasks.size(); }
 		
 		[[nodiscard]] dispatch_handle get_handle() {

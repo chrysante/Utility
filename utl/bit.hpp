@@ -13,10 +13,10 @@ _UTL_SYSTEM_HEADER_
 namespace utl {
 	
 	/// MARK: bit_cast
-	template<typename To, typename From,
-			 UTL_ENABLE_IF(sizeof(To) == sizeof(From)),
-			 UTL_ENABLE_IF(std::is_trivially_copyable<To>::value),
-			 UTL_ENABLE_IF(std::is_trivially_copyable<From>::value)>
+	template <typename To, typename From>
+	requires (sizeof(To) == sizeof(From) &&
+			  std::is_trivially_copyable_v<To> &&
+			  std::is_trivially_copyable<From>::value)
 	constexpr To bit_cast(From const& from) noexcept {
 #if defined(__cpp_lib_bit_cast)
 		return std::bit_cast<To>(from);
@@ -28,9 +28,9 @@ namespace utl {
 	}
 	
 	/// MARK: unsafe_bit_cast
-	template<typename To, typename From,
-			 UTL_ENABLE_IF(sizeof(To) == sizeof(From))>
-	constexpr To unsafe_bit_cast(From const& from) noexcept {
+	template <typename To, typename From>
+	requires (sizeof(To) == sizeof(From))
+	To unsafe_bit_cast(From const& from) noexcept {
 		typename std::aligned_storage<sizeof(To), alignof(To)>::type storage;
 		std::memcpy(&storage, &from, sizeof(To));
 		return reinterpret_cast<To&>(storage);

@@ -38,7 +38,7 @@ namespace utl {
 	template <typename T, typename Name>
 	struct named_type<T, Name, _private::named_type_availability::inheritance>: public T {
 	public:
-		template <typename... Args, UTL_ENABLE_IF(std::is_constructible<T, Args...>::value)>
+		template <typename... Args> requires (constructible<T, Args...>)
 		constexpr named_type<T, Name, _private::named_type_availability::inheritance>(Args&&... args): T(std::forward<Args>(args)...) {}
 		constexpr named_type<T, Name, _private::named_type_availability::inheritance>(T const& value): T(value) {}
 		constexpr named_type<T, Name, _private::named_type_availability::inheritance>(T&& value) : T(std::move(value)) {}
@@ -70,36 +70,36 @@ namespace utl {
 		constexpr operator T const&() const noexcept { return get(); }
 		
 		// explicit conversion (constructor)
-		template <typename U, UTL_ENABLE_IF(std::is_constructible<T, U>::value)>
+		template <typename U> requires (constructible_from<T, U>)
 		constexpr explicit named_type<T, Name, _private::named_type_availability::conversion>(U u) noexcept: m_value(static_cast<T>(u)) {}
-		template <typename U, UTL_ENABLE_IF(std::is_constructible<U, T>::value)>
+		template <constructible_from<T> U>
 		constexpr explicit operator U() const { return static_cast<U>(get()); }
 		
 	private:
 		T m_value;
 	};
 	
-	template <typename T, typename Name, UTL_ENABLE_IF(has_operator_bitwise_and<T>::value)>
+	template <typename T, typename Name> requires requires(T& t) { { t & t } -> convertible_to<T>; }
 	constexpr named_type<T, Name> operator&(named_type<T, Name> const& a, named_type<T, Name> const& b) {
 		return a.get() & b.get();
 	}
 	
-	template <typename T, typename Name, UTL_ENABLE_IF(has_operator_bitwise_or<T>::value)>
+	template <typename T, typename Name>  requires requires(T& t) { { t | t } -> convertible_to<T>; }
 	constexpr named_type<T, Name> operator|(named_type<T, Name> const& a, named_type<T, Name> const& b) {
 		return a.get() | b.get();
 	}
 	
-	template <typename T, typename Name, UTL_ENABLE_IF(has_operator_bitwise_xor<T>::value)>
+	template <typename T, typename Name>  requires requires(T& t) { { t ^ t } -> convertible_to<T>; }
 	constexpr named_type<T, Name> operator^(named_type<T, Name> const& a, named_type<T, Name> const& b) {
 		return a.get() ^ b.get();
 	}
 	
-	template <typename T, typename Name, UTL_ENABLE_IF(has_operator_bitwise_not<T>::value)>
+	template <typename T, typename Name>  requires requires(T& t) { { ~t } -> convertible_to<T>; }
 	constexpr named_type<T, Name> operator~(named_type<T, Name> const& a) {
 		return ~a.get();
 	}
 	
-	template <typename T, typename Name, UTL_ENABLE_IF(has_operator_logical_not<T>::value)>
+	template <typename T, typename Name> requires requires(T& t) { !t; }
 	constexpr auto operator!(named_type<T, Name> const& a) {
 		return !a.get();
 	}
