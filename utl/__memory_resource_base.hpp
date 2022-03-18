@@ -4,6 +4,7 @@
 _UTL_SYSTEM_HEADER_
 
 #include "__debug.hpp"
+#include "concepts.hpp"
 #include "type_traits.hpp"
 
 namespace utl::pmr {
@@ -21,9 +22,10 @@ namespace utl::pmr {
 }
 
 
-// MARK: - memory_resource [interface]
+
 namespace utl::pmr {
-	
+
+	/// MARK: - memory_resource [interface]
 	class memory_resource {
 	public:
 		virtual ~memory_resource() = default;
@@ -57,12 +59,8 @@ namespace utl::pmr {
 	inline bool operator!=(memory_resource const& lhs, memory_resource const& rhs) noexcept {
 		return !(lhs == rhs);
 	}
-	
-}
 
-// MARK: - polymorphic_allocator
-namespace utl::pmr {
-	
+	/// MARK: - polymorphic_allocator
 	template <typename T>
 	class polymorphic_allocator {
 	public:
@@ -135,70 +133,81 @@ namespace utl::pmr {
 		return !(lhs == rhs);
 	}
 	
-}
-
-
-
-// MARK: - new_delete_resource
-namespace utl::pmr {
-	// implementation
-	namespace _private {
-		class _new_delete_resource: public memory_resource {
-			void* do_allocate(std::size_t size, std::size_t alignment) final {
-				return ::operator new(size, static_cast<std::align_val_t>(alignment));
-			}
-			
-			void do_deallocate(void* memory, std::size_t size, std::size_t alignment) final {
-				::operator delete(memory, size, static_cast<std::align_val_t>(alignment));
-			}
-			
-			bool do_is_equal(memory_resource const& rhs) const noexcept final {
-				return this == &rhs;
-			}
-		};
+	/// MARK: - polymorphic_delete
+	template <typename T>
+	struct polymorphic_delete {
+		template <typename> friend class polymorphic_delete;
 		
-		_new_delete_resource* _get_new_delete_resource() noexcept;
-	}
+		static_assert(!std::is_function<T>::value,
+					  "polymorphic_delete cannot be instantiated for function types");
+	
+		constexpr polymorphic_delete() noexcept = default;
+	
+		template <typename U> requires convertible_to<U*, T*>
+		polymorphic_delete(polymorphic_delete<U> const& rhs) noexcept:
+			_resource(rhs._resource)
+		{}
+
+		void operator()(T* ptr) const noexcept {
+			static_assert(sizeof(T) > 0, "polymorphic_delete cannot deallocate incomplete type");
+			static_assert(!std::is_void_v<T>, "polymorphic_delete cannot deallocate incomplete type");
+			_resource->deallocate(ptr, sizeof(T), alignof(T));
+	  }
+		
+	private:
+		memory_resource* _resource;
+	};
+
+	/// MARK: - new_delete_resource
+	class __utl_new_delete_resource: public memory_resource {
+		void* do_allocate(std::size_t size, std::size_t alignment) final {
+			return ::operator new(size, static_cast<std::align_val_t>(alignment));
+		}
+		
+		void do_deallocate(void* memory, std::size_t size, std::size_t alignment) final {
+			::operator delete(memory, size, static_cast<std::align_val_t>(alignment));
+		}
+		
+		bool do_is_equal(memory_resource const& rhs) const noexcept final {
+			return this == &rhs;
+		}
+	};
+	
+	__utl_new_delete_resource* __utl_get_new_delete_resource() noexcept;
+	
 	inline memory_resource* new_delete_resource() noexcept {
-		return _private::_get_new_delete_resource();
+		return __utl_get_new_delete_resource();
 	}
-}
 
+	/// MARK: - null_memory_resource
+	class __utl_null_memory_resource: public memory_resource {
+		void* do_allocate(std::size_t size, std::size_t alignment) final {
+			throw std::bad_alloc{};
+		}
+		
+		void do_deallocate(void* memory, std::size_t size, std::size_t alignment) final {
+			// empty
+		}
+		
+		bool do_is_equal(memory_resource const& rhs) const noexcept final {
+			return this == &rhs;
+		}
+	};
+	__utl_null_memory_resource* __utl_get_null_memory_resource() noexcept;
 
-
-// MARK: - null_memory_resource
-namespace utl::pmr {
-	// implementation
-	namespace _private {
-		class _null_memory_resource: public memory_resource {
-			void* do_allocate(std::size_t size, std::size_t alignment) final {
-				throw std::bad_alloc{};
-			}
-			
-			void do_deallocate(void* memory, std::size_t size, std::size_t alignment) final {
-				// empty
-			}
-			
-			bool do_is_equal(memory_resource const& rhs) const noexcept final {
-				return this == &rhs;
-			}
-		};
-		_null_memory_resource* _get_null_memory_resource() noexcept;
-	}
 	inline memory_resource* null_memory_resource() noexcept {
-		return _private::_get_null_memory_resource();
+		return __utl_get_null_memory_resource();
 	}
-}
-
-// MARK: - get_default_resource
-namespace utl::pmr {
-	namespace _private {
-		memory_resource* _default_resource_manager(bool set, memory_resource* other);
-	}
+	
+	// MARK: - get_default_resource
+	memory_resource*& __utl_get_default_resource() noexcept;
+	
 	inline memory_resource* get_default_resource() {
-		return _private::_default_resource_manager(false, nullptr);
+		return __utl_get_default_resource();
 	}
+	
 	inline void set_default_resource(memory_resource* r) {
-		_private::_default_resource_manager(true, r);
+		__utl_get_default_resource() = r;
 	}
+
 }

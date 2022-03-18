@@ -30,26 +30,6 @@ namespace utl {
 		utl::ref<T const> ref() const { return this->shared_from_this(); }
 	};
 	
-//	template <typename T>
-//	struct pmr_delete {
-//		static_assert(!is_function<T>::value,
-//					  "default_delete cannot be instantiated for function types");
-//	
-//		constexpr default_delete() noexcept = default;
-//	
-//		template <typename U, UTL_ENABLE_IF(is_convertible<U*, T*>::value)>
-//		default_delete(default_delete<U> const&) noexcept {}
-//
-//		void operator()(T* ptr) const noexcept {
-//			static_assert(sizeof(T) > 0, "default_delete can not delete incomplete type");
-//			static_assert(!is_void<T>::value, "default_delete can not delete incomplete type");
-//			_resource->deallocate(ptr, <#std::size_t size#>, <#std::size_t alignment#>)
-//	  }
-//		
-//	private:
-//		memory_resource* _resource;
-//	};
-	
 	template <typename T, typename Deleter = std::default_delete<T>>
 	using unique_ref = std::unique_ptr<T, Deleter>;
 	

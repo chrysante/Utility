@@ -37,40 +37,38 @@ include "utility_project.lua"
 -----------------------------------------------------------------------------------------
 -- Project UtilityTest
 -----------------------------------------------------------------------------------------
-filter "options:tests"
-    project "UtilityTest"
-    location "."
-    kind "ConsoleApp"
-    language "C++"    
+project "UtilityTest"
+location "."
+kind "ConsoleApp"
+language "C++"    
 
-    externalincludedirs {
-        "."
-    }
+externalincludedirs {
+    "."
+}
 
-    files { 
-        "UtilityTest/**.hpp",
-        "UtilityTest/**.cpp"
-    }
+files { 
+    "UtilityTest/**.hpp",
+    "UtilityTest/**.cpp"
+}
 
-    links "Utility"
+links "Utility"
 
 -----------------------------------------------------------------------------------------
 -- Project Playground
 -----------------------------------------------------------------------------------------
-filter { "options:tests" }
-    project "Playground"
-    location "."
-    kind "ConsoleApp"
-    language "C++"
-    filter { "options:tests", "system:macosx"} 
-        xcodebuildsettings { 
 
-        }
-    filter {}
+project "Playground"
+location "."
+kind "ConsoleApp"
+language "C++"
+filter { "system:macosx"} 
+    xcodebuildsettings { 
 
-filter { "options:tests" }
-    files { 
-        "Playground/**.hpp",
-        "Playground/**.cpp"
     }
-    links "Utility"
+filter {}
+
+files { 
+    "Playground/**.hpp",
+    "Playground/**.cpp"
+}
+links "Utility"

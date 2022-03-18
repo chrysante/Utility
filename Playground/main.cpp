@@ -1,27 +1,23 @@
-#include <iostream>
+#include "utl/dynamic_dispatch.hpp"
+#include "utl/stdio.hpp"
+#include "utl/typeinfo.hpp"
 
-#include "utl/__common.hpp"
-#include "dispatch_queue.hpp"
-#include "fancy_debug.hpp"
-#include "utl/md_array.hpp"
+#include <tuple>
+#include <concepts>
 
-#define MyAssert(...) UTL_FANCY_ASSERT("My Module", 2, assertion, __VA_ARGS__)
+enum class E {
+	a, b
+};
+
+template <typename T>
+void f(std::same_as<T> auto) {
+	
+}
 
 
-
-int main(int argc, const char * argv[]) {
-	
-	utl::dispatch_queue q;
-	
-	int x = 0;
+int main() {
+	std::tuple<int, int> t(0, 2);
+	f<int>(0);
 	
 	
-	
-	
-	MyAssert(x > 0);
-	MyAssert(x > 0, "Message");
-	MyAssert(audit, x > 0);
-	MyAssert(audit, x > 0, "Message");
-	
-	return 0;
 }

@@ -86,12 +86,7 @@ namespace utl {
 	class listener {
 	public:
 		listener(__private_tag) {}
-//		listener(listener_id id, utl::function<void(__message const&)> f):
-//			id(std::move(id)),
-//			f(std::move(f))
-//		{}
 		
-//	private:
 		friend class messenger;
 		listener_id id;
 		utl::function<void(__message const&)> f;

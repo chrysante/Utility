@@ -5,7 +5,7 @@
 
 TEST_CASE("structure_of_arrays") {
 	
-	utl::structure_of_arrays<utl::soa::tuple<float, int>> S;
+	utl::structure_of_arrays<std::tuple<float, int>> S;
 	
 	S.push_back(0.4, 0);
 	S.push_back(0.5, 1);
@@ -39,14 +39,14 @@ TEST_CASE("structure_of_arrays") {
 
 TEST_CASE("structure_of_arrays2") {
 	
-	utl::structure_of_arrays<utl::soa::tuple<float, int>> S;
+	utl::structure_of_arrays<std::tuple<float, int>> S;
 	
 	S.push_back(0.4, 0);
 	S.push_back(0.5, 1);
 	S.push_back(0.7, 3);
 	S.push_back(0.6, 2);
 	
-	auto elem = S[2].copy();
+	std::tuple<float, int> elem = S[2];
 	S.erase(2);
 	S.push_back(elem);
 	

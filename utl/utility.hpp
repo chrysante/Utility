@@ -6,45 +6,37 @@ _UTL_SYSTEM_HEADER_
 
 #include "__debug.hpp"
 #include "concepts.hpp"
+#include "math.hpp"
 #include "type_traits.hpp"
 #include <bit>
 
 namespace utl {
 	
-	template <typename X, typename...T>
-	concept __mtl_any_of = std::conjunction_v<std::is_same<X, T>...>;
-	
-	template <typename Enum>
-	constexpr std::underlying_type_t<Enum> to_underlying(Enum t) {
-		return static_cast<std::underlying_type_t<Enum>>(t);
-	}
-	
 	template <integral To, integral From>
-	To narrow_cast(From f) { return static_cast<To>(f); }
-	
-//	template <real_unsigned_integral To, real_unsigned_integral From>
-//	constexpr To narrow_cast(From f) noexcept(!UTL_INTERNAL_ASSERT_WITH_EXCEPTIONS) {
-//		if constexpr (std::numeric_limits<To>::digits >= std::numeric_limits<From>::digits) {
-//			return f;
-//		}
-//		else {
-//			__utl_assert(f <= (From)std::numeric_limits<To>::max(), "bad narrowing cast - overflow");
-//			return (To)f;
-//		}
-//	}
-//
-//	template <real_signed_integral To, real_signed_integral From>
-//	constexpr To narrow_cast(From f) noexcept(!UTL_INTERNAL_ASSERT_WITH_EXCEPTIONS) {
-//		if constexpr (std::numeric_limits<To>::digits >= std::numeric_limits<From>::digits) {
-//			return f;
-//		}
-//		else {
-//			__utl_assert(f <= (From)std::numeric_limits<To>::max(), "bad narrowing cast - overflow");
-//			__utl_assert(f >= (From)std::numeric_limits<To>::min(), "bad narrowing cast - overflow");
-//			return (To)f;
-//		}
-//	}
-	
+	constexpr To narrow_cast(From x) {
+		if constexpr (std::is_signed_v<From> && std::is_unsigned_v<To>) {
+			// casting from signed to unsigned
+			__utl_expect(x >= (From)0);
+			return narrow_cast<To>((std::make_unsigned_t<From>)x);
+		}
+		else if constexpr (std::is_unsigned_v<From> && std::is_signed_v<To>) {
+			// casting from unsigned to signed
+			if constexpr (sizeof(From) <= sizeof(To)) {
+				// conversion might narrow
+				__utl_expect(x <= (std::make_unsigned_t<To>)std::numeric_limits<To>::max());
+			}
+			return (To)x;
+		}
+		else {
+			// both are either signed or unsigned
+			if constexpr (sizeof(To) < sizeof(From)) {
+				__utl_expect(x <= (From)std::numeric_limits<To>::max());
+				__utl_expect(x >= (From)std::numeric_limits<To>::min());
+			}
+			return (To)x;
+		}
+	}
+
 	template <typename T>
 	void uninitialized_relocate(T* from, T* to) {
 		if constexpr (utl::is_trivially_relocatable<T>::value) {
@@ -65,8 +57,10 @@ namespace utl {
 		constexpr bool input_contigous  = std::is_pointer_v<InputIter> || std::is_same_v<std::contiguous_iterator_tag, typename std::iterator_traits<InputIter>::iterator_category>;
 		constexpr bool output_contigous = std::is_pointer_v<OutputIter> || std::is_same_v<std::contiguous_iterator_tag, typename std::iterator_traits<OutputIter>::iterator_category>;
 		if constexpr (triv_reloc && input_contigous && output_contigous) {
-			static_assert(std::is_pointer_v<InputIter>,  "Other Cases are disabled to make ubsan happy");
-			static_assert(std::is_pointer_v<OutputIter>, "Just disable these static_asserts and swap active lines below");
+			static_assert(std::is_pointer_v<InputIter>,
+						  "Other Cases are disabled to make ubsan happy");
+			static_assert(std::is_pointer_v<OutputIter>,
+						  "Just disable these static_asserts and swap active lines below");
 //			std::memcpy(std::addressof(*outBegin), std::addressof(*inBegin), std::distance(inBegin, inEnd) * sizeof(T));
 			if (outBegin)
 				std::memcpy(outBegin, inBegin, std::distance(inBegin, inEnd) * sizeof(T));
@@ -78,57 +72,7 @@ namespace utl {
 		}
 	}
 	
-	constexpr int log2(unsigned long x) {
-#if defined(__GNUC__) || defined(__clang__)
-		return __builtin_ctzl(x);
-#else
-		__utl_expect(popcount(x) == 1, "x must be a power of 2");
-		int result = 0;
-		while ((x /= 2) != 0) {
-			++result;
-		}
-		return result;
-#endif
-	}
 	
-	constexpr int log2(unsigned char x) {
-		return log2(static_cast<unsigned long>(x));
-	}
-	constexpr int log2(unsigned short x) {
-		return log2(static_cast<unsigned long>(x));
-	}
-	constexpr int log2(unsigned int x) {
-#if defined(__GNUC__) || defined(__clang__)
-		return __builtin_ctz(x);
-#else
-		return log2(static_cast<unsigned long>(x));
-#endif
-	}
-	
-	
-	constexpr int log2(long x) {
-		__utl_expect(x > 0, "log2 is not defined for x <= 0");
-		return log2(static_cast<unsigned long>(x));
-	}
-	constexpr int log2(char x) {
-		return log2(static_cast<long>(x));
-	}
-	constexpr int log2(short x) {
-		return log2(static_cast<long>(x));
-	}
-	constexpr int log2(int x) {
-		return log2(static_cast<long>(x));
-	}
-	
-	template <arithmetic T>
-	constexpr T ipow(T base, int exp) {
-		__utl_expect(exp >= 0);
-		return
-			exp     == 1 ? base :
-			exp     == 0 ? 1 :
-			exp % 2 == 0 ? ipow(base * base, exp / 2) :
-					base * ipow(base * base, exp / 2);
-	}
 	
 	template <integral T>
 	constexpr T fast_mod_pow_two(T x, T y) {
@@ -156,42 +100,6 @@ namespace utl {
 
 
 namespace utl {
-	
-	template <unsigned_integral Int>
-	class uint_bool_pair {
-		static constexpr Int bool_mask = Int(1) << (sizeof(Int) * 8 - 1);
-		static constexpr Int int_mask = ~bool_mask;
-		
-	public:
-		uint_bool_pair() = default;
-		constexpr uint_bool_pair(Int i, bool b = false): _value(i | (b ? bool_mask : Int(0))) {
-			__utl_assert(!(i & bool_mask), "too big");
-		}
-		
-		constexpr Int integer() const noexcept {
-			return _value & int_mask;
-		}
-		
-		constexpr void integer(Int value) noexcept {
-			__utl_assert(!(value & bool_mask), "too big");
-			_value = value | (boolean() ? bool_mask : Int(0));
-		}
-		
-		constexpr bool boolean() const noexcept {
-			return _value & bool_mask;
-		}
-		
-		constexpr void boolean(bool value) noexcept {
-			_value = (_value & int_mask) | (value ? bool_mask : Int(0));
-		}
-		
-		constexpr Int raw_value() const noexcept { return _value; }
-		
-		static constexpr Int max() noexcept { return int_mask; }
-		
-	private:
-		Int _value;
-	};
 	
 	template <typename T, typename = int, std::size_t IntWidth = utl::log2(alignof(T))>
 	class pointer_int_pair;

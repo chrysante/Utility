@@ -176,10 +176,6 @@ namespace utl {
 	}
 	template <typename T>
 	void as_const(const T&&) = delete;
-//	template <typename T>
-//	constexpr T const* as_const(T* t) noexcept {
-//		return t;
-//	}
 	
 	template <typename T>
 	constexpr typename std::remove_const<T>::type& as_mutable(T& t) noexcept {
@@ -187,19 +183,12 @@ namespace utl {
 	}
 	template <typename T>
 	void as_mutable(const T&&) = delete;
-//	template <typename T>
-//	constexpr T* as_mutable(T const* t) noexcept {
-//		return const_cast<T*>(t);
-//	}
 	
-//	template <typename T>
-//	constexpr T* as_mutable_ptr(T const* a) noexcept {
-//		return const_cast<T*>(a);
-//	}
-//	template <typename T>
-//	constexpr T* as_mutable_ptr(T* a) noexcept {
-//		return a;
-//	}
+	/// MARK: to_underlying
+	template <typename Enum> requires (std::is_enum_v<Enum>)
+	constexpr std::underlying_type_t<Enum> to_underlying(Enum t) {
+		return static_cast<std::underlying_type_t<Enum>>(t);
+	}
 	
 	/// MARK: strlen
 	/// because constexpr
@@ -229,7 +218,18 @@ namespace utl {
 	
 	/// MARK: type_sequence
 	template <typename... T>
-	struct type_sequence {};
+	struct type_sequence {
+		template <typename U>
+		static constexpr std::size_t occurence_count = (std::is_same_v<T, U> + ...);
+		template <typename U>
+		static constexpr bool contains = (bool)occurence_count<U>;
+		static constexpr bool unique = ((occurence_count<T> == 1) && ...);
+		template <typename U>
+		static constexpr std::size_t index_of = []{
+			std::size_t result = 0;
+			return (... || (++result, std::is_same_v<T, U>)) ? result - 1 : (std::size_t)-1;
+		}();
+	};
 	
 	template <typename T, std::size_t N, typename... R>
 	struct __utl_make_type_sequence_impl {
@@ -249,16 +249,10 @@ namespace utl {
 	#define UTL_CTPRINT(...) ::utl::ctprint<__VA_ARGS__> UTL_ANONYMOUS_VARIABLE(_UTL_CTPRINT)
 
 	/// MARK: Iota
-	template <typename>
-	class iota;
-	
-	template <typename T, typename U>
-	requires(std::is_arithmetic_v<T> && std::is_arithmetic_v<U>)
-	iota(T, U) -> iota<std::common_type_t<T, U>>;
-	
 	template <typename T>
-	requires (std::is_integral_v<T>)
-	class iota<T> {
+	class iota {
+		static_assert(std::is_integral_v<T>);
+		
 	public:
 		using value_type = T;
 		using size_type = std::conditional_t<std::is_signed_v<T>, std::ptrdiff_t, std::size_t>;

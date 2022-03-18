@@ -49,6 +49,7 @@ namespace utl {
 	
 #else // UTL_STDLIB_HAS_CONCEPTS
 	
+	/// MARK: - Arithmetic
 	template <typename T>
 	concept arithmetic = std::is_arithmetic_v<T>;
 	
@@ -64,13 +65,7 @@ namespace utl {
 	template <typename T>
 	concept floating_point = std::is_floating_point_v<T>;
 	
-	template <class From, class To>
-	concept convertible_to =
-		std::is_convertible_v<From, To> &&
-		requires {
-			static_cast<To>(std::declval<From>());
-		};
-	
+	/// MARK: - Type Relations
 	template <typename Derived, typename Base>
 	concept derived_from =
 	  std::is_base_of_v<Base, Derived> &&
@@ -82,11 +77,100 @@ namespace utl {
 	template <class T, class U>
 	concept same_as = __utl_same_helper<T, U> && __utl_same_helper<U, T>;
 	
+	/// MARK: - Functional
 	template <class F, class... Args>
 	concept invocable = template_true<std::invoke_result_t<F, Args...>>;
 	
 	template <class F, class... Args>
 	concept regular_invocable = invocable<F, Args...>;
+	
+	/// MARK: - Type Properties
+	template <typename T>
+	concept destructible = std::is_nothrow_destructible_v<T>;
+
+	template <typename T, typename... Args >
+	concept constructible_from =
+		destructible<T> && std::is_constructible_v<T, Args...>;
+
+	template <class From, class To>
+	concept convertible_to =
+		std::is_convertible_v<From, To> &&
+		requires {
+			static_cast<To>(std::declval<From>());
+		};
+//
+//	template <typename LHS, typename RHS>
+//	concept assignable_from =
+//	  std::is_lvalue_reference_v<LHS> &&
+//	  std::common_reference_with<
+//		const std::remove_reference_t<LHS>&,
+//		const std::remove_reference_t<RHS>&> &&
+//	  requires(LHS lhs, RHS&& rhs) {
+//		{ lhs = std::forward<RHS>(rhs) } -> std::same_as<LHS>;
+//	  };
+//
+//	template <typename T>
+//	concept move_constructible = constructible_from<T, T> && convertible_to<T, T>;
+//
+//	template <typename T>
+//	concept copy_constructible =
+//		move_constructible<T> &&
+//		constructible_from<T, T&> && convertible_to<T&, T> &&
+//		constructible_from<T, T const&> && convertible_to<T const&, T> &&
+//		constructible_from<T, T const> && convertible_to<T const, T>;
+//
+//	template <typename T>
+//	concept movable =
+//	  std::is_object_v<T> &&
+//	  move_constructible<T> &&
+//	  assignable_from<T&, T> &&
+//	  swappable<T>;
+//
+//
+//	template <typename T>
+//	concept copyable =
+//		copy_constructible<T> &&
+//		movable<T> &&
+//		assignable_from<T&, T&> &&
+//		assignable_from<T&, const T&> &&
+//		assignable_from<T&, const T>;
+//
+//	template <typename T>
+//	concept default_initializable =
+//
+//
+//	template <typename T, typename U>
+//	concept __utl_weakly_equality_comparable_with =
+//		requires(std::remove_reference_t<T> const& t,
+//				 std::remove_reference_t<U> const& u) {
+//			{ t == u } -> convertible_to<bool>;
+//			{ t != u } -> convertible_to<bool>;
+//			{ u == t } -> convertible_to<bool>;
+//			{ u != t } -> convertible_to<bool>;
+//		};
+//
+//	template <typename T>
+//	concept equality_comparable = __utl_weakly_equality_comparable_with<T, T>;
+//
+//	template <typename T>
+//	concept semi_regular = copyable<T> && default_initializable<T>;
+	
+//	template <typename T, typename U> /* too hard too implement */
+//	concept equality_comparable_with =
+//		equality_comparable<T> &&
+//		equality_comparable<U> &&
+//		common_reference_with<
+//			const std::remove_reference_t<T>&,
+//			const std::remove_reference_t<U>&> &&
+//		equality_comparable<
+//			common_reference_t<
+//				const std::remove_reference_t<T>&,
+//				const std::remove_reference_t<U>&>> &&
+//			__utl_weakly_equality_comparable_with<T, U>;
+		
+	
+
+	
 	
 #endif // UTL_STDLIB_HAS_CONCEPTS
 	
