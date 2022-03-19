@@ -1,41 +1,49 @@
+include "premakeCommon.lua"
+
+
 -----------------------------------------------------------------------------------------
 -- Workspace Utility
 -----------------------------------------------------------------------------------------
-workspace "Utility"
-architecture "x86_64"
-configurations {
-    "Debug",
-    "Release"
-}
-filter "configurations:Debug" 
-    symbols "On"
-filter "configurations:Release"
-    optimize "Speed"
-filter {}
-
-includedirs {
-    "."
-}
-
-filter "system:macosx" 
-    cppdialect "C++20"
-    staticruntime "On"
-filter {}
+basicWorkspace("Utility")
 newoption {
     trigger = "tests",
     description = "Generate Unit Test Projects"
- }
+}
+--workspace "Utility"
+--architecture "x86_64"
+--configurations {
+--    "Debug",
+--    "Release"
+--}
+--filter "configurations:Debug" 
+--    symbols "On"
+--filter "configurations:Release"
+--    optimize "Speed"
+--filter {}
 
-filter "system:windows"
+--includedirs {
+--    "."
+--}
 
-    buildoptions { "/Zc:__cplusplus", "/Zc:preprocessor", "/MP" }
+--filter "system:macosx" 
+--    cppdialect "C++20"
+--    staticruntime "On"
+--filter {}
+--newoption {
+--    trigger = "tests",
+--    description = "Generate Unit Test Projects"
+-- }
 
-filter {}
+--filter "system:windows"
 
-targetdir("Build/Bin/%{cfg.longname}")
-objdir("Build/Obj/%{cfg.longname}")
+--    buildoptions { "/Zc:__cplusplus", "/Zc:preprocessor", "/MP" }
 
-cppdialect "C++20"
+--filter {}
+
+--targetdir("Build/Bin/%{cfg.longname}")
+--objdir("Build/Obj/%{cfg.longname}")
+
+--cppdialect "C++20"
 
 -----------------------------------------------------------------------------------------
 -- Project Utility
