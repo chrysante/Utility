@@ -21,7 +21,7 @@ namespace utl::pmr {
 	}
 	
 	void* monitor_resource::do_allocate(std::size_t size, std::size_t align) {
-		auto const result = upstream()->allocate(size, align);
+		void* const result = upstream()->allocate(size, align);
 		utl::print("allocate(size: {}, align: {}) -> {}\n", size, align, result);
 		return result;
 	}

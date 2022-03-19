@@ -87,14 +87,22 @@ namespace _VMTL {
 	__mtl_mathfunction __mtl_always_inline
 	constexpr auto __map_impl(F&& f, vector<T, S, O> const&... v) {
 		using U = std::invoke_result_t<F, T...>;
-		constexpr auto P = combine(O...);
-		return vector<U, S, P>([&](std::size_t i) { return std::invoke(__mtl_forward(f), v.__mtl_at(i)...); });
+		if constexpr (mtl::same_as<U, void>) {
+			for (std::size_t i = 0; i < S; ++i) {
+				std::invoke(__mtl_forward(f), v.__mtl_at(i)...);
+			}
+		}
+		else {
+			constexpr auto P = combine(O...);
+			return vector<U, S, P>([&](std::size_t i) { return std::invoke(__mtl_forward(f), v.__mtl_at(i)...); });
+		}
 	}
 	
 	template <typename T0, std::size_t S, vector_options O0, _VMTL::invocable<T0> F>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr auto map(vector<T0, S, O0> const& v0,
-					   F&& f) requires(!std::is_same_v<void, std::invoke_result_t<F, T0>>) {
+					   F&& f) 
+	{
 		return __map_impl(__mtl_forward(f), v0);
 	}
 	template <typename T0, typename T1, std::size_t S,
@@ -103,7 +111,8 @@ namespace _VMTL {
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr auto map(vector<T0, S, O0> const& v0,
 					   vector<T1, S, O1> const& v1,
-					   F&& f) requires(!std::is_same_v<void, std::invoke_result_t<F, T0, T1>>) {
+					   F&& f)
+	{
 		return __map_impl(__mtl_forward(f), v0, v1);
 	}
 	template <typename T0, typename T1, typename T2, std::size_t S,
@@ -113,7 +122,8 @@ namespace _VMTL {
 	constexpr auto map(vector<T0, S, O0> const& v0,
 					   vector<T1, S, O1> const& v1,
 					   vector<T2, S, O2> const& v2,
-					   F&& f) requires(!std::is_same_v<void, std::invoke_result_t<F, T0, T1, T2>>) {
+					   F&& f) 
+	{
 		return __map_impl(__mtl_forward(f), v0, v1, v2);
 	}
 	
@@ -125,7 +135,8 @@ namespace _VMTL {
 					   vector<T1, S, O1> const& v1,
 					   vector<T2, S, O2> const& v2,
 					   vector<T3, S, O3> const& v3,
-					   F&& f) requires(!std::is_same_v<void, std::invoke_result_t<F, T0, T1, T2, T3>>) {
+					   F&& f) 
+	{
 		return __map_impl(__mtl_forward(f), v0, v1, v2, v3);
 	}
 	
@@ -138,7 +149,8 @@ namespace _VMTL {
 					   vector<T2, S, O2> const& v2,
 					   vector<T3, S, O3> const& v3,
 					   vector<T4, S, O4> const& v4,
-					   F&& f) requires(!std::is_same_v<void, std::invoke_result_t<F, T0, T1, T2, T3, T4>>) {
+					   F&& f) 
+	{
 		return __map_impl(__mtl_forward(f), v0, v1, v2, v3, v4);
 	}
 	
@@ -152,7 +164,8 @@ namespace _VMTL {
 					   vector<T3, S, O3> const& v3,
 					   vector<T4, S, O4> const& v4,
 					   vector<T5, S, O5> const& v5,
-					   F&& f) requires(!std::is_same_v<void, std::invoke_result_t<F, T0, T1, T2, T3, T4, T5>>) {
+					   F&& f) 
+	{
 		return __map_impl(__mtl_forward(f), v0, v1, v2, v3, v4, v5);
 	}
 	
@@ -404,7 +417,7 @@ namespace _VMTL {
 	template <typename T, std::size_t Size, vector_options O,
 			  typename = __mtl_make_type_sequence<T, Size>,
 			  typename = __mtl_make_index_sequence<Size>>
-	class __vector_base;
+	struct __vector_base;
 	
 	template <typename T, std::size_t Size, vector_options O,
 			  typename... AllT, std::size_t... I>

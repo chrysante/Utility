@@ -279,7 +279,7 @@
 #  if defined(__cpp_nontype_template_args) &&                \
       ((FMT_GCC_VERSION >= 903 && __cplusplus >= 201709L) || \
        __cpp_nontype_template_args >= 201911L)
-#    define FMT_USE_NONTYPE_TEMPLATE_PARAMETERS 1
+#    define FMT_USE_NONTYPE_TEMPLATE_PARAMETERS /*1*/ 0 // for now
 #  else
 #    define FMT_USE_NONTYPE_TEMPLATE_PARAMETERS 0
 #  endif

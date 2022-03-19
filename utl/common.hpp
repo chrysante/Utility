@@ -137,11 +137,7 @@ inline constexpr TYPE operator OP(TYPE a, typename _UTL_NSSTD::underlying_type<T
 
 namespace utl {
 	
-	/// MARK: Integer Typedefs
-#if (__GNUC__ || __clang__) // && ...
-#	define UTL_128_BIT_ARITHMETIC
-#endif
-	
+	/// MARK: Integer Typedefs	
 	using uint8_t   = std::uint8_t;
 	using uint16_t  = std::uint16_t;
 	using uint32_t  = std::uint32_t;
@@ -151,6 +147,11 @@ namespace utl {
 	using int16_t   = std::int16_t;
 	using int32_t   = std::int32_t;
 	using int64_t   = std::int64_t;
+
+#if (defined(__GNUC__) || defined(__clang__)) // && ...
+#	define UTL_128_BIT_ARITHMETIC
+#endif
+
 #ifdef UTL_128_BIT_ARITHMETIC
 	using uint128_t = __uint128_t;
 	using int128_t  = __int128_t;
@@ -211,6 +212,12 @@ namespace utl {
 	using make_index_sequence = std::make_index_sequence<N>;
 	
 	/// MARK: type_sequence
+	template <typename U, typename...T>
+	constexpr std::size_t __utl_index_of_impl() {
+		std::size_t result = 0;
+		return (... || (++result, std::is_same_v<T, U>)) ? result - 1 : (std::size_t)-1;
+	};
+
 	template <typename... T>
 	struct type_sequence {
 		template <typename U>
@@ -219,10 +226,7 @@ namespace utl {
 		static constexpr bool contains = (bool)occurence_count<U>;
 		static constexpr bool unique = ((occurence_count<T> == 1) && ...);
 		template <typename U>
-		static constexpr std::size_t index_of = []{
-			std::size_t result = 0;
-			return (... || (++result, std::is_same_v<T, U>)) ? result - 1 : (std::size_t)-1;
-		}();
+		static constexpr std::size_t index_of = __utl_index_of_impl<U, T...>();
 	};
 	
 	template <typename T, std::size_t N, typename... R>

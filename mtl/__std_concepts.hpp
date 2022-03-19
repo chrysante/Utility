@@ -8,7 +8,13 @@ _MTL_SYSTEM_HEADER_
 #ifndef __MTL_STD_CONCEPTS_HPP_INCLUDED__
 #define __MTL_STD_CONCEPTS_HPP_INCLUDED__
 
-#define MTL_STDLIB_HAS_CONCEPTS (_LIBCPP_VERSION >= 13000 || _MSC_VER >= 1923)
+#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION >= 13000
+#	define MTL_STDLIB_HAS_CONCEPTS 1
+#elif defined(_MSC_VER) && _MSC_VER >= 1923
+#	define MTL_STDLIB_HAS_CONCEPTS 1
+#else 
+#	define MTL_STDLIB_HAS_CONCEPTS 0 
+#endif
 
 #include <type_traits>
 

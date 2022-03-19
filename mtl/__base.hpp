@@ -35,7 +35,11 @@ _MTL_SYSTEM_HEADER_
 #endif
 
 #ifndef MTL_UNICODE_MATH_PARANTHESES
-#define MTL_UNICODE_MATH_PARANTHESES 1
+#	if defined(__APPLE__)
+#		define MTL_UNICODE_MATH_PARANTHESES 1
+#	else
+#		define MTL_UNICODE_MATH_PARANTHESES 0
+#	endif
 #endif
 
 /// MARK: - Attributes

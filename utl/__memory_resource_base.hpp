@@ -6,6 +6,7 @@ _UTL_SYSTEM_HEADER_
 #include "__debug.hpp"
 #include "concepts.hpp"
 #include "type_traits.hpp"
+#include <exception>
 
 namespace utl::pmr {
 	class memory_resource;
@@ -136,7 +137,7 @@ namespace utl::pmr {
 	/// MARK: - polymorphic_delete
 	template <typename T>
 	struct polymorphic_delete {
-		template <typename> friend class polymorphic_delete;
+		template <typename> friend struct polymorphic_delete;
 		
 		static_assert(!std::is_function<T>::value,
 					  "polymorphic_delete cannot be instantiated for function types");

@@ -4,8 +4,10 @@
 #include "format.hpp"
 #include "scope_guard.hpp"
 
-#include <dlfcn.h>
 #include <exception>
+
+#if defined(__unix__)
+#include <dlfcn.h>
 
 namespace utl {
 	
@@ -96,3 +98,4 @@ namespace utl {
 	}
 	
 }
+#endif // defined(__unix__)

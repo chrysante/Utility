@@ -1,6 +1,4 @@
 
-
-
 // put all implementation-provided headers into the global module fragment
 // to prevent attachment to this module
 #if !defined(_CRT_SECURE_NO_WARNINGS) && defined(_MSC_VER)
@@ -8,6 +6,12 @@
 #endif
 #if !defined(WIN32_LEAN_AND_MEAN) && defined(_WIN32)
 #  define WIN32_LEAN_AND_MEAN
+#endif
+
+#if defined(_WIN32)
+#  ifndef NOMINMAX
+#    define NOMINMAX
+#  endif
 #endif
 
 #include <algorithm>

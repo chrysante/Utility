@@ -96,8 +96,9 @@ namespace utl {
 		});
 	}
 
-	void __dispatch_one_impl(auto&& selector, auto size_constant, std::size_t index, auto&&... args)
-	requires requires{ selector(size_constant); } && __is_integral_constant<decltype(size_constant)>::value
+	template <typename Selector, typename SizeConstant>
+		requires requires(Selector&& s, SizeConstant c) { s(c); } && (__is_integral_constant<SizeConstant>::value)
+	void __dispatch_one_impl(Selector&& selector, SizeConstant size_constant, std::size_t index, auto&&... args)
 	{
 		constexpr std::size_t size = decltype(size_constant)::value;
 		__utl_bounds_check(index, 0, size);

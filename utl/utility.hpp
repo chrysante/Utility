@@ -110,11 +110,11 @@ namespace utl {
 		static constexpr bool fits(Int i) noexcept {
 			if constexpr (std::is_signed_v<Int>) {
 				// n bits represent { -2^(n-1), ..., 2^(n-1) - 1 }
-				return i >= -((long long)(1) << (int_size - 1)) && i < ((long long)(1) << (int_size - 1));
+				return i >= -((std::intmax_t)(1) << (int_size - 1)) && i < ((std::intmax_t)(1) << (int_size - 1));
 			}
 			else {
 				// n bits represent { 0, ..., 2^(n) - 1 }
-				return i < ((long long)(1) << (int_size));
+				return i < ((std::intmax_t)(1) << (int_size));
 			}
 		}
 		
@@ -130,9 +130,9 @@ namespace utl {
 		
 		void pointer(T* p) noexcept {
 			__utl_expect((reinterpret_cast<std::uintptr_t>(p) & ~pointer_mask) == 0, "pointer alignment not satisfied");
-			auto const i =_i;
-			_p = p;
-			_i = i;
+			//auto const i =_i;
+			_p = (T*)((std::uintptr_t)p & pointer_mask);
+			//_i = i;
 		}
 		
 		auto integer() const noexcept { return _i; }
@@ -140,10 +140,10 @@ namespace utl {
 		void integer(Int i) noexcept {
 			_i = i;
 		}
-		
+	
 	private:
-		static constexpr auto int_size = IntWidth;
-		static constexpr unsigned long pointer_mask = ~((long(1) << int_size) - 1);
+		static constexpr std::size_t int_size = IntWidth;
+		static constexpr std::uintptr_t pointer_mask = ~((std::uintptr_t(1) << int_size) - 1);
 		union {
 			T* _p;
 			Int _i : int_size;

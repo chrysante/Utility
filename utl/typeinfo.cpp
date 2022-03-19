@@ -1,6 +1,9 @@
 #include "typeinfo.hpp"
 
 #include "__debug.hpp"
+
+#if defined(__GNUC__) || defined(__clang__)
+
 #include <cxxabi.h>
 
 std::string utl::__demangle_name(char const* mangled_name) {
@@ -15,6 +18,14 @@ std::string utl::__demangle_name(char const* mangled_name) {
 	std::free(demangled_name);
 	return result;
 }
+
+#else
+
+std::string utl::__demangle_name(char const* mangled_name) {
+	return mangled_name;
+}
+
+#endif
 
 std::string utl::qualified_function_name(std::string_view pretty) {
 	try {

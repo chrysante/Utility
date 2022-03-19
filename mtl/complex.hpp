@@ -23,10 +23,12 @@ _MTL_SYSTEM_HEADER_
 
 namespace _VMTL {
 
+	inline constexpr vector_options __mtl_complex_vector_options = vector_options{}.packed(false);
+
 	/// MARK: - struct complex
 	template <real_scalar T>
 	struct complex<T>: public vector<T, 2, vector_options{}.packed(false)> {
-		static constexpr auto __mtl_options = vector_options{}.packed(false);
+		constexpr static vector_options __mtl_options = __mtl_complex_vector_options;
 		using __mtl_base = vector<T, 2, __mtl_options>;
 		using typename __mtl_base::value_type;
 		
@@ -109,12 +111,12 @@ namespace _VMTL {
 	
 	template <typename T>
 	__mtl_mathfunction __mtl_always_inline
-	constexpr vector<T, 2, complex<T>::__mtl_options>& __as_vector(complex<T>& z) {
+	constexpr vector<T, 2, __mtl_complex_vector_options>& __as_vector(complex<T>& z) {
 		return static_cast<vector<T, 2, complex<T>::__mtl_options>&>(z);
 	}
 	template <typename T>
 	__mtl_mathfunction __mtl_always_inline
-	constexpr vector<T, 2, complex<T>::__mtl_options> const& __as_vector(complex<T> const& z) {
+	constexpr vector<T, 2, __mtl_complex_vector_options> const& __as_vector(complex<T> const& z) {
 		return static_cast<vector<T, 2, complex<T>::__mtl_options> const&>(z);
 	}
 	
@@ -137,16 +139,15 @@ namespace _VMTL {
 	inline namespace literals {
 		inline namespace quaternion_literals {
 			inline namespace complex_literals {
-				inline constexpr complex<double>             operator"" _i   (long double x)        { return { 0, x }; }
-				inline constexpr complex<float>              operator"" _if  (long double x)        { return { 0, x }; }
-				inline constexpr complex<long double>        operator"" _ild (long double x)        { return { 0, x }; }
-				
-				inline constexpr complex<int>                operator"" _i   (unsigned long long x) { return { 0, x }; }
-				inline constexpr complex<long>               operator"" _il  (unsigned long long x) { return { 0, x }; }
-				inline constexpr complex<long long>          operator"" _ill (unsigned long long x) { return { 0, x }; }
-				inline constexpr complex<unsigned int>       operator"" _iu  (unsigned long long x) { return { 0, x }; }
-				inline constexpr complex<unsigned long>      operator"" _iul (unsigned long long x) { return { 0, x }; }
-				inline constexpr complex<unsigned long long> operator"" _iull(unsigned long long x) { return { 0, x }; }
+				inline constexpr complex<double>             operator"" _i(long double x)           { return { 0, static_cast<double>(x) }; }
+				inline constexpr complex<float>              operator"" _if(long double x)          { return { 0, static_cast<float>(x) }; }
+				inline constexpr complex<long double>        operator"" _ild(long double x)         { return { 0, static_cast<long double>(x) }; }
+				inline constexpr complex<int>                operator"" _i(unsigned long long x)    { return { 0, static_cast<int>(x) }; }
+				inline constexpr complex<long>               operator"" _il(unsigned long long x)   { return { 0, static_cast<long>(x) }; }
+				inline constexpr complex<long long>          operator"" _ill(unsigned long long x)  { return { 0, static_cast<long long>(x) }; }
+				inline constexpr complex<unsigned int>       operator"" _iu(unsigned long long x)   { return { 0, static_cast<unsigned int>(x) }; }
+				inline constexpr complex<unsigned long>      operator"" _iul(unsigned long long x)  { return { 0, static_cast<unsigned long>(x) }; }
+				inline constexpr complex<unsigned long long> operator"" _iull(unsigned long long x) { return { 0, static_cast<unsigned long long>(x) }; }
 			}
 		}
 	}
@@ -172,13 +173,13 @@ namespace _VMTL {
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr complex<__mtl_promote(T, U)> operator+(complex<T> const& a, U const& b) {
-		return { real(a) + b, imag(a) };
+		return complex<__mtl_promote(T, U)>(real(a) + b, imag(a));
 	}
 	
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr complex<__mtl_promote(T, U)> operator+(T const& a, complex<U> const& b) {
-		return { a + real(b), imag(b) };
+		return complex<__mtl_promote(T, U)>(a + real(b), imag(b));
 	}
 	
 	template <real_scalar T, real_scalar U>
@@ -190,34 +191,34 @@ namespace _VMTL {
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr complex<__mtl_promote(T, U)> operator-(complex<T> const& a, U const& b) {
-		return { real(a) - b, imag(a) };
+		return complex<__mtl_promote(T, U)>(real(a) - b, imag(a));
 	}
 	
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr complex<__mtl_promote(T, U)> operator-(T const& a, complex<U> const& b) {
-		return { a - real(b), -imag(b) };
+		return complex<__mtl_promote(T, U)>(a - real(b), -imag(b));
 	}
 	
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr complex<__mtl_promote(T, U)> operator*(complex<T> const& a, complex<U> const& b) {
-		return {
+		return complex<__mtl_promote(T, U)>(
 			real(a) * real(b) - imag(a) * imag(b),
 			real(a) * imag(b) + imag(a) * real(b)
-		};
+		);
 	}
 	
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr complex<__mtl_promote(T, U)> operator*(complex<T> const& a, U const& b) {
-		return { real(a) * b, imag(a) * b };
+		return complex<__mtl_promote(T, U)>(real(a) * b, imag(a) * b);
 	}
 	
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr complex<__mtl_promote(T, U)> operator*(T const& a, complex<U> const& b) {
-		return { a * real(b), a * imag(b) };
+		return complex<__mtl_promote(T, U)>(a * real(b), a * imag(b));
 	}
 	
 	template <real_scalar T, real_scalar U>
@@ -229,7 +230,7 @@ namespace _VMTL {
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr complex<__mtl_promote(T, U)> operator/(complex<T> const& a, U const& b) {
-		return complex{ real(a) / b, imag(a) / b };
+		return complex<__mtl_promote(T, U)>(real(a) / b, imag(a) / b);
 	}
 	
 	template <real_scalar T, real_scalar U>
@@ -314,8 +315,11 @@ namespace _VMTL {
 	
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
-	constexpr complex<__mtl_floatify(__mtl_promote(T, U))> polar(T const& r, U const& theta) {
+	constexpr complex<__mtl_floatify(__mtl_promote(T, U))> polar(T const& _r, U const& _theta) {
+
 		using F = __mtl_floatify(T);
+		F const r = _r;
+		F const theta = _theta;
 		__mtl_safe_math_if (std::isnan(r) || signbit(r))
 			return { F(NAN), F(NAN) };
 		__mtl_safe_math_if (std::isnan(theta)) {
@@ -335,8 +339,9 @@ namespace _VMTL {
 	/// MARK: Power Functions
 	template <real_scalar T>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
-	complex<__mtl_floatify(T)> exp(complex<T> const& z) {
+	complex<__mtl_floatify(T)> exp(complex<T> const& _z) {
 		using F = __mtl_floatify(T);
+		complex<F> z = _z;
 		F i = imag(z);
 		__mtl_safe_math_if (std::isinf(real(z))) {
 			__mtl_safe_math_if (real(z) < F(0)) {
@@ -357,7 +362,9 @@ namespace _VMTL {
 	
 	template <real_scalar T>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
-	complex<__mtl_floatify(T)> log(complex<T> const& z) {
+	complex<__mtl_floatify(T)> log(complex<T> const& _z) {
+		using F = __mtl_floatify(T);
+		complex<F> z = _z;
 		__mtl_expect(z != 0);
 		return { std::log(abs(z)), arg(z) };
 	}
@@ -388,8 +395,9 @@ namespace _VMTL {
 	
 	template <real_scalar T>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
-	complex<__mtl_floatify(T)> sqrt(complex<T> const& z) {
+	complex<__mtl_floatify(T)> sqrt(complex<T> const& _z) {
 		using F = __mtl_floatify(T);
+		complex<F> z = _z;
 		__mtl_safe_math_if (std::isinf(imag(z)))
 			return complex<F>(F(INFINITY), imag(z));
 		__mtl_safe_math_if (std::isinf(real(z)))
@@ -403,8 +411,9 @@ namespace _VMTL {
 	
 	/// MARK: Hyperbolic Functions
 	template <real_scalar T>
-	complex<__mtl_floatify(T)> sinh(complex<T> const& z) {
+	complex<__mtl_floatify(T)> sinh(complex<T> const& _z) {
 		using F = __mtl_floatify(T);
+		complex<F> z = _z;
 		__mtl_safe_math_if (std::isinf(real(z)) && !std::isinf(imag(z)))
 			return complex<F>(real(z), F(NAN));
 		__mtl_safe_math_if (real(z) == 0 && !std::isinf(imag(z)))
@@ -415,8 +424,9 @@ namespace _VMTL {
 	}
 	
 	template <real_scalar T>
-	complex<__mtl_floatify(T)> cosh(complex<T> const& z) {
+	complex<__mtl_floatify(T)> cosh(complex<T> const& _z) {
 		using F = __mtl_floatify(T);
+		complex<F> z = _z;
 		__mtl_safe_math_if (std::isinf(real(z)) && !std::isinf(imag(z)))
 			return { std::abs(real(z)), F(NAN) };
 		__mtl_safe_math_if (real(z) == 0 && !std::isinf(imag(z)))
@@ -429,8 +439,9 @@ namespace _VMTL {
 	}
 	
 	template <real_scalar T>
-	complex<__mtl_floatify(T)> tanh(complex<T> const& z) {
+	complex<__mtl_floatify(T)> tanh(complex<T> const& _z) {
 		using F = __mtl_floatify(T);
+		complex<F> z = _z;
 		__mtl_safe_math_if (std::isinf(real(z))) {
 			__mtl_safe_math_if (!std::isinf(imag(z)))
 				return { F(1), F(0) };
@@ -451,8 +462,9 @@ namespace _VMTL {
 	}
 	
 	template <real_scalar T>
-	complex<__mtl_floatify(T)> asinh(complex<T> const& z) {
+	complex<__mtl_floatify(T)> asinh(complex<T> const& _z) {
 		using F = __mtl_floatify(T);
+		complex<F> z = _z;
 		__mtl_safe_math_if (std::isinf(real(z))) {
 			__mtl_safe_math_if (std::isnan(imag(z)))
 				return z;
@@ -474,8 +486,9 @@ namespace _VMTL {
 	}
 	
 	template <real_scalar T>
-	complex<__mtl_floatify(T)> acosh(complex<T> const& z) {
+	complex<__mtl_floatify(T)> acosh(complex<T> const& _z) {
 		using F = __mtl_floatify(T);
+		complex<F> z = _z;
 		__mtl_safe_math_if (std::isinf(real(z))) {
 			__mtl_safe_math_if (std::isnan(imag(z)))
 				return { std::abs(real(z)), imag(z) };
@@ -501,8 +514,9 @@ namespace _VMTL {
 	}
 	
 	template <real_scalar T>
-	complex<__mtl_floatify(T)> atanh(complex<T> const& z) {
+	complex<__mtl_floatify(T)> atanh(complex<T> const& _z) {
 		using F = __mtl_floatify(T);
+		complex<F> z = _z;
 		__mtl_safe_math_if (std::isinf(imag(z))) {
 			return { std::copysign(F(0), real(z)), std::copysign(_VMTL::constants<F>::pi / F(2), imag(z)) };
 		}

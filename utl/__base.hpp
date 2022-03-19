@@ -35,15 +35,15 @@ _UTL_SYSTEM_HEADER_
 #ifdef UTL_CPP // guard here because general purpose header may be included in shader source
 
 /// MARK: Attributes
-#if __GNUC__ || __clang__
+#if defined(__GNUC__) || defined(__clang__)
 #	define UTL_LIKELY(...)   (__builtin_expect((__VA_ARGS__), 1))
 #	define UTL_UNLIKELY(...) (__builtin_expect((__VA_ARGS__), 0))
-#else // __GNUC__ || __clang__
+#else 
 #	define UTL_LIKELY(...)   (__VA_ARGS__)
 #	define UTL_UNLIKELY(...) (__VA_ARGS__)
-#endif // __GNUC__ || __clang__
+#endif
 
-#if __GNUC__ || __clang__
+#if defined(__GNUC__) || defined(__clang__)
 
 #	define __utl_pure                 __attribute__((const))
 #	define __utl_nodiscard            [[nodiscard]]
@@ -60,7 +60,7 @@ _UTL_SYSTEM_HEADER_
 #		define __utl_interface_export  __attribute__((nodebug))
 #	endif // UTL_DEBUG_LEVEL > 1
 
-#else // __GNUC__ || __clang__ // _MSC_VER section
+#else // defined(__GNUC__) || defined(__clang__)
 
 #	define __utl_pure
 #	define __utl_nodiscard
@@ -78,13 +78,13 @@ _UTL_SYSTEM_HEADER_
 #		define __utl_interface_export
 #	endif // UTL_DEBUG_LEVEL > 1
 
-#endif // __GNUC__ || __clang__
+#endif // defined(__GNUC__) || defined(__clang__)
 
 /// MARK: Sanitizers
-#if __GNCU__ || __clang__
+#if defined(__GNUC__) || defined(__clang__)
 #	define _UTL_DISABLE_UBSAN_INTEGER __attribute__((no_sanitize("integer")))
-#else // __GNCU__ || __clang__
+#else // defined(__GNUC__) || defined(__clang__)
 #	define _UTL_DISABLE_UBSAN_INTEGER
-#endif // __GNCU__ || __clang__
+#endif // defined(__GNUC__) || defined(__clang__)
 
 #endif // UTL_CPP

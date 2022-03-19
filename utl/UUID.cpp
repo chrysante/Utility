@@ -27,7 +27,11 @@ namespace utl {
 	}
 	
 	std::ostream& operator<<(std::ostream& str, UUID id) {
+#if defined(UTL_128_BIT_ARITHMETIC)
 		return str << utl::format("{:x}", id.value());
+#else
+		return str << utl::format("{:x}{:x}", id.value()[0], id.value()[1]);
+#endif
 	}
 	
 }

@@ -24,10 +24,12 @@ _MTL_SYSTEM_HEADER_
 
 namespace _VMTL {
 	
+	inline constexpr vector_options __mtl_quaternion_vector_options = vector_options{}.packed(false);
+
 	/// MARK: - struct quaternion
 	template <real_scalar T>
-	struct quaternion<T>: public vector<T, 4, vector_options{}.packed(false)> {
-		static constexpr auto __mtl_options = vector_options{}.packed(false);
+	struct quaternion<T>: public vector<T, 4, __mtl_quaternion_vector_options> {
+		static constexpr auto __mtl_options = __mtl_quaternion_vector_options;
 		using __mtl_base = vector<T, 4, __mtl_options>;
 		using typename __mtl_base::value_type;
 		
@@ -102,7 +104,7 @@ namespace _VMTL {
 	constexpr T real(quaternion<T> const& z) { return z.__mtl_at(0); }
 	template <typename T>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
-	constexpr vector<T, 3, quaternion<T>::__mtl_options> imag(quaternion<T> const& z) {
+	constexpr vector<T, 3, __mtl_quaternion_vector_options> imag(quaternion<T> const& z) {
 		return {
 			z.__mtl_at(1), z.__mtl_at(2), z.__mtl_at(3)
 		};
@@ -110,12 +112,12 @@ namespace _VMTL {
 	
 	template <typename T>
 	__mtl_mathfunction __mtl_always_inline
-	constexpr vector<T, 4, quaternion<T>::__mtl_options>& __as_vector(quaternion<T>& z) {
+	constexpr vector<T, 4, __mtl_quaternion_vector_options>& __as_vector(quaternion<T>& z) {
 		return static_cast<vector<T, 4, quaternion<T>::__mtl_options>&>(z);
 	}
 	template <typename T>
 	__mtl_mathfunction __mtl_always_inline
-	constexpr vector<T, 4, quaternion<T>::__mtl_options> const& __as_vector(quaternion<T> const& z) {
+	constexpr vector<T, 4, __mtl_quaternion_vector_options> const& __as_vector(quaternion<T> const& z) {
 		return static_cast<vector<T, 4, quaternion<T>::__mtl_options> const&>(z);
 	}
 	
@@ -129,27 +131,24 @@ namespace _VMTL {
 			 _i* literals are defined in complex.hpp and can be used in conjunction with these
 			 ‘using namespace mtl::quaternion_literals;' also pulls in the _i* complex literals
 			 */
-			inline constexpr quaternion<double>             operator"" _j   (long double x)        { return { 0, 0, x, 0 }; }
-			inline constexpr quaternion<float>              operator"" _jf  (long double x)        { return { 0, 0, x, 0 }; }
-			inline constexpr quaternion<long double>        operator"" _jld (long double x)        { return { 0, 0, x, 0 }; }
-			
-			inline constexpr quaternion<int>                operator"" _j   (unsigned long long x) { return { 0, 0, x, 0 }; }
-			inline constexpr quaternion<long>               operator"" _jl  (unsigned long long x) { return { 0, 0, x, 0 }; }
-			inline constexpr quaternion<long long>          operator"" _jll (unsigned long long x) { return { 0, 0, x, 0 }; }
-			inline constexpr quaternion<unsigned int>       operator"" _ju  (unsigned long long x) { return { 0, 0, x, 0 }; }
-			inline constexpr quaternion<unsigned long>      operator"" _jul (unsigned long long x) { return { 0, 0, x, 0 }; }
-			inline constexpr quaternion<unsigned long long> operator"" _jull(unsigned long long x) { return { 0, 0, x, 0 }; }
-			
-			inline constexpr quaternion<double>             operator"" _k   (long double x)        { return { 0, 0, 0, x }; }
-			inline constexpr quaternion<float>              operator"" _kf  (long double x)        { return { 0, 0, 0, x }; }
-			inline constexpr quaternion<long double>        operator"" _kld (long double x)        { return { 0, 0, 0, x }; }
-			
-			inline constexpr quaternion<int>                operator"" _k   (unsigned long long x) { return { 0, 0, 0, x }; }
-			inline constexpr quaternion<long>               operator"" _kl  (unsigned long long x) { return { 0, 0, 0, x }; }
-			inline constexpr quaternion<long long>          operator"" _kll (unsigned long long x) { return { 0, 0, 0, x }; }
-			inline constexpr quaternion<unsigned int>       operator"" _ku  (unsigned long long x) { return { 0, 0, 0, x }; }
-			inline constexpr quaternion<unsigned long>      operator"" _kul (unsigned long long x) { return { 0, 0, 0, x }; }
-			inline constexpr quaternion<unsigned long long> operator"" _kull(unsigned long long x) { return { 0, 0, 0, x }; }
+			inline constexpr quaternion<double>             operator"" _j(long double x) { return { 0, 0, static_cast<double>(x), 0 }; }
+			inline constexpr quaternion<float>              operator"" _jf(long double x) { return { 0, 0, static_cast<float>(x), 0 }; }
+			inline constexpr quaternion<long double>        operator"" _jld(long double x) { return { 0, 0, static_cast<long double>(x), 0 }; }
+			inline constexpr quaternion<int>                operator"" _j(unsigned long long x) { return { 0, 0, static_cast<int>(x), 0 }; }
+			inline constexpr quaternion<long>               operator"" _jl(unsigned long long x) { return { 0, 0, static_cast<long>(x), 0 }; }
+			inline constexpr quaternion<long long>          operator"" _jll(unsigned long long x) { return { 0, 0, static_cast<long long>(x), 0 }; }
+			inline constexpr quaternion<unsigned int>       operator"" _ju(unsigned long long x) { return { 0, 0, static_cast<unsigned int>(x), 0 }; }
+			inline constexpr quaternion<unsigned long>      operator"" _jul(unsigned long long x) { return { 0, 0, static_cast<unsigned long>(x), 0 }; }
+			inline constexpr quaternion<unsigned long long> operator"" _jull(unsigned long long x) { return { 0, 0, static_cast<unsigned long long>(x), 0 }; }
+			inline constexpr quaternion<double>             operator"" _k(long double x) { return { 0, 0, 0, static_cast<double>(x) }; }
+			inline constexpr quaternion<float>              operator"" _kf(long double x) { return { 0, 0, 0, static_cast<float>(x) }; }
+			inline constexpr quaternion<long double>        operator"" _kld(long double x) { return { 0, 0, 0, static_cast<long double>(x) }; }
+			inline constexpr quaternion<int>                operator"" _k(unsigned long long x) { return { 0, 0, 0, static_cast<int>(x) }; }
+			inline constexpr quaternion<long>               operator"" _kl(unsigned long long x) { return { 0, 0, 0, static_cast<long>(x) }; }
+			inline constexpr quaternion<long long>          operator"" _kll(unsigned long long x) { return { 0, 0, 0, static_cast<long long>(x) }; }
+			inline constexpr quaternion<unsigned int>       operator"" _ku(unsigned long long x) { return { 0, 0, 0, static_cast<unsigned int>(x) }; }
+			inline constexpr quaternion<unsigned long>      operator"" _kul(unsigned long long x) { return { 0, 0, 0, static_cast<unsigned long>(x) }; }
+			inline constexpr quaternion<unsigned long long> operator"" _kull(unsigned long long x) { return { 0, 0, 0, static_cast<unsigned long long>(x) }; }
 		}
 	}
 	
@@ -174,25 +173,25 @@ namespace _VMTL {
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr quaternion<__mtl_promote(T, U)> operator+(quaternion<T> const& a, complex<U> const& b) {
-		return { real(a) + real(b), imag(b) + a.__mtl_at(1), a.__mtl_at(2), a.__mtl_at(3) };
+		return quaternion<__mtl_promote(T, U)>(real(a) + real(b), imag(b) + a.__mtl_at(1), a.__mtl_at(2), a.__mtl_at(3));
 	}
 	
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr quaternion<__mtl_promote(T, U)> operator+(quaternion<T> const& a, U const& b) {
-		return { real(a) + b, a.__mtl_at(1), a.__mtl_at(2), a.__mtl_at(3) };
+		return quaternion<__mtl_promote(T, U)>(real(a) + b, a.__mtl_at(1), a.__mtl_at(2), a.__mtl_at(3));
 	}
 	
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr quaternion<__mtl_promote(T, U)> operator+(complex<T> const& a, quaternion<U> const& b) {
-		return { real(a) + real(b), imag(a) + b.__mtl_at(1), b.__mtl_at(2), b.__mtl_at(3) };
+		return quaternion<__mtl_promote(T, U)>(real(a) + real(b), imag(a) + b.__mtl_at(1), b.__mtl_at(2), b.__mtl_at(3));
 	}
 	
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr quaternion<__mtl_promote(T, U)> operator+(T const& a, quaternion<U> const& b) {
-		return { a + real(b), b.__mtl_at(1), b.__mtl_at(2), b.__mtl_at(3) };
+		return quaternion<__mtl_promote(T, U)>(a + real(b), b.__mtl_at(1), b.__mtl_at(2), b.__mtl_at(3));
 	}
 	
 	template <real_scalar T, real_scalar U>
@@ -204,58 +203,58 @@ namespace _VMTL {
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr quaternion<__mtl_promote(T, U)> operator-(quaternion<T> const& a, complex<U> const& b) {
-		return { real(a) - real(b), a.__mtl_at(1) - imag(b), a.__mtl_at(2), a.__mtl_at(3) };
+		return quaternion<__mtl_promote(T, U)>(real(a) - real(b), a.__mtl_at(1) - imag(b), a.__mtl_at(2), a.__mtl_at(3));
 	}
 	
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr quaternion<__mtl_promote(T, U)> operator-(quaternion<T> const& a, U const& b) {
-		return { real(a) - b, a.__mtl_at(1), a.__mtl_at(2), a.__mtl_at(3) };
+		return quaternion<__mtl_promote(T, U)>(real(a) - b, a.__mtl_at(1), a.__mtl_at(2), a.__mtl_at(3));
 	}
 	
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr quaternion<__mtl_promote(T, U)> operator-(complex<T> const& a, quaternion<U> const& b) {
-		return { real(a) - real(b), imag(a) - b.__mtl_at(1), -b.__mtl_at(2), -b.__mtl_at(3) };
+		return quaternion<__mtl_promote(T, U)>(real(a) - real(b), imag(a) - b.__mtl_at(1), -b.__mtl_at(2), -b.__mtl_at(3));
 	}
 	
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr quaternion<__mtl_promote(T, U)> operator-(T const& a, quaternion<U> const& b) {
-		return { a - real(b), -imag(b) };
+		return quaternion<__mtl_promote(T, U)>(a - real(b), -imag(b));
 	}
 	
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr quaternion<__mtl_promote(T, U)> operator*(quaternion<T> const& a, quaternion<U> const& b) {
-		return {
+		return quaternion<__mtl_promote(T, U)>(
 			a.__mtl_at(0) * b.__mtl_at(0) - a.__mtl_at(1) * b.__mtl_at(1) - a.__mtl_at(2) * b.__mtl_at(2) - a.__mtl_at(3) * b.__mtl_at(3),  // 1
 			a.__mtl_at(0) * b.__mtl_at(1) + a.__mtl_at(1) * b.__mtl_at(0) + a.__mtl_at(2) * b.__mtl_at(3) - a.__mtl_at(3) * b.__mtl_at(2),  // i
 			a.__mtl_at(0) * b.__mtl_at(2) - a.__mtl_at(1) * b.__mtl_at(3) + a.__mtl_at(2) * b.__mtl_at(0) + a.__mtl_at(3) * b.__mtl_at(1),  // j
 			a.__mtl_at(0) * b.__mtl_at(3) + a.__mtl_at(1) * b.__mtl_at(2) - a.__mtl_at(2) * b.__mtl_at(1) + a.__mtl_at(3) * b.__mtl_at(0)   // k
-		};
+		);
 	}
 	
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr quaternion<__mtl_promote(T, U)> operator*(quaternion<T> const& a, complex<U> const& b) {
-		return {
+		return quaternion<__mtl_promote(T, U)>(
 			 a.__mtl_at(0) * b.__mtl_at(0) - a.__mtl_at(1) * b.__mtl_at(1),  // 1
 			 a.__mtl_at(0) * b.__mtl_at(1) + a.__mtl_at(1) * b.__mtl_at(0),  // i
 			 a.__mtl_at(2) * b.__mtl_at(0) + a.__mtl_at(3) * b.__mtl_at(1),  // j
 			-a.__mtl_at(2) * b.__mtl_at(1) + a.__mtl_at(3) * b.__mtl_at(0)   // k
-		};
+		);
 	}
 	
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr quaternion<__mtl_promote(T, U)> operator*(complex<T> const& a, quaternion<U> const& b) {
-		return {
+		return quaternion<__mtl_promote(T, U)>(
 			a.__mtl_at(0) * b.__mtl_at(0) - a.__mtl_at(1) * b.__mtl_at(1),  // 1
 			a.__mtl_at(0) * b.__mtl_at(1) + a.__mtl_at(1) * b.__mtl_at(0),  // i
 			a.__mtl_at(0) * b.__mtl_at(2) - a.__mtl_at(1) * b.__mtl_at(3),  // j
 			a.__mtl_at(0) * b.__mtl_at(3) + a.__mtl_at(1) * b.__mtl_at(2)   // k
-		};
+		);
 	}
 	
 	template <real_scalar T, real_scalar U>
@@ -432,8 +431,9 @@ namespace _VMTL {
 	
 	/// MARK: Hyperbolic Functions
 	template <real_scalar T>
-	quaternion<__mtl_floatify(T)> sinh(quaternion<T> const& z) {
+	quaternion<__mtl_floatify(T)> sinh(quaternion<T> const& _z) {
 		using F = __mtl_floatify(T);
+		quaternion<F> z = _z;
 		auto const v_norm = _VMTL::norm(z.vector);
 		__mtl_safe_math_if (std::isinf(real(z)) && !std::isinf(v_norm))
 			return complex<F>(real(z), F(NAN));
@@ -448,8 +448,9 @@ namespace _VMTL {
 	}
 	
 	template <real_scalar T>
-	quaternion<__mtl_floatify(T)> cosh(quaternion<T> const& z) {
+	quaternion<__mtl_floatify(T)> cosh(quaternion<T> const& _z) {
 		using F = __mtl_floatify(T);
+		quaternion<F> z = _z;
 		auto const v_norm = _VMTL::norm(z.vector);
 		__mtl_safe_math_if (std::isinf(real(z)) && !std::isinf(v_norm))
 			return { std::abs(real(z)), F(NAN), F(NAN), F(NAN) };

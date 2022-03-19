@@ -26,8 +26,16 @@ newoption {
     description = "Generate Unit Test Projects"
  }
 
+filter "system:windows"
+
+    buildoptions { "/Zc:__cplusplus", "/Zc:preprocessor", "/MP" }
+
+filter {}
+
 targetdir("Build/Bin/%{cfg.longname}")
 objdir("Build/Obj/%{cfg.longname}")
+
+cppdialect "C++20"
 
 -----------------------------------------------------------------------------------------
 -- Project Utility
@@ -42,8 +50,8 @@ location "."
 kind "ConsoleApp"
 language "C++"    
 
-externalincludedirs {
-    "."
+sysincludedirs {
+    ".", "UtilityTest"
 }
 
 files { 

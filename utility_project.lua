@@ -12,8 +12,8 @@ filter {}
 files { 
     "utl/**.hpp",
     "utl/**.cpp",
+    "utl/**.h",
     "utl/**.cc",
     "mtl/**.hpp",
-    "mtl/**.cpp",
-    "mtl/**.cc",
+    "mtl/**.cpp"
 }

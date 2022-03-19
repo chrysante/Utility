@@ -108,7 +108,7 @@ namespace utl {
 				   format_codes::bold, message.logger_name, modNameLength,
 				   format_codes::reset | format_codes::underline | format_codes::gray,
 				   time_in_HH_MM_SS_MMM(message.time),
-				   utl::format("{:6}", utl::bit_cast<std::size_t>(message.thread_id)),
+				   utl::format("{:6}", message.thread_id),
 				   format_codes::italic,
 				   truncate(qualified_function_name(message.source_info.function), function_name_width),
 				   function_name_width,

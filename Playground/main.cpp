@@ -1,23 +1,28 @@
-#include "utl/dynamic_dispatch.hpp"
-#include "utl/stdio.hpp"
-#include "utl/typeinfo.hpp"
+#define MTL_DEBUG_LEVEL 2
 
-#include <tuple>
-#include <concepts>
+#include <iostream>
+#include <utl/vector.hpp>
+#include <bitset>
 
-enum class E {
-	a, b
-};
-
-template <typename T>
-void f(std::same_as<T> auto) {
-	
-}
-
+#include <utl/__fmt/format.h>
+#include <utl/typeinfo.hpp>
+#include <utl/stdio.hpp>
+#include <utl/algorithm.hpp>
+#include <mtl/mtl.hpp>
 
 int main() {
-	std::tuple<int, int> t(0, 2);
-	f<int>(0);
+
+	using namespace mtl;
 	
-	
+	std::cout << std::boolalpha;
+
+	std::cout << (0 == 1.38778e-16) << std::endl;
+
+	std::cout << mtl::__mtl_float_threshold<double> * std::numeric_limits<double>::min() << std::endl;
+	std::cout << 0.0000001 *std::numeric_limits<double>::min() << std::endl;
+
+	bool value = (0 == mtl::approx(1.38778e-16));
+
+	std::cout << value << std::endl;
+
 }

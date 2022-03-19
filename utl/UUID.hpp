@@ -36,7 +36,7 @@ namespace utl {
 		UUID(value_type v): _value(v) {}
 		
 	private:
-		value_type _value = 0;
+		value_type _value{};
 	};
 	
 	inline bool operator==(UUID a, UUID b) noexcept {

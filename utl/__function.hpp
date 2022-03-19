@@ -27,6 +27,7 @@ namespace utl {
 #include "__debug.hpp"
 #include "type_traits.hpp"
 #include "bit.hpp"
+#include "concepts.hpp"
 
 #define UTL_INTERNAL_LOCAL_FUNCTION_SIZE_IN_WORDS 3
 
@@ -222,7 +223,7 @@ namespace utl::_private::functionDetails {
 	static_assert(ptrSize == sizeof(nullptr));
 	
 	inline constexpr auto ptrAlign = alignof(void*);
-	static_assert(ptrAlign == alignof(std::nullptr_t));
+	//static_assert(ptrAlign == alignof(std::nullptr_t)); // alignof(std::nullptr_t) == 1 in VC++
 	
 	inline constexpr std::size_t LocalFunctionStoragePtrCount = 4;
 	
@@ -259,6 +260,8 @@ namespace utl::_private::functionDetails {
 	};
 	
 	static_assert(sizeof(FunctionVTable) == sizeof(void*));
+	static_assert(alignof(FunctionVTable) == 8);
+	static_assert(8 == alignof(void*));
 	static_assert(alignof(FunctionVTable) == alignof(void*));
 	
 	struct FunctionVTableStorage {
@@ -363,7 +366,7 @@ namespace utl::_private::functionDetails {
 		}
 		
 		// move constructor
-		LocalFunctionObjectStorage(LocalFunctionObjectStorage&& other):
+		LocalFunctionObjectStorage(LocalFunctionObjectStorage&& other) noexcept:
 			vTableStorage(other.vTableStorage) {
 				vTable()->moveConstruct(storagePtr(), other.storagePtr());
 		}
@@ -450,7 +453,7 @@ namespace utl::_private::functionDetails {
 		}
 		
 		// move constructor
-		HeapFunctionObjectStorage(HeapFunctionObjectStorage&& other):
+		HeapFunctionObjectStorage(HeapFunctionObjectStorage&& other) noexcept:
 			vTableStorage(other.vTableStorage)
 		{
 				this->functionStorage = other.functionStorage;
@@ -579,7 +582,7 @@ namespace utl::_private::functionDetails {
 			}
 		}
 		
-		FunctionStorage(FunctionStorage&& other) {
+		FunctionStorage(FunctionStorage&& other) noexcept {
 			if (other.isLocalFunctionObject()) {
 				new (&this->localFunction) LocalFunctionObjectStorage<Signature>(std::move(other.localFunction));
 				other.localFunction.destroy();

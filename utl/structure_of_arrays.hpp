@@ -80,13 +80,20 @@ namespace utl {
 			this->push_back(elem.template get<T>()...);
 		}
 		template <typename... U>
-		requires (sizeof...(T) == sizeof...(U)) && (convertible_to<U, T> && ...)
+		//requires (sizeof...(T) == sizeof...(U)) && (convertible_to<U, T> && ...)
 		void push_back(U&&... u) {
 			if (this->size() == this->capacity()) {
 				_grow();
 			}
-			((new (this->template _get_array_ptr<T>() + _size) T(std::forward<U>(u))), ...);
+			//((new (this->template _get_array_ptr<T>() + _size) T(UTL_FORWARD(u))), ...);
+			//(__push_back_one<T>(UTL_FORWARD(u)), ...);
 			++_size;
+		}
+
+		template <typename V, typename U>
+		void __push_back_one(U&& u) {
+			void* ptr = this->template _get_array_ptr<V>() + _size;
+			new (ptr) V(UTL_FORWARD(u));
 		}
 		
 		void reserve(std::size_t n) {
@@ -282,26 +289,29 @@ namespace utl {
 		
 		
 	private:
-		void _grow_to(std::size_t const new_cap) {
+		template <typename T_>
+		void _grow_to_one(std::size_t new_cap) {
 			bool const is_empty = empty();
 			std::size_t const old_cap = capacity();
-			
-			([&] {
-				auto& alloc = _get_allocator<T>();
-				T* const new_buffer = static_cast<T*>(alloc.allocate(new_cap));
-				auto const old_buffer = this->template _get_array_ptr<T>();
-				utl::for_each(old_buffer, old_buffer + size(), new_buffer, [&](auto& i, auto& j) {
-					new (&j) T(std::move(i));
-					i.~T();
+
+			auto& alloc = _get_allocator<T_>();
+			T_* const new_buffer = static_cast<T_*>(alloc.allocate(new_cap));
+			auto const old_buffer = this->template _get_array_ptr<T_>();
+			utl::for_each(old_buffer, old_buffer + size(), new_buffer, [&](auto& i, auto& j) {
+				new (&j) T_(std::move(i));
+				destroy(i);
 				});
-				
-				if (!is_empty) {
-					alloc.deallocate(old_buffer, old_cap);
-				}
-				
-				this->template _set_array_ptr<T>(new_buffer);
-			}(), ...);
-			
+
+			if (!is_empty) {
+				alloc.deallocate(old_buffer, old_cap);
+			}
+
+			this->template _set_array_ptr<T_>(new_buffer);
+		}
+
+		void _grow_to(std::size_t const new_cap) {
+			(_grow_to_one<T>(new_cap), ...);
+
 			_cap = new_cap;
 		}
 		

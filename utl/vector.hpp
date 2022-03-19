@@ -13,6 +13,7 @@ _UTL_SYSTEM_HEADER_
 #include <memory>
 #include <algorithm>
 #include <exception>
+#include <stdexcept>
 #include <bit>
 #include <iosfwd>
 
@@ -94,7 +95,7 @@ namespace utl {
 	
 	// MARK: - class vector
 	template <typename T, typename Allocator>
-	class vector: private Allocator {
+	class vector: public /*private*/ Allocator {
 	public:
 		/// MARK: Member Types
 		using value_type = T;
@@ -363,7 +364,7 @@ namespace utl {
 					// get the allocator
 					this->_assign_alloc(rhs._alloc());
 				}
-				this->_set_begin(this->allocate(rhs.size()));
+				this->_set_begin(this->_allocate(rhs.size()));
 				this->_set_size(rhs.size());
 				this->_set_cap(rhs.size());
 				this->_set_uses_inline_buffer(false);
@@ -382,7 +383,7 @@ namespace utl {
 					this->_set_size(rhs.size());
 				}
 				else {
-					this->_set_begin(this->allocate(rhs._size()));
+					this->_set_begin(this->_allocate(rhs._size()));
 					this->_set_size(rhs.size());
 					this->_set_cap(rhs.size());
 					this->_set_uses_inline_buffer(false);
@@ -425,7 +426,7 @@ namespace utl {
 				_destroy_elems();
 				_alloc().deallocate(this->_begin(), this->capacity());
 				
-				this->_set_begin(this->allocate(ilist.size()));
+				this->_set_begin(this->_allocate(ilist.size()));
 				this->_set_size(ilist.size());
 				this->_set_cap(ilist.size());
 				this->_set_uses_inline_buffer(false);
@@ -539,7 +540,7 @@ namespace utl {
 			if (new_cap <= capacity()) {
 				return;
 			}
-			T* new_buffer = this->allocate(new_cap);
+			T* new_buffer = this->_allocate(new_cap);
 			_move_construct_range(this->_begin(), this->_end(), new_buffer);
 			_destroy_elems();
 			if (!_uses_inline_buffer()) {
@@ -732,7 +733,7 @@ namespace utl {
 				auto const old_size = size();
 				if (count > capacity()) {
 					auto const target_cap = _recommend(count);
-					auto const new_buffer = this->allocate(target_cap);
+					auto const new_buffer = this->_allocate(target_cap);
 					_move_construct_range(begin(), end(), new_buffer);
 					_destroy_elems();
 					if (!_uses_inline_buffer()) {

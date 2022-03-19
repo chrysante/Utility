@@ -26,7 +26,7 @@ namespace utl {
 		template <typename>
 		friend class message;
 		friend class messenger;
-		friend class std::hash<__message>;
+		friend struct std::hash<__message>;
 		__message(std::size_t id, std::string_view name): id(id), _name(name) {}
 		std::size_t id;
 		std::string_view _name;

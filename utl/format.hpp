@@ -17,7 +17,7 @@ namespace utl {
 	constexpr char const* __utl_pointer_to_void(char const* p) { return p; }
 	
 	template <typename... Args>
-	__utl_nodiscard std::string format(fmt::format_string<Args...> format_string, Args&&... args) {
-		return fmt::format(std::move(format_string), __utl_pointer_to_void(UTL_FORWARD(args))...);
+	__utl_nodiscard std::string format(std::string_view format_string, Args&&... args) {
+		return fmt::format(fmt::runtime(format_string), __utl_pointer_to_void(UTL_FORWARD(args))...);
 	}
 }

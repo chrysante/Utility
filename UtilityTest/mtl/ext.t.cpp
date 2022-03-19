@@ -123,7 +123,7 @@ TEST_CASE("matrix inverse") {
 		};
 		ldouble4x4 const I = mtl::inverse(A);
 		
-		CHECK(int4x4(A * I) == 1);
+		CHECK(A * I == mtl::approx(ldouble4x4(1)).epsilon(0.00000000001));
 	}
 	
 	SECTION("3x3") {
@@ -134,7 +134,7 @@ TEST_CASE("matrix inverse") {
 		};
 		ldouble3x3 const I = mtl::inverse(A);
 		
-		CHECK(int3x3(A * I) == 1);
+		CHECK(A * I == mtl::approx(ldouble3x3(1)).epsilon(0.00000000001));
 	}
 	
 	SECTION("2x2") {
@@ -144,7 +144,7 @@ TEST_CASE("matrix inverse") {
 		};
 		ldouble2x2 const I = mtl::inverse(A);
 		
-		CHECK(int2x2(A * I) == 1);
+		CHECK(A * I == mtl::approx(ldouble2x2(1)).epsilon(0.00000000001));
 	}
 }
 

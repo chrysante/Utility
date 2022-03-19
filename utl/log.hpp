@@ -17,6 +17,11 @@ _UTL_SYSTEM_HEADER_
 #include <ostream>
 #include <array>
 
+#ifdef _WIN32
+#	define UTL_PRETTY_FUNCTION __FUNCSIG__
+#else
+#	define UTL_PRETTY_FUNCTION __PRETTY_FUNCTION__
+#endif
 
 namespace utl {
 	
@@ -94,7 +99,7 @@ namespace utl {
 }
 
 #define UTL_MAKE_SOURCE_INFO() \
-::utl::source_info { __PRETTY_FUNCTION__, __FILE__, __LINE__ }
+::utl::source_info { UTL_PRETTY_FUNCTION, __FILE__, __LINE__ }
 
 #define UTL_MAKE_LOG_MACRO(Logger, LogLevelMask, FirstArg, ...) \
 	Logger.log(UTL_MAKE_SOURCE_INFO(), LogLevelMask,            \
