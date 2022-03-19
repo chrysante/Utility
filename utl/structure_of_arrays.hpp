@@ -80,13 +80,13 @@ namespace utl {
 			this->push_back(elem.template get<T>()...);
 		}
 		template <typename... U>
-		//requires (sizeof...(T) == sizeof...(U)) && (convertible_to<U, T> && ...)
+		requires (sizeof...(T) == sizeof...(U)) && (convertible_to<U, T> && ...)
 		void push_back(U&&... u) {
 			if (this->size() == this->capacity()) {
 				_grow();
 			}
-			//((new (this->template _get_array_ptr<T>() + _size) T(UTL_FORWARD(u))), ...);
-			//(__push_back_one<T>(UTL_FORWARD(u)), ...);
+			((new (this->template _get_array_ptr<T>() + _size) T(UTL_FORWARD(u))), ...);
+			(__push_back_one<T>(UTL_FORWARD(u)), ...);
 			++_size;
 		}
 
@@ -111,20 +111,23 @@ namespace utl {
 			--_size;
 		}
 		
+		template <typename T_>
+		void __erase_one(std::size_t index) {
+			auto const buffer = this->template _get_array_ptr<T_>();
+			auto const elem = buffer + index;
+
+			// shift following elements
+			utl::for_each(elem, buffer + size() - 1, elem + 1, [](auto& a, auto& b) {
+				a = std::move(b);
+				});
+
+			// _destroy last element
+			destroy(*(buffer + size() - 1));
+		}
+
 		void erase(std::size_t index) {
 			__utl_bounds_check(index, 0, size());
-			([&] {
-				auto const buffer = this->template _get_array_ptr<T>();
-				auto const elem = buffer + index;
-				
-				// shift following elements
-				utl::for_each(elem, buffer + size() - 1, elem + 1, [](auto& a, auto& b) {
-					a = std::move(b);
-				});
-				
-				// _destroy last element
-				(buffer + size() - 1)->~T();
-			}(), ...);
+			(__erase_one<T>(index), ...);
 			--_size;
 		}
 		
