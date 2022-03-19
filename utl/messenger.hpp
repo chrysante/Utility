@@ -17,6 +17,7 @@ _UTL_SYSTEM_HEADER_
 namespace utl {
 
 	class messenger;
+	template <typename> struct message;
 	
 	/// MARK: - struct message
 	struct __message {
@@ -24,7 +25,7 @@ namespace utl {
 		
 	private:
 		template <typename>
-		friend class message;
+		friend struct message;
 		friend class messenger;
 		friend struct std::hash<__message>;
 		__message(std::size_t id, std::string_view name): id(id), _name(name) {}

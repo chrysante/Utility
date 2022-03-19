@@ -38,7 +38,7 @@ namespace utl {
 	template <typename T, typename Name>
 	struct named_type<T, Name, _private::named_type_availability::inheritance>: public T {
 	public:
-		template <typename... Args> requires (constructible<T, Args...>)
+		template <typename... Args> requires (constructible_from<T, Args...>)
 		constexpr named_type<T, Name, _private::named_type_availability::inheritance>(Args&&... args): T(std::forward<Args>(args)...) {}
 		constexpr named_type<T, Name, _private::named_type_availability::inheritance>(T const& value): T(value) {}
 		constexpr named_type<T, Name, _private::named_type_availability::inheritance>(T&& value) : T(std::move(value)) {}

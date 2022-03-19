@@ -1,14 +1,22 @@
 include "premakeCommon.lua"
 
+newoption {
+    trigger = "tests",
+    description = "Generate Unit Test Projects"
+}
 
 -----------------------------------------------------------------------------------------
 -- Workspace Utility
 -----------------------------------------------------------------------------------------
 basicWorkspace("Utility")
-newoption {
-    trigger = "tests",
-    description = "Generate Unit Test Projects"
+
+includedirs {
+    "."
 }
+
+
+
+
 --workspace "Utility"
 --architecture "x86_64"
 --configurations {

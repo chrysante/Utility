@@ -41,7 +41,8 @@ namespace utl {
 			auto& get() const { return *std::get<index_of<V>>(_ptr); }
 			
 			operator _reference<std::add_const_t<U>...>() const {
-				return utl::bit_cast<_reference<std::add_const_t<U>...>>(*this);
+				return _reference<std::add_const_t<U>...>(*std::get<U*>(_ptr)...);
+				//return utl::bit_cast<_reference<std::add_const_t<U>...>>(*this);
 			}
 			
 			operator std::tuple<T...>() const {

@@ -53,6 +53,9 @@ namespace utl {
 	template <typename T>
 	concept copy_constructible = std::copy_constructible<T>;
 
+	template <typename T, typename... Args >
+	concept constructible_from = std::constructible_from<T, Args...>;
+
 #else // UTL_STDLIB_HAS_CONCEPTS
 
 	template <typename T>

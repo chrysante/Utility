@@ -110,11 +110,11 @@ namespace utl {
 		static constexpr bool fits(Int i) noexcept {
 			if constexpr (std::is_signed_v<Int>) {
 				// n bits represent { -2^(n-1), ..., 2^(n-1) - 1 }
-				return i >= -((std::intmax_t)(1) << (int_size - 1)) && i < ((std::intmax_t)(1) << (int_size - 1));
+				return (std::intmax_t)i >= -((std::intmax_t)(1) << (int_size - 1)) && (std::intmax_t)i < ((std::intmax_t)(1) << (int_size - 1));
 			}
 			else {
 				// n bits represent { 0, ..., 2^(n) - 1 }
-				return i < ((std::intmax_t)(1) << (int_size));
+				return (std::uintmax_t)i < ((std::uintmax_t)(1) << (int_size));
 			}
 		}
 		

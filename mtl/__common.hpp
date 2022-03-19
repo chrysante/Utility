@@ -8,6 +8,7 @@ _MTL_SYSTEM_HEADER_
 
 #include <cmath>
 #include <utility>
+#include <iosfwd>
 #include "__std_concepts.hpp"
 
 #define __MTL_DECLARE_STDINT_TYPEDEFS__
