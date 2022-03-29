@@ -14,13 +14,6 @@ includedirs {
     "."
 }
 
-<<<<<<< HEAD
-filter "system:macosx" 
-    cppdialect "C++20"
-    staticruntime "On"
-filter {}
-=======
->>>>>>> 7fb59ccaef9831cf8b2aed71e2e18cee100a22e5
 
 
 
@@ -74,11 +67,7 @@ kind "ConsoleApp"
 language "C++"    
 
 sysincludedirs {
-<<<<<<< HEAD
-    "."
-=======
     ".", "UtilityTest"
->>>>>>> 7fb59ccaef9831cf8b2aed71e2e18cee100a22e5
 }
 
 files { 
@@ -91,23 +80,10 @@ links "Utility"
 -----------------------------------------------------------------------------------------
 -- Project Playground
 -----------------------------------------------------------------------------------------
-<<<<<<< HEAD
-=======
-
->>>>>>> 7fb59ccaef9831cf8b2aed71e2e18cee100a22e5
 project "Playground"
 location "."
 kind "ConsoleApp"
 language "C++"
-<<<<<<< HEAD
-
-sysincludedirs {
-    "."
-}
-
-
-=======
->>>>>>> 7fb59ccaef9831cf8b2aed71e2e18cee100a22e5
 filter { "system:macosx"} 
     xcodebuildsettings { 
 
