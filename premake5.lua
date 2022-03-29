@@ -21,10 +21,6 @@ filter "system:macosx"
     cppdialect "C++20"
     staticruntime "On"
 filter {}
-newoption {
-    trigger = "tests",
-    description = "Generate Unit Test Projects"
- }
 
 targetdir("Build/Bin/%{cfg.longname}")
 objdir("Build/Obj/%{cfg.longname}")
@@ -55,40 +51,43 @@ files {
 -----------------------------------------------------------------------------------------
 -- Project UtilityTest
 -----------------------------------------------------------------------------------------
-filter "options:tests"
-    project "UtilityTest"
-    location "."
-    kind "ConsoleApp"
-    language "C++"    
+project "UtilityTest"
+location "."
+kind "ConsoleApp"
+language "C++"    
 
-    externalincludedirs {
-        "."
-    }
+sysincludedirs {
+    "."
+}
 
-    files { 
-        "UtilityTest/**.hpp",
-        "UtilityTest/**.cpp"
-    }
+files { 
+    "UtilityTest/**.hpp",
+    "UtilityTest/**.cpp"
+}
 
-    links "Utility"
+links "Utility"
 
 -----------------------------------------------------------------------------------------
 -- Project Playground
 -----------------------------------------------------------------------------------------
-filter { "options:tests" }
-    project "Playground"
-    location "."
-    kind "ConsoleApp"
-    language "C++"
-    filter { "options:tests", "system:macosx"} 
-        xcodebuildsettings { 
+project "Playground"
+location "."
+kind "ConsoleApp"
+language "C++"
 
-        }
-    filter {}
+sysincludedirs {
+    "."
+}
 
-filter { "options:tests" }
-    files { 
-        "Playground/**.hpp",
-        "Playground/**.cpp"
+
+filter { "system:macosx"} 
+    xcodebuildsettings { 
+
     }
-    links "Utility"
+filter {}
+
+files { 
+    "Playground/**.hpp",
+    "Playground/**.cpp"
+}
+links "Utility"

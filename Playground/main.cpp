@@ -1,27 +1,39 @@
+#include "utl/__soa_exp.hpp"
+
 #include <iostream>
 
-#include "utl/__common.hpp"
-#include "dispatch_queue.hpp"
-#include "fancy_debug.hpp"
-#include "utl/md_array.hpp"
+#include "mtl/mtl.hpp"
 
-#define MyAssert(...) UTL_FANCY_ASSERT("My Module", 2, assertion, __VA_ARGS__)
+namespace worldmachine {
 
+	UTL_SOA_TYPE(Edge,
+				 (int, id),
+				 (float, position)
+				 );
 
-
-int main(int argc, const char * argv[]) {
+	struct Network {
+		utl::SOA<Node> nodes;
+		utl::SOA<Edge> edges;
+	};
 	
-	utl::dispatch_queue q;
-	
-	int x = 0;
-	
-	
-	
-	
-	MyAssert(x > 0);
-	MyAssert(x > 0, "Message");
-	MyAssert(audit, x > 0);
-	MyAssert(audit, x > 0, "Message");
-	
-	return 0;
 }
+
+
+int main() {
+	worldmachine::Network network;
+	network.nodes.push_back({ 1, 0.5 });
+	
+	auto&& [id, transform] = network.nodes[0];
+	
+	network.nodes[0] = { -1, 1.5 };
+	
+	std::cout << network.nodes[0].id << std::endl;
+	std::cout << network.nodes[0].transform.position << std::endl;
+	
+	network.nodes.id(0) = -2;
+	network.nodes.transform(0) = { 3.5, 0 };
+	
+	std::cout << network.nodes[0].id << std::endl;
+	std::cout << network.nodes[0].transform.position << std::endl;
+}
+

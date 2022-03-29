@@ -18,9 +18,6 @@ namespace utl {
 #if UTL_STDLIB_HAS_CONCEPTS
 	
 	template <typename T>
-	concept arithmetic = std::arithmetic<T>;
-	
-	template <typename T>
 	concept integral = std::integral<T>;
 	
 	template <typename T>
@@ -48,9 +45,6 @@ namespace utl {
 	concept regular_invocable = std::regular_invocable<F, Args...>;
 	
 #else // UTL_STDLIB_HAS_CONCEPTS
-	
-	template <typename T>
-	concept arithmetic = std::is_arithmetic_v<T>;
 	
 	template <typename T>
 	concept integral = std::is_integral_v<T>;
@@ -89,6 +83,9 @@ namespace utl {
 	concept regular_invocable = invocable<F, Args...>;
 	
 #endif // UTL_STDLIB_HAS_CONCEPTS
+	
+	template <typename T>
+	concept arithmetic = std::is_arithmetic_v<T>;
 	
 	/// MARK: - Additional Concepts
 	template <typename T>

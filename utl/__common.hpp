@@ -5,6 +5,7 @@ _UTL_SYSTEM_HEADER_
 
 #include <utility>
 #include <type_traits>
+#include <cstdint>
 
 /// MARK: UTL_CONCAT
 #define _UTL_CONCAT_IMPL(A, B) A##B

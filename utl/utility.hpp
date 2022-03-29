@@ -8,6 +8,7 @@ _UTL_SYSTEM_HEADER_
 #include "concepts.hpp"
 #include "type_traits.hpp"
 #include <bit>
+#include <memory>
 
 namespace utl {
 	
