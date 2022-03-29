@@ -29,7 +29,7 @@ TEMPLATE_TEST_CASE("log2", "", int, long, unsigned int, unsigned long) {
 	}
 }
 
-TEMPLATE_TEST_CASE("ipow", "", long) {
+TEMPLATE_TEST_CASE("ipow", "", std::int64_t) {
 	std::uniform_int_distribution<TestType> distBase(0, 30);
 	std::uniform_int_distribution<int> distExp(0, 10);
 	auto const data = makeTestData(512, [&](auto& rng) {

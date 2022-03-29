@@ -6,6 +6,7 @@ _UTL_SYSTEM_HEADER_
 #include <cstddef>
 #include <iosfwd>
 #include <array>
+#include <mutex>
 #include "static_string.hpp"
 #include "type_traits.hpp"
 #include "strcat.hpp"
@@ -47,14 +48,23 @@ namespace utl {
 	}
 	std::tuple<stream_ref_wrapper, std::unique_lock<std::mutex>> get_global_output_stream();
 	
+	//template <typename... Args>
+	//void print(fmt::format_string<Args...> format_string, Args&&... args);
+
+	//template <typename... Args>
+	//void print(stream_ref_wrapper stream,
+	//	fmt::format_string<Args...> format_string,
+	//	Args&&... args);
+
 	template <typename... Args>
 	void print(std::string_view format_string, Args&&... args);
-	
+
 	template <typename... Args>
 	void print(stream_ref_wrapper stream,
-			   std::string_view format_string,
-			   Args&&... args);
-	
+		std::string_view format_string,
+		Args&&... args);
+
+
 	
 	
 	template <typename... Args>
@@ -71,9 +81,10 @@ namespace utl {
 	void print(std::string_view format_string, Args&&... args) {
 		
 		auto [stream, lock] = get_global_output_stream();
-		auto formatted = utl::format(format_string,
-									 format_codes::_private::_decay(args, stream._using_colors)...);
-		utl::print(stream, formatted);
+		std::string formatted = utl::format(format_string,
+						    				format_codes::_private::_decay(args, stream._using_colors)...);
+		*stream._stream << formatted;
+		//utl::print(stream, formatted);
 	}
 	
 }

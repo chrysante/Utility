@@ -3,10 +3,13 @@
 #include "__base.hpp"
 _UTL_SYSTEM_HEADER_
 
+<<<<<<< HEAD:utl/__common.hpp
 #include <utility>
 #include <type_traits>
 #include <cstdint>
 
+=======
+>>>>>>> 7fb59ccaef9831cf8b2aed71e2e18cee100a22e5:utl/common.hpp
 /// MARK: UTL_CONCAT
 #define _UTL_CONCAT_IMPL(A, B) A##B
 #define UTL_CONCAT(A, B) _UTL_CONCAT_IMPL(A, B)
@@ -85,12 +88,6 @@ _UTL_SYSTEM_HEADER_
 	UTL_INTERNAL_INDEX_SEQ_HELPER_FUNCTION_PARAMS params __VA_ARGS__ \
 	UTL_INTERNAL_INDEX_SEQ_HELPER_FUNCTION_INVOKE params
 
-
-/// MARK: UTL_ENABLE_IF
-#define UTL_ENABLE_IF_IMPL(...) typename std::enable_if<__VA_ARGS__, std::nullptr_t>::type
-#define UTL_ENABLE_IF(...) UTL_ENABLE_IF_IMPL(__VA_ARGS__) = nullptr
-//#define UTL_ENABLE_MEMBER_IF(...) std::nullptr_t UTL_INTERNAL_UNIQUE_NAME(_re2_dummy) = nullptr, typename std::enable_if<!static_cast<void*>(UTL_INTERNAL_UNIQUE_NAME(_re2_dummy)) && (__VA_ARGS__), std::nullptr_t>::type = nullptr
-
 /// MARK: Enum Operators
 #if defined(UTL_CPP)
 #	define _UTL_NSSTD std
@@ -135,20 +132,19 @@ inline constexpr TYPE operator OP(TYPE a, typename _UTL_NSSTD::underlying_type<T
 	_UTL_ENUM_ASSIGNMENT(TYPE, ^) \
 	_UTL_ENUM_UNARY_PREFIX_OPERATOR(TYPE, TYPE, ~) \
 	_UTL_ENUM_UNARY_PREFIX_OPERATOR(TYPE, bool, !) \
-	constexpr bool test(TYPE value) noexcept { return !!value; }
+	constexpr bool test(TYPE value) { return !!value; }
 
 
 
 
 #ifdef UTL_CPP // Guard here because general purpose header may be included in shader source
 
+#include <utility>
+#include <type_traits>
+
 namespace utl {
 	
-	/// MARK: Integer Typedefs
-#if (__GNUC__ || __clang__) // && ...
-#	define UTL_128_BIT_ARITHMETIC
-#endif
-	
+	/// MARK: Integer Typedefs	
 	using uint8_t   = std::uint8_t;
 	using uint16_t  = std::uint16_t;
 	using uint32_t  = std::uint32_t;
@@ -158,6 +154,11 @@ namespace utl {
 	using int16_t   = std::int16_t;
 	using int32_t   = std::int32_t;
 	using int64_t   = std::int64_t;
+
+#if (defined(__GNUC__) || defined(__clang__)) // && ...
+#	define UTL_128_BIT_ARITHMETIC
+#endif
+
 #ifdef UTL_128_BIT_ARITHMETIC
 	using uint128_t = __uint128_t;
 	using int128_t  = __int128_t;
@@ -177,10 +178,6 @@ namespace utl {
 	}
 	template <typename T>
 	void as_const(const T&&) = delete;
-//	template <typename T>
-//	constexpr T const* as_const(T* t) noexcept {
-//		return t;
-//	}
 	
 	template <typename T>
 	constexpr typename std::remove_const<T>::type& as_mutable(T& t) noexcept {
@@ -188,19 +185,12 @@ namespace utl {
 	}
 	template <typename T>
 	void as_mutable(const T&&) = delete;
-//	template <typename T>
-//	constexpr T* as_mutable(T const* t) noexcept {
-//		return const_cast<T*>(t);
-//	}
 	
-//	template <typename T>
-//	constexpr T* as_mutable_ptr(T const* a) noexcept {
-//		return const_cast<T*>(a);
-//	}
-//	template <typename T>
-//	constexpr T* as_mutable_ptr(T* a) noexcept {
-//		return a;
-//	}
+	/// MARK: to_underlying
+	template <typename Enum> requires (std::is_enum_v<Enum>)
+	constexpr std::underlying_type_t<Enum> to_underlying(Enum t) {
+		return static_cast<std::underlying_type_t<Enum>>(t);
+	}
 	
 	/// MARK: strlen
 	/// because constexpr
@@ -229,8 +219,22 @@ namespace utl {
 	using make_index_sequence = std::make_index_sequence<N>;
 	
 	/// MARK: type_sequence
+	template <typename U, typename...T>
+	constexpr std::size_t __utl_index_of_impl() {
+		std::size_t result = 0;
+		return (... || (++result, std::is_same_v<T, U>)) ? result - 1 : (std::size_t)-1;
+	};
+
 	template <typename... T>
-	struct type_sequence {};
+	struct type_sequence {
+		template <typename U>
+		static constexpr std::size_t occurence_count = (std::is_same_v<T, U> + ...);
+		template <typename U>
+		static constexpr bool contains = (bool)occurence_count<U>;
+		static constexpr bool unique = ((occurence_count<T> == 1) && ...);
+		template <typename U>
+		static constexpr std::size_t index_of = __utl_index_of_impl<U, T...>();
+	};
 	
 	template <typename T, std::size_t N, typename... R>
 	struct __utl_make_type_sequence_impl {
@@ -250,16 +254,10 @@ namespace utl {
 	#define UTL_CTPRINT(...) ::utl::ctprint<__VA_ARGS__> UTL_ANONYMOUS_VARIABLE(_UTL_CTPRINT)
 
 	/// MARK: Iota
-	template <typename>
-	class iota;
-	
-	template <typename T, typename U>
-	requires(std::is_arithmetic_v<T> && std::is_arithmetic_v<U>)
-	iota(T, U) -> iota<std::common_type_t<T, U>>;
-	
 	template <typename T>
-	requires (std::is_integral_v<T>)
-	class iota<T> {
+	class iota {
+		static_assert(std::is_integral_v<T>);
+		
 	public:
 		using value_type = T;
 		using size_type = std::conditional_t<std::is_signed_v<T>, std::ptrdiff_t, std::size_t>;

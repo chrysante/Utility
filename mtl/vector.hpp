@@ -13,6 +13,7 @@ _MTL_SYSTEM_HEADER_
 
 #include "__std_concepts.hpp"
 
+#include <functional>
 #include <iosfwd>
 
 /// MARK: - Synopsis
@@ -86,14 +87,22 @@ namespace _VMTL {
 	__mtl_mathfunction __mtl_always_inline
 	constexpr auto __map_impl(F&& f, vector<T, S, O> const&... v) {
 		using U = std::invoke_result_t<F, T...>;
-		constexpr auto P = combine(O...);
-		return vector<U, S, P>([&](std::size_t i) { return std::invoke(__mtl_forward(f), v.__mtl_at(i)...); });
+		if constexpr (mtl::same_as<U, void>) {
+			for (std::size_t i = 0; i < S; ++i) {
+				std::invoke(__mtl_forward(f), v.__mtl_at(i)...);
+			}
+		}
+		else {
+			constexpr auto P = combine(O...);
+			return vector<U, S, P>([&](std::size_t i) { return std::invoke(__mtl_forward(f), v.__mtl_at(i)...); });
+		}
 	}
 	
 	template <typename T0, std::size_t S, vector_options O0, _VMTL::invocable<T0> F>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr auto map(vector<T0, S, O0> const& v0,
-					   F&& f) requires(!std::is_same_v<void, std::invoke_result_t<F, T0>>) {
+					   F&& f) 
+	{
 		return __map_impl(__mtl_forward(f), v0);
 	}
 	template <typename T0, typename T1, std::size_t S,
@@ -102,7 +111,8 @@ namespace _VMTL {
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr auto map(vector<T0, S, O0> const& v0,
 					   vector<T1, S, O1> const& v1,
-					   F&& f) requires(!std::is_same_v<void, std::invoke_result_t<F, T0, T1>>) {
+					   F&& f)
+	{
 		return __map_impl(__mtl_forward(f), v0, v1);
 	}
 	template <typename T0, typename T1, typename T2, std::size_t S,
@@ -112,7 +122,8 @@ namespace _VMTL {
 	constexpr auto map(vector<T0, S, O0> const& v0,
 					   vector<T1, S, O1> const& v1,
 					   vector<T2, S, O2> const& v2,
-					   F&& f) requires(!std::is_same_v<void, std::invoke_result_t<F, T0, T1, T2>>) {
+					   F&& f) 
+	{
 		return __map_impl(__mtl_forward(f), v0, v1, v2);
 	}
 	
@@ -124,7 +135,8 @@ namespace _VMTL {
 					   vector<T1, S, O1> const& v1,
 					   vector<T2, S, O2> const& v2,
 					   vector<T3, S, O3> const& v3,
-					   F&& f) requires(!std::is_same_v<void, std::invoke_result_t<F, T0, T1, T2, T3>>) {
+					   F&& f) 
+	{
 		return __map_impl(__mtl_forward(f), v0, v1, v2, v3);
 	}
 	
@@ -137,7 +149,8 @@ namespace _VMTL {
 					   vector<T2, S, O2> const& v2,
 					   vector<T3, S, O3> const& v3,
 					   vector<T4, S, O4> const& v4,
-					   F&& f) requires(!std::is_same_v<void, std::invoke_result_t<F, T0, T1, T2, T3, T4>>) {
+					   F&& f) 
+	{
 		return __map_impl(__mtl_forward(f), v0, v1, v2, v3, v4);
 	}
 	
@@ -151,7 +164,8 @@ namespace _VMTL {
 					   vector<T3, S, O3> const& v3,
 					   vector<T4, S, O4> const& v4,
 					   vector<T5, S, O5> const& v5,
-					   F&& f) requires(!std::is_same_v<void, std::invoke_result_t<F, T0, T1, T2, T3, T4, T5>>) {
+					   F&& f) 
+	{
 		return __map_impl(__mtl_forward(f), v0, v1, v2, v3, v4, v5);
 	}
 	
@@ -403,7 +417,7 @@ namespace _VMTL {
 	template <typename T, std::size_t Size, vector_options O,
 			  typename = __mtl_make_type_sequence<T, Size>,
 			  typename = __mtl_make_index_sequence<Size>>
-	class __vector_base;
+	struct __vector_base;
 	
 	template <typename T, std::size_t Size, vector_options O,
 			  typename... AllT, std::size_t... I>
@@ -450,12 +464,12 @@ namespace _VMTL {
 		__mtl_always_inline
 		constexpr T&& __mtl_at(std::size_t i)&& {
 			__mtl_assert_audit(i < Size);
-			return (T&&)(this->__data[i]);
+			return std::move(this->__data[i]);
 		}
 		__mtl_always_inline
 		constexpr T const&& __mtl_at(std::size_t i) const&& {
 			__mtl_assert_audit(i < Size);
-			return (T const&&)(this->__data[i]);
+			return std::move(this->__data[i]);
 		}
 		
 		/// MARK: Public Interface
@@ -649,68 +663,68 @@ namespace _VMTL {
 	// (s, s)
 	template <scalar T, scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
-	vector<__mtl_promote(T, U), 2> concat(T const& a, U const& b) {
-		return { a, b };
+	constexpr vector<__mtl_promote(T, U), 2> concat(T const& a, U const& b) {
+		return vector<__mtl_promote(T, U), 2>(a, b);
 	}
 	// (s, s, s)
 	template <scalar T, scalar U, scalar V>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
-	vector<__mtl_promote(T, U, V), 3> concat(T const& a, U const& b, V const& c) {
-		return { a, b, c };
+	constexpr vector<__mtl_promote(T, U, V), 3> concat(T const& a, U const& b, V const& c) {
+		return vector<__mtl_promote(T, U, V), 3>(a, b, c);
 	}
 	// (s, s, s, s)
 	template <scalar T, scalar U, scalar V, scalar W>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
-	vector<__mtl_promote(T, U, V, W), 4> concat(T const& a, U const& b, V const& c, W const& d) {
-		return { a, b, c, d };
+	constexpr vector<__mtl_promote(T, U, V, W), 4> concat(T const& a, U const& b, V const& c, W const& d) {
+		return vector<__mtl_promote(T, U, V, W), 4>(a, b, c, d);
 	}
 	// (v2, s)
 	template <scalar T, scalar U, vector_options O>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	vector<__mtl_promote(T, U), 3, O> concat(vector<T, 2, O> const& a, U const& b) {
-		return { a, b };
+		return vector<__mtl_promote(T, U), 3, O>(a, b);
 	}
 	// (s, v2)
 	template <scalar T, scalar U, vector_options O>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
-	vector<__mtl_promote(T, U), 3, O> concat(T const& a, vector<U, 2, O> const& b) {
-		return { a, b };
+	constexpr vector<__mtl_promote(T, U), 3, O> concat(T const& a, vector<U, 2, O> const& b) {
+		return vector<__mtl_promote(T, U), 3, O>(a, b);
 	}
 	// (v2, s, s)
 	template <scalar T, scalar U, scalar V, vector_options O>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
-	vector<__mtl_promote(T, U, V), 4, O> concat(vector<T, 2, O> const& a, U const& b, V const& c) {
-		return { a, b, c };
+	constexpr vector<__mtl_promote(T, U, V), 4, O> concat(vector<T, 2, O> const& a, U const& b, V const& c) {
+		return vector<__mtl_promote(T, U, V), 4, O>(a, b, c);
 	}
 	// (s, v2, s)
 	template <scalar T, scalar U, scalar V, vector_options O>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
-	vector<__mtl_promote(T, U, V), 4, O> concat(T const& a, vector<U, 2, O> const& b, V const& c) {
-		return { a, b, c };
+	constexpr vector<__mtl_promote(T, U, V), 4, O> concat(T const& a, vector<U, 2, O> const& b, V const& c) {
+		return vector<__mtl_promote(T, U, V), 4, O>(a, b, c);
 	}
 	// (s, s, v2)
 	template <scalar T, scalar U, scalar V, vector_options O>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
-	vector<__mtl_promote(T, U, V), 4, O> concat(T const& a, U const& b, vector<V, 2, O> const& c) {
-		return { a, b, c };
+	constexpr vector<__mtl_promote(T, U, V), 4, O> concat(T const& a, U const& b, vector<V, 2, O> const& c) {
+		return vector<__mtl_promote(T, U, V), 4, O>(a, b, c);
 	}
 	// (v2, v2)
 	template <scalar T, scalar U, vector_options O, vector_options P>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
-	vector<__mtl_promote(T, U), 4, O> concat(vector<T, 2, O> const& a, vector<U, 2, P> const& b) {
-		return { a, b };
+	constexpr vector<__mtl_promote(T, U), 4, O> concat(vector<T, 2, O> const& a, vector<U, 2, P> const& b) {
+		return vector<__mtl_promote(T, U), 4, O>(a, b);
 	}
 	// (v3, s)
 	template <scalar T, scalar U, vector_options O>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
-	vector<__mtl_promote(T, U), 4, O> concat(vector<T, 3, O> const& a, U const& b) {
-		return { a, b };
+	constexpr vector<__mtl_promote(T, U), 4, O> concat(vector<T, 3, O> const& a, U const& b) {
+		return vector<__mtl_promote(T, U), 4, O>(a, b);
 	}
 	// (s, v3)
 	template <scalar T, scalar U, vector_options O>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
-	vector<__mtl_promote(T, U), 4, O> concat(T const& a, vector<U, 3, O> const& b) {
-		return { a, b };
+	constexpr vector<__mtl_promote(T, U), 4, O> concat(T const& a, vector<U, 3, O> const& b) {
+		return vector<__mtl_promote(T, U), 4, O>(a, b);
 	}
 	
 	/// Reverse
@@ -953,24 +967,24 @@ public:
 namespace _VMTL {
 	
 	template <std::size_t I, typename T, std::size_t Size, vector_options O>
-	T const& get(vector<T, Size, O> const& v) {
+	constexpr T const& get(vector<T, Size, O> const& v) {
 		static_assert(I < Size);
 		return v.__mtl_at(I);
 	}
 	template <std::size_t I, typename T, std::size_t Size, vector_options O>
-	T& get(vector<T, Size, O>& v) {
+	constexpr T& get(vector<T, Size, O>& v) {
 		static_assert(I < Size);
 		return v.__mtl_at(I);
 	}
 	template <std::size_t I, typename T, std::size_t Size, vector_options O>
-	T&& get(vector<T, Size, O>&& v) {
+	constexpr T&& get(vector<T, Size, O>&& v) {
 		static_assert(I < Size);
-		return std::move(v).__mtl_at(I);
+		return std::move(v.__mtl_at(I));
 	}
 	template <std::size_t I, typename T, std::size_t Size, vector_options O>
-	T const&& get(vector<T, Size, O> const&& v) {
+	constexpr T const&& get(vector<T, Size, O> const&& v) {
 		static_assert(I < Size);
-		return std::move(v).__mtl_at(I);
+		return std::move(v.__mtl_at(I));
 	}
 	
 }

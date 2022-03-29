@@ -6,6 +6,11 @@
 
 namespace worldmachine {
 
+	UTL_SOA_TYPE(Node,
+				 (int, id),
+				 (float, position)
+				 );
+	
 	UTL_SOA_TYPE(Edge,
 				 (int, id),
 				 (float, position)

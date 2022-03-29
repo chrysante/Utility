@@ -4,7 +4,7 @@
 _UTL_SYSTEM_HEADER_
 
 
-#include "__common.hpp"
+#include "common.hpp"
 
 #include <cstddef>
 #include <array>
@@ -17,10 +17,10 @@ namespace utl {
 	template <typename Container,
 			  std::size_t Dimensions,
 			  typename = make_type_sequence<std::size_t, Dimensions>>
-	class md_array;
+	class mdarray;
 
 	template <typename Container, std::size_t Dimensions, typename... SizeT>
-	class md_array<Container, Dimensions, type_sequence<SizeT...>> {
+	class mdarray<Container, Dimensions, type_sequence<SizeT...>> {
 	public:
 		using container_type = Container;
 		using value_type = typename Container::value_type;
@@ -28,16 +28,18 @@ namespace utl {
 		static constexpr auto dimensions = Dimensions;
 		
 	public:
-		md_array(size_type size):
+		mdarray() = default;
+		mdarray(size_type size):
 			__size(size),
 			__cont(size.fold(utl::multiplies))
 		{}
+		mdarray(SizeT... size): mdarray(size_type{ size... }) {}
 		
 		size_type size() const { return __size; }
 		
 		value_type const& operator()(size_type index) const& {
 			UTL_WITH_INDEX_SEQUENCE((I, Dimensions), {
-				(utl_expect(index[I] < __size[I]), ...);
+				(__utl_expect(index[I] < __size[I]), ...);
 			});
 			return (*this)[__expand_index(index)];
 		}
@@ -58,14 +60,26 @@ namespace utl {
 			return utl::as_mutable(utl::as_const(*this)[index]);
 		}
 		
+		value_type const& operator[](size_type index) const& {
+			return (*this)(index);
+		}
+		value_type& operator[](size_type index)& {
+			return (*this)(index);
+		}
+		
 		void resize(size_type new_size) {
-			md_array new_inst(new_size);
+			mdarray new_inst(new_size);
 			for (auto i: utl::iota(mtl::map(__size, new_size, utl::min))) {
 				new_inst(i) = (*this)(i);
 			}
 			*this = new_inst;
 		}
 		void resize(SizeT... new_size) { resize({ new_size... }); }
+		
+		auto begin() { return __cont.begin(); }
+		auto begin() const { return __cont.begin(); }
+		auto end() { return __cont.end(); }
+		auto end() const { return __cont.end(); }
 		
 	private:
 		std::size_t __expand_index(size_type index) const {
@@ -78,7 +92,7 @@ namespace utl {
 		}
 		
 	private:
-		size_type __size;
+		size_type __size = 0;
 		container_type __cont;
 	};
 

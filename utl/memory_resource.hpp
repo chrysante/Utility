@@ -98,7 +98,7 @@ namespace utl::pmr {
 		 */
 		void* do_allocate(std::size_t bytes, std::size_t alignment) override {
 			auto const result = utl::align_to(_localBuffer.current, alignment);
-			if (_localBuffer.end - result < bytes) {
+			if (_localBuffer.end - result < (std::ptrdiff_t)bytes) {
 				throw std::bad_alloc{};
 			}
 //			_localBuffer.current = result + bytes;

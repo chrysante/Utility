@@ -247,11 +247,11 @@ namespace utl {
 		template <typename T>
 		struct _is_any_invocable<T, false> {
 			static constexpr bool value = []{
-				if constexpr (std::is_reference_v<T> || std::is_const_v<T>) {
+				if constexpr (std::is_reference_v<T> || std::is_const_v<T>) {
 					return _is_any_invocable<std::remove_cvref_t<T>>::value;
 				}
 				else if constexpr (std::is_scalar_v<T>) {
-					return std::is_function_v<std::remove_pointer_t<T>> || std::is_member_pointer_v<T>;
+					return std::is_function_v<std::remove_pointer_t<T>> || std::is_member_pointer_v<T>;
 				}
 			}();
 		};
@@ -321,9 +321,11 @@ namespace utl::_private
 			using T = decltype(std::declval<Range>().begin());
 			using U = decltype(std::declval<Range>().end());
 			
-			if (is_iterator<T>::value && is_iterator<U>::value) {
-				return std::is_same<typename std::remove_const<decltype(*std::declval<T>())>::type,
-									typename std::remove_const<decltype(*std::declval<U>())>::type>::value;
+			if constexpr (is_iterator<T>::value && is_iterator<U>::value) {
+				using T_ = decltype(*std::declval<T>());
+				using U_ = decltype(*std::declval<U>());
+				return (bool)std::is_same<typename std::remove_const<T_>::type,
+										  typename std::remove_const<U_>::type>::value;
 			}
 		}
 		return false;
@@ -576,3 +578,5 @@ namespace utl {
 	};
 	
 }
+
+

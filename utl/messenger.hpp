@@ -17,6 +17,7 @@ _UTL_SYSTEM_HEADER_
 namespace utl {
 
 	class messenger;
+	template <typename> struct message;
 	
 	/// MARK: - struct message
 	struct __message {
@@ -24,9 +25,9 @@ namespace utl {
 		
 	private:
 		template <typename>
-		friend class message;
+		friend struct message;
 		friend class messenger;
-		friend class std::hash<__message>;
+		friend struct std::hash<__message>;
 		__message(std::size_t id, std::string_view name): id(id), _name(name) {}
 		std::size_t id;
 		std::string_view _name;
@@ -86,12 +87,7 @@ namespace utl {
 	class listener {
 	public:
 		listener(__private_tag) {}
-//		listener(listener_id id, utl::function<void(__message const&)> f):
-//			id(std::move(id)),
-//			f(std::move(f))
-//		{}
 		
-//	private:
 		friend class messenger;
 		listener_id id;
 		utl::function<void(__message const&)> f;

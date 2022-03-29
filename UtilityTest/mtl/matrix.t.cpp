@@ -8,13 +8,13 @@
 (int, 2, 3, O), (int, 3, 3, O), (int, 4, 3, O), \
 (int, 2, 4, O), (int, 3, 4, O), (int, 4, 4, O), \
 (unsigned, 2, 2, O), (unsigned, 3, 2, O), (unsigned, 4, 2, O), \
-(unsigned, 2, 3, O), (unsigned, 3, 3, O), (unsigned, 4, 3, O), \
+/*(unsigned, 2, 3, O), (unsigned, 3, 3, O), (unsigned, 4, 3, O),*/ \
 (unsigned, 2, 4, O), (unsigned, 3, 4, O), (unsigned, 4, 4, O), \
 (float, 2, 2, O), (float, 3, 2, O), (float, 4, 2, O), \
 (float, 2, 3, O), (float, 3, 3, O), (float, 4, 3, O), \
 (float, 2, 4, O), (float, 3, 4, O), (float, 4, 4, O), \
 (double, 2, 2, O), (double, 3, 2, O), (double, 4, 2, O), \
-(double, 2, 3, O), (double, 3, 3, O), (double, 4, 3, O), \
+/*(double, 2, 3, O), (double, 3, 3, O), (double, 4, 3, O),*/ \
 (double, 2, 4, O), (double, 3, 4, O), (double, 4, 4, O)
 
 #define MATRIX_TEST_CASE(...) \

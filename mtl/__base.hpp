@@ -35,11 +35,15 @@ _MTL_SYSTEM_HEADER_
 #endif
 
 #ifndef MTL_UNICODE_MATH_PARANTHESES
-#define MTL_UNICODE_MATH_PARANTHESES 1
+#	if defined(__APPLE__)
+#		define MTL_UNICODE_MATH_PARANTHESES 1
+#	else
+#		define MTL_UNICODE_MATH_PARANTHESES 0
+#	endif
 #endif
 
 /// MARK: - Attributes
-#if __GNUC__ || __clang__
+#if defined(__GNUC__) || defined(__clang__)
 
 #	define __mtl_pure                 __attribute__((const))
 #	define __mtl_nodiscard            [[nodiscard]]
@@ -57,7 +61,7 @@ _MTL_SYSTEM_HEADER_
 #		define __mtl_interface_export  __attribute__((nodebug))
 #	endif // MTL_DEBUG_LEVEL > 1
 
-#else // __GNUC__ || __clang__ // _MSC_VER section
+#else
 
 #	define __mtl_pure
 #	define __mtl_nodiscard
@@ -75,7 +79,7 @@ _MTL_SYSTEM_HEADER_
 #		define __mtl_interface_export
 #	endif // MTL_DEBUG_LEVEL > 1
 
-#endif // __GNUC__ || __clang__
+#endif
 
 /// MARK: - Debug
 #if MTL_DEBUG_LEVEL > 0
@@ -94,11 +98,13 @@ _MTL_SYSTEM_HEADER_
 #define __mtl_expect(COND) __mtl_assert(COND)
 #define __mtl_ensure(COND) __mtl_assert(COND)
 
-#if __GNUC__ || __clang__
+#if defined(__GNUC__) || defined(__clang__)
 #	define __mtl_debugbreak(msg) __builtin_debugtrap()
-#else // __GNUC__ || __clang__
+#elif defined(_MSC_VER)
 #	define __mtl_debugbreak(msg) __debugbreak()
-#endif // __GNUC__ || __clang__
+#else 
+#	error
+#endif
 
 #define __mtl_bounds_check(index, lower, upper) (__mtl_expect(lower <= index), __mtl_expect(index < upper))
 

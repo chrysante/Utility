@@ -8,6 +8,7 @@ _MTL_SYSTEM_HEADER_
 
 #include <cmath>
 #include <utility>
+#include <iosfwd>
 #include "__std_concepts.hpp"
 
 #define __MTL_DECLARE_STDINT_TYPEDEFS__
@@ -89,25 +90,68 @@ namespace _VMTL {
 	struct is_vector<vector<T, N, O> volatile>: std::true_type{};
 	template <typename T, std::size_t N, vector_options O>
 	struct is_vector<vector<T, N, O> const volatile>: std::true_type{};
+
+	template <typename T>
+	struct is_matrix : std::false_type {};
+	template <typename T, std::size_t R, std::size_t C, vector_options O>
+	struct is_matrix<matrix<T, R, C, O>> : std::true_type {};
+	template <typename T, std::size_t R, std::size_t C, vector_options O>
+	struct is_matrix<matrix<T, R, C, O> const> : std::true_type {};
+	template <typename T, std::size_t R, std::size_t C, vector_options O>
+	struct is_matrix<matrix<T, R, C, O> volatile> : std::true_type {};
+	template <typename T, std::size_t R, std::size_t C, vector_options O>
+	struct is_matrix<matrix<T, R, C, O> const volatile> : std::true_type {};
 	
 	template <typename T>
 	struct is_scalar: std::disjunction<is_real_scalar<T>, is_complex<T>, is_quaternion<T>> {};
 	
 	template <typename>
-	struct get_vector_underlying_type;
+	struct get_underlying_type;
 	
 	template <typename T>
-	struct get_vector_underlying_type { using type = T; };
+	struct get_underlying_type { using type = T; };
 	
+	template <typename T>
+	struct get_underlying_type<complex<T>> { using type = T; };
+	template <typename T>
+	struct get_underlying_type<complex<T> const> { using type = T const; };
+	template <typename T>
+	struct get_underlying_type<complex<T> volatile> { using type = T volatile; };
+	template <typename T>
+	struct get_underlying_type<complex<T> const volatile> { using type = T const volatile; };
+
+	template <typename T>
+	struct get_underlying_type<quaternion<T>> { using type = T; };
+	template <typename T>
+	struct get_underlying_type<quaternion<T> const> { using type = T const; };
+	template <typename T>
+	struct get_underlying_type<quaternion<T> volatile> { using type = T volatile; };
+	template <typename T>
+	struct get_underlying_type<quaternion<T> const volatile> { using type = T const volatile; };
+
 	template <typename T, std::size_t N, vector_options O>
-	struct get_vector_underlying_type<vector<T, N, O>> { using type = T; };
+	struct get_underlying_type<vector<T, N, O>> { using type = T; };
 	template <typename T, std::size_t N, vector_options O>
-	struct get_vector_underlying_type<vector<T, N, O> const> { using type = T const; };
+	struct get_underlying_type<vector<T, N, O> const> { using type = T const; };
 	template <typename T, std::size_t N, vector_options O>
-	struct get_vector_underlying_type<vector<T, N, O> volatile> { using type = T volatile; };
+	struct get_underlying_type<vector<T, N, O> volatile> { using type = T volatile; };
 	template <typename T, std::size_t N, vector_options O>
-	struct get_vector_underlying_type<vector<T, N, O> const volatile> { using type = T const volatile; };
+	struct get_underlying_type<vector<T, N, O> const volatile> { using type = T const volatile; };
 	
+	template <typename T, std::size_t R, std::size_t C, vector_options O>
+	struct get_underlying_type<matrix<T, R, C, O>> { using type = T; };
+	template <typename T, std::size_t R, std::size_t C, vector_options O>
+	struct get_underlying_type<matrix<T, R, C, O> const> { using type = T const; };
+	template <typename T, std::size_t R, std::size_t C, vector_options O>
+	struct get_underlying_type<matrix<T, R, C, O> volatile> { using type = T volatile; };
+	template <typename T, std::size_t R, std::size_t C, vector_options O>
+	struct get_underlying_type<matrix<T, R, C, O> const volatile> { using type = T const volatile; };
+
+	template <typename T, bool = is_complex<T>::value || is_quaternion<T>::value || is_vector<T>::value || is_matrix<T>::value>
+	struct get_underlying_type_r /* bool = true */ { using type = typename get_underlying_type<T>::type; };
+	template <typename T>
+	struct get_underlying_type_r<T, false> { using type = T; };
+
 	template <typename>
 	struct get_vector_size;
 	
@@ -145,7 +189,7 @@ namespace _VMTL {
 	concept scalar      = is_scalar<T>::value;
 	
 	template <typename T, typename U, typename ... V>
-	concept __mtl_any_of = (_VMTL::same_as<T, U> || ... || _VMTL::same_as<T, V>);
+	concept __mtl_any_of = (_VMTL::same_as<T, U> || (_VMTL::same_as<T, V> || ...));
 	
 	/// MARK: Floatify
 #define __mtl_floatify(__type) typename _MTL_floatify<__type>::type
@@ -162,7 +206,7 @@ namespace _VMTL {
 	struct _MTL_floatify<long double> { using type = long double; };
 
 	/// MARK: Stripped Decltype
-	#define __mtl_decltype_stripped(__VA_ARGS__) std::decay_t<decltype(__VA_ARGS__)>
+	#define __mtl_decltype_stripped(...) std::decay_t<decltype(__VA_ARGS__)>
 	
 	/// MARK: Promotion
 #define __mtl_promote(...) ::_VMTL::promote_t<__VA_ARGS__>
@@ -264,7 +308,7 @@ namespace _VMTL {
 		using type = matrix<typename promote<T, U>::type, Rows, Columns, combine(O, P)>;
 	};
 	template <typename T, typename U,
-			  std::size_t Rows1, std::size_t Columns1,
+			  std::size_t Rows1, // std::size_t Columns1,
 			  std::size_t Rows2, std::size_t Columns2,
 			  vector_options O, vector_options P>
 	struct promote<matrix<T, Rows1, Columns2, O>, matrix<U, Rows2, Columns2, P>>; /// Can't promote two matrices of different dimensions
@@ -353,12 +397,12 @@ namespace _VMTL {
 	
 	template <typename T>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
-	constexpr bool __is_unit(T const& x) {
+	constexpr bool __mtl_is_unit(T const& x) {
 		if constexpr (std::is_floating_point_v<T>) {
 			return x != 0;
 		}
 		else if constexpr (std::is_integral_v<T>) {
-			return x == 1 || x == -1;
+			return x == 1 || x == -1;
 		}
 		else {
 			static_assert(!__mtl_template_true_type<T>::value);
@@ -388,25 +432,15 @@ namespace _VMTL {
 	using __mtl_make_type_sequence = typename __mtl_make_type_sequence_impl<T, N>::type;
 
 	
-	/// MARK: - class approx
-	template <typename>
-	class approx;
-	
-	template <real_scalar T>
-	approx(T) -> approx<T>;
-	template <typename T, std::size_t Size, vector_options O>
-	approx(vector<T, Size, O>) -> approx<vector<T, Size, O>>;
-	
+	/// MARK: - class approx	
 	template <typename T>
 	inline constexpr T __mtl_float_threshold = 0;
 	template <>
-	inline constexpr float       __mtl_float_threshold<float>       = 0.000000000000001;
+	inline constexpr float       __mtl_float_threshold<float>       = 0.000000000000001f;
 	template <>
 	inline constexpr double      __mtl_float_threshold<double>      = 0.000000000000001;
 	template <>
 	inline constexpr long double __mtl_float_threshold<long double> = 0.000000000000001;
-	
-	
 	
 	template <typename T>
 	requires std::is_floating_point_v<T>
@@ -421,7 +455,8 @@ namespace _VMTL {
 		else if (a == 0 || b == 0 || (absA + absB < std::numeric_limits<T>::min())) {
 			// a or b is zero or both are extremely close to zero
 			// relative error is less meaningful here
-			return diff < (epsilon * std::numeric_limits<T>::min());
+			return diff < epsilon;
+			//return diff < (epsilon * std::numeric_limits<T>::min());
 		}
 		else { // use relative error
 			return diff / _VMTL::min((absA + absB), std::numeric_limits<T>::max()) < epsilon;
@@ -429,43 +464,44 @@ namespace _VMTL {
 	}
 	
 	template <typename T>
-	requires std::is_floating_point_v<T>
-	class approx<T> {
+		requires (std::is_arithmetic_v<T>) || requires (T const& t) {
+			t.begin(); t.end();
+		}
+	class approx {
+		using U = typename get_underlying_type_r<T>::type;
 	public:
-		approx(T z): _value(z) {}
+		approx(T const& z, U epsilon = __mtl_float_threshold<U>): _value(z), _epsilon(epsilon) {}
 		
 		bool __mtl_comp_eq(T rhs) const {
-			return __mtl_nearly_equal(_value, rhs);
+			if constexpr (std::is_floating_point_v<T>) {
+				return __mtl_nearly_equal(_value, rhs, _epsilon);
+			}
+			else if constexpr (std::is_integral_v<T>) {
+				return _value == rhs;
+			}
+			else {
+				auto i = _value.begin();
+				auto j = rhs.begin();
+				auto end = _value.end();
+				for (; i != end; ++i, ++j) {
+					using underlying = typename get_underlying_type<T>::type;
+					if (*i != approx<underlying>(*j, _epsilon)) {
+						return false;
+					}
+				}
+				return true;
+			}
 		}
 		
+		approx& epsilon(U new_epsilon) { _epsilon = new_epsilon;  return *this; }
+
 		friend std::ostream& operator<<(std::ostream& str, approx<T> const& a) {
 			return str << a._value;
 		}
 		
 	private:
 		T _value;
-	};
-	
-	template <typename T, std::size_t Size, vector_options O>
-	requires std::is_floating_point_v<T>
-	class approx<vector<T, Size, O>> {
-	public:
-		approx(vector<T, Size, O> const& z): _value(z) {}
-		
-		bool __mtl_comp_eq(vector<T, Size, O> const& rhs) const {
-			return map(_value, rhs, [](auto&& a, auto&& b) {
-				return __mtl_nearly_equal(a, b);
-			}).fold([](auto a, auto b) {
-				return a && b;
-			});
-		}
-		
-		friend std::ostream& operator<<(std::ostream& str, approx<vector<T, Size, O>> const& a) {
-			return str << a._value;
-		}
-		
-	private:
-		vector<T, Size, O> _value;
+		U _epsilon;
 	};
 	
 	template <typename T, typename U>
@@ -485,19 +521,19 @@ namespace _VMTL {
 	}
 	
 	__mtl_pure __mtl_always_inline
-	inline constexpr float __mtl_fract(float f) {
+	inline /*constexpr*/ float __mtl_fract(float f) {
 		float i;
 		float result = std::modf(f, &i);
 		return (result < 0.0f) + result;
 	}
 	__mtl_pure __mtl_always_inline
-	inline constexpr double __mtl_fract(double f) {
+	inline /*constexpr*/ double __mtl_fract(double f) {
 		double i;
 		double result = std::modf(f, &i);
 		return (result < 0.0) + result;
 	}
 	__mtl_pure __mtl_always_inline
-	inline constexpr long double __mtl_fract(long double f) {
+	inline /*constexpr*/ long double __mtl_fract(long double f) {
 		long double i;
 		long double result = std::modf(f, &i);
 		return (result < 0.0l) + result;
@@ -538,22 +574,22 @@ namespace _VMTL {
 	F(long double)
 	
 #define MTL_LENGTH_SQUARED(T) \
-	__mtl_mathfunction __mtl_pure __mtl_always_inline      \
+	__mtl_mathfunction __mtl_pure __mtl_always_inline      \
 	inline constexpr T norm_squared(T x) { return x * x; } \
-	__mtl_mathfunction __mtl_pure __mtl_always_inline \
+	__mtl_mathfunction __mtl_pure __mtl_always_inline      \
 	inline constexpr T length_squared(T x) { return norm_squared(x); }
 	MTL_FOR_EACH_BUILTIN_TYPE(MTL_LENGTH_SQUARED);
 #undef MTL_LENGTH_SQUARED
 	
-#define MTL_SQR(T)                                 \
-	__mtl_mathfunction __mtl_pure __mtl_always_inline  \
+#define MTL_SQR(T)                                      \
+	__mtl_mathfunction __mtl_pure __mtl_always_inline   \
 	constexpr inline T __mtl_sqr(T x) { return x * x; }
 	MTL_FOR_EACH_BUILTIN_TYPE(MTL_SQR);
 #undef MTL_SQR
 	
 #define MTL_IPOW(T)                                  \
 	__mtl_mathfunction __mtl_pure                    \
-	constexpr inline T __mtl_ipow(T x, int i) {          \
+	constexpr inline T __mtl_ipow(T x, int i) {      \
 		__mtl_expect(i >= 0);                        \
 		if (i == 1)     return x;                    \
 		if (i == 0)     return 1;                    \
@@ -590,7 +626,7 @@ namespace _VMTL {
 		/// b / a <= 1 for all b, so the square of b / a is also <= 1,
 		/// so the argument to std::sqrt is <= count of arguments, so no  overflow can occur.
 		/// Overflow can only occur if the actual result overflows.
-		return a * std::sqrt((1.0 + ... + __mtl_sqr(b / a)));
+		return a * std::sqrt((T(1.0) + ... + __mtl_sqr(b / a)));
 	}
 	
 	template <_VMTL::__mtl_any_of<float, double, long double> T>

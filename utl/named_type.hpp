@@ -38,7 +38,7 @@ namespace utl {
 	template <typename T, typename Name>
 	struct named_type<T, Name, _private::named_type_availability::inheritance>: public T {
 	public:
-		template <typename... Args, UTL_ENABLE_IF(std::is_constructible<T, Args...>::value)>
+		template <typename... Args> requires (constructible_from<T, Args...>)
 		constexpr named_type<T, Name, _private::named_type_availability::inheritance>(Args&&... args): T(std::forward<Args>(args)...) {}
 		constexpr named_type<T, Name, _private::named_type_availability::inheritance>(T const& value): T(value) {}
 		constexpr named_type<T, Name, _private::named_type_availability::inheritance>(T&& value) : T(std::move(value)) {}
@@ -52,14 +52,13 @@ namespace utl {
 		constexpr named_type<T, Name, _private::named_type_availability::conversion>(T value) noexcept: m_value(value) {}
 		
 		// union constructor
-		template <typename U,
-				  UTL_ENABLE_IF(is_list_initializable<T, U>::value),
-				  UTL_ENABLE_MEMBER_IF(std::is_union<T>::value)>
-		constexpr named_type<T, Name, _private::named_type_availability::conversion>(U&& u): m_value{ std::forward<U>(u) } {}
+		template <typename U>
+		constexpr named_type<T, Name, _private::named_type_availability::conversion>(U&& u)
+			requires (is_list_initializable<T, U>::value && std::is_union<T>::value)
+		: m_value{ std::forward<U>(u) } {}
 		
 		// union member access
-		template <UTL_ENABLE_MEMBER_IF(std::is_union<T>::value)>
-		constexpr T* operator->() noexcept { return &m_value; }
+		constexpr T* operator->() noexcept requires(std::is_union<T>::value) { return &m_value; }
 		constexpr T const* operator->() const noexcept { return &m_value; }
 		
 		// get
@@ -71,36 +70,36 @@ namespace utl {
 		constexpr operator T const&() const noexcept { return get(); }
 		
 		// explicit conversion (constructor)
-		template <typename U, UTL_ENABLE_IF(std::is_constructible<T, U>::value)>
+		template <typename U> requires (constructible_from<T, U>)
 		constexpr explicit named_type<T, Name, _private::named_type_availability::conversion>(U u) noexcept: m_value(static_cast<T>(u)) {}
-		template <typename U, UTL_ENABLE_IF(std::is_constructible<U, T>::value)>
+		template <constructible_from<T> U>
 		constexpr explicit operator U() const { return static_cast<U>(get()); }
 		
 	private:
 		T m_value;
 	};
 	
-	template <typename T, typename Name, UTL_ENABLE_IF(has_operator_bitwise_and<T>::value)>
+	template <typename T, typename Name> requires requires(T& t) { { t & t } -> convertible_to<T>; }
 	constexpr named_type<T, Name> operator&(named_type<T, Name> const& a, named_type<T, Name> const& b) {
 		return a.get() & b.get();
 	}
 	
-	template <typename T, typename Name, UTL_ENABLE_IF(has_operator_bitwise_or<T>::value)>
+	template <typename T, typename Name>  requires requires(T& t) { { t | t } -> convertible_to<T>; }
 	constexpr named_type<T, Name> operator|(named_type<T, Name> const& a, named_type<T, Name> const& b) {
 		return a.get() | b.get();
 	}
 	
-	template <typename T, typename Name, UTL_ENABLE_IF(has_operator_bitwise_xor<T>::value)>
+	template <typename T, typename Name>  requires requires(T& t) { { t ^ t } -> convertible_to<T>; }
 	constexpr named_type<T, Name> operator^(named_type<T, Name> const& a, named_type<T, Name> const& b) {
 		return a.get() ^ b.get();
 	}
 	
-	template <typename T, typename Name, UTL_ENABLE_IF(has_operator_bitwise_not<T>::value)>
+	template <typename T, typename Name>  requires requires(T& t) { { ~t } -> convertible_to<T>; }
 	constexpr named_type<T, Name> operator~(named_type<T, Name> const& a) {
 		return ~a.get();
 	}
 	
-	template <typename T, typename Name, UTL_ENABLE_IF(has_operator_logical_not<T>::value)>
+	template <typename T, typename Name> requires requires(T& t) { !t; }
 	constexpr auto operator!(named_type<T, Name> const& a) {
 		return !a.get();
 	}
