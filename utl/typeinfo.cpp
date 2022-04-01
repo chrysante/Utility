@@ -31,7 +31,7 @@ std::string utl::qualified_function_name(std::string_view pretty) {
 	try {
 		auto const end = pretty.find('(');
 		auto const begin = [&]() -> std::size_t {
-			auto i = end;
+			std::ptrdiff_t i = end;
 			int openAngle = 0;
 			while (i > 0) {
 				--i;

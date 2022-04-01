@@ -7,6 +7,18 @@
 #include <vector>
 #include <random>
 
+TEST_CASE("round_up") {
+	CHECK(utl::round_up(12, 4) == 12);
+	CHECK(utl::round_up(13, 4) == 16);
+	CHECK(utl::round_up(0, 3) == 0);
+	CHECK(utl::round_up(3, 3) == 3);
+	CHECK(utl::round_up(12, 1) == 12);
+	
+	CHECK(utl::round_up_pow_two(12, 4) == 12);
+	CHECK(utl::round_up_pow_two(13, 4) == 16);
+	CHECK(utl::round_up_pow_two(12, 1) == 12);
+}
+
 static auto makeTestData(std::size_t count, utl::invocable<std::mt19937_64&> auto f) {
 	std::mt19937_64 rng(std::random_device{}());
 	using T = std::invoke_result_t<decltype(f), decltype((rng))>;

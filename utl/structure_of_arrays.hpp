@@ -1222,7 +1222,8 @@ namespace utl {
 				result.member_offset[i] = total_size;
 				std::size_t const i_size = size[i] * obj_count;
 				
-				total_size += round_up_pow_two(i_size, alignment[i + 1]);
+				total_size += i_size;
+				total_size = round_up_pow_two(total_size, alignment[i + 1]);
 			}
 			
 			result.total_size = total_size;
@@ -1248,7 +1249,7 @@ namespace utl {
 		
 		std::tuple<T*...> __allocate(std::size_t obj_count) {
 			auto const buffer_info = __make_buffer_info(obj_count);
-			void* const buffer = __allocate_raw(buffer_info.total_size, buffer_info.base_align);
+			void* const buffer = __allocate_raw(buffer_info.total_size, 32);
 			return __decompose_buffer_pointer(buffer, buffer_info);
 		}
 		

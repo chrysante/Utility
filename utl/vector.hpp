@@ -214,6 +214,7 @@ namespace utl {
 				   rhs.empty())
 		{
 			_set_begin(this->_allocate(rhs.size()));
+			_set_uses_inline_buffer(rhs.empty());
 			_copy_construct_range(rhs._begin(), rhs._end(), this->_begin());
 		}
 		
@@ -329,8 +330,8 @@ namespace utl {
 		constexpr ~vector() {
 			_destroy_elems();
 			if (!this->_uses_inline_buffer()) {
-				__utl_assert(this->_begin() != nullptr, "must not be null");
-				__utl_assert(this->capacity() > 0, "must be positive");
+//				__utl_assert(this->_begin() != nullptr, "must not be null");
+//				__utl_assert(this->capacity() > 0, "must be positive");
 				this->_deallocate(this->_begin(), this->capacity());
 			}
 		}

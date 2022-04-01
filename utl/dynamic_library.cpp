@@ -6,7 +6,7 @@
 
 #include <exception>
 
-#if defined(__unix__)
+#if defined(__unix__) || defined(__APPLE__)
 #include <dlfcn.h>
 
 namespace utl {
@@ -98,4 +98,4 @@ namespace utl {
 	}
 	
 }
-#endif // defined(__unix__)
+#endif // defined(__unix__) || defined(__APPLE__)

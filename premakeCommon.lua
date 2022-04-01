@@ -28,8 +28,12 @@ function basicWorkspace (name)
    
     filter "system:windows" 
         buildoptions { "/Zc:__cplusplus", "/Zc:preprocessor", "/MP" }
+        systemversion ("latest")
+    filter "system:macosx"
+        systemversion ("12.2") -- until i update
     filter {}
     
+
     targetdir("Build/Bin/%{cfg.longname}")
     objdir("Build/Obj/%{cfg.longname}")
     

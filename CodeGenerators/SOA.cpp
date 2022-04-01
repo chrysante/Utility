@@ -45,6 +45,10 @@ static std::string SOAGenerator() {
 _UTL_SYSTEM_HEADER_
 #include "common.hpp"
 
+namespace utl {
+	auto constexpr __soa_identity = [](auto&& x) -> decltype(auto) { return x; };
+}
+
 #define _UTL_SOA_MEMBER_TYPE_IMPL(a, b) a
 #define _UTL_SOA_MEMBER_NAME_IMPL(a, b) b
 
@@ -254,7 +258,7 @@ _UTL_SYSTEM_HEADER_
 			 auto type: types)
 		{
 			sstr << "/* Conversion to Value Type */ \\\n";
-			sstr << type << "::operator Name() const { \\\n";
+			sstr << "inline " << type << "::operator Name() const { \\\n";
 			sstr << "	return { \\\n";
 			for (int i = 0; i < count; ++i) {
 				sstr << "		_UTL_SOA_MEMBER_NAME(X" << i << ")" << (i != count - 1 ? "," : "") << " \\\n";
@@ -265,7 +269,7 @@ _UTL_SYSTEM_HEADER_
 		
 		/// MARK: Conversion Reference -> Const Reference
 		sstr << "/* Conversion Reference -> Const Reference */ \\\n";
-		sstr << "__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \\\n";
+		sstr << "inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \\\n";
 		sstr << "	return { \\\n";
 		for (int i = 0; i < count; ++i) {
 			sstr << "		_UTL_SOA_MEMBER_NAME(X" << i << ")" << (i != count - 1 ? "," : "") << " \\\n";
@@ -275,7 +279,7 @@ _UTL_SYSTEM_HEADER_
 		
 		/// MARK: Conversion Value Type -> Reference
 		sstr << "/* Conversion Value Type -> Reference */ \\\n";
-		sstr << "Name::operator __##Name##_soa_reference() { \\\n";
+		sstr << "inline Name::operator __##Name##_soa_reference() { \\\n";
 		sstr << "	return { \\\n";
 		for (int i = 0; i < count; ++i) {
 			sstr << "		_UTL_SOA_MEMBER_NAME(X" << i << ")" << (i != count - 1 ? "," : "") << " \\\n";
@@ -285,7 +289,7 @@ _UTL_SYSTEM_HEADER_
 		
 		/// MARK: Conversion Value Type -> Const Reference
 		sstr << "/* Conversion Value Type -> Const Reference */ \\\n";
-		sstr << "Name::operator __##Name##_soa_const_reference() const { \\\n";
+		sstr << "inline Name::operator __##Name##_soa_const_reference() const { \\\n";
 		sstr << "	return { \\\n";
 		for (int i = 0; i < count; ++i) {
 			sstr << "		_UTL_SOA_MEMBER_NAME(X" << i << ")" << (i != count - 1 ? "," : "") << " \\\n";
@@ -300,14 +304,15 @@ _UTL_SYSTEM_HEADER_
 		for (std::array const types = { "Name", "__##Name##_soa_reference", "__##Name##_soa_const_reference" };
 			 auto typeI: types) {
 			for (auto typeJ: types) {
-				sstr << "constexpr bool operator==(" << typeI << " const& a, " << typeJ << " const& b) { \\\n";
+				sstr << "template <auto Id = utl::__soa_identity> \\\n";
+				sstr << "inline bool operator==(" << typeI << " const& a, " << typeJ << " const& b) { \\\n";
 				if (count == 0) {
 					sstr << "	return true; \\\n";
 				}
 				else {
 					sstr << "	return \\\n";
 					for (int k = 0; k < count; ++k) {
-						sstr << "		a.get<" << k << ">() == b.get<" << k << ">()" << (k == count - 1 ? ";" : " &&") << " \\\n";
+						sstr << "		Id(a.get<" << k << ">()) == Id(b.get<" << k << ">())" << (k == count - 1 ? ";" : " &&") << " \\\n";
 					}
 				}
 				sstr << "} \\\n";

@@ -3,10 +3,6 @@
 #include "__base.hpp"
 _UTL_SYSTEM_HEADER_
 
-#include <utility>
-#include <type_traits>
-#include <cstdint>
-
 /// MARK: UTL_CONCAT
 #define _UTL_CONCAT_IMPL(A, B) A##B
 #define UTL_CONCAT(A, B) _UTL_CONCAT_IMPL(A, B)
@@ -138,6 +134,7 @@ inline constexpr TYPE operator OP(TYPE a, typename _UTL_NSSTD::underlying_type<T
 
 #include <utility>
 #include <type_traits>
+#include <cstdint>
 
 namespace utl {
 	

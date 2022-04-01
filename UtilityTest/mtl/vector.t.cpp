@@ -71,8 +71,8 @@ VECTOR_TEST_CASE("vector single value constructor", "[vector]") {
 
 VECTOR_TEST_CASE("vector functional constructor", "[vector]") {
 	using V = mtl::vector<T, Size, Options>;
-	
-	T const values[4] = { 0, 1, (T)-1, 5321 };
+	static_assert(Size <= 8);
+	T const values[8] = { 0, 1, (T)-1, 5321, 1, 2, 3, 4 };
 	
 	V v;
 	SECTION("1") {
@@ -89,7 +89,7 @@ VECTOR_TEST_CASE("vector functional constructor", "[vector]") {
 }
 
 VECTOR_TEST_CASE("vector conversion", "[vector]") {
-	T const values[4] = { 0, (T)1.5, (T)-1, 5321 };
+	T const values[8] = { 0, (T)1.5, (T)-1, 5321, 1, 2, 3, 4 };
 	
 	mtl::vector<T, Size, Options> const v([&](int i) { return values[i]; });
 	

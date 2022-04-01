@@ -63,12 +63,20 @@ namespace {
 	
 	int LifetimeCounter::_liveObjects;
 	
+	struct alignas(64) Overaligned {
+		bool operator==(Overaligned const&) const = default;
+	};
+	
+	static_assert(sizeof(Overaligned) == 64);
+	static_assert(alignof(Overaligned) == 64);
+	
 	UTL_SOA_TYPE(Particle,
 				 (float,  position),
 				 (int,    id),
 				 (double, color),
 				 (int,    size),
-				 (LifetimeCounter, counter)
+				 (LifetimeCounter, counter),
+				 (Overaligned, overaligned)
 	);
 	
 }

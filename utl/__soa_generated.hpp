@@ -7,6 +7,10 @@
 _UTL_SYSTEM_HEADER_
 #include "common.hpp"
 
+namespace utl {
+	auto constexpr __soa_identity = [](auto&& x) -> decltype(auto) { return x; };
+}
+
 #define _UTL_SOA_MEMBER_TYPE_IMPL(a, b) a
 #define _UTL_SOA_MEMBER_NAME_IMPL(a, b) b
 
@@ -96,57 +100,66 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 	}; \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return true; \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return true; \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return true; \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return true; \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return true; \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return true; \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return true; \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return true; \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return true; \
 } \
 
@@ -277,72 +290,81 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0) \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0) \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0) \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0) \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0) \
 	}; \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>(); \
+		Id(a.get<0>()) == Id(b.get<0>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>(); \
+		Id(a.get<0>()) == Id(b.get<0>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>(); \
+		Id(a.get<0>()) == Id(b.get<0>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>(); \
+		Id(a.get<0>()) == Id(b.get<0>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>(); \
+		Id(a.get<0>()) == Id(b.get<0>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>(); \
+		Id(a.get<0>()) == Id(b.get<0>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>(); \
+		Id(a.get<0>()) == Id(b.get<0>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>(); \
+		Id(a.get<0>()) == Id(b.get<0>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>(); \
+		Id(a.get<0>()) == Id(b.get<0>()); \
 } \
 
 #define _UTL_SOA_TYPE_3(Name, X0, X1) \
@@ -495,35 +517,35 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1) \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1) \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1) \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1) \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1) \
@@ -531,50 +553,59 @@ Name::operator __##Name##_soa_const_reference() const { \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()); \
 } \
 
 #define _UTL_SOA_TYPE_4(Name, X0, X1, X2) \
@@ -750,7 +781,7 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -758,7 +789,7 @@ __##Name##_soa_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -766,7 +797,7 @@ __##Name##_soa_const_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -774,7 +805,7 @@ __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -782,7 +813,7 @@ Name::operator __##Name##_soa_reference() { \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -791,59 +822,68 @@ Name::operator __##Name##_soa_const_reference() const { \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()); \
 } \
 
 #define _UTL_SOA_TYPE_5(Name, X0, X1, X2, X3) \
@@ -1042,7 +1082,7 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -1051,7 +1091,7 @@ __##Name##_soa_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -1060,7 +1100,7 @@ __##Name##_soa_const_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -1069,7 +1109,7 @@ __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -1078,7 +1118,7 @@ Name::operator __##Name##_soa_reference() { \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -1088,68 +1128,77 @@ Name::operator __##Name##_soa_const_reference() const { \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()); \
 } \
 
 #define _UTL_SOA_TYPE_6(Name, X0, X1, X2, X3, X4) \
@@ -1371,7 +1420,7 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -1381,7 +1430,7 @@ __##Name##_soa_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -1391,7 +1440,7 @@ __##Name##_soa_const_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -1401,7 +1450,7 @@ __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -1411,7 +1460,7 @@ Name::operator __##Name##_soa_reference() { \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -1422,77 +1471,86 @@ Name::operator __##Name##_soa_const_reference() const { \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()); \
 } \
 
 #define _UTL_SOA_TYPE_7(Name, X0, X1, X2, X3, X4, X5) \
@@ -1737,7 +1795,7 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -1748,7 +1806,7 @@ __##Name##_soa_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -1759,7 +1817,7 @@ __##Name##_soa_const_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -1770,7 +1828,7 @@ __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -1781,7 +1839,7 @@ Name::operator __##Name##_soa_reference() { \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -1793,86 +1851,95 @@ Name::operator __##Name##_soa_const_reference() const { \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()); \
 } \
 
 #define _UTL_SOA_TYPE_8(Name, X0, X1, X2, X3, X4, X5, X6) \
@@ -2140,7 +2207,7 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -2152,7 +2219,7 @@ __##Name##_soa_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -2164,7 +2231,7 @@ __##Name##_soa_const_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -2176,7 +2243,7 @@ __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -2188,7 +2255,7 @@ Name::operator __##Name##_soa_reference() { \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -2201,95 +2268,104 @@ Name::operator __##Name##_soa_const_reference() const { \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()); \
 } \
 
 #define _UTL_SOA_TYPE_9(Name, X0, X1, X2, X3, X4, X5, X6, X7) \
@@ -2580,7 +2656,7 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -2593,7 +2669,7 @@ __##Name##_soa_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -2606,7 +2682,7 @@ __##Name##_soa_const_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -2619,7 +2695,7 @@ __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -2632,7 +2708,7 @@ Name::operator __##Name##_soa_reference() { \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -2646,104 +2722,113 @@ Name::operator __##Name##_soa_const_reference() const { \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()); \
 } \
 
 #define _UTL_SOA_TYPE_10(Name, X0, X1, X2, X3, X4, X5, X6, X7, X8) \
@@ -3057,7 +3142,7 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -3071,7 +3156,7 @@ __##Name##_soa_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -3085,7 +3170,7 @@ __##Name##_soa_const_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -3099,7 +3184,7 @@ __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -3113,7 +3198,7 @@ Name::operator __##Name##_soa_reference() { \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -3128,113 +3213,122 @@ Name::operator __##Name##_soa_const_reference() const { \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()); \
 } \
 
 #define _UTL_SOA_TYPE_11(Name, X0, X1, X2, X3, X4, X5, X6, X7, X8, X9) \
@@ -3571,7 +3665,7 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -3586,7 +3680,7 @@ __##Name##_soa_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -3601,7 +3695,7 @@ __##Name##_soa_const_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -3616,7 +3710,7 @@ __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -3631,7 +3725,7 @@ Name::operator __##Name##_soa_reference() { \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -3647,122 +3741,131 @@ Name::operator __##Name##_soa_const_reference() const { \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()); \
 } \
 
 #define _UTL_SOA_TYPE_12(Name, X0, X1, X2, X3, X4, X5, X6, X7, X8, X9, X10) \
@@ -4122,7 +4225,7 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -4138,7 +4241,7 @@ __##Name##_soa_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -4154,7 +4257,7 @@ __##Name##_soa_const_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -4170,7 +4273,7 @@ __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -4186,7 +4289,7 @@ Name::operator __##Name##_soa_reference() { \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -4203,131 +4306,140 @@ Name::operator __##Name##_soa_const_reference() const { \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()); \
 } \
 
 #define _UTL_SOA_TYPE_13(Name, X0, X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, X11) \
@@ -4710,7 +4822,7 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -4727,7 +4839,7 @@ __##Name##_soa_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -4744,7 +4856,7 @@ __##Name##_soa_const_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -4761,7 +4873,7 @@ __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -4778,7 +4890,7 @@ Name::operator __##Name##_soa_reference() { \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -4796,140 +4908,149 @@ Name::operator __##Name##_soa_const_reference() const { \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()); \
 } \
 
 #define _UTL_SOA_TYPE_14(Name, X0, X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, X11, X12) \
@@ -5335,7 +5456,7 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -5353,7 +5474,7 @@ __##Name##_soa_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -5371,7 +5492,7 @@ __##Name##_soa_const_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -5389,7 +5510,7 @@ __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -5407,7 +5528,7 @@ Name::operator __##Name##_soa_reference() { \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -5426,149 +5547,158 @@ Name::operator __##Name##_soa_const_reference() const { \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()); \
 } \
 
 #define _UTL_SOA_TYPE_15(Name, X0, X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, X11, X12, X13) \
@@ -5997,7 +6127,7 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -6016,7 +6146,7 @@ __##Name##_soa_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -6035,7 +6165,7 @@ __##Name##_soa_const_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -6054,7 +6184,7 @@ __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -6073,7 +6203,7 @@ Name::operator __##Name##_soa_reference() { \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -6093,158 +6223,167 @@ Name::operator __##Name##_soa_const_reference() const { \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()); \
 } \
 
 #define _UTL_SOA_TYPE_16(Name, X0, X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, X11, X12, X13, X14) \
@@ -6696,7 +6835,7 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -6716,7 +6855,7 @@ __##Name##_soa_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -6736,7 +6875,7 @@ __##Name##_soa_const_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -6756,7 +6895,7 @@ __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -6776,7 +6915,7 @@ Name::operator __##Name##_soa_reference() { \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -6797,167 +6936,176 @@ Name::operator __##Name##_soa_const_reference() const { \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()); \
 } \
 
 #define _UTL_SOA_TYPE_17(Name, X0, X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, X11, X12, X13, X14, X15) \
@@ -7432,7 +7580,7 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -7453,7 +7601,7 @@ __##Name##_soa_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -7474,7 +7622,7 @@ __##Name##_soa_const_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -7495,7 +7643,7 @@ __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -7516,7 +7664,7 @@ Name::operator __##Name##_soa_reference() { \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -7538,176 +7686,185 @@ Name::operator __##Name##_soa_const_reference() const { \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()); \
 } \
 
 #define _UTL_SOA_TYPE_18(Name, X0, X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, X11, X12, X13, X14, X15, X16) \
@@ -8205,7 +8362,7 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -8227,7 +8384,7 @@ __##Name##_soa_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -8249,7 +8406,7 @@ __##Name##_soa_const_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -8271,7 +8428,7 @@ __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -8293,7 +8450,7 @@ Name::operator __##Name##_soa_reference() { \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -8316,185 +8473,194 @@ Name::operator __##Name##_soa_const_reference() const { \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()); \
 } \
 
 #define _UTL_SOA_TYPE_19(Name, X0, X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, X11, X12, X13, X14, X15, X16, X17) \
@@ -9015,7 +9181,7 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -9038,7 +9204,7 @@ __##Name##_soa_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -9061,7 +9227,7 @@ __##Name##_soa_const_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -9084,7 +9250,7 @@ __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -9107,7 +9273,7 @@ Name::operator __##Name##_soa_reference() { \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -9131,194 +9297,203 @@ Name::operator __##Name##_soa_const_reference() const { \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()); \
 } \
 
 #define _UTL_SOA_TYPE_20(Name, X0, X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, X11, X12, X13, X14, X15, X16, X17, X18) \
@@ -9862,7 +10037,7 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -9886,7 +10061,7 @@ __##Name##_soa_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -9910,7 +10085,7 @@ __##Name##_soa_const_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -9934,7 +10109,7 @@ __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -9958,7 +10133,7 @@ Name::operator __##Name##_soa_reference() { \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -9983,203 +10158,212 @@ Name::operator __##Name##_soa_const_reference() const { \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()); \
 } \
 
 #define _UTL_SOA_TYPE_21(Name, X0, X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, X11, X12, X13, X14, X15, X16, X17, X18, X19) \
@@ -10746,7 +10930,7 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -10771,7 +10955,7 @@ __##Name##_soa_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -10796,7 +10980,7 @@ __##Name##_soa_const_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -10821,7 +11005,7 @@ __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -10846,7 +11030,7 @@ Name::operator __##Name##_soa_reference() { \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -10872,212 +11056,221 @@ Name::operator __##Name##_soa_const_reference() const { \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()); \
 } \
 
 #define _UTL_SOA_TYPE_22(Name, X0, X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, X11, X12, X13, X14, X15, X16, X17, X18, X19, X20) \
@@ -11667,7 +11860,7 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -11693,7 +11886,7 @@ __##Name##_soa_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -11719,7 +11912,7 @@ __##Name##_soa_const_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -11745,7 +11938,7 @@ __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -11771,7 +11964,7 @@ Name::operator __##Name##_soa_reference() { \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -11798,221 +11991,230 @@ Name::operator __##Name##_soa_const_reference() const { \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()); \
 } \
 
 #define _UTL_SOA_TYPE_23(Name, X0, X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, X11, X12, X13, X14, X15, X16, X17, X18, X19, X20, X21) \
@@ -12625,7 +12827,7 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -12652,7 +12854,7 @@ __##Name##_soa_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -12679,7 +12881,7 @@ __##Name##_soa_const_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -12706,7 +12908,7 @@ __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -12733,7 +12935,7 @@ Name::operator __##Name##_soa_reference() { \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -12761,230 +12963,239 @@ Name::operator __##Name##_soa_const_reference() const { \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()); \
 } \
 
 #define _UTL_SOA_TYPE_24(Name, X0, X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, X11, X12, X13, X14, X15, X16, X17, X18, X19, X20, X21, X22) \
@@ -13620,7 +13831,7 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -13648,7 +13859,7 @@ __##Name##_soa_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -13676,7 +13887,7 @@ __##Name##_soa_const_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -13704,7 +13915,7 @@ __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -13732,7 +13943,7 @@ Name::operator __##Name##_soa_reference() { \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -13761,239 +13972,248 @@ Name::operator __##Name##_soa_const_reference() const { \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>() && \
-		a.get<22>() == b.get<22>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()) && \
+		Id(a.get<22>()) == Id(b.get<22>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>() && \
-		a.get<22>() == b.get<22>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()) && \
+		Id(a.get<22>()) == Id(b.get<22>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>() && \
-		a.get<22>() == b.get<22>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()) && \
+		Id(a.get<22>()) == Id(b.get<22>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>() && \
-		a.get<22>() == b.get<22>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()) && \
+		Id(a.get<22>()) == Id(b.get<22>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>() && \
-		a.get<22>() == b.get<22>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()) && \
+		Id(a.get<22>()) == Id(b.get<22>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>() && \
-		a.get<22>() == b.get<22>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()) && \
+		Id(a.get<22>()) == Id(b.get<22>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>() && \
-		a.get<22>() == b.get<22>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()) && \
+		Id(a.get<22>()) == Id(b.get<22>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>() && \
-		a.get<22>() == b.get<22>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()) && \
+		Id(a.get<22>()) == Id(b.get<22>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>() && \
-		a.get<22>() == b.get<22>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()) && \
+		Id(a.get<22>()) == Id(b.get<22>()); \
 } \
 
 #define _UTL_SOA_TYPE_25(Name, X0, X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, X11, X12, X13, X14, X15, X16, X17, X18, X19, X20, X21, X22, X23) \
@@ -14652,7 +14872,7 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	return *this; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_reference::operator Name() const { \
+inline __##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -14681,7 +14901,7 @@ __##Name##_soa_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion to Value Type */ \
-__##Name##_soa_const_reference::operator Name() const { \
+inline __##Name##_soa_const_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -14710,7 +14930,7 @@ __##Name##_soa_const_reference::operator Name() const { \
 	}; \
 } \
 /* Conversion Reference -> Const Reference */ \
-__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+inline __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -14739,7 +14959,7 @@ __##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
 	}; \
 } \
 /* Conversion Value Type -> Reference */ \
-Name::operator __##Name##_soa_reference() { \
+inline Name::operator __##Name##_soa_reference() { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -14768,7 +14988,7 @@ Name::operator __##Name##_soa_reference() { \
 	}; \
 } \
 /* Conversion Value Type -> Const Reference */ \
-Name::operator __##Name##_soa_const_reference() const { \
+inline Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -14798,248 +15018,257 @@ Name::operator __##Name##_soa_const_reference() const { \
 } \
 \
 /* Comparison */ \
-constexpr bool operator==(Name const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>() && \
-		a.get<22>() == b.get<22>() && \
-		a.get<23>() == b.get<23>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()) && \
+		Id(a.get<22>()) == Id(b.get<22>()) && \
+		Id(a.get<23>()) == Id(b.get<23>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>() && \
-		a.get<22>() == b.get<22>() && \
-		a.get<23>() == b.get<23>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()) && \
+		Id(a.get<22>()) == Id(b.get<22>()) && \
+		Id(a.get<23>()) == Id(b.get<23>()); \
 } \
-constexpr bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(Name const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>() && \
-		a.get<22>() == b.get<22>() && \
-		a.get<23>() == b.get<23>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()) && \
+		Id(a.get<22>()) == Id(b.get<22>()) && \
+		Id(a.get<23>()) == Id(b.get<23>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>() && \
-		a.get<22>() == b.get<22>() && \
-		a.get<23>() == b.get<23>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()) && \
+		Id(a.get<22>()) == Id(b.get<22>()) && \
+		Id(a.get<23>()) == Id(b.get<23>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>() && \
-		a.get<22>() == b.get<22>() && \
-		a.get<23>() == b.get<23>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()) && \
+		Id(a.get<22>()) == Id(b.get<22>()) && \
+		Id(a.get<23>()) == Id(b.get<23>()); \
 } \
-constexpr bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>() && \
-		a.get<22>() == b.get<22>() && \
-		a.get<23>() == b.get<23>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()) && \
+		Id(a.get<22>()) == Id(b.get<22>()) && \
+		Id(a.get<23>()) == Id(b.get<23>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, Name const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>() && \
-		a.get<22>() == b.get<22>() && \
-		a.get<23>() == b.get<23>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()) && \
+		Id(a.get<22>()) == Id(b.get<22>()) && \
+		Id(a.get<23>()) == Id(b.get<23>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>() && \
-		a.get<22>() == b.get<22>() && \
-		a.get<23>() == b.get<23>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()) && \
+		Id(a.get<22>()) == Id(b.get<22>()) && \
+		Id(a.get<23>()) == Id(b.get<23>()); \
 } \
-constexpr bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
+template <auto Id = utl::__soa_identity> \
+inline bool operator==(__##Name##_soa_const_reference const& a, __##Name##_soa_const_reference const& b) { \
 	return \
-		a.get<0>() == b.get<0>() && \
-		a.get<1>() == b.get<1>() && \
-		a.get<2>() == b.get<2>() && \
-		a.get<3>() == b.get<3>() && \
-		a.get<4>() == b.get<4>() && \
-		a.get<5>() == b.get<5>() && \
-		a.get<6>() == b.get<6>() && \
-		a.get<7>() == b.get<7>() && \
-		a.get<8>() == b.get<8>() && \
-		a.get<9>() == b.get<9>() && \
-		a.get<10>() == b.get<10>() && \
-		a.get<11>() == b.get<11>() && \
-		a.get<12>() == b.get<12>() && \
-		a.get<13>() == b.get<13>() && \
-		a.get<14>() == b.get<14>() && \
-		a.get<15>() == b.get<15>() && \
-		a.get<16>() == b.get<16>() && \
-		a.get<17>() == b.get<17>() && \
-		a.get<18>() == b.get<18>() && \
-		a.get<19>() == b.get<19>() && \
-		a.get<20>() == b.get<20>() && \
-		a.get<21>() == b.get<21>() && \
-		a.get<22>() == b.get<22>() && \
-		a.get<23>() == b.get<23>(); \
+		Id(a.get<0>()) == Id(b.get<0>()) && \
+		Id(a.get<1>()) == Id(b.get<1>()) && \
+		Id(a.get<2>()) == Id(b.get<2>()) && \
+		Id(a.get<3>()) == Id(b.get<3>()) && \
+		Id(a.get<4>()) == Id(b.get<4>()) && \
+		Id(a.get<5>()) == Id(b.get<5>()) && \
+		Id(a.get<6>()) == Id(b.get<6>()) && \
+		Id(a.get<7>()) == Id(b.get<7>()) && \
+		Id(a.get<8>()) == Id(b.get<8>()) && \
+		Id(a.get<9>()) == Id(b.get<9>()) && \
+		Id(a.get<10>()) == Id(b.get<10>()) && \
+		Id(a.get<11>()) == Id(b.get<11>()) && \
+		Id(a.get<12>()) == Id(b.get<12>()) && \
+		Id(a.get<13>()) == Id(b.get<13>()) && \
+		Id(a.get<14>()) == Id(b.get<14>()) && \
+		Id(a.get<15>()) == Id(b.get<15>()) && \
+		Id(a.get<16>()) == Id(b.get<16>()) && \
+		Id(a.get<17>()) == Id(b.get<17>()) && \
+		Id(a.get<18>()) == Id(b.get<18>()) && \
+		Id(a.get<19>()) == Id(b.get<19>()) && \
+		Id(a.get<20>()) == Id(b.get<20>()) && \
+		Id(a.get<21>()) == Id(b.get<21>()) && \
+		Id(a.get<22>()) == Id(b.get<22>()) && \
+		Id(a.get<23>()) == Id(b.get<23>()); \
 } \
 
 
