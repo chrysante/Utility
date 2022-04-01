@@ -1,0 +1,295 @@
+#include "Catch2.hpp"
+#include "utl/structure_of_arrays.hpp"
+#include "utl/utility.hpp"
+
+#include <algorithm>
+#include <iostream>
+
+namespace {
+	
+	UTL_SOA_TYPE(Particle,
+				 (float,  position),
+				 (int,    id),
+				 (double, color),
+				 (int,    size)
+	);
+	
+}
+
+static void testPushBack(auto const& s, std::size_t size) {
+	CHECK(s.size() == size);
+	for (std::size_t i = 0; i < size; ++i) {
+		CHECK(s[i].id == (int)i);
+	}
+}
+
+static void testPushBack(auto& s) {
+	s.push_back({ .id = 0 });
+	testPushBack(s, 1);
+	s.push_back({ .id = 1 });
+	testPushBack(s, 2);
+	s.push_back({ .id = 2 });
+	testPushBack(s, 3);
+	s.push_back({ .id = 3 });
+	testPushBack(s, 4);
+	s.push_back({ .id = 4 });
+	testPushBack(s, 5);
+	s.push_back({ .id = 5 });
+	testPushBack(s, 6);
+}
+
+TEST_CASE("structure_of_arrays::push_back") {
+	utl::structure_of_arrays<Particle> s;
+	testPushBack(s);
+}
+
+TEST_CASE("pmr::structure_of_arrays::push_back") {
+	utl::pmr::structure_of_arrays<Particle> s;
+	testPushBack(s);
+}
+
+TEST_CASE("pmr::structure_of_arrays move construct (resource equal)") {
+	utl::pmr::structure_of_arrays<Particle> s;
+	s.push_back({ .id = 0 });
+	s.push_back({ .id = 1 });
+	
+	utl::pmr::structure_of_arrays<Particle> t = std::move(s);
+	CHECK(s.size() == 0);
+	CHECK(s.capacity() == 0);
+	CHECK(t.size() == 2);
+	CHECK(t[0].id == 0);
+	CHECK(t[1].id == 1);
+}
+
+TEST_CASE("pmr::structure_of_arrays move assign (resource equal)") {
+	utl::pmr::structure_of_arrays<Particle> s;
+	s.push_back({ .id = 0 });
+	s.push_back({ .id = 1 });
+	
+	utl::pmr::structure_of_arrays<Particle> t;
+	SECTION("empty") {}
+	SECTION("non-empty") {
+		t.push_back({});
+		t.push_back({});
+		t.push_back({});
+	}
+	t = std::move(s);
+	CHECK(s.size() == 0);
+	CHECK(s.capacity() == 0);
+	CHECK(t.size() == 2);
+	CHECK(t[0].id == 0);
+	CHECK(t[1].id == 1);
+}
+
+TEST_CASE("structure_of_arrays::view") {
+	utl::structure_of_arrays<Particle> const s = {
+		Particle{ .position = 1, .id = 2, .color = 3, .size = 4 },
+		Particle{},
+		Particle{}
+	};
+	CHECK(s.size() == 3);
+	CHECK(s.capacity() >= 3);
+	CHECK(s[0] == Particle{ 1, 2, 3, 4 });
+}
+
+TEST_CASE("structure_of_arrays::iterator") {
+	utl::structure_of_arrays<Particle> s;
+	int const size = GENERATE(0, 1, 10, 42);
+	for (int i = 0; i < size; ++i) {
+		s.push_back(Particle{ .position = (rand() % 1024) / 1024.0f, .id = rand() % 1024 });
+	}
+	SECTION("Arithmetic") {
+		CHECK(s.end() - s.begin() == size);
+		CHECK(s.begin() + size == s.end());
+		CHECK(s.end() - size == s.begin());
+	}
+	SECTION("Reverse Arithmetic") {
+		auto r = utl::reverse(s);
+		CHECK(r.end() - r.begin() == size);
+		CHECK(r.begin() + size == r.end());
+		CHECK(r.end() - size == r.begin());
+	}
+	SECTION("Increment") {
+		auto itr = s.begin();
+		for (int i = 0; i < size; ++i) {
+			++itr;
+		}
+		CHECK(itr == s.end());
+	}
+}
+
+TEST_CASE("std::sort(structure_of_arrays)") {
+	utl::structure_of_arrays<Particle> s;
+	int const size = GENERATE(0, 1, 10, 42);
+	std::vector<int> values(size);
+	std::iota(values.begin(), values.end(), 0);
+	std::shuffle(values.begin(), values.end(), std::mt19937_64(std::random_device{}()));
+	for (int i: values) {
+		s.push_back(Particle{ .position = (float)i, .id = size - 1 - i });
+	}
+	SECTION("forward") {
+		// sort by id
+		std::sort(s.begin(), s.end(), [](auto&& a, auto&& b) { return a.id < b.id; });
+	}
+	SECTION("reverse") {
+		// sort by id
+		std::sort(s.rbegin(), s.rend(), [](auto&& a, auto&& b) { return a.id > b.id; });
+	}
+	for (int i = 0; auto [position, id]: s.view<Particle::members::position, Particle::members::id>()) {
+		CHECK(id == i);
+		CHECK(position == size - 1 - i);
+		++i;
+	}
+}
+
+TEST_CASE("structure_of_arrays::insert") {
+	utl::structure_of_arrays<Particle> s;
+	for (int i = 0; i < 3; ++i) {
+		s.push_back(Particle{ .id = i });
+	}
+	REQUIRE(s.size() == 3);
+	SECTION("insert front") {
+		s.insert(0, Particle{ .id = -1 });
+		CHECK(s.size() == 4);
+		CHECK(s.capacity() >= 4);
+		CHECK(s[0].id == -1);
+		CHECK(s[1].id == 0);
+		CHECK(s[2].id == 1);
+		CHECK(s[3].id == 2);
+	}
+	SECTION("insert center") {
+		s.insert(1, Particle{ .id = -1 });
+		CHECK(s.size() == 4);
+		CHECK(s.capacity() >= 4);
+		CHECK(s[0].id == 0);
+		CHECK(s[1].id == -1);
+		CHECK(s[2].id == 1);
+		CHECK(s[3].id == 2);
+	}
+	SECTION("insert back") {
+		s.insert(3, Particle{ .id = -1 });
+		CHECK(s.size() == 4);
+		CHECK(s.capacity() >= 4);
+		CHECK(s[0].id == 0);
+		CHECK(s[1].id == 1);
+		CHECK(s[2].id == 2);
+		CHECK(s[3].id == -1);
+	}
+}
+
+TEST_CASE("structure_of_arrays::insert [empty]") {
+	utl::structure_of_arrays<Particle> s;
+	s.insert(0, Particle{ .id = -1 });
+	CHECK(s.size() == 1);
+	CHECK(s.capacity() >= 1);
+	CHECK(s[0].id == -1);
+}
+
+TEST_CASE("structure_of_arrays::erase") {
+	utl::structure_of_arrays<Particle> s;
+	for (int i = 0; i < 4; ++i) {
+		s.push_back(Particle{ .id = i });
+	}
+	
+	REQUIRE(s.size() == 4);
+	SECTION("erase front") {
+		s.erase(0);
+		CHECK(s.size() == 3);
+		CHECK(s[0].id == 1);
+		CHECK(s[1].id == 2);
+		CHECK(s[2].id == 3);
+	}
+	SECTION("erase center") {
+		s.erase(1);
+		CHECK(s.size() == 3);
+		CHECK(s[0].id == 0);
+		CHECK(s[1].id == 2);
+		CHECK(s[2].id == 3);
+	}
+	SECTION("erase back") {
+		s.erase(3);
+		CHECK(s.size() == 3);
+		CHECK(s[0].id == 0);
+		CHECK(s[1].id == 1);
+		CHECK(s[2].id == 2);
+	}
+}
+
+TEST_CASE("structure_of_arrays::erase to empty") {
+	utl::structure_of_arrays<Particle> s = { Particle{} };
+	s.erase(0);
+	CHECK(s.size() == 0);
+}
+
+TEST_CASE("structure_of_arrays::erase to empty with iterator") {
+	SECTION("single element") {
+		utl::structure_of_arrays<Particle> s = { Particle{} };
+		s.erase(s.begin());
+		CHECK(s.size() == 0);
+	}
+	SECTION("multiple elements") {
+		utl::structure_of_arrays<Particle> s(10);
+		s.erase(s.begin(), s.end());
+		CHECK(s.size() == 0);
+	}
+}
+
+TEST_CASE("structure_of_arrays::erase range") {
+	utl::structure_of_arrays<Particle> s;
+	for (int i = 0; i < 8; ++i) {
+		s.push_back(Particle{ .id = i });
+	}
+	
+	REQUIRE(s.size() == 8);
+	SECTION("erase front") {
+		s.erase(0, 5);
+		CHECK(s.size() == 3);
+		CHECK(s[0].id == 5);
+		CHECK(s[1].id == 6);
+		CHECK(s[2].id == 7);
+	}
+	SECTION("erase center") {
+		s.erase(2, 7);
+		CHECK(s.size() == 3);
+		CHECK(s[0].id == 0);
+		CHECK(s[1].id == 1);
+		CHECK(s[2].id == 7);
+	}
+	SECTION("erase back") {
+		s.erase(3, 8);
+		CHECK(s.size() == 3);
+		CHECK(s[0].id == 0);
+		CHECK(s[1].id == 1);
+		CHECK(s[2].id == 2);
+	}
+}
+
+TEST_CASE("structure_of_arrays::erase range to empty") {
+	utl::structure_of_arrays<Particle> s(8);
+	s.erase(0, 8);
+	CHECK(s.size() == 0);
+}
+
+TEST_CASE("structure_of_arrays iterate") {
+	utl::structure_of_arrays<Particle> s;
+	int const size = GENERATE(0, 1, 10, 42);
+	for (int i = 0; i < size; ++i) {
+		s.push_back(Particle{ .id = i });
+	}
+	SECTION("iterate subset view") {
+		for (int i = 0;
+			 auto [position, id]: s.view<Particle::members::position const, Particle::members::id const>())
+		{
+			CHECK(id == i);
+			++i;
+		}
+	}
+	SECTION("iterate single member with begin/end") {
+		int i = 0;
+		auto itr = s.begin<Particle::members::id const>();
+		auto end = s.end<Particle::members::id>();
+		for (; itr != end; ++itr, ++i) {
+			CHECK(*itr == i);
+		}
+	}
+}

@@ -73,21 +73,6 @@ namespace utl {
 		}
 	}
 	
-	
-	
-	template <integral T>
-	constexpr T fast_mod_pow_two(T x, T y) {
-		__utl_expect(y >= 0);
-		__utl_expect(std::popcount(y) == 1);
-		T const e = utl::log2(y);
-		return ~(~T{} << e) & x;
-	}
-	template <integral T, integral U>
-	constexpr std::common_type_t<T, U> fast_mod_pow_two(T x, U y) {
-		using X = std::common_type_t<T, U>;
-		return fast_mod_pow_two((X)x, (X)y);
-	}
-	
 	constexpr char* align_to(void* p, std::size_t align) {
 		auto const rest = fast_mod_pow_two((std::uintptr_t)p, align);
 		if (!rest) {
@@ -98,6 +83,59 @@ namespace utl {
 	
 }
 
+
+namespace utl {
+	
+	/// MARK: Reverse Container Adaptor
+	template <typename C>
+	class __reverse_adapter {
+		static_assert(!std::is_reference_v<C>);
+	public:
+		__reverse_adapter(auto&& c):
+			c(UTL_FORWARD(c))
+		{}
+		
+		auto begin() { return c.rbegin(); }
+		auto begin() const { return c.rbegin(); }
+		
+		auto end() { return c.rend(); }
+		auto end() const { return c.rend(); }
+		
+	private:
+		C c;
+	};
+	
+	template <typename C>
+	class __reverse_adapter<C&> {
+	public:
+		template <typename T>
+		__reverse_adapter(T&& c):
+			c(c)
+		{ static_assert(!std::is_rvalue_reference_v<T>); }
+		
+		auto begin() const { return c.rbegin(); }
+		auto end() const { return c.rend(); }
+		
+	private:
+		C& c;
+	};
+	
+	template <typename C>
+	auto reverse(C& c) {
+		return __reverse_adapter<C&>(c);
+	}
+	
+	template <typename C>
+	auto reverse(C const& c) {
+		return __reverse_adapter<C const&>(c);
+	}
+	
+	template <typename C>
+	auto reverse(C&& c) {
+		return __reverse_adapter<C>(std::move(c));
+	}
+	
+}
 
 
 namespace utl {

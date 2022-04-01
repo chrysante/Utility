@@ -78,6 +78,27 @@ files {
 links "Utility"
 
 -----------------------------------------------------------------------------------------
+-- Project CodeGenerators
+-----------------------------------------------------------------------------------------
+project "CodeGenerators"
+location "."
+kind "ConsoleApp"
+language "C++"
+filter { "system:macosx"} 
+    defines { "PROJECT_LOCATION=\"../../..\"" } -- use different (maybe less fragile) solution for windows
+    xcodebuildsettings { 
+
+    }
+filter {}
+
+files { 
+    "CodeGenerators/**.hpp",
+    "CodeGenerators/**.cpp"
+}
+
+defines { "PROJECT_LOCATION=\"../../..\"" }
+
+-----------------------------------------------------------------------------------------
 -- Project Playground
 -----------------------------------------------------------------------------------------
 project "Playground"

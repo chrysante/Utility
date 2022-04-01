@@ -1,354 +1,1175 @@
 #pragma once
 
-#ifndef __UTL_STRUCTURE_OF_ARRAYS_HPP_INCLUDED__
-#define __UTL_STRUCTURE_OF_ARRAYS_HPP_INCLUDED__
+/**
+Generic Structure of Arrays Class
+Value Types need to be declared with the UTL_SOA_TYPE macro.
+ [ Example:
+	namespace ... [optional] {
+		UTL_SOA_TYPE(Particle,
+					(int, id),
+					(float2, position),
+					(float2, position),
+					(float4, color));
+	}
+ 
+	The UTL_SOA_TYPE macro then declares multiple structures, especially the following
+	
+		struct Particle {
+			int id;
+			float2 position;
+			float2 position;
+			float4 color;
+		};
+	 
+		struct __Particle_reference { [exposition only]
+			int& id;
+			float2& position;
+			float2& position;
+			float4& color;
+		};
+	 
+		struct __Particle_const_reference { [exposition only]
+			int const& id;
+			float2 const& position;
+			float2 const& position;
+			float4 const& color;
+		};
+	
+	and additional template machinery used by the utl::structure_of_arrays<Particle> class.
+	Reference Types are accessible via utl::structure_of_arrays<Particle>::reference/const_reference
+ 
+	utl::structure_of_arrays<Particle> then behaves similarly to std::vector<Particle> however all members of Particle are stored in seperate arrays to improve cache locality
+	when iterating over individual members or subsets of the entire Particle structure.
+ 
+ ]
+ 
+ */
 
 #include "__base.hpp"
 _UTL_SYSTEM_HEADER_
 
+#include "__debug.hpp"
+#include "__soa_generated.hpp"
 #include "__memory_resource_base.hpp"
 #include "common.hpp"
-#include "algorithm.hpp"
-#include "bit.hpp"
-#include <tuple>
-#include <span>
+#include "math.hpp"
 
+
+#include <tuple>
+#include <memory>
+#include <algorithm>
+#include <span>
+#include <compare>
+#include <exception>
 
 namespace utl {
+
+	template <typename T>
+	concept __soa_type = requires{ typename T::__utl_soa_meta; };
+
+	struct __utl_soa_options {
+		bool view = false;
+	};
 	
-	template <typename>
+	/// MARK: - Declarations
+	template <__soa_type ST, typename Allocator = std::allocator<ST>>
 	class structure_of_arrays;
 	
-	template <typename... T>
-	requires (type_sequence<T...>::unique)
-	class structure_of_arrays<std::tuple<T...>> {
-	public:
-		template <typename U>
-		static constexpr std::size_t index_of = type_sequence<T...>::template index_of<U>;
+	namespace pmr {
+		template <__soa_type ST>
+		using structure_of_arrays = utl::structure_of_arrays<ST, polymorphic_allocator<ST>>;
+	}
+	
+	template <__soa_type, typename... Members>
+	class soa_view;
+
+	/// MARK: - Partial Types
+	enum struct __soa_type_kind {
+		value, reference, const_reference, pointer, const_pointer
+	};
+	template <__soa_type_kind, typename>
+	struct __soa_type_mapper;
+	
+	template <typename T>
+	struct __soa_type_mapper<__soa_type_kind::value, T> { using type = T; };
+	template <typename T>
+	struct __soa_type_mapper<__soa_type_kind::reference, T> { using type = T&; };
+	template <typename T>
+	struct __soa_type_mapper<__soa_type_kind::const_reference, T> { using type = T const&; };
+	template <typename T>
+	struct __soa_type_mapper<__soa_type_kind::pointer, T> { using type = T*; };
+	template <typename T>
+	struct __soa_type_mapper<__soa_type_kind::const_pointer, T> { using type = T const*; };
+	
+	template <typename Meta, typename>
+	struct __soa_is_full: std::false_type{};
+	template <typename Meta, typename... T>
+	struct __soa_is_full<Meta, std::tuple<T...>>: std::bool_constant<
+		std::is_same_v<
+			std::make_index_sequence<Meta::member_count>,
+			std::index_sequence<T::index...>
+		>
+		&& (!std::is_const_v<T> && ...)
+	>{};
+	
+	template <typename Meta,
+			  typename Members,
+			  __soa_type_kind,
+			  bool IsFull = __soa_is_full<Meta, Members>::value>
+	struct __soa_type_maker;
+	
+	/// 'Full' Case: Use generated Value, Reference and Pointer  Types
+	template <typename Meta, typename _>
+	struct __soa_type_maker<Meta, _, __soa_type_kind::value, true> {
+		using type = typename Meta::value_type;
+	};
+	template <typename Meta, typename _>
+	struct __soa_type_maker<Meta, _, __soa_type_kind::reference, true> {
+		using type = typename Meta::reference;
+	};
+	template <typename Meta, typename _>
+	struct __soa_type_maker<Meta, _, __soa_type_kind::const_reference, true> {
+		using type = typename Meta::const_reference;
+	};
+	template <typename Meta, typename _>
+	struct __soa_type_maker<Meta, _, __soa_type_kind::pointer, true> {
+		using type = typename Meta::pointer;
+	};
+	template <typename Meta, typename _>
+	struct __soa_type_maker<Meta, _, __soa_type_kind::const_pointer, true> {
+		using type = typename Meta::const_pointer;
+	};
+	
+	/// Partial Case
+	template <typename Meta, std::size_t J>
+	using __soa_element_type = std::tuple_element_t<J, typename Meta::tuple>;
+	
+	constexpr __soa_type_kind __make_soa_reference_const_if(bool condition, __soa_type_kind k) {
+		if (!condition) {
+			return k;
+		}
+		if (k == __soa_type_kind::reference) {
+			return __soa_type_kind::const_reference;
+		}
+		if (k == __soa_type_kind::pointer) {
+			return __soa_type_kind::const_pointer;
+		}
+		return k;
+	}
+	
+	template <typename Meta, typename Member, __soa_type_kind Kind>
+	using __soa_element_member_base = typename Meta::template member_base<
+		Member::index>::template type<
+			typename __soa_type_mapper<
+				__make_soa_reference_const_if(std::is_const_v<Member>, Kind), __soa_element_type<Meta, Member::index>
+			>::type
+		>;
+	
+	template <typename Meta, typename Members, __soa_type_kind Kind>
+	struct __soa_partial_element;
+	
+	template <typename Meta, typename... Members, __soa_type_kind Kind>
+	struct __soa_partial_element<Meta, std::tuple<Members...>, Kind>: __soa_element_member_base<Meta, Members, Kind>... {
+		__soa_partial_element() = default;
 		
-		template <typename U>
-		static constexpr bool contains = type_sequence<T...>::template contains<U>;
+		template <typename M>
+		using __member_base = __soa_element_member_base<Meta, M, Kind>;
 		
-	private:
-		template <typename... U>
-		class _reference {
-			static_assert((std::is_same_v<std::remove_const_t<U>, T> && ...));
-		public:
-			explicit _reference(U&... t): _ptr(&t...) {}
-			
-			template <typename V>
-			requires(contains<V>)
-			auto& get() const { return *std::get<index_of<V>>(_ptr); }
-			
-			operator _reference<std::add_const_t<U>...>() const {
-				return _reference<std::add_const_t<U>...>(*std::get<U*>(_ptr)...);
-				//return utl::bit_cast<_reference<std::add_const_t<U>...>>(*this);
+		template <typename M>
+		static constexpr auto __add_ref_helper() {
+			// handle pointer case first
+			if (Kind == __soa_type_kind::pointer || Kind == __soa_type_kind::const_pointer) {
+				if (std::is_const_v<M>) {
+					return __soa_type_kind::const_pointer;
+				}
+				return Kind;
 			}
-			
-			operator std::tuple<T...>() const {
-				return { get<T>()... };
+			if (Kind == __soa_type_kind::value) {
+				return __soa_type_kind::const_reference;
 			}
-			
-		private:
-			std::tuple<U*...> _ptr;
+			if (std::is_const_v<M>) {
+				return __soa_type_kind::const_reference;
+			}
+			return Kind;
 		};
 		
-	public:
-		using value_type = std::tuple<T...>;
-		using reference = _reference<T...>;
-		using const_reference = _reference<T const...>;
+		template <typename M, typename T>
+		using __add_ref = typename __soa_type_mapper<__add_ref_helper<M>(), T>::type;
 		
-	public:
-		// MARK: - Lifetime
-		structure_of_arrays() = default;
+		constexpr __soa_partial_element(__add_ref<Members, __soa_element_type<Meta, Members::index>>... members): __member_base<Members>{ members }... {}
 		
-		structure_of_arrays(pmr::memory_resource* r):
-			_alloc(((std::void_t<T>)0, r)...)
-		{}
+		template <__soa_type_kind K>
+		using __corresponding_type = typename __soa_type_maker<Meta, std::tuple<Members...>, K>::type;
 		
-		~structure_of_arrays() { _destroy(); }
-		
-		// MARK: - observers
-		std::size_t size() const { return _size; }
-		std::size_t capacity() const { return _cap; }
-		bool empty() const { return size() == 0; }
-		
-		// MARK: - modifiers
-		void push_back(value_type const& elem) {
-			this->push_back(std::get<T>(elem)...);
-		}
-		void push_back(const_reference elem) {
-			this->push_back(elem.template get<T>()...);
-		}
-		template <typename... U>
-		requires (sizeof...(T) == sizeof...(U)) && (convertible_to<U, T> && ...)
-		void push_back(U&&... u) {
-			if (this->size() == this->capacity()) {
-				_grow();
-			}
-			((new (this->template _get_array_ptr<T>() + _size) T(UTL_FORWARD(u))), ...);
-			(__push_back_one<T>(UTL_FORWARD(u)), ...);
-			++_size;
-		}
-
-		template <typename V, typename U>
-		void __push_back_one(U&& u) {
-			void* ptr = this->template _get_array_ptr<V>() + _size;
-			new (ptr) V(UTL_FORWARD(u));
+		constexpr __soa_partial_element& operator=(__corresponding_type<__soa_type_kind::const_reference> const& rhs)
+			requires(Kind != __soa_type_kind::const_reference)
+		{
+			((this->__member_base<Members>::__get() = rhs.__corresponding_type<__soa_type_kind::const_reference>::template __member_base<Members>::__get()), ...);
+			return *this;
 		}
 		
-		void reserve(std::size_t n) {
-			if (n > capacity()) {
-				_grow_to(n);
-			}
+		constexpr operator __corresponding_type<__soa_type_kind::const_reference>() const {
+			return { __member_base<Members>::__get()... };
 		}
 		
-		void pop_back() {
-			([&] {
-				auto const buffer = this->template _get_array_ptr<T>();
-				// _destroy last element
-				(buffer + size() - 1)->~T();
-			}(), ...);
-			--_size;
+		template <std::size_t I>
+		auto& get() requires (Kind == __soa_type_kind::value) {
+			using M = std::tuple_element_t<I, std::tuple<Members...>>;
+			return __member_base<M>::__get();
 		}
 		
-		template <typename T_>
-		void __erase_one(std::size_t index) {
-			auto const buffer = this->template _get_array_ptr<T_>();
-			auto const elem = buffer + index;
-
-			// shift following elements
-			utl::for_each(elem, buffer + size() - 1, elem + 1, [](auto& a, auto& b) {
-				a = std::move(b);
-				});
-
-			// _destroy last element
-			destroy(*(buffer + size() - 1));
-		}
-
-		void erase(std::size_t index) {
-			__utl_bounds_check(index, 0, size());
-			(__erase_one<T>(index), ...);
-			--_size;
-		}
-		
-		void clear() {
-			(for_each<T>([](T& t){
-				t.~T();
-			}), ...);
-			_size = 0;
-		}
-		
-		void insert_at(std::size_t index, value_type const& elem) {
-			insert_at(index, elem.template get<T>()...);
-		}
-		void insert_at(std::size_t index, const_reference elem) {
-			insert_at(index, elem.template get<T>()...);
-		}
-		template <typename... U> requires (sizeof...(T) == sizeof...(U) && (std::is_convertible<U, T>::value && ...))
-		void insert_at(std::size_t index, U&&... u) {
-			if (this->size() == this->capacity()) {
-				_grow();
-			}
-			([&] {
-				auto const buffer = this->template _get_array_ptr<T>();
-				auto const elem = buffer + index;
-				
-				auto const back = buffer + size();
-				// construct back from back - 1
-				new (back) T(std::move(*(back - 1)));
-				// shift
-				for (auto i = back - 2, j = back - 1; i >= elem; --i, --j) {
-					*j = std::move(*i);
-				}
-				// assign elem
-				*elem = std::forward<U>(u);
-			}(), ...);
-			++_size;
-		}
-		
-		/// MARK: - for_each
-		// mutable
-		template <typename U, typename... V> requires (contains<U> && (contains<V> && ...))
-		auto for_each(invocable<U&, V&...> auto&& f) {
-			this->for_each<utl::direction::forward, U, V...>(UTL_FORWARD(f));
-		}
-		template <typename U, typename... V> requires (contains<U> && (contains<V> && ...))
-		auto for_each(invocable<std::size_t, U&, V&...> auto&& f) {
-			this->for_each<utl::direction::forward, U, V...>(UTL_FORWARD(f));
-		}
-		template <utl::direction dir, typename U, typename... V> requires (contains<U> && (contains<V> && ...))
-		auto for_each(invocable<U&, V&...> auto&& f) {
-			utl::for_each<dir>(UTL_FORWARD(f), this->array<U>(), this->array<V>()...);
-		}
-		template <utl::direction dir, typename U, typename... V> requires (contains<U> && (contains<V> && ...))
-		auto for_each(invocable<std::size_t, U&, V&...> auto&& f) {
-			utl::for_each<dir>(UTL_FORWARD(f), this->array<U>(), this->array<V>()...);
-		}
-		// const
-		template <typename U, typename... V> requires (contains<U> && (contains<V> && ...))
-		auto for_each(/*invocable<U const&, V const&...>*/ auto&& f) const {
-			this->for_each<utl::direction::forward, U, V...>(UTL_FORWARD(f));
-		}
-//		template <typename U, typename... V> requires (contains<U> && (contains<V> && ...))
-//		auto for_each(/*invocable<std::size_t, U const&, V const&...>*/ auto&& f) const {
-//			this->for_each<utl::direction::forward, U, V...>(UTL_FORWARD(f));
-//		}
-		template <utl::direction dir, typename U, typename... V> requires (contains<U> && (contains<V> && ...))
-		auto for_each(/*invocable<U const&, V const&...>*/ auto&& f) const {
-			utl::for_each<dir>(UTL_FORWARD(f), this->array<U>(), this->array<V>()...);
-		}
-//		template <utl::direction dir, typename U, typename... V> requires (contains<U> && (contains<V> && ...))
-//		auto for_each(/*invocable<std::size_t, U const&, V const&...>*/ auto&& f) const {
-//			utl::for_each<dir>(UTL_FORWARD(f), this->array<U>(), this->array<V>()...);
-//		}
-		
-		// reference types
-		template <utl::direction dir = utl::direction::forward>
-		void for_each(utl::invocable<reference> auto&& f) {
-			_for_each_impl(*this, UTL_FORWARD(f));
-		}
-		
-		template <utl::direction dir = utl::direction::forward>
-		void for_each(utl::invocable<const_reference> auto&& f) const {
-			_for_each_impl(*this, UTL_FORWARD(f));
-		}
-		
-	private:
-		template <utl::direction dir = utl::direction::forward>
-		static void _for_each_impl(auto&& soa, auto&& f) {
-			if constexpr (dir == utl::direction::forward) {
-				for (std::size_t i = 0, end = soa.size(); i < end; ++i) {
-					f(soa[i]);
-				}
+		template <std::size_t I>
+		auto& get() const {
+			using M = std::tuple_element_t<I, std::tuple<Members...>>;
+			if constexpr (Kind == __soa_type_kind::value) {
+				return as_const(__member_base<M>::__get());
 			}
 			else {
-				for (std::size_t i = soa.size(); i > 0;) {
-					--i;
-					f(soa[i]);
-				}
+				return __member_base<M>::__get();
 			}
 		}
-	public:
-		
-		template <typename ... U, typename G> requires ((contains<U> && ...))
-		auto find_if(G&& f) {
-			return this->find_if<utl::direction::forward, U...>(std::forward<G>(f));
-		}
-		template <utl::direction dir, typename ... U, typename G> requires ((contains<U> && ...))
-		auto find_if(G&& f) {
-			return utl::find_if<dir>(std::forward<G>(f), this->array<U>()...);
-		}
-		template <typename ... U, typename G> requires ((contains<U> && ...))
-		auto find_if(G&& f) const {
-			return this->find_if<utl::direction::forward, U...>(std::forward<G>(f));
-		}
-		template <utl::direction dir, typename ... U, typename G> requires ((contains<U> && ...))
-		auto find_if(G&& f) const {
-			return utl::find_if<dir>(std::forward<G>(f), this->array<U>()...);
-		}
-		
-		// MARK: - accessors
-		reference operator[](std::size_t index) {
-			__utl_bounds_check(index, 0, size());
-			return reference(this->template _get_array_ptr<T>()[index]...);
-		}
-		
-		const_reference operator[](std::size_t index) const {
-			__utl_bounds_check(index, 0, size());
-			return const_reference(this->template _get_array_ptr<T>()[index]...);
-		}
-
-		template <typename U> requires (contains<U>)
-		std::span<U> array() {
-			return std::span<U>(_get_array_ptr<U>(), size());
-		}
-		
-		template <typename U> requires (contains<U>)
-		std::span<U const> array() const {
-			return std::span<U const>(_get_array_ptr<U>(), size());
-		}
-		
-		template <typename U> requires (contains<U>)
-		U& get(std::size_t index) {
-			__utl_bounds_check(index, 0, size());
-			return _get_array_ptr<U>()[index];
-		}
-		
-		template <typename U> requires (contains<U>)
-		U const& get(std::size_t index) const {
-			__utl_bounds_check(index, 0, size());
-			return _get_array_ptr<U>()[index];
-		}
-		
-		template <typename U> requires (contains<U>)
-		U* data() {
-			return this->template _get_array_ptr<U>();
-		}
-		
-		template <typename U> requires (contains<U>)
-		U const* data() const {
-			return this->template _get_array_ptr<U>();
-		}
-		
-		
-	private:
-		template <typename T_>
-		void _grow_to_one(std::size_t new_cap) {
-			bool const is_empty = empty();
-			std::size_t const old_cap = capacity();
-
-			auto& alloc = _get_allocator<T_>();
-			T_* const new_buffer = static_cast<T_*>(alloc.allocate(new_cap));
-			auto const old_buffer = this->template _get_array_ptr<T_>();
-			utl::for_each(old_buffer, old_buffer + size(), new_buffer, [&](auto& i, auto& j) {
-				new (&j) T_(std::move(i));
-				destroy(i);
-				});
-
-			if (!is_empty) {
-				alloc.deallocate(old_buffer, old_cap);
-			}
-
-			this->template _set_array_ptr<T_>(new_buffer);
-		}
-
-		void _grow_to(std::size_t const new_cap) {
-			(_grow_to_one<T>(new_cap), ...);
-
-			_cap = new_cap;
-		}
-		
-		void _grow() {
-			auto constexpr growth_factor = 2;
-			std::size_t const new_cap = empty() ? 1 : capacity() * growth_factor;
-			_grow_to(new_cap);
-		}
-		
-		void _destroy() {
-			if (!empty()) {
-				((this->template _get_allocator<T>().deallocate(this->_get_array_ptr<T>(), capacity())), ...);
-			}
-		}
-		
-		template <typename U> requires (contains<U>)
-		U*& _get_array_ptr() { return std::get<index_of<U>>(_arrays); }
-		template <typename U> requires (contains<U>)
-		U const* _get_array_ptr() const { return std::get<index_of<U>>(_arrays); }
-		
-		template <typename U> requires (contains<U>)
-		void _set_array_ptr(U* ptr) { std::get<index_of<U>>(_arrays) = ptr; }
-		
-		template <typename U> requires (contains<U>)
-		auto& _get_allocator() { return std::get<index_of<U>>(_alloc); }
-						  
-	private:
-		std::tuple<T*...> _arrays = {};
-		std::tuple<pmr::polymorphic_allocator<T>...> _alloc;
-		
-		std::size_t _size = 0, _cap = 0;
+	};
+	
+	template <typename Meta, typename... Members, __soa_type_kind Kind>
+	struct __soa_type_maker<Meta, std::tuple<Members...>, Kind, false> {
+		using type = __soa_partial_element<Meta, std::tuple<Members...>, Kind>;
+	};
+	
+	// Partial Case One Member
+	template <typename Meta, typename Member>
+	struct __soa_type_maker<Meta, std::tuple<Member>, __soa_type_kind::value, false> {
+		using _T = std::tuple_element_t<Member::index, typename Meta::tuple>;
+		using type = _T;
+	};
+	template <typename Meta, typename Member>
+	struct __soa_type_maker<Meta, std::tuple<Member>, __soa_type_kind::reference, false> {
+		using _T = std::tuple_element_t<Member::index, typename Meta::tuple>;
+		using type = std::conditional_t<std::is_const_v<Member>, _T const&, _T&>;
+	};
+	template <typename Meta, typename Member>
+	struct __soa_type_maker<Meta, std::tuple<Member>, __soa_type_kind::const_reference, false> {
+		using _T = std::tuple_element_t<Member::index, typename Meta::tuple>;
+		using type = _T const&;
+	};
+	template <typename Meta, typename Member>
+	struct __soa_type_maker<Meta, std::tuple<Member>, __soa_type_kind::pointer, false> {
+		using _T = std::tuple_element_t<Member::index, typename Meta::tuple>;
+		using type = std::conditional_t<std::is_const_v<Member>, _T const*, _T*>;
+	};
+	template <typename Meta, typename Member>
+	struct __soa_type_maker<Meta, std::tuple<Member>, __soa_type_kind::const_pointer, false> {
+		using _T = std::tuple_element_t<Member::index, typename Meta::tuple>;
+		using type = _T const*;
 	};
 	
 }
 
-#endif // __UTL_STRUCTURE_OF_ARRAYS_HPP_INCLUDED__
+/// MARK: - Structured Binding Partial Types
+template <typename Meta, typename Tuple, utl::__soa_type_kind Kind>
+struct std::tuple_size<utl::__soa_partial_element<Meta, Tuple, Kind>>:
+	std::integral_constant<std::size_t, std::tuple_size<Tuple>::value>
+{};
+
+template <std::size_t N, typename Meta, typename... Members>
+struct std::tuple_element<N, utl::__soa_partial_element<Meta, std::tuple<Members...>, utl::__soa_type_kind::value>> {
+	using __member = std::tuple_element_t<N, std::tuple<Members...>>;
+	using _T = std::tuple_element_t<__member::index, typename Meta::tuple>;
+	using type = _T;
+};
+
+template <std::size_t N, typename Meta, typename... Members>
+struct std::tuple_element<N, utl::__soa_partial_element<Meta, std::tuple<Members...>, utl::__soa_type_kind::reference>> {
+	using __member = std::tuple_element_t<N, std::tuple<Members...>>;
+	using _T = std::tuple_element_t<__member::index, typename Meta::tuple>;
+	
+	using type = std::conditional_t<std::is_const_v<__member>, _T const&, _T&>;
+};
+
+template <std::size_t N, typename Meta, typename... Members>
+struct std::tuple_element<N, utl::__soa_partial_element<Meta, std::tuple<Members...>, utl::__soa_type_kind::const_reference>> {
+	using __member = std::tuple_element_t<N, std::tuple<Members...>>;
+	using _T = std::tuple_element_t<__member::index, typename Meta::tuple>;
+	using type = _T const&;
+};
+
+
+namespace utl {
+	
+	/// MARK: - Choosing Implementation
+	template <typename Meta, typename MemberIndices, typename T, typename I, typename Allocator, __utl_soa_options>
+	struct __soa_impl;
+	
+	/// SOA
+	template <typename ST, typename Allocator, typename I = std::make_index_sequence<ST::__utl_soa_meta::member_count>>
+	struct __soa_base;
+	
+	template <typename ST, typename Allocator, std::size_t... I>
+	struct __soa_base<ST, Allocator, std::index_sequence<I...>> {
+		using type = __soa_impl<
+			typename ST::__utl_soa_meta, /* Meta */
+			std::tuple<typename ST::__utl_soa_meta::members::template type<I>...>, /* here we want all members mutable in default order */
+			typename ST::__utl_soa_meta::tuple,
+			std::make_index_sequence<ST::__utl_soa_meta::member_count>,
+			Allocator,
+			__utl_soa_options{}
+		>;
+	};
+	
+	template <__soa_type ST, typename Allocator>
+	class structure_of_arrays: public __soa_base<ST, Allocator>::type {
+		using __base = typename __soa_base<ST, Allocator>::type;
+		using __base::__base;
+	};
+	
+	/// SOA View
+	template <typename Meta, typename Member>
+	struct __soa_get_member_type {
+		using _T = std::tuple_element_t<Member::index, typename Meta::tuple>;
+		using type = std::conditional_t<std::is_const_v<Member>, _T const, _T>;
+	};
+	
+	template <__soa_type ST, typename... Members>
+	using __soa_view_base = __soa_impl<
+		typename ST::__utl_soa_meta, /* Meta */
+		std::tuple<Members...>,
+		std::tuple<typename __soa_get_member_type<typename ST::__utl_soa_meta, Members>::type...>,
+		std::make_index_sequence<sizeof...(Members)>,
+		empty, /* Allocator */
+		__utl_soa_options{ .view = true }
+	>;
+	
+	template <__soa_type ST, typename... Members>
+	class soa_view: public __soa_view_base<ST, Members...> {
+		using __base = __soa_view_base<ST, Members...>;
+		using __base::__base;
+	};
+
+	/// MARK: - Iterator
+	template <typename SOAImpl, typename T, typename I, bool IsConst>
+	struct __soa_iterator;
+	
+	template <typename SOAImpl, typename... T, std::size_t... I, bool IsConst>
+	struct __soa_iterator<SOAImpl,
+						  std::tuple<T...>,
+						  std::index_sequence<I...>,
+						  IsConst>
+	{
+		using __soa_ref_type = std::conditional_t<IsConst, typename SOAImpl::const_reference, typename SOAImpl::reference>;
+		using __soa_ptr_type = std::tuple<std::conditional_t<IsConst, T const*, T*>...>;
+		
+		/// Member Types
+		using iterator_category = std::random_access_iterator_tag;
+		using difference_type = std::ptrdiff_t;
+		using value_type = typename SOAImpl::value_type;
+		using pointer = std::conditional_t<IsConst, typename SOAImpl::const_pointer, typename SOAImpl::pointer>;
+		using reference = typename SOAImpl::reference;
+		
+		/// Constructors
+		explicit __soa_iterator(__soa_ptr_type ptr): _ptr(ptr) {}
+		__soa_iterator(__private_tag, T*... ptr): _ptr(ptr...) {}
+		
+		/// Conversion to Const Iterator
+		operator __soa_iterator<SOAImpl,
+							    std::tuple<T...>,
+							    std::index_sequence<I...>,
+							    true>() const requires (!IsConst)
+		{
+			return { __private_tag{}, std::get<I>(_ptr)... };
+		}
+		
+		/// Partial Conversion to Const
+		template <typename ...U, bool RHSIsConst>
+		requires (std::is_convertible_v<T*, U*> && ...)
+		operator __soa_iterator<SOAImpl,
+								std::tuple<U...>,
+								std::index_sequence<I...>,
+								RHSIsConst>() const requires (!IsConst)
+		{
+			return { __private_tag{}, std::get<I>(_ptr)... };
+		}
+		
+		/// Increment / Decrement
+		__soa_iterator& operator++() {
+			(++std::get<I>(_ptr), ...);
+			return *this;
+		}
+		
+		__soa_iterator& operator--() {
+			(--std::get<I>(_ptr), ...);
+			return *this;
+		}
+		
+		/// Arithmetic
+		difference_type operator-(__soa_iterator const& rhs) const {
+			return std::get<0>(_ptr) - std::get<0>(rhs._ptr);
+		}
+		
+		__soa_iterator operator+(difference_type offset) const {
+			return __soa_iterator({ (std::get<I>(_ptr) + offset)... });
+		}
+		
+		__soa_iterator operator-(difference_type offset) const {
+			return __soa_iterator({ (std::get<I>(_ptr) - offset)... });
+		}
+		
+		__soa_iterator& operator+=(difference_type offset)& {
+			*this = *this + offset;
+			return *this;
+		}
+		
+		__soa_iterator& operator-=(difference_type offset)& {
+			*this = *this - offset;
+			return *this;
+		}
+		
+		/// Dereference
+		__soa_ref_type operator*() const {
+			return { *std::get<I>(_ptr)... };
+		}
+		
+		/**
+		 operator-> is not usable. It requires to return a raw pointer, but we can't form a raw pointer to our value type, because of the memory layout.
+		 */
+		/*
+		pointer operator->() const {
+			return { std::get<I>(_ptr)... };
+		}
+		 */
+		
+		/// Comparison
+		bool operator==(__soa_iterator const& rhs) const {
+			bool const result = std::get<0>(_ptr) == std::get<0>(rhs._ptr);
+			(__utl_assert_audit(result == (std::get<I>(_ptr) == std::get<I>(rhs._ptr))), ...);
+			return result;
+		}
+		
+		bool operator<(__soa_iterator const& rhs) const {
+			return std::get<0>(_ptr) < std::get<0>(rhs._ptr);
+		}
+		bool operator<=(__soa_iterator const& rhs) const {
+			return std::get<0>(_ptr) <= std::get<0>(rhs._ptr);
+		}
+		bool operator>(__soa_iterator const& rhs) const {
+			return std::get<0>(_ptr) > std::get<0>(rhs._ptr);
+		}
+		bool operator>=(__soa_iterator const& rhs) const {
+			return std::get<0>(_ptr) >= std::get<0>(rhs._ptr);
+		}
+		
+	private:
+		/// Data
+		__soa_ptr_type _ptr;
+	};
+	
+	/// MARK: - SOA Implementation
+	template <typename Allocator>
+	struct __make_byte_allocator {
+		using type = typename std::allocator_traits<Allocator>::template rebind_alloc<std::byte>;
+	};
+	
+	template <>
+	struct __make_byte_allocator<empty> {
+		using type = empty;
+	};
+	
+	template <bool IsView, typename... T>
+	struct __soa_impl_data /* IsView = true */ {
+		std::tuple<T*...> _data = {};
+		std::size_t _size = 0;
+	};
+	template <typename... T>
+	struct __soa_impl_data<false, T...> {
+		std::tuple<T*...> _data = {};
+		std::size_t _size = 0;
+		std::size_t _cap = 0;
+	};
+	
+	template <typename Meta,
+			  typename ..._Members,
+			  typename ...T,
+			  std::size_t ...I,
+			  typename _Allocator,
+			  __utl_soa_options Options>
+	struct __soa_impl<Meta,
+					  std::tuple<_Members...>,
+					  std::tuple<T...>,
+					  std::index_sequence<I...>,
+					  _Allocator,
+					  Options>:
+		private __make_byte_allocator<_Allocator>::type,
+		private __soa_impl_data<Options.view, T...>
+	{
+		/// MARK: Internals
+		template <typename, typename, typename, typename, typename, __utl_soa_options>
+		friend class __soa_impl;
+		
+		using __soa_type = typename Meta::value_type;
+		using __allocator = typename __make_byte_allocator<_Allocator>::type;
+		using __data_base = __soa_impl_data<Options.view, T...>;
+		
+		static constexpr bool __is_view = Options.view;
+		static constexpr bool __is_container = !__is_view;
+		static constexpr std::size_t __member_count = Meta::member_count;
+		
+		using __member_tuple = std::tuple<T...>;
+		using __member_indices = std::index_sequence<_Members::index...>;
+		using __members = std::tuple<_Members...>;
+		
+		static constexpr std::array<std::size_t, __member_count> __make_index_map() {
+			std::array<std::size_t, __member_count> result{};
+			std::array const member_indices = { _Members::index... };
+			for (std::size_t i = 0; i < __member_count; ++i) {
+				auto itr = std::find(member_indices.begin(), member_indices.end(), i);
+				if (itr == member_indices.end()) {
+					result[i] = std::size_t(-1);
+				}
+				else {
+					result[i] = itr - member_indices.begin();
+				}
+			}
+			return result;
+		}
+		static constexpr std::array<std::size_t, __member_count> __index_map = __make_index_map();
+		
+		template <typename Member>
+		static constexpr bool __has_member() {
+			constexpr std::size_t mapped_index = __index_map[Member::index];
+			if (mapped_index == std::size_t(-1)) {
+				return false;
+			}
+			if (!std::is_const_v<Member>) {
+				return !std::is_const_v<std::tuple_element_t<mapped_index, __members>>;
+			}
+			return true;
+		}
+		
+		/// MARK: Member Types
+		using value_type = typename __soa_type_maker<Meta, __members, __soa_type_kind::value>::type;
+		using allocator_type = __allocator;
+		using size_type = std::size_t;
+		using difference_type = std::ptrdiff_t;
+		using reference = typename __soa_type_maker<Meta, __members, __soa_type_kind::reference>::type;
+		using const_reference = typename __soa_type_maker<Meta, __members, __soa_type_kind::const_reference>::type;
+		using pointer = typename __soa_type_maker<Meta, __members, __soa_type_kind::pointer>::type;
+		using const_pointer = typename __soa_type_maker<Meta, __members, __soa_type_kind::const_pointer>::type;
+		using iterator = __soa_iterator<__soa_impl, std::tuple<T...>, std::index_sequence<I...>, false>;
+		using const_iterator = __soa_iterator<__soa_impl, std::tuple<T const...>, std::index_sequence<I...>, true>;
+		using reverse_iterator = std::reverse_iterator<__soa_iterator<__soa_impl, std::tuple<T...>, std::index_sequence<I...>, false>>;
+		using const_reverse_iterator = std::reverse_iterator<__soa_iterator<__soa_impl, std::tuple<T const...>, std::index_sequence<I...>, true>>;
+		
+		/// MARK: Constructors
+		__soa_impl(): __allocator{} {}
+		__soa_impl(__allocator const& alloc): __allocator(alloc) {}
+		__soa_impl(std::size_t size, __allocator const& alloc = {}): __allocator(alloc) {
+			reserve(size);
+			(__construct(__begin<I>(), __end<I>()), ...);
+			this->_size = size;
+		}
+		__soa_impl(std::initializer_list<value_type> ilist, __allocator const& alloc = {}): __allocator(alloc) {
+			reserve(ilist.size());
+			for (auto const& elem: ilist) {
+				push_back(elem);
+			}
+		}
+		
+		/// Copy Ctor
+		__soa_impl(__soa_impl const& rhs, __allocator const& alloc = {}): __allocator(alloc) {
+			if constexpr (__is_container) {
+				reserve(rhs._size);
+				this->_size = rhs._size;
+				(__uninitialized_copy(rhs.__begin<I>(), rhs.__end<I>(), __begin<I>()), ...);
+			}
+			else {
+				__copy_view(rhs);
+			}
+		}
+		void __copy_view(auto const& rhs) {
+			this->_data = rhs._data;
+			this->_size   = rhs._size;
+		}
+		
+		/// Move Ctor
+		__soa_impl(__soa_impl&& rhs, __allocator const& alloc = {}): __allocator(alloc) {
+			if constexpr (__is_container) {
+				if (__get_allocator() == rhs.__get_allocator()) {
+					// we can swap
+					this->_data = rhs._data;
+					this->_size   = rhs._size;
+					this->_cap    = rhs._cap;
+					rhs._data = {};
+					rhs._size = 0;
+					rhs._cap = 0;
+				}
+				else {
+					reserve(rhs.size());
+					this->_size = rhs.size();
+					(__uninitialized_move(rhs.__begin<I>(), rhs.__end<I>(), __begin<I>()), ...);
+				}
+			}
+			else {
+				__copy_view(rhs);
+			}
+		}
+		
+		/// Private (for construcing views)
+		explicit __soa_impl(__private_tag, std::tuple<T*...> ptr, std::size_t size) requires(__is_view): __data_base{ ptr, size } {}
+		
+		/// MARK: Assignment
+		__soa_impl& operator=(__soa_impl const& rhs)& {
+			if constexpr (__is_container) {
+				clear();
+				reserve(rhs.size());
+				(__uninitialized_copy(rhs.__begin<I>(), rhs.__end<I>(), __begin<I>()), ...);
+			}
+			else {
+				__copy_view(rhs);
+			}
+			return *this;
+		}
+		
+		__soa_impl& operator=(__soa_impl&& rhs)& {
+			if constexpr (__is_container) {
+				if (__get_allocator() == rhs.__get_allocator()) {
+					// we can swap pointers
+					__destroy_this();
+					this->_data = rhs._data;
+					this->_size   = rhs._size;
+					this->_cap    = rhs._cap;
+					rhs._data = {};
+					rhs._size = 0;
+					rhs._cap = 0;
+				}
+				else {
+					clear();
+					reserve(rhs.size());
+					(__uninitialized_move(rhs.__begin<I>(), rhs.__end<I>(), __begin<I>()), ...);
+				}
+			}
+			else {
+				__copy_view(rhs);
+			}
+			return *this;
+		}
+		
+ 
+		/// MARK: Destructor
+		~__soa_impl() {
+			if constexpr (__is_container) {
+				__destroy_this();
+			}
+		}
+		
+		/// MARK: Modifiers
+		/// Emplace Back
+		template <typename ...U>
+		void __emplace_back_impl(U&&... u) {
+			__grow_to(size() + 1);
+			((__begin<I>()[size()] = std::move(u)), ...);
+			++this->_size;
+		}
+		
+		template <typename ...U>
+		void emplace_back(U&&... u) requires (__is_container) { __emplace_back_impl(UTL_FORWARD(u)...); }
+		void emplace_back(T const&... t) requires(__is_container) { __emplace_back_impl(t...); }
+		void emplace_back(T&&... t) requires (__is_container) { __emplace_back_impl(std::move(t)...); }
+		
+		/// Push Back
+		void push_back(value_type const& v) requires (__is_container) { emplace_back(v.template get<I>()...); }
+		void push_back(value_type&& v) requires (__is_container) { emplace_back(std::move(v.template get<I>())...); }
+		
+		/// Pop Back
+		void pop_back() requires (__is_container) {
+			--this->_size;
+			(__destroy_at(__end<I>()), ...);
+		}
+		
+		/// Insert
+		static void __uninit_shift_right(auto begin, auto end, std::ptrdiff_t offset) {
+			__utl_assert(offset >= 0);
+			for (auto __it = end - offset; __it != end; ++__it) {
+				*(__it + offset) = *__it;
+			}
+			std::shift_right(begin, end, offset);
+		}
+		
+		void __insert_impl(std::size_t index, auto&& value) {
+			__utl_expect(index >= 0);
+			__utl_expect(index <= size());
+			// somewhat naive implementation, doing unnecesary copies and shifts when reallocating
+			__grow_to(size() + 1);
+			(__uninit_shift_right(__begin<I>() + index, __end<I>(), 1), ...);
+			++this->_size;
+			(*this)[index] = UTL_FORWARD(value);
+		}
+		
+		void insert(std::size_t index, value_type const& value) requires (__is_container) {
+			__insert_impl(index, value);
+		}
+		
+		void insert(std::size_t index, value_type&& value) requires (__is_container) {
+			__insert_impl(index, std::move(value));
+		}
+		
+		void insert(const_iterator itr, value_type const& value) requires (__is_container) {
+			insert(__itr_to_index(itr), value);
+		}
+		
+		void insert(const_iterator itr, value_type&& value) requires (__is_container) {
+			insert(__itr_to_index(itr), std::move(value));
+		}
+
+		/// Erase
+		void erase(std::size_t position) requires (__is_container) {
+			erase(position, position + 1);
+		}
+		
+		void erase(std::size_t first, std::size_t last) requires (__is_container) {
+			__utl_expect(first < last);
+			__utl_expect(first >= 0);
+			__utl_expect(last <= size());
+			std::size_t const count = last - first;
+			((std::shift_left(__begin<I>() + first, __end<I>(), count),
+			  __destroy(__end<I>() - count, __end<I>())),
+			 ...);
+			this->_size -= count;
+		}
+		
+		void erase(const_iterator itr) requires (__is_container) {
+			erase(__itr_to_index(itr));
+		}
+		
+		void erase(const_iterator first, const_iterator const& last) requires (__is_container) {
+			erase(__itr_to_index(first), __itr_to_index(last));
+		}
+		
+		/// Reserve
+		void reserve(std::size_t new_cap) requires (__is_container) {
+			if (this->_cap >= new_cap) {
+				return;
+			}
+			std::tuple<T*...> new_array = __allocate(new_cap);
+			(__relocate_one<I>(std::get<I>(new_array)), ...);
+			__deallocate(this->_data, this->_cap);
+			this->_data = new_array;
+			this->_cap = new_cap;
+		}
+		
+		template <std::size_t J>
+		void __relocate_one(auto* new_array) {
+			__uninitialized_move(__begin<J>(), __end<J>(), new_array);
+			__destroy(__begin<J>(), __end<J>());
+		}
+		
+		/// Clear
+		void clear() requires (__is_container) {
+			(__destroy(__begin<I>(), __end<I>()), ...);
+			this->_size = 0;
+		}
+		
+		/// MARK: Views
+		template <typename ...Members>
+		[[nodiscard]] soa_view<__soa_type, Members...> __view_impl() const {
+			using view_t = soa_view<__soa_type, Members...>;
+			return view_t(__private_tag{}, { __begin<__index_map[Members::index]>()... }, size());
+		}
+		
+		/// Owning
+		template <typename ...Members> requires (__has_member<Members>() && ...) && (__is_container)
+		[[nodiscard]] auto view() {
+			return __view_impl<Members...>();
+		}
+		template <typename ...Members> requires (__has_member<Members const>() && ...) && (__is_container)
+		[[nodiscard]] auto view() const {
+			return __view_impl<Members const...>();
+		}
+		/// Non-Owning
+		template <typename ...Members> requires (__has_member<Members>() && ...) && (__is_view)
+		[[nodiscard]] auto view() const {
+			return __view_impl<Members...>();
+		}
+		
+		/// Experimental
+		template <typename ...Members> requires (__has_member<Members>() && ...) && (__is_container)
+		[[nodiscard]] auto __view(Members...) {
+			return __view_impl<std::remove_const_t<Members>...>();
+		}
+		
+		/// Convert to std::span
+		operator std::span<std::tuple_element_t<0, std::tuple<T...>>>() const requires(sizeof...(T) == 1) {
+			return std::span<std::tuple_element_t<0, std::tuple<T...>>>(__begin<0>(), size());
+		}
+		operator std::span<std::tuple_element_t<0, std::tuple<T...>> const>() const requires (sizeof...(T) == 1) && (!std::is_const_v<std::tuple_element_t<0, std::tuple<T...>>>) {
+			return std::span<std::tuple_element_t<0, std::tuple<T...>>>(__begin<0>(), size());
+		}
+		
+		/// MARK: Obeservers
+		std::size_t size() const { return this->_size; }
+		std::size_t capacity() const requires (__is_container) { return this->_cap; }
+		bool empty() const { return size() == 0; }
+		
+		allocator_type get_allocator() const { return __get_allocator(); }
+		
+		/// MARK: Accessors
+		reference front() {
+			__utl_expect(!empty());
+			return { *__begin<I>()... };
+		}
+		const_reference front() const {
+			__utl_expect(!empty());
+			return { *__begin<I>()... };
+		}
+		reference back() {
+			__utl_expect(!empty());
+			return { *(__end<I>() - 1)... };
+		}
+		const_reference back() const {
+			__utl_expect(!empty());
+			return { *(__end<I>() - 1)... };
+		}
+		
+		template <typename M, bool ForceConst = false>
+		auto* __data_impl() const {
+			constexpr std::size_t tuple_index = __index_map[M::index];
+			using U = std::tuple_element_t<tuple_index, std::tuple<T...>>;
+			using V = std::conditional_t<std::is_const_v<M> || ForceConst, U const, U>;
+			return const_cast<V*>(__begin<tuple_index>());
+		}
+		
+		template <typename Member> requires (__has_member<Member>()) && (!__is_view)
+		auto* data() {
+			return __data_impl<Member>();
+		}
+		
+		pointer data() requires(__is_container) {
+			return { __data_impl<std::tuple_element_t<I, __members>>()... };
+		}
+		const_pointer data() const requires(__is_container) {
+			return { __data_impl<std::tuple_element_t<I, __members>>()... };
+		}
+		pointer data() requires(__is_view) {
+			return { __data_impl<std::tuple_element_t<I, __members>>()... };
+		}
+		
+		template <typename Member> requires (__has_member<Member>())
+		auto* data() const {
+			return __data_impl<Member, !__is_view>();
+		}
+		
+		auto* data() const requires (sizeof...(T) == 1) {
+			return __data_impl<std::tuple_element_t<0, __members>, !__is_view>();
+		}
+		
+		/// At
+		template <std::size_t TypeIndex> requires (__is_container)
+		auto& __at_impl(std::size_t index) {
+			return __begin<TypeIndex>()[index];
+		}
+		
+		template <std::size_t TypeIndex> requires (__is_container)
+		auto const& __at_impl(std::size_t index) const {
+			return __begin<TypeIndex>()[index];
+		}
+		
+		template <std::size_t TypeIndex> requires (__is_view)
+		auto& __at_impl(std::size_t index) const {
+			return __begin<TypeIndex>()[index];
+		}
+		
+		template <typename Reference>
+		Reference __at_impl(std::size_t index) {
+			return { __begin<I>()[index]... };
+		}
+		
+		template <typename Reference>
+		Reference __at_impl(std::size_t index) const {
+			return { __begin<I>()[index]... };
+		}
+		
+		template <std::size_t TypeIndex>
+		auto& at(std::size_t index) {
+			__bounds_check(index);
+			return __at_impl<TypeIndex>(index);
+		}
+		
+		reference at(std::size_t index) requires (__is_container) {
+			__bounds_check(index);
+			return __at_impl<reference>(index);
+		}
+		
+		const_reference at(std::size_t index) const requires (__is_container) {
+			__bounds_check(index);
+			return __at_impl<const_reference>(index);
+		}
+		
+		reference at(std::size_t index) const requires(__is_view) {
+			__bounds_check(index);
+			return __at_impl<reference>(index);
+		}
+		
+		/// Operator[]
+		reference operator[](std::size_t index) requires (__is_container) {
+			__bounds_check_assert(index);
+			return __at_impl<reference>(index);
+		}
+		
+		const_reference operator[](std::size_t index) const requires (__is_container) {
+			__bounds_check_assert(index);
+			return __at_impl<const_reference>(index);
+		}
+		
+		reference operator[](std::size_t index) const requires(__is_view) {
+			__bounds_check_assert(index);
+			return __at_impl<reference>(index);
+		}
+		
+		/// MARK: Begin, End
+		std::tuple<T*...> __data_offset(std::ptrdiff_t offset) requires (__is_container) {
+			return { (__begin<I>() + offset)... };
+		}
+		std::tuple<T const*...> __data_offset(std::ptrdiff_t offset) const requires (__is_container) {
+			return { (__begin<I>() + offset)... };
+		}
+		std::tuple<T*...> __data_offset(std::ptrdiff_t offset) const requires (__is_view) {
+			return { (__begin<I>() + offset)... };
+		}
+		/// Begin
+		iterator begin() requires (__is_container)             { return iterator(this->_data); }
+		const_iterator begin() const requires (__is_container) { return const_iterator(this->_data); }
+		iterator begin() const requires (__is_view)            { return iterator(this->_data); }
+		
+		/// CBegin
+		const_iterator cbegin() const { return const_iterator(this->_data); }
+		
+		/// RBegin
+		reverse_iterator rbegin() requires (__is_container)             { return std::make_reverse_iterator(end()); }
+		const_reverse_iterator rbegin() const requires (__is_container) { return std::make_reverse_iterator(end()); }
+		reverse_iterator rbegin() const requires (__is_view)            { return std::make_reverse_iterator(end()); }
+		
+		/// CRBegin
+		const_reverse_iterator crbegin() const { return std::make_reverse_iterator(cend()); }
+		
+		/// End
+		iterator end() requires (__is_container) { return iterator(__data_offset(size())); }
+		const_iterator end() const requires (__is_container) { return const_iterator(__data_offset(size())); }
+		iterator end() const requires (__is_view) { return iterator(__data_offset(size())); }
+		
+		/// CEnd
+		const_iterator cend() const { return const_iterator(__data_offset(size())); }
+		
+		/// REnd
+		reverse_iterator rend() requires (__is_container)             { return std::make_reverse_iterator(begin()); }
+		const_reverse_iterator rend() const requires (__is_container) { return std::make_reverse_iterator(begin()); }
+		reverse_iterator rend() const requires (__is_view)            { return std::make_reverse_iterator(begin()); }
+		
+		/// CREnd
+		const_reverse_iterator crend() const { return std::make_reverse_iterator(begin()); }
+		
+		/// MARK: Single Member Begin, End
+		/// Begin
+		template <typename M>
+		auto begin() requires (__is_container)       { return __begin<M::index, std::is_const_v<M>>(); }
+		template <typename M>
+		auto begin() const requires (__is_container) { return __begin<M::index, true>(); }
+		template <typename M>
+		auto begin() const requires (__is_view)      { return __begin<M::index, std::is_const_v<M>>(); }
+		
+		/// CBegin
+		template <typename M>
+		auto cbegin() const { return __begin<M::index, true>(); }
+		
+		/// End
+		template <typename M>
+		auto end() requires (__is_container)       { return __end<M::index, std::is_const_v<M>>(); }
+		template <typename M>
+		auto end() const requires (__is_container) { return __end<M::index, true>(); }
+		template <typename M>
+		auto end() const requires (__is_view)      { return __end<M::index, std::is_const_v<M>>(); }
+		
+		/// CEnd
+		template <typename M>
+		auto cend() const { return __end<M::index, true>(); }
+		
+		/// RBegin
+		template <typename M>
+		auto rbegin() requires (__is_container)       { return std::make_reverse_iterator(end()); }
+		template <typename M>
+		auto rbegin() const requires (__is_container) { return std::make_reverse_iterator(end()); }
+		template <typename M>
+		auto rbegin() const requires (__is_view)      { return std::make_reverse_iterator(end()); }
+		
+		/// CRBegin
+		template <typename M>
+		auto crbegin() const { return std::make_reverse_iterator(cend()); }
+		
+		/// REnd
+		template <typename M>
+		auto rend() requires (__is_container)       { return std::make_reverse_iterator(begin()); }
+		template <typename M>
+		auto rend() const requires (__is_container) { return std::make_reverse_iterator(begin()); }
+		template <typename M>
+		auto rend() const requires (__is_view)      { return std::make_reverse_iterator(begin()); }
+		
+		/// CREnd
+		template <typename M>
+		auto crend() const { return std::make_reverse_iterator(cbegin()); }
+		
+		/// MARK: More Internals
+		template <std::size_t J, bool ForceConst = false>
+		auto* __begin() const {
+			using U = std::tuple_element_t<J, std::tuple<T...>>;
+			using MaybeConstU = std::conditional_t<ForceConst, std::add_const_t<U>, U>;
+			return const_cast<MaybeConstU*>(std::get<J>(this->_data));
+		}
+		
+		template <std::size_t J, bool ForceConst = false>
+		auto* __end() const {
+			return __begin<J, ForceConst>() + size();
+		}
+		
+		template <std::size_t J, bool ForceConst = false>
+		auto* __cap_end() const requires (__is_container) {
+			return __begin<J, ForceConst>() + capacity();
+		}
+		
+		std::size_t __itr_to_index(auto itr) const {
+			difference_type const index = itr - begin();
+			__utl_expect(index >= 0,      "invalid iterator");
+			__utl_expect(index <= size(), "invalid iterator");
+			return index;
+		}
+		
+		std::size_t __recommend_size(std::size_t new_size) {
+			return std::max(new_size, size() * 2);
+		}
+		
+		void __grow_to(std::size_t min_cap) {
+			if (this->_cap <= min_cap) {
+				reserve(__recommend_size(min_cap));
+			}
+		}
+		
+		void __construct(auto begin, auto end, auto&&... args) {
+			for (; begin != end; ++begin) {
+				__construct_at(begin, UTL_FORWARD(args)...);
+			}
+		}
+		
+		void __construct_at(auto address, auto&&... args) {
+			std::allocator_traits<__allocator>::construct(__get_allocator(), address, UTL_FORWARD(args)...);
+		}
+		
+		void __destroy(auto begin, auto end) {
+			for (; begin != end; ++begin) {
+				__destroy_at(begin);
+			}
+		}
+		
+		void __destroy_at(auto address) {
+			std::allocator_traits<__allocator>::destroy(__get_allocator(), address);
+		}
+		
+		void __uninitialized_move(auto begin, auto end, auto out) {
+			for (; begin != end; ++begin, ++out) {
+				__construct_at(out, std::move(*begin));
+			}
+		}
+		
+		void __uninitialized_copy(auto begin, auto end, auto out) {
+			for (; begin != end; ++begin, ++out) {
+				__construct_at(out, *begin);
+			}
+		}
+		
+		void __destroy_this() {
+			static_assert(__is_container);
+			(__destroy(__begin<I>(), __end<I>()), ...);
+			__deallocate(this->_data, size());
+			this->_size = 0;
+			this->_cap = 0;
+		}
+		
+		void __bounds_check(std::size_t index) const {
+			if (index >= size()) {
+				__throw_out_of_bounds_error();
+			}
+		}
+		
+		void __bounds_check_assert(std::size_t index) const {
+			__utl_bounds_check(index, 0, size());
+		}
+		
+		void __throw_out_of_bounds_error() {
+			throw std::logic_error("utl::structure_of_arrays<...>::out_of_bounds");
+		}
+		
+		/// MARK: Memory Allocation
+		struct __buffer_info {
+			std::size_t total_size;
+			std::size_t base_align;
+			std::array<std::size_t, __member_count> offset;
+		};
+		
+		static __buffer_info __make_buffer_info(std::size_t obj_count) {
+			static constexpr std::array size = { sizeof(T)... };
+			static constexpr std::array<std::size_t, __member_count + 1> alignment = {
+				alignof(T)..., 1 /* append 1 here to make algorithm below simpler, because we don't have to branch on last element */
+			};
+			
+			__buffer_info result;
+			result.base_align = alignment[0];
+			
+			std::size_t total_size = 0;
+			for (std::size_t i = 0; i < __member_count; ++i) {
+				result.offset[i] = total_size;
+				std::size_t const i_size = size[i] * obj_count;
+				
+				total_size += round_up_pow_two(i_size, alignment[i + 1]);
+			}
+			
+			result.total_size = total_size;
+			return result;
+		}
+		
+		static std::tuple<T*...> __decompose_buffer_pointer(void* ptr, __buffer_info const& info) {
+			return { (T*)((char*)ptr + info.offset[I])... };
+		}
+		
+		void* __allocate_raw(std::size_t size, std::size_t alignment) {
+			std::byte* const result = __get_allocator().allocate(size);
+			__utl_assert((std::uintptr_t)result % alignment == 0, "memory not aligned");
+			return result;
+		}
+		void __deallocate_raw(void* ptr, std::size_t size, std::size_t alignment) {
+			if (ptr == nullptr) {
+				__utl_assert(size == 0);
+				return;
+			}
+			__get_allocator().deallocate((std::byte*)ptr, size);
+		}
+		
+		std::tuple<T*...> __allocate(std::size_t obj_count) {
+			auto const buffer_info = __make_buffer_info(obj_count);
+			void* const buffer = __allocate_raw(buffer_info.total_size, buffer_info.base_align);
+			return __decompose_buffer_pointer(buffer, buffer_info);
+		}
+		
+		// convenience
+		void __deallocate(std::tuple<T*...> const& ptr, std::size_t obj_count) {
+			__deallocate((void*)std::get<0>(ptr), obj_count);
+		}
+		void __deallocate(void* ptr, std::size_t obj_count) {
+			auto const buffer_info = __make_buffer_info(obj_count);
+			__deallocate_raw(ptr, buffer_info.total_size, buffer_info.base_align);
+		}
+		
+		__allocator& __get_allocator() {
+			return static_cast<__allocator&>(*this);
+		}
+		__allocator const& __get_allocator() const {
+			return static_cast<__allocator const&>(*this);
+		}
+	};
+	
+	
+	
+}

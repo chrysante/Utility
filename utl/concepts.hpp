@@ -22,11 +22,7 @@ namespace utl {
 
 	/// MARK: - Standard Concepts
 #if UTL_STDLIB_HAS_CONCEPTS
-<<<<<<< HEAD
-	
-=======
 
->>>>>>> 7fb59ccaef9831cf8b2aed71e2e18cee100a22e5
 	template <typename T>
 	concept integral = std::integral<T>;
 
@@ -55,8 +51,6 @@ namespace utl {
 	concept convertible_to = std::convertible_to<From, To>;
 
 	template <typename T>
-<<<<<<< HEAD
-=======
 	concept copy_constructible = std::copy_constructible<T>;
 
 	template <typename T, typename... Args >
@@ -65,7 +59,6 @@ namespace utl {
 #else // UTL_STDLIB_HAS_CONCEPTS
 
 	template <typename T>
->>>>>>> 7fb59ccaef9831cf8b2aed71e2e18cee100a22e5
 	concept integral = std::is_integral_v<T>;
 
 	template <typename T>
@@ -178,14 +171,7 @@ namespace utl {
 	//			__utl_weakly_equality_comparable_with<T, U>;
 
 #endif // UTL_STDLIB_HAS_CONCEPTS
-<<<<<<< HEAD
 	
-	template <typename T>
-	concept arithmetic = std::is_arithmetic_v<T>;
-	
-=======
-
->>>>>>> 7fb59ccaef9831cf8b2aed71e2e18cee100a22e5
 	/// MARK: - Additional Concepts
 	template <typename T>
 	concept arithmetic = std::is_arithmetic_v<T>;

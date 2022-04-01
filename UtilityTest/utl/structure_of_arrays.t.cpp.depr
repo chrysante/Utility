@@ -1,7 +1,7 @@
 #include "Catch2.hpp"
 
 
-#include "utl/structure_of_arrays.hpp"
+#include "utl/__depr_structure_of_arrays.hpp"
 
 TEST_CASE("structure_of_arrays") {
 	

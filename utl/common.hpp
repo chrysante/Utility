@@ -3,13 +3,10 @@
 #include "__base.hpp"
 _UTL_SYSTEM_HEADER_
 
-<<<<<<< HEAD:utl/__common.hpp
 #include <utility>
 #include <type_traits>
 #include <cstdint>
 
-=======
->>>>>>> 7fb59ccaef9831cf8b2aed71e2e18cee100a22e5:utl/common.hpp
 /// MARK: UTL_CONCAT
 #define _UTL_CONCAT_IMPL(A, B) A##B
 #define UTL_CONCAT(A, B) _UTL_CONCAT_IMPL(A, B)
@@ -170,6 +167,9 @@ namespace utl {
 	
 	template <typename T>
 	struct tag { using type = T; };
+	
+	/// MARK: Empty
+	struct empty{};
 	
 	// MARK: as_const / as_mutable
 	template <typename T>
