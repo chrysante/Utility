@@ -8,58 +8,28 @@
 #include "utl/vector.hpp"
 #include <random>
 
-using namespace mtl::short_types;
+namespace myLib {
 
-namespace {
+	template <typename T, typename U>
+	concept __same_as_impl = std::is_same_v<T, U>;
 	
-	struct NotComparable {
-		
-	};
-
-	UTL_SOA_TYPE(Node,
-				 (int, id),
-				 (float3, position),
-				 (float2, size),
-				 (NotComparable, test)
-				 );
-
-}
-
-void f(utl::vector<int>) {
+	template <typename T, typename U>
+	concept same_as = __same_as_impl<T, U> && __same_as_impl<U, T>;
 	
 }
+
+template <typename T>
+concept hasOffset = requires(T t) {
+	{ t.offset } -> myLib::same_as<mtl::double2&>;
+};
+
+
+struct Event {
+	mtl::double2 offset;
+};
 
 int main() {
+
+	std::cout << hasOffset<Event> << std::endl;
 	
-	utl::small_vector<int> v;
-	f(v);
-	
-	
-//	utl::structure_of_arrays<Node> s;
-//	for (int i = 0; i < 10; ++i) {
-//		s.push_back({ .id = i });
-//	}
-
-	utl::structure_of_arrays<Node> s(10);
-
-	std::generate(s.begin(), s.end(), [i = 0]() mutable { return Node{ .id = i++ }; });
-
-	std::reverse(s.begin(), s.end());
-
-	std::rotate(s.begin(), s.begin() + 3, s.end());
-
-	std::shuffle(s.begin(), s.end(), std::mt19937(std::random_device{}()));
-
-	std::sort(s.begin(), s.end(), [](Node::reference a, Node::reference b) { return a.id < b.id; });
-
-	utl::structure_of_arrays<Node> t;
-
-	std::copy(s.begin(), s.end(), std::back_inserter(t));
-
-	for (auto id: t.view<Node::members::id>()) {
-		std::cout << id << std::endl;
-	}
-
-
-
 }

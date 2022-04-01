@@ -1,67 +1,16 @@
 #include "Catch2.hpp"
+
+#include "LifetimeCounter.hpp"
+
 #include "utl/structure_of_arrays.hpp"
 #include "utl/utility.hpp"
 
 #include <algorithm>
 #include <iostream>
 
+using namespace utl_test;
+
 namespace {
-	
-	struct __LifetimeCounterBase {
-		bool _doCount = true;
-		bool operator==(__LifetimeCounterBase const&) const = default;
-	};
-	
-	class LifetimeCounter: __LifetimeCounterBase {
-	public:
-		LifetimeCounter() {
-			_inc();
-		}
-		
-		explicit LifetimeCounter(bool doCount): __LifetimeCounterBase{ doCount } {
-			_inc();
-		}
-		
-		LifetimeCounter(LifetimeCounter const& rhs) {
-			_inc();
-		}
-		
-		LifetimeCounter(LifetimeCounter&&) {
-			_inc();
-		}
-		
-		~LifetimeCounter() {
-			_dec();
-		}
-		
-		LifetimeCounter& operator=(LifetimeCounter const&)& {
-			return *this;
-		}
-		
-		LifetimeCounter& operator=(LifetimeCounter&&)& {
-			return *this;
-		}
-		
-		bool operator==(LifetimeCounter const&) const = default;
-		
-		static int liveObjects() { return _liveObjects; }
-		static void reset() { _liveObjects = 0; }
-		
-	private:
-		void _inc() const {
-			if (_doCount) {
-				++_liveObjects;
-			}
-		}
-		void _dec() const {
-			if (_doCount) {
-				--_liveObjects;
-			}
-		}
-		static int _liveObjects;
-	};
-	
-	int LifetimeCounter::_liveObjects;
 	
 	struct alignas(64) Overaligned {
 		bool operator==(Overaligned const&) const = default;
@@ -414,7 +363,7 @@ TEST_CASE("structure_of_arrays::swap") {
 		Particle{ .id = 2 }
 	};
 	utl::structure_of_arrays<Particle> t = {
-		Particle{ .id = 0 },
+		Particle{ .id =  0 },
 		Particle{ .id = -1 }
 	};
 	s.swap(t);
@@ -449,5 +398,44 @@ TEST_CASE("structure_of_arrays iterate") {
 		for (; itr != end; ++itr, ++i) {
 			CHECK(*itr == i);
 		}
+	}
+}
+
+TEST_CASE("structure_of_arrays with STL algorithms") {
+	utl::structure_of_arrays<Particle> s(10);
+	std::generate(s.begin(), s.end(), [i = 0]() mutable {
+		auto const result = Particle{ .id = 9 - i, .position = static_cast<float>(9 - i) };
+		++i;
+		return result;
+	});
+	for (int i = 0; i < 10; ++i) {
+		CHECK(s[i].id == 9 - i);
+		CHECK(s[i].position == 9 - i);
+	}
+	std::reverse(s.begin(), s.end());
+	for (int i = 0; i < 10; ++i) {
+		CHECK(s[i].id == i);
+		CHECK(s[i].position == i);
+	}
+	std::rotate(s.begin(), s.begin() + 3, s.end());
+	for (int i = 0; i < 10; ++i) {
+		CHECK(s[i].id == (i + 3) % 10);
+		CHECK(s[i].position == (i + 3) % 10);
+	}
+	
+	std::shuffle(s.begin(), s.end(), std::mt19937(std::random_device{}()));
+
+	std::sort(s.begin(), s.end(), [](auto a, auto b) { return a.id < b.id; });
+	for (int i = 0; i < 10; ++i) {
+		CHECK(s[i].id == i);
+		CHECK(s[i].position == i);
+	}
+	
+	utl::structure_of_arrays<Particle> t;
+
+	std::copy(s.begin(), s.end(), std::back_inserter(t));
+	for (int i = 0; i < 10; ++i) {
+		CHECK(t[i].id == i);
+		CHECK(t[i].position == i);
 	}
 }
