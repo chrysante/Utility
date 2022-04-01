@@ -6,7 +6,7 @@ _UTL_SYSTEM_HEADER_
 #include "common.hpp"
 #include "type_traits.hpp"
 #include "concepts.hpp"
-
+#include "math.hpp"
 
 #include <cmath>
 #include <algorithm>
@@ -99,8 +99,12 @@ namespace utl {
 			}
 		}
 		
-		__utl_nodiscard constexpr auto ceil_divide(integral auto a, integral auto b) {
+		__utl_nodiscard constexpr auto ceil_divide(unsigned_integral auto a, unsigned_integral auto b) {
 			return (a / b) + !!(a % b);
+		}
+		
+		__utl_nodiscard constexpr auto ceil_divide_pow_two(unsigned_integral auto a, unsigned_integral auto b) {
+			return fast_div_pow_two(a, b) + !!fast_mod_pow_two(a, b);
 		}
 		
 		__utl_nodiscard constexpr auto fract(floating_point auto f) {
@@ -159,6 +163,11 @@ namespace utl {
 	UTL_INTERNAL_FUNCTION_OBJECT_DEF(ceil_divide, (auto const& x, auto const& y) const {
 		using __utl_function_objects_impl::ceil_divide;
 		return ceil_divide(x, y);
+	});
+	
+	UTL_INTERNAL_FUNCTION_OBJECT_DEF(ceil_divide_pow_two, (auto const& x, auto const& y) const {
+		using __utl_function_objects_impl::ceil_divide_pow_two;
+		return ceil_divide_pow_two(x, y);
 	});
 	
 	UTL_INTERNAL_FUNCTION_OBJECT_DEF(floor, (auto const& x) const {

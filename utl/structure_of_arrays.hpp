@@ -77,6 +77,7 @@ _UTL_SYSTEM_HEADER_
 #include "__debug.hpp"
 #include "__soa_generated.hpp"
 #include "__memory_resource_base.hpp"
+#include "__function_objects.hpp"
 #include "common.hpp"
 #include "math.hpp"
 #include "concepts.hpp"
@@ -513,13 +514,13 @@ namespace utl {
 	};
 	
 	/// MARK: - SOA Implementation
-	template <typename Allocator>
-	struct __make_byte_allocator {
-		using type = typename std::allocator_traits<Allocator>::template rebind_alloc<std::byte>;
+	template <typename Allocator, typename T>
+	struct __soa_rebind_allocator {
+		using type = typename std::allocator_traits<Allocator>::template rebind_alloc<T>;
 	};
 	
-	template <>
-	struct __make_byte_allocator<empty> {
+	template <typename T>
+	struct __soa_rebind_allocator<empty, T> {
 		using type = empty;
 	};
 	
@@ -535,6 +536,9 @@ namespace utl {
 		std::size_t _cap = 0;
 	};
 	
+	constexpr std::size_t __soa_max_align = 64;
+	struct alignas(__soa_max_align) __soa_max_aligned_storage: std::integral_constant<std::size_t, __soa_max_align> {};
+	
 	template <typename Meta,
 			  typename ..._Members,
 			  typename ...T,
@@ -547,7 +551,7 @@ namespace utl {
 					  std::index_sequence<I...>,
 					  _Allocator,
 					  Options>:
-		private __make_byte_allocator<_Allocator>::type,
+		private __soa_rebind_allocator<_Allocator, __soa_max_aligned_storage>::type,
 		private __soa_impl_data<Options.view, T...>
 	{
 		/// MARK: Internals
@@ -555,7 +559,8 @@ namespace utl {
 		friend class __soa_impl;
 		
 		using __soa_type = typename Meta::value_type;
-		using __allocator = typename __make_byte_allocator<_Allocator>::type;
+		
+		using __allocator = typename __soa_rebind_allocator<_Allocator, __soa_max_aligned_storage>::type;
 		using __data_base = __soa_impl_data<Options.view, T...>;
 		
 		static constexpr bool __is_view = Options.view;
@@ -1235,16 +1240,21 @@ namespace utl {
 		}
 		
 		void* __allocate_raw(std::size_t size, std::size_t alignment) {
-			std::byte* const result = __get_allocator().allocate(size);
+			__utl_expect(alignment <= __soa_max_align);
+			
+			size = ceil_divide_pow_two(size, __soa_max_align);
+			void* const result = __get_allocator().allocate(size);
 			__utl_assert((std::uintptr_t)result % alignment == 0, "memory not aligned");
+			
 			return result;
 		}
 		void __deallocate_raw(void* ptr, std::size_t size, std::size_t alignment) {
+			size = ceil_divide_pow_two(size, __soa_max_align);
 			if (ptr == nullptr) {
 				__utl_assert(size == 0);
 				return;
 			}
-			__get_allocator().deallocate((std::byte*)ptr, size);
+			__get_allocator().deallocate(reinterpret_cast<__soa_max_aligned_storage*>(ptr), size);
 		}
 		
 		std::tuple<T*...> __allocate(std::size_t obj_count) {

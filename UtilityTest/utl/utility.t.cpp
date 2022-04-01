@@ -8,15 +8,32 @@
 #include <random>
 
 TEST_CASE("round_up") {
-	CHECK(utl::round_up(12, 4) == 12);
-	CHECK(utl::round_up(13, 4) == 16);
-	CHECK(utl::round_up(0, 3) == 0);
-	CHECK(utl::round_up(3, 3) == 3);
-	CHECK(utl::round_up(12, 1) == 12);
+	CHECK(utl::round_up(12u, 4) == 12);
+	CHECK(utl::round_up(13u, 4) == 16);
+	CHECK(utl::round_up(0u, 3) == 0);
+	CHECK(utl::round_up(3u, 3) == 3);
+	CHECK(utl::round_up(12u, 1) == 12);
 	
-	CHECK(utl::round_up_pow_two(12, 4) == 12);
-	CHECK(utl::round_up_pow_two(13, 4) == 16);
-	CHECK(utl::round_up_pow_two(12, 1) == 12);
+	CHECK(utl::round_up_pow_two(12u, 4) == 12);
+	CHECK(utl::round_up_pow_two(13u, 4) == 16);
+	CHECK(utl::round_up_pow_two(12u, 1) == 12);
+}
+
+TEST_CASE("fast_mod_pow_two") {
+	CHECK(utl::fast_mod_pow_two(5u, 2) == 1);
+	CHECK(utl::fast_mod_pow_two(13u, 4) == 1);
+	CHECK(utl::fast_mod_pow_two(515u, 32) == 3);
+	
+	CHECK(utl::fast_mod_pow_two(512u, 32) == 0);
+	CHECK(utl::fast_mod_pow_two(0u, 32) == 0);
+	CHECK(utl::fast_mod_pow_two(32u, 32) == 0);
+}
+
+TEST_CASE("fast_div_pow_two") {
+	CHECK(utl::fast_div_pow_two(5u, 2) == 2);
+	CHECK(utl::fast_div_pow_two(13u, 4) == 3);
+	CHECK(utl::fast_div_pow_two(10u, 4) == 2);
+	CHECK(utl::fast_div_pow_two(12u, 4) == 3);
 }
 
 static auto makeTestData(std::size_t count, utl::invocable<std::mt19937_64&> auto f) {

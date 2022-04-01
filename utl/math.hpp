@@ -3,8 +3,7 @@
 #include "__base.hpp"
 _UTL_SYSTEM_HEADER_
 
-
-#include "__function_objects.hpp"
+#include "__debug.hpp"
 #include "concepts.hpp"
 #include <bit>
 
@@ -34,14 +33,27 @@ namespace utl {
 		}
 	}
 
-	template <integral T>
+	template <unsigned_integral T>
+	constexpr T fast_div_pow_two(T x, T y) {
+		__utl_expect(y >= 0);
+		__utl_expect(std::popcount(y) == 1);
+		int const e = utl::log2(y);
+		return x >> e;
+	}
+	template <integral T, integral U> requires unsigned_integral<std::common_type_t<T, U>>
+	constexpr std::common_type_t<T, U> fast_div_pow_two(T x, U y) {
+		using X = std::common_type_t<T, U>;
+		return fast_div_pow_two((X)x, (X)y);
+	}
+	
+	template <unsigned_integral T>
 	constexpr T fast_mod_pow_two(T x, T y) {
 		__utl_expect(y >= 0);
 		__utl_expect(std::popcount(y) == 1);
-		T const e = utl::log2(y);
+		int const e = utl::log2(y);
 		return ~(~T{} << e) & x;
 	}
-	template <integral T, integral U>
+	template <integral T, integral U> requires unsigned_integral<std::common_type_t<T, U>>
 	constexpr std::common_type_t<T, U> fast_mod_pow_two(T x, U y) {
 		using X = std::common_type_t<T, U>;
 		return fast_mod_pow_two((X)x, (X)y);
@@ -57,11 +69,11 @@ namespace utl {
 		return remainder == 0 ? x : x + multiple_of - remainder;
 	}
 	
-	constexpr auto round_up(integral auto x, std::size_t multiple_of) noexcept {
+	constexpr auto round_up(unsigned_integral auto x, std::size_t multiple_of) noexcept {
 		return __round_up_impl(x, multiple_of, [](auto x, auto y) { return x % y; });
 	}
 	
-	constexpr auto round_up_pow_two(integral auto x, std::size_t multiple_of) noexcept {
+	constexpr auto round_up_pow_two(unsigned_integral auto x, std::size_t multiple_of) noexcept {
 		return __round_up_impl(x, multiple_of, [](auto x, auto y) { return fast_mod_pow_two(x, y); });
 	}
 	
