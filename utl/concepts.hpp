@@ -100,17 +100,7 @@ namespace utl {
 		requires {
 		static_cast<To>(std::declval<From>());
 	};
-	//
-	//	template <typename LHS, typename RHS>
-	//	concept assignable_from =
-	//	  std::is_lvalue_reference_v<LHS> &&
-	//	  std::common_reference_with<
-	//		const std::remove_reference_t<LHS>&,
-	//		const std::remove_reference_t<RHS>&> &&
-	//	  requires(LHS lhs, RHS&& rhs) {
-	//		{ lhs = std::forward<RHS>(rhs) } -> std::same_as<LHS>;
-	//	  };
-	//
+	
 	template <typename T>
 	concept move_constructible = constructible_from<T, T> && convertible_to<T, T>;
 	//
@@ -120,56 +110,7 @@ namespace utl {
 		constructible_from<T, T&> && convertible_to<T&, T> &&
 		constructible_from<T, T const&> && convertible_to<T const&, T> &&
 		constructible_from<T, T const> && convertible_to<T const, T>;
-	//
-	//	template <typename T>
-	//	concept movable =
-	//	  std::is_object_v<T> &&
-	//	  move_constructible<T> &&
-	//	  assignable_from<T&, T> &&
-	//	  swappable<T>;
-	//
-	//
-	//	template <typename T>
-	//	concept copyable =
-	//		copy_constructible<T> &&
-	//		movable<T> &&
-	//		assignable_from<T&, T&> &&
-	//		assignable_from<T&, const T&> &&
-	//		assignable_from<T&, const T>;
-	//
-	//	template <typename T>
-	//	concept default_initializable =
-	//
-	//
-	//	template <typename T, typename U>
-	//	concept __utl_weakly_equality_comparable_with =
-	//		requires(std::remove_reference_t<T> const& t,
-	//				 std::remove_reference_t<U> const& u) {
-	//			{ t == u } -> convertible_to<bool>;
-	//			{ t != u } -> convertible_to<bool>;
-	//			{ u == t } -> convertible_to<bool>;
-	//			{ u != t } -> convertible_to<bool>;
-	//		};
-	//
-	//	template <typename T>
-	//	concept equality_comparable = __utl_weakly_equality_comparable_with<T, T>;
-	//
-	//	template <typename T>
-	//	concept semi_regular = copyable<T> && default_initializable<T>;
-
-	//	template <typename T, typename U> /* too hard too implement */
-	//	concept equality_comparable_with =
-	//		equality_comparable<T> &&
-	//		equality_comparable<U> &&
-	//		common_reference_with<
-	//			const std::remove_reference_t<T>&,
-	//			const std::remove_reference_t<U>&> &&
-	//		equality_comparable<
-	//			common_reference_t<
-	//				const std::remove_reference_t<T>&,
-	//				const std::remove_reference_t<U>&>> &&
-	//			__utl_weakly_equality_comparable_with<T, U>;
-
+	
 #endif // UTL_STDLIB_HAS_CONCEPTS
 	
 	/// MARK: - Additional Concepts
@@ -191,17 +132,79 @@ namespace utl {
 	template <class F>
 	concept any_invocable = is_any_invocable<F>::value;
 	
+	template <typename T>
+	concept __utl_referenceable = std::is_object_v<std::remove_reference_t<T>>;
+	
 	template <typename I>
-	concept input_iterator = requires(I&& i) {
-		{ i != i } -> convertible_to<bool>;
-		{ *i }     -> convertible_to<typename std::iterator_traits<I>::value_type>;
-		{ ++i }    -> same_as<I&>;
-	};
+	concept iterator =
+		requires(I i) {
+			{   *i } -> __utl_referenceable;
+			{  ++i } -> std::same_as<I&>;
+			{ *i++ } -> __utl_referenceable;
+		} && std::copyable<I>;
 	
 	template <typename I, typename T>
-	concept input_iterator_for = input_iterator<I> && requires(I&& i) {
-		{ *i } -> convertible_to<T>;
-	};
+	concept iterator_for = iterator<I> && std::convertible_to<typename std::iterator_traits<I>::value_type, T>;
+	
+	template <typename I>
+	concept input_iterator =
+		iterator<I> &&
+		std::equality_comparable<I> &&
+		requires(I i) {
+			typename std::incrementable_traits<I>::difference_type;
+			typename std::indirectly_readable_traits<I>::value_type;
+			typename std::common_reference_t<std::iter_reference_t<I>&&,
+											 typename std::indirectly_readable_traits<I>::value_type&>;
+			*i++;
+			typename std::common_reference_t<decltype(*i++)&&,
+											 typename std::indirectly_readable_traits<I>::value_type&>;
+			requires std::signed_integral<typename std::incrementable_traits<I>::difference_type>;
+		};
+	
+	template <typename I, typename T>
+	concept input_iterator_for = input_iterator<I> && std::convertible_to<typename std::iterator_traits<I>::value_type, T>;
+	
+	template <typename I>
+	concept forward_iterator =
+		input_iterator<I> && std::constructible_from<I> &&
+		std::is_lvalue_reference_v<std::iter_reference_t<I>> &&
+		std::same_as<
+			std::remove_cvref_t<std::iter_reference_t<I>>,
+			typename std::indirectly_readable_traits<I>::value_type> &&
+		requires(I i) {
+			{  i++ } -> std::convertible_to<const I&>;
+			{ *i++ } -> std::same_as<std::iter_reference_t<I>>;
+		};
+	
+	template <typename I, typename T>
+	concept forward_iterator_for = forward_iterator<I> && std::convertible_to<typename std::iterator_traits<I>::value_type, T>;
+	
+	template <typename I>
+	concept bidirectional_iterator =
+		forward_iterator<I> && requires(I i) {
+			{  --i } -> std::same_as<I&>;
+			{  i-- } -> std::convertible_to<const I&>;
+			{ *i-- } -> std::same_as<std::iter_reference_t<I>>;
+		};
+	
+	template <typename I, typename T>
+	concept bidirectional_iterator_for = bidirectional_iterator<I> && std::convertible_to<typename std::iterator_traits<I>::value_type, T>;
+	
+	template <typename I>
+	concept random_access_iterator =
+		bidirectional_iterator<I> && std::totally_ordered<I> &&
+		requires(I i, typename std::incrementable_traits<I>::difference_type n) {
+			{ i += n } -> std::same_as<I&>;
+			{ i -= n } -> std::same_as<I&>;
+			{ i +  n } -> std::same_as<I>;
+			{ n +  i } -> std::same_as<I>;
+			{ i -  n } -> std::same_as<I>;
+			{ i -  i } -> std::same_as<decltype(n)>;
+			{  i[n]  } -> std::convertible_to<std::iter_reference_t<I>>;
+		};
+	
+	template <typename I, typename T>
+	concept random_access_iterator_for = random_access_iterator<I> && std::convertible_to<typename std::iterator_traits<I>::value_type, T>;
 	
 }
 

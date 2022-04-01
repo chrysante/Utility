@@ -30,7 +30,8 @@ struct __##Name##_soa_reference { \
 	__##Name##_soa_reference& operator=(__##Name##_soa_reference const&); \
 	__##Name##_soa_reference& operator=(__##Name##_soa_const_reference const&); \
 	__##Name##_soa_reference& operator=(Name const&); \
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 	} \
@@ -38,7 +39,7 @@ struct __##Name##_soa_reference { \
 /* Const Reference */ \
 struct __##Name##_soa_const_reference { \
 	/* Members */ \
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -71,8 +72,12 @@ struct __##Name##_soa_meta { \
 \
 struct Name { \
 	/* Members */ \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 };  /* End Value Type */ \
 \
 /* Member Base Specialization */ \
@@ -90,13 +95,28 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(__##Name##_
 inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const& x) { \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 	}; \
 } \
@@ -156,7 +176,8 @@ struct __##Name##_soa_reference { \
 	auto& get() const { \
 		     if constexpr (I == 0) return _UTL_SOA_MEMBER_NAME(X0); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 		std::swap(a.get<0>(), b.get<0>()); \
@@ -171,7 +192,7 @@ struct __##Name##_soa_const_reference { \
 	auto const& get() const { \
 		     if constexpr (I == 0) return _UTL_SOA_MEMBER_NAME(X0); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -215,8 +236,12 @@ struct __##Name##_soa_meta { \
 struct Name { \
 	/* Members */ \
 	_UTL_SOA_MEMBER_TYPE(X0)  _UTL_SOA_MEMBER_NAME(X0); \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 	/* Generic Getter */ \
 	template <std::size_t I> requires (I < 1) \
 	auto& get()  { \
@@ -251,14 +276,32 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	this->get<0>() = x.get<0>(); \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0) \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0) \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0) \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0) \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0) \
 	}; \
@@ -335,7 +378,8 @@ struct __##Name##_soa_reference { \
 		     if constexpr (I == 0) return _UTL_SOA_MEMBER_NAME(X0); \
 		else if constexpr (I == 1) return _UTL_SOA_MEMBER_NAME(X1); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 		std::swap(a.get<0>(), b.get<0>()); \
@@ -353,7 +397,7 @@ struct __##Name##_soa_const_reference { \
 		     if constexpr (I == 0) return _UTL_SOA_MEMBER_NAME(X0); \
 		else if constexpr (I == 1) return _UTL_SOA_MEMBER_NAME(X1); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -401,8 +445,12 @@ struct Name { \
 	/* Members */ \
 	_UTL_SOA_MEMBER_TYPE(X0)  _UTL_SOA_MEMBER_NAME(X0); \
 	_UTL_SOA_MEMBER_TYPE(X1)  _UTL_SOA_MEMBER_NAME(X1); \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 	/* Generic Getter */ \
 	template <std::size_t I> requires (I < 2) \
 	auto& get()  { \
@@ -446,15 +494,36 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	this->get<1>() = x.get<1>(); \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1) \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1) \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1) \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1) \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1) \
@@ -548,7 +617,8 @@ struct __##Name##_soa_reference { \
 		else if constexpr (I == 1) return _UTL_SOA_MEMBER_NAME(X1); \
 		else if constexpr (I == 2) return _UTL_SOA_MEMBER_NAME(X2); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 		std::swap(a.get<0>(), b.get<0>()); \
@@ -569,7 +639,7 @@ struct __##Name##_soa_const_reference { \
 		else if constexpr (I == 1) return _UTL_SOA_MEMBER_NAME(X1); \
 		else if constexpr (I == 2) return _UTL_SOA_MEMBER_NAME(X2); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -621,8 +691,12 @@ struct Name { \
 	_UTL_SOA_MEMBER_TYPE(X0)  _UTL_SOA_MEMBER_NAME(X0); \
 	_UTL_SOA_MEMBER_TYPE(X1)  _UTL_SOA_MEMBER_NAME(X1); \
 	_UTL_SOA_MEMBER_TYPE(X2)  _UTL_SOA_MEMBER_NAME(X2); \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 	/* Generic Getter */ \
 	template <std::size_t I> requires (I < 3) \
 	auto& get()  { \
@@ -675,16 +749,40 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	this->get<2>() = x.get<2>(); \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
 		_UTL_SOA_MEMBER_NAME(X2) \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2) \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2) \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2) \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -795,7 +893,8 @@ struct __##Name##_soa_reference { \
 		else if constexpr (I == 2) return _UTL_SOA_MEMBER_NAME(X2); \
 		else if constexpr (I == 3) return _UTL_SOA_MEMBER_NAME(X3); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 		std::swap(a.get<0>(), b.get<0>()); \
@@ -819,7 +918,7 @@ struct __##Name##_soa_const_reference { \
 		else if constexpr (I == 2) return _UTL_SOA_MEMBER_NAME(X2); \
 		else if constexpr (I == 3) return _UTL_SOA_MEMBER_NAME(X3); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -875,8 +974,12 @@ struct Name { \
 	_UTL_SOA_MEMBER_TYPE(X1)  _UTL_SOA_MEMBER_NAME(X1); \
 	_UTL_SOA_MEMBER_TYPE(X2)  _UTL_SOA_MEMBER_NAME(X2); \
 	_UTL_SOA_MEMBER_TYPE(X3)  _UTL_SOA_MEMBER_NAME(X3); \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 	/* Generic Getter */ \
 	template <std::size_t I> requires (I < 4) \
 	auto& get()  { \
@@ -938,8 +1041,8 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	this->get<3>() = x.get<3>(); \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -947,8 +1050,35 @@ constexpr __##Name##_soa_reference::operator Name() const { \
 		_UTL_SOA_MEMBER_NAME(X3) \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3) \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3) \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3) \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -1076,7 +1206,8 @@ struct __##Name##_soa_reference { \
 		else if constexpr (I == 3) return _UTL_SOA_MEMBER_NAME(X3); \
 		else if constexpr (I == 4) return _UTL_SOA_MEMBER_NAME(X4); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 		std::swap(a.get<0>(), b.get<0>()); \
@@ -1103,7 +1234,7 @@ struct __##Name##_soa_const_reference { \
 		else if constexpr (I == 3) return _UTL_SOA_MEMBER_NAME(X3); \
 		else if constexpr (I == 4) return _UTL_SOA_MEMBER_NAME(X4); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -1163,8 +1294,12 @@ struct Name { \
 	_UTL_SOA_MEMBER_TYPE(X2)  _UTL_SOA_MEMBER_NAME(X2); \
 	_UTL_SOA_MEMBER_TYPE(X3)  _UTL_SOA_MEMBER_NAME(X3); \
 	_UTL_SOA_MEMBER_TYPE(X4)  _UTL_SOA_MEMBER_NAME(X4); \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 	/* Generic Getter */ \
 	template <std::size_t I> requires (I < 5) \
 	auto& get()  { \
@@ -1235,8 +1370,8 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	this->get<4>() = x.get<4>(); \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -1245,8 +1380,38 @@ constexpr __##Name##_soa_reference::operator Name() const { \
 		_UTL_SOA_MEMBER_NAME(X4) \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4) \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4) \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4) \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -1391,7 +1556,8 @@ struct __##Name##_soa_reference { \
 		else if constexpr (I == 4) return _UTL_SOA_MEMBER_NAME(X4); \
 		else if constexpr (I == 5) return _UTL_SOA_MEMBER_NAME(X5); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 		std::swap(a.get<0>(), b.get<0>()); \
@@ -1421,7 +1587,7 @@ struct __##Name##_soa_const_reference { \
 		else if constexpr (I == 4) return _UTL_SOA_MEMBER_NAME(X4); \
 		else if constexpr (I == 5) return _UTL_SOA_MEMBER_NAME(X5); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -1485,8 +1651,12 @@ struct Name { \
 	_UTL_SOA_MEMBER_TYPE(X3)  _UTL_SOA_MEMBER_NAME(X3); \
 	_UTL_SOA_MEMBER_TYPE(X4)  _UTL_SOA_MEMBER_NAME(X4); \
 	_UTL_SOA_MEMBER_TYPE(X5)  _UTL_SOA_MEMBER_NAME(X5); \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 	/* Generic Getter */ \
 	template <std::size_t I> requires (I < 6) \
 	auto& get()  { \
@@ -1566,8 +1736,8 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	this->get<5>() = x.get<5>(); \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -1577,8 +1747,41 @@ constexpr __##Name##_soa_reference::operator Name() const { \
 		_UTL_SOA_MEMBER_NAME(X5) \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5) \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5) \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5) \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -1740,7 +1943,8 @@ struct __##Name##_soa_reference { \
 		else if constexpr (I == 5) return _UTL_SOA_MEMBER_NAME(X5); \
 		else if constexpr (I == 6) return _UTL_SOA_MEMBER_NAME(X6); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 		std::swap(a.get<0>(), b.get<0>()); \
@@ -1773,7 +1977,7 @@ struct __##Name##_soa_const_reference { \
 		else if constexpr (I == 5) return _UTL_SOA_MEMBER_NAME(X5); \
 		else if constexpr (I == 6) return _UTL_SOA_MEMBER_NAME(X6); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -1841,8 +2045,12 @@ struct Name { \
 	_UTL_SOA_MEMBER_TYPE(X4)  _UTL_SOA_MEMBER_NAME(X4); \
 	_UTL_SOA_MEMBER_TYPE(X5)  _UTL_SOA_MEMBER_NAME(X5); \
 	_UTL_SOA_MEMBER_TYPE(X6)  _UTL_SOA_MEMBER_NAME(X6); \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 	/* Generic Getter */ \
 	template <std::size_t I> requires (I < 7) \
 	auto& get()  { \
@@ -1931,8 +2139,8 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	this->get<6>() = x.get<6>(); \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -1943,8 +2151,44 @@ constexpr __##Name##_soa_reference::operator Name() const { \
 		_UTL_SOA_MEMBER_NAME(X6) \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6) \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6) \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6) \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -2123,7 +2367,8 @@ struct __##Name##_soa_reference { \
 		else if constexpr (I == 6) return _UTL_SOA_MEMBER_NAME(X6); \
 		else if constexpr (I == 7) return _UTL_SOA_MEMBER_NAME(X7); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 		std::swap(a.get<0>(), b.get<0>()); \
@@ -2159,7 +2404,7 @@ struct __##Name##_soa_const_reference { \
 		else if constexpr (I == 6) return _UTL_SOA_MEMBER_NAME(X6); \
 		else if constexpr (I == 7) return _UTL_SOA_MEMBER_NAME(X7); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -2231,8 +2476,12 @@ struct Name { \
 	_UTL_SOA_MEMBER_TYPE(X5)  _UTL_SOA_MEMBER_NAME(X5); \
 	_UTL_SOA_MEMBER_TYPE(X6)  _UTL_SOA_MEMBER_NAME(X6); \
 	_UTL_SOA_MEMBER_TYPE(X7)  _UTL_SOA_MEMBER_NAME(X7); \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 	/* Generic Getter */ \
 	template <std::size_t I> requires (I < 8) \
 	auto& get()  { \
@@ -2330,8 +2579,8 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	this->get<7>() = x.get<7>(); \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -2343,8 +2592,47 @@ constexpr __##Name##_soa_reference::operator Name() const { \
 		_UTL_SOA_MEMBER_NAME(X7) \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7) \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7) \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7) \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -2540,7 +2828,8 @@ struct __##Name##_soa_reference { \
 		else if constexpr (I == 7) return _UTL_SOA_MEMBER_NAME(X7); \
 		else if constexpr (I == 8) return _UTL_SOA_MEMBER_NAME(X8); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 		std::swap(a.get<0>(), b.get<0>()); \
@@ -2579,7 +2868,7 @@ struct __##Name##_soa_const_reference { \
 		else if constexpr (I == 7) return _UTL_SOA_MEMBER_NAME(X7); \
 		else if constexpr (I == 8) return _UTL_SOA_MEMBER_NAME(X8); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -2655,8 +2944,12 @@ struct Name { \
 	_UTL_SOA_MEMBER_TYPE(X6)  _UTL_SOA_MEMBER_NAME(X6); \
 	_UTL_SOA_MEMBER_TYPE(X7)  _UTL_SOA_MEMBER_NAME(X7); \
 	_UTL_SOA_MEMBER_TYPE(X8)  _UTL_SOA_MEMBER_NAME(X8); \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 	/* Generic Getter */ \
 	template <std::size_t I> requires (I < 9) \
 	auto& get()  { \
@@ -2763,8 +3056,8 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	this->get<8>() = x.get<8>(); \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -2777,8 +3070,50 @@ constexpr __##Name##_soa_reference::operator Name() const { \
 		_UTL_SOA_MEMBER_NAME(X8) \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8) \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8) \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8) \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -2991,7 +3326,8 @@ struct __##Name##_soa_reference { \
 		else if constexpr (I == 8) return _UTL_SOA_MEMBER_NAME(X8); \
 		else if constexpr (I == 9) return _UTL_SOA_MEMBER_NAME(X9); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 		std::swap(a.get<0>(), b.get<0>()); \
@@ -3033,7 +3369,7 @@ struct __##Name##_soa_const_reference { \
 		else if constexpr (I == 8) return _UTL_SOA_MEMBER_NAME(X8); \
 		else if constexpr (I == 9) return _UTL_SOA_MEMBER_NAME(X9); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -3113,8 +3449,12 @@ struct Name { \
 	_UTL_SOA_MEMBER_TYPE(X7)  _UTL_SOA_MEMBER_NAME(X7); \
 	_UTL_SOA_MEMBER_TYPE(X8)  _UTL_SOA_MEMBER_NAME(X8); \
 	_UTL_SOA_MEMBER_TYPE(X9)  _UTL_SOA_MEMBER_NAME(X9); \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 	/* Generic Getter */ \
 	template <std::size_t I> requires (I < 10) \
 	auto& get()  { \
@@ -3230,8 +3570,8 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	this->get<9>() = x.get<9>(); \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -3245,8 +3585,53 @@ constexpr __##Name##_soa_reference::operator Name() const { \
 		_UTL_SOA_MEMBER_NAME(X9) \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9) \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9) \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9) \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -3476,7 +3861,8 @@ struct __##Name##_soa_reference { \
 		else if constexpr (I == 9) return _UTL_SOA_MEMBER_NAME(X9); \
 		else if constexpr (I == 10) return _UTL_SOA_MEMBER_NAME(X10); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 		std::swap(a.get<0>(), b.get<0>()); \
@@ -3521,7 +3907,7 @@ struct __##Name##_soa_const_reference { \
 		else if constexpr (I == 9) return _UTL_SOA_MEMBER_NAME(X9); \
 		else if constexpr (I == 10) return _UTL_SOA_MEMBER_NAME(X10); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -3605,8 +3991,12 @@ struct Name { \
 	_UTL_SOA_MEMBER_TYPE(X8)  _UTL_SOA_MEMBER_NAME(X8); \
 	_UTL_SOA_MEMBER_TYPE(X9)  _UTL_SOA_MEMBER_NAME(X9); \
 	_UTL_SOA_MEMBER_TYPE(X10)  _UTL_SOA_MEMBER_NAME(X10); \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 	/* Generic Getter */ \
 	template <std::size_t I> requires (I < 11) \
 	auto& get()  { \
@@ -3731,8 +4121,8 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	this->get<10>() = x.get<10>(); \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -3747,8 +4137,56 @@ constexpr __##Name##_soa_reference::operator Name() const { \
 		_UTL_SOA_MEMBER_NAME(X10) \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10) \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10) \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10) \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -3995,7 +4433,8 @@ struct __##Name##_soa_reference { \
 		else if constexpr (I == 10) return _UTL_SOA_MEMBER_NAME(X10); \
 		else if constexpr (I == 11) return _UTL_SOA_MEMBER_NAME(X11); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 		std::swap(a.get<0>(), b.get<0>()); \
@@ -4043,7 +4482,7 @@ struct __##Name##_soa_const_reference { \
 		else if constexpr (I == 10) return _UTL_SOA_MEMBER_NAME(X10); \
 		else if constexpr (I == 11) return _UTL_SOA_MEMBER_NAME(X11); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -4131,8 +4570,12 @@ struct Name { \
 	_UTL_SOA_MEMBER_TYPE(X9)  _UTL_SOA_MEMBER_NAME(X9); \
 	_UTL_SOA_MEMBER_TYPE(X10)  _UTL_SOA_MEMBER_NAME(X10); \
 	_UTL_SOA_MEMBER_TYPE(X11)  _UTL_SOA_MEMBER_NAME(X11); \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 	/* Generic Getter */ \
 	template <std::size_t I> requires (I < 12) \
 	auto& get()  { \
@@ -4266,8 +4709,8 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	this->get<11>() = x.get<11>(); \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -4283,8 +4726,59 @@ constexpr __##Name##_soa_reference::operator Name() const { \
 		_UTL_SOA_MEMBER_NAME(X11) \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11) \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11) \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11) \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -4548,7 +5042,8 @@ struct __##Name##_soa_reference { \
 		else if constexpr (I == 11) return _UTL_SOA_MEMBER_NAME(X11); \
 		else if constexpr (I == 12) return _UTL_SOA_MEMBER_NAME(X12); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 		std::swap(a.get<0>(), b.get<0>()); \
@@ -4599,7 +5094,7 @@ struct __##Name##_soa_const_reference { \
 		else if constexpr (I == 11) return _UTL_SOA_MEMBER_NAME(X11); \
 		else if constexpr (I == 12) return _UTL_SOA_MEMBER_NAME(X12); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -4691,8 +5186,12 @@ struct Name { \
 	_UTL_SOA_MEMBER_TYPE(X10)  _UTL_SOA_MEMBER_NAME(X10); \
 	_UTL_SOA_MEMBER_TYPE(X11)  _UTL_SOA_MEMBER_NAME(X11); \
 	_UTL_SOA_MEMBER_TYPE(X12)  _UTL_SOA_MEMBER_NAME(X12); \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 	/* Generic Getter */ \
 	template <std::size_t I> requires (I < 13) \
 	auto& get()  { \
@@ -4835,8 +5334,8 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	this->get<12>() = x.get<12>(); \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -4853,8 +5352,62 @@ constexpr __##Name##_soa_reference::operator Name() const { \
 		_UTL_SOA_MEMBER_NAME(X12) \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12) \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12) \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12) \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -5135,7 +5688,8 @@ struct __##Name##_soa_reference { \
 		else if constexpr (I == 12) return _UTL_SOA_MEMBER_NAME(X12); \
 		else if constexpr (I == 13) return _UTL_SOA_MEMBER_NAME(X13); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 		std::swap(a.get<0>(), b.get<0>()); \
@@ -5189,7 +5743,7 @@ struct __##Name##_soa_const_reference { \
 		else if constexpr (I == 12) return _UTL_SOA_MEMBER_NAME(X12); \
 		else if constexpr (I == 13) return _UTL_SOA_MEMBER_NAME(X13); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -5285,8 +5839,12 @@ struct Name { \
 	_UTL_SOA_MEMBER_TYPE(X11)  _UTL_SOA_MEMBER_NAME(X11); \
 	_UTL_SOA_MEMBER_TYPE(X12)  _UTL_SOA_MEMBER_NAME(X12); \
 	_UTL_SOA_MEMBER_TYPE(X13)  _UTL_SOA_MEMBER_NAME(X13); \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 	/* Generic Getter */ \
 	template <std::size_t I> requires (I < 14) \
 	auto& get()  { \
@@ -5438,8 +5996,8 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	this->get<13>() = x.get<13>(); \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -5457,8 +6015,65 @@ constexpr __##Name##_soa_reference::operator Name() const { \
 		_UTL_SOA_MEMBER_NAME(X13) \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13) \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13) \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13) \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -5756,7 +6371,8 @@ struct __##Name##_soa_reference { \
 		else if constexpr (I == 13) return _UTL_SOA_MEMBER_NAME(X13); \
 		else if constexpr (I == 14) return _UTL_SOA_MEMBER_NAME(X14); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 		std::swap(a.get<0>(), b.get<0>()); \
@@ -5813,7 +6429,7 @@ struct __##Name##_soa_const_reference { \
 		else if constexpr (I == 13) return _UTL_SOA_MEMBER_NAME(X13); \
 		else if constexpr (I == 14) return _UTL_SOA_MEMBER_NAME(X14); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -5913,8 +6529,12 @@ struct Name { \
 	_UTL_SOA_MEMBER_TYPE(X12)  _UTL_SOA_MEMBER_NAME(X12); \
 	_UTL_SOA_MEMBER_TYPE(X13)  _UTL_SOA_MEMBER_NAME(X13); \
 	_UTL_SOA_MEMBER_TYPE(X14)  _UTL_SOA_MEMBER_NAME(X14); \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 	/* Generic Getter */ \
 	template <std::size_t I> requires (I < 15) \
 	auto& get()  { \
@@ -6075,8 +6695,8 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	this->get<14>() = x.get<14>(); \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -6095,8 +6715,68 @@ constexpr __##Name##_soa_reference::operator Name() const { \
 		_UTL_SOA_MEMBER_NAME(X14) \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14) \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14) \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14) \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -6411,7 +7091,8 @@ struct __##Name##_soa_reference { \
 		else if constexpr (I == 14) return _UTL_SOA_MEMBER_NAME(X14); \
 		else if constexpr (I == 15) return _UTL_SOA_MEMBER_NAME(X15); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 		std::swap(a.get<0>(), b.get<0>()); \
@@ -6471,7 +7152,7 @@ struct __##Name##_soa_const_reference { \
 		else if constexpr (I == 14) return _UTL_SOA_MEMBER_NAME(X14); \
 		else if constexpr (I == 15) return _UTL_SOA_MEMBER_NAME(X15); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -6575,8 +7256,12 @@ struct Name { \
 	_UTL_SOA_MEMBER_TYPE(X13)  _UTL_SOA_MEMBER_NAME(X13); \
 	_UTL_SOA_MEMBER_TYPE(X14)  _UTL_SOA_MEMBER_NAME(X14); \
 	_UTL_SOA_MEMBER_TYPE(X15)  _UTL_SOA_MEMBER_NAME(X15); \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 	/* Generic Getter */ \
 	template <std::size_t I> requires (I < 16) \
 	auto& get()  { \
@@ -6746,8 +7431,8 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	this->get<15>() = x.get<15>(); \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -6767,8 +7452,71 @@ constexpr __##Name##_soa_reference::operator Name() const { \
 		_UTL_SOA_MEMBER_NAME(X15) \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15) \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15) \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15) \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -7100,7 +7848,8 @@ struct __##Name##_soa_reference { \
 		else if constexpr (I == 15) return _UTL_SOA_MEMBER_NAME(X15); \
 		else if constexpr (I == 16) return _UTL_SOA_MEMBER_NAME(X16); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 		std::swap(a.get<0>(), b.get<0>()); \
@@ -7163,7 +7912,7 @@ struct __##Name##_soa_const_reference { \
 		else if constexpr (I == 15) return _UTL_SOA_MEMBER_NAME(X15); \
 		else if constexpr (I == 16) return _UTL_SOA_MEMBER_NAME(X16); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -7271,8 +8020,12 @@ struct Name { \
 	_UTL_SOA_MEMBER_TYPE(X14)  _UTL_SOA_MEMBER_NAME(X14); \
 	_UTL_SOA_MEMBER_TYPE(X15)  _UTL_SOA_MEMBER_NAME(X15); \
 	_UTL_SOA_MEMBER_TYPE(X16)  _UTL_SOA_MEMBER_NAME(X16); \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 	/* Generic Getter */ \
 	template <std::size_t I> requires (I < 17) \
 	auto& get()  { \
@@ -7451,8 +8204,8 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	this->get<16>() = x.get<16>(); \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -7473,8 +8226,74 @@ constexpr __##Name##_soa_reference::operator Name() const { \
 		_UTL_SOA_MEMBER_NAME(X16) \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15), \
+		_UTL_SOA_MEMBER_NAME(X16) \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15), \
+		_UTL_SOA_MEMBER_NAME(X16) \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15), \
+		_UTL_SOA_MEMBER_NAME(X16) \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -7823,7 +8642,8 @@ struct __##Name##_soa_reference { \
 		else if constexpr (I == 16) return _UTL_SOA_MEMBER_NAME(X16); \
 		else if constexpr (I == 17) return _UTL_SOA_MEMBER_NAME(X17); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 		std::swap(a.get<0>(), b.get<0>()); \
@@ -7889,7 +8709,7 @@ struct __##Name##_soa_const_reference { \
 		else if constexpr (I == 16) return _UTL_SOA_MEMBER_NAME(X16); \
 		else if constexpr (I == 17) return _UTL_SOA_MEMBER_NAME(X17); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -8001,8 +8821,12 @@ struct Name { \
 	_UTL_SOA_MEMBER_TYPE(X15)  _UTL_SOA_MEMBER_NAME(X15); \
 	_UTL_SOA_MEMBER_TYPE(X16)  _UTL_SOA_MEMBER_NAME(X16); \
 	_UTL_SOA_MEMBER_TYPE(X17)  _UTL_SOA_MEMBER_NAME(X17); \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 	/* Generic Getter */ \
 	template <std::size_t I> requires (I < 18) \
 	auto& get()  { \
@@ -8190,8 +9014,8 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	this->get<17>() = x.get<17>(); \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -8213,8 +9037,77 @@ constexpr __##Name##_soa_reference::operator Name() const { \
 		_UTL_SOA_MEMBER_NAME(X17) \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15), \
+		_UTL_SOA_MEMBER_NAME(X16), \
+		_UTL_SOA_MEMBER_NAME(X17) \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15), \
+		_UTL_SOA_MEMBER_NAME(X16), \
+		_UTL_SOA_MEMBER_NAME(X17) \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15), \
+		_UTL_SOA_MEMBER_NAME(X16), \
+		_UTL_SOA_MEMBER_NAME(X17) \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -8580,7 +9473,8 @@ struct __##Name##_soa_reference { \
 		else if constexpr (I == 17) return _UTL_SOA_MEMBER_NAME(X17); \
 		else if constexpr (I == 18) return _UTL_SOA_MEMBER_NAME(X18); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 		std::swap(a.get<0>(), b.get<0>()); \
@@ -8649,7 +9543,7 @@ struct __##Name##_soa_const_reference { \
 		else if constexpr (I == 17) return _UTL_SOA_MEMBER_NAME(X17); \
 		else if constexpr (I == 18) return _UTL_SOA_MEMBER_NAME(X18); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -8765,8 +9659,12 @@ struct Name { \
 	_UTL_SOA_MEMBER_TYPE(X16)  _UTL_SOA_MEMBER_NAME(X16); \
 	_UTL_SOA_MEMBER_TYPE(X17)  _UTL_SOA_MEMBER_NAME(X17); \
 	_UTL_SOA_MEMBER_TYPE(X18)  _UTL_SOA_MEMBER_NAME(X18); \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 	/* Generic Getter */ \
 	template <std::size_t I> requires (I < 19) \
 	auto& get()  { \
@@ -8963,8 +9861,8 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	this->get<18>() = x.get<18>(); \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -8987,8 +9885,80 @@ constexpr __##Name##_soa_reference::operator Name() const { \
 		_UTL_SOA_MEMBER_NAME(X18) \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15), \
+		_UTL_SOA_MEMBER_NAME(X16), \
+		_UTL_SOA_MEMBER_NAME(X17), \
+		_UTL_SOA_MEMBER_NAME(X18) \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15), \
+		_UTL_SOA_MEMBER_NAME(X16), \
+		_UTL_SOA_MEMBER_NAME(X17), \
+		_UTL_SOA_MEMBER_NAME(X18) \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15), \
+		_UTL_SOA_MEMBER_NAME(X16), \
+		_UTL_SOA_MEMBER_NAME(X17), \
+		_UTL_SOA_MEMBER_NAME(X18) \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -9371,7 +10341,8 @@ struct __##Name##_soa_reference { \
 		else if constexpr (I == 18) return _UTL_SOA_MEMBER_NAME(X18); \
 		else if constexpr (I == 19) return _UTL_SOA_MEMBER_NAME(X19); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 		std::swap(a.get<0>(), b.get<0>()); \
@@ -9443,7 +10414,7 @@ struct __##Name##_soa_const_reference { \
 		else if constexpr (I == 18) return _UTL_SOA_MEMBER_NAME(X18); \
 		else if constexpr (I == 19) return _UTL_SOA_MEMBER_NAME(X19); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -9563,8 +10534,12 @@ struct Name { \
 	_UTL_SOA_MEMBER_TYPE(X17)  _UTL_SOA_MEMBER_NAME(X17); \
 	_UTL_SOA_MEMBER_TYPE(X18)  _UTL_SOA_MEMBER_NAME(X18); \
 	_UTL_SOA_MEMBER_TYPE(X19)  _UTL_SOA_MEMBER_NAME(X19); \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 	/* Generic Getter */ \
 	template <std::size_t I> requires (I < 20) \
 	auto& get()  { \
@@ -9770,8 +10745,8 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	this->get<19>() = x.get<19>(); \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -9795,8 +10770,83 @@ constexpr __##Name##_soa_reference::operator Name() const { \
 		_UTL_SOA_MEMBER_NAME(X19) \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15), \
+		_UTL_SOA_MEMBER_NAME(X16), \
+		_UTL_SOA_MEMBER_NAME(X17), \
+		_UTL_SOA_MEMBER_NAME(X18), \
+		_UTL_SOA_MEMBER_NAME(X19) \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15), \
+		_UTL_SOA_MEMBER_NAME(X16), \
+		_UTL_SOA_MEMBER_NAME(X17), \
+		_UTL_SOA_MEMBER_NAME(X18), \
+		_UTL_SOA_MEMBER_NAME(X19) \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15), \
+		_UTL_SOA_MEMBER_NAME(X16), \
+		_UTL_SOA_MEMBER_NAME(X17), \
+		_UTL_SOA_MEMBER_NAME(X18), \
+		_UTL_SOA_MEMBER_NAME(X19) \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -10196,7 +11246,8 @@ struct __##Name##_soa_reference { \
 		else if constexpr (I == 19) return _UTL_SOA_MEMBER_NAME(X19); \
 		else if constexpr (I == 20) return _UTL_SOA_MEMBER_NAME(X20); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 		std::swap(a.get<0>(), b.get<0>()); \
@@ -10271,7 +11322,7 @@ struct __##Name##_soa_const_reference { \
 		else if constexpr (I == 19) return _UTL_SOA_MEMBER_NAME(X19); \
 		else if constexpr (I == 20) return _UTL_SOA_MEMBER_NAME(X20); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -10395,8 +11446,12 @@ struct Name { \
 	_UTL_SOA_MEMBER_TYPE(X18)  _UTL_SOA_MEMBER_NAME(X18); \
 	_UTL_SOA_MEMBER_TYPE(X19)  _UTL_SOA_MEMBER_NAME(X19); \
 	_UTL_SOA_MEMBER_TYPE(X20)  _UTL_SOA_MEMBER_NAME(X20); \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 	/* Generic Getter */ \
 	template <std::size_t I> requires (I < 21) \
 	auto& get()  { \
@@ -10611,8 +11666,8 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	this->get<20>() = x.get<20>(); \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -10637,8 +11692,86 @@ constexpr __##Name##_soa_reference::operator Name() const { \
 		_UTL_SOA_MEMBER_NAME(X20) \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15), \
+		_UTL_SOA_MEMBER_NAME(X16), \
+		_UTL_SOA_MEMBER_NAME(X17), \
+		_UTL_SOA_MEMBER_NAME(X18), \
+		_UTL_SOA_MEMBER_NAME(X19), \
+		_UTL_SOA_MEMBER_NAME(X20) \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15), \
+		_UTL_SOA_MEMBER_NAME(X16), \
+		_UTL_SOA_MEMBER_NAME(X17), \
+		_UTL_SOA_MEMBER_NAME(X18), \
+		_UTL_SOA_MEMBER_NAME(X19), \
+		_UTL_SOA_MEMBER_NAME(X20) \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15), \
+		_UTL_SOA_MEMBER_NAME(X16), \
+		_UTL_SOA_MEMBER_NAME(X17), \
+		_UTL_SOA_MEMBER_NAME(X18), \
+		_UTL_SOA_MEMBER_NAME(X19), \
+		_UTL_SOA_MEMBER_NAME(X20) \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -11055,7 +12188,8 @@ struct __##Name##_soa_reference { \
 		else if constexpr (I == 20) return _UTL_SOA_MEMBER_NAME(X20); \
 		else if constexpr (I == 21) return _UTL_SOA_MEMBER_NAME(X21); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 		std::swap(a.get<0>(), b.get<0>()); \
@@ -11133,7 +12267,7 @@ struct __##Name##_soa_const_reference { \
 		else if constexpr (I == 20) return _UTL_SOA_MEMBER_NAME(X20); \
 		else if constexpr (I == 21) return _UTL_SOA_MEMBER_NAME(X21); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -11261,8 +12395,12 @@ struct Name { \
 	_UTL_SOA_MEMBER_TYPE(X19)  _UTL_SOA_MEMBER_NAME(X19); \
 	_UTL_SOA_MEMBER_TYPE(X20)  _UTL_SOA_MEMBER_NAME(X20); \
 	_UTL_SOA_MEMBER_TYPE(X21)  _UTL_SOA_MEMBER_NAME(X21); \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 	/* Generic Getter */ \
 	template <std::size_t I> requires (I < 22) \
 	auto& get()  { \
@@ -11486,8 +12624,8 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	this->get<21>() = x.get<21>(); \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -11513,8 +12651,89 @@ constexpr __##Name##_soa_reference::operator Name() const { \
 		_UTL_SOA_MEMBER_NAME(X21) \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15), \
+		_UTL_SOA_MEMBER_NAME(X16), \
+		_UTL_SOA_MEMBER_NAME(X17), \
+		_UTL_SOA_MEMBER_NAME(X18), \
+		_UTL_SOA_MEMBER_NAME(X19), \
+		_UTL_SOA_MEMBER_NAME(X20), \
+		_UTL_SOA_MEMBER_NAME(X21) \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15), \
+		_UTL_SOA_MEMBER_NAME(X16), \
+		_UTL_SOA_MEMBER_NAME(X17), \
+		_UTL_SOA_MEMBER_NAME(X18), \
+		_UTL_SOA_MEMBER_NAME(X19), \
+		_UTL_SOA_MEMBER_NAME(X20), \
+		_UTL_SOA_MEMBER_NAME(X21) \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15), \
+		_UTL_SOA_MEMBER_NAME(X16), \
+		_UTL_SOA_MEMBER_NAME(X17), \
+		_UTL_SOA_MEMBER_NAME(X18), \
+		_UTL_SOA_MEMBER_NAME(X19), \
+		_UTL_SOA_MEMBER_NAME(X20), \
+		_UTL_SOA_MEMBER_NAME(X21) \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -11948,7 +13167,8 @@ struct __##Name##_soa_reference { \
 		else if constexpr (I == 21) return _UTL_SOA_MEMBER_NAME(X21); \
 		else if constexpr (I == 22) return _UTL_SOA_MEMBER_NAME(X22); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 		std::swap(a.get<0>(), b.get<0>()); \
@@ -12029,7 +13249,7 @@ struct __##Name##_soa_const_reference { \
 		else if constexpr (I == 21) return _UTL_SOA_MEMBER_NAME(X21); \
 		else if constexpr (I == 22) return _UTL_SOA_MEMBER_NAME(X22); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -12161,8 +13381,12 @@ struct Name { \
 	_UTL_SOA_MEMBER_TYPE(X20)  _UTL_SOA_MEMBER_NAME(X20); \
 	_UTL_SOA_MEMBER_TYPE(X21)  _UTL_SOA_MEMBER_NAME(X21); \
 	_UTL_SOA_MEMBER_TYPE(X22)  _UTL_SOA_MEMBER_NAME(X22); \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 	/* Generic Getter */ \
 	template <std::size_t I> requires (I < 23) \
 	auto& get()  { \
@@ -12395,8 +13619,8 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	this->get<22>() = x.get<22>(); \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -12423,8 +13647,92 @@ constexpr __##Name##_soa_reference::operator Name() const { \
 		_UTL_SOA_MEMBER_NAME(X22) \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15), \
+		_UTL_SOA_MEMBER_NAME(X16), \
+		_UTL_SOA_MEMBER_NAME(X17), \
+		_UTL_SOA_MEMBER_NAME(X18), \
+		_UTL_SOA_MEMBER_NAME(X19), \
+		_UTL_SOA_MEMBER_NAME(X20), \
+		_UTL_SOA_MEMBER_NAME(X21), \
+		_UTL_SOA_MEMBER_NAME(X22) \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15), \
+		_UTL_SOA_MEMBER_NAME(X16), \
+		_UTL_SOA_MEMBER_NAME(X17), \
+		_UTL_SOA_MEMBER_NAME(X18), \
+		_UTL_SOA_MEMBER_NAME(X19), \
+		_UTL_SOA_MEMBER_NAME(X20), \
+		_UTL_SOA_MEMBER_NAME(X21), \
+		_UTL_SOA_MEMBER_NAME(X22) \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15), \
+		_UTL_SOA_MEMBER_NAME(X16), \
+		_UTL_SOA_MEMBER_NAME(X17), \
+		_UTL_SOA_MEMBER_NAME(X18), \
+		_UTL_SOA_MEMBER_NAME(X19), \
+		_UTL_SOA_MEMBER_NAME(X20), \
+		_UTL_SOA_MEMBER_NAME(X21), \
+		_UTL_SOA_MEMBER_NAME(X22) \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -12875,7 +14183,8 @@ struct __##Name##_soa_reference { \
 		else if constexpr (I == 22) return _UTL_SOA_MEMBER_NAME(X22); \
 		else if constexpr (I == 23) return _UTL_SOA_MEMBER_NAME(X23); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
+	operator __##Name##_soa_const_reference() const; \
 	/* Swap */ \
 	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \
 		std::swap(a.get<0>(), b.get<0>()); \
@@ -12959,7 +14268,7 @@ struct __##Name##_soa_const_reference { \
 		else if constexpr (I == 22) return _UTL_SOA_MEMBER_NAME(X22); \
 		else if constexpr (I == 23) return _UTL_SOA_MEMBER_NAME(X23); \
 	}\
-	constexpr operator Name() const; \
+	operator Name() const; \
 }; /* End Const Reference */ \
 \
 /* Pointer */ \
@@ -13095,8 +14404,12 @@ struct Name { \
 	_UTL_SOA_MEMBER_TYPE(X21)  _UTL_SOA_MEMBER_NAME(X21); \
 	_UTL_SOA_MEMBER_TYPE(X22)  _UTL_SOA_MEMBER_NAME(X22); \
 	_UTL_SOA_MEMBER_TYPE(X23)  _UTL_SOA_MEMBER_NAME(X23); \
+	operator __##Name##_soa_reference(); \
+	operator __##Name##_soa_const_reference() const; \
 	using __utl_soa_meta = __##Name##_soa_meta; \
 	using members = typename __utl_soa_meta::members; \
+	using reference = typename __utl_soa_meta::reference; \
+	using const_reference = typename __utl_soa_meta::const_reference; \
 	/* Generic Getter */ \
 	template <std::size_t I> requires (I < 24) \
 	auto& get()  { \
@@ -13338,8 +14651,8 @@ inline __##Name##_soa_reference& __##Name##_soa_reference::operator=(Name const&
 	this->get<23>() = x.get<23>(); \
 	return *this; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_reference::operator Name() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \
@@ -13367,8 +14680,95 @@ constexpr __##Name##_soa_reference::operator Name() const { \
 		_UTL_SOA_MEMBER_NAME(X23) \
 	}; \
 } \
-/* Operator Structure Type */ \
-constexpr __##Name##_soa_const_reference::operator Name() const { \
+/* Conversion to Value Type */ \
+__##Name##_soa_const_reference::operator Name() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15), \
+		_UTL_SOA_MEMBER_NAME(X16), \
+		_UTL_SOA_MEMBER_NAME(X17), \
+		_UTL_SOA_MEMBER_NAME(X18), \
+		_UTL_SOA_MEMBER_NAME(X19), \
+		_UTL_SOA_MEMBER_NAME(X20), \
+		_UTL_SOA_MEMBER_NAME(X21), \
+		_UTL_SOA_MEMBER_NAME(X22), \
+		_UTL_SOA_MEMBER_NAME(X23) \
+	}; \
+} \
+/* Conversion Reference -> Const Reference */ \
+__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15), \
+		_UTL_SOA_MEMBER_NAME(X16), \
+		_UTL_SOA_MEMBER_NAME(X17), \
+		_UTL_SOA_MEMBER_NAME(X18), \
+		_UTL_SOA_MEMBER_NAME(X19), \
+		_UTL_SOA_MEMBER_NAME(X20), \
+		_UTL_SOA_MEMBER_NAME(X21), \
+		_UTL_SOA_MEMBER_NAME(X22), \
+		_UTL_SOA_MEMBER_NAME(X23) \
+	}; \
+} \
+/* Conversion Value Type -> Reference */ \
+Name::operator __##Name##_soa_reference() { \
+	return { \
+		_UTL_SOA_MEMBER_NAME(X0), \
+		_UTL_SOA_MEMBER_NAME(X1), \
+		_UTL_SOA_MEMBER_NAME(X2), \
+		_UTL_SOA_MEMBER_NAME(X3), \
+		_UTL_SOA_MEMBER_NAME(X4), \
+		_UTL_SOA_MEMBER_NAME(X5), \
+		_UTL_SOA_MEMBER_NAME(X6), \
+		_UTL_SOA_MEMBER_NAME(X7), \
+		_UTL_SOA_MEMBER_NAME(X8), \
+		_UTL_SOA_MEMBER_NAME(X9), \
+		_UTL_SOA_MEMBER_NAME(X10), \
+		_UTL_SOA_MEMBER_NAME(X11), \
+		_UTL_SOA_MEMBER_NAME(X12), \
+		_UTL_SOA_MEMBER_NAME(X13), \
+		_UTL_SOA_MEMBER_NAME(X14), \
+		_UTL_SOA_MEMBER_NAME(X15), \
+		_UTL_SOA_MEMBER_NAME(X16), \
+		_UTL_SOA_MEMBER_NAME(X17), \
+		_UTL_SOA_MEMBER_NAME(X18), \
+		_UTL_SOA_MEMBER_NAME(X19), \
+		_UTL_SOA_MEMBER_NAME(X20), \
+		_UTL_SOA_MEMBER_NAME(X21), \
+		_UTL_SOA_MEMBER_NAME(X22), \
+		_UTL_SOA_MEMBER_NAME(X23) \
+	}; \
+} \
+/* Conversion Value Type -> Const Reference */ \
+Name::operator __##Name##_soa_const_reference() const { \
 	return { \
 		_UTL_SOA_MEMBER_NAME(X0), \
 		_UTL_SOA_MEMBER_NAME(X1), \

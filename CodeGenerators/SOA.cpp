@@ -96,7 +96,8 @@ _UTL_SYSTEM_HEADER_
 			writeGetter(sstr, count, { .referenceIsConst = false, .functionIsConst = true });
 		}
 		
-		sstr << "	constexpr operator Name() const; \\\n";
+		sstr << "	operator Name() const; \\\n";
+		sstr << "	operator __##Name##_soa_const_reference() const; \\\n";
 		
 		/* Swap */
 		sstr << "	/* Swap */ \\\n";
@@ -119,7 +120,7 @@ _UTL_SYSTEM_HEADER_
 			writeGetter(sstr, count, { .referenceIsConst = true, .functionIsConst = true });
 		}
 		
-		sstr << "	constexpr operator Name() const; \\\n";
+		sstr << "	operator Name() const; \\\n";
 		/// End
 		sstr << "}; /* End Const Reference */ \\\n";
 		sstr << "\\\n";
@@ -189,8 +190,14 @@ _UTL_SYSTEM_HEADER_
 		/* Members */
 		sstr << "	/* Members */ \\\n";
 		declareMembers(sstr, count);
+		
+		sstr << "	operator __##Name##_soa_reference(); \\\n";
+		sstr << "	operator __##Name##_soa_const_reference() const; \\\n";
+		
 		sstr << "	using __utl_soa_meta = __##Name##_soa_meta; \\\n";
 		sstr << "	using members = typename __utl_soa_meta::members; \\\n";
+		sstr << "	using reference = typename __utl_soa_meta::reference; \\\n";
+		sstr << "	using const_reference = typename __utl_soa_meta::const_reference; \\\n";
 		
 		if (count > 0) {
 			sstr << "	/* Generic Getter */ \\\n";
@@ -242,11 +249,12 @@ _UTL_SYSTEM_HEADER_
 		sstr << "	return *this; \\\n";
 		sstr << "} \\\n";
 		
-		/// MARK: Conversion to Value Type */
+		/// MARK: Conversion [Reference, Const Reference] -> Value Type
 		for (std::array const types = { "__##Name##_soa_reference", "__##Name##_soa_const_reference" };
-			 auto type: types) {
-			sstr << "/* Operator Structure Type */ \\\n";
-			sstr << "constexpr " << type << "::operator Name() const { \\\n";
+			 auto type: types)
+		{
+			sstr << "/* Conversion to Value Type */ \\\n";
+			sstr << type << "::operator Name() const { \\\n";
 			sstr << "	return { \\\n";
 			for (int i = 0; i < count; ++i) {
 				sstr << "		_UTL_SOA_MEMBER_NAME(X" << i << ")" << (i != count - 1 ? "," : "") << " \\\n";
@@ -254,6 +262,36 @@ _UTL_SYSTEM_HEADER_
 			sstr << "	}; \\\n";
 			sstr << "} \\\n";
 		}
+		
+		/// MARK: Conversion Reference -> Const Reference
+		sstr << "/* Conversion Reference -> Const Reference */ \\\n";
+		sstr << "__##Name##_soa_reference::operator __##Name##_soa_const_reference() const { \\\n";
+		sstr << "	return { \\\n";
+		for (int i = 0; i < count; ++i) {
+			sstr << "		_UTL_SOA_MEMBER_NAME(X" << i << ")" << (i != count - 1 ? "," : "") << " \\\n";
+		}
+		sstr << "	}; \\\n";
+		sstr << "} \\\n";
+		
+		/// MARK: Conversion Value Type -> Reference
+		sstr << "/* Conversion Value Type -> Reference */ \\\n";
+		sstr << "Name::operator __##Name##_soa_reference() { \\\n";
+		sstr << "	return { \\\n";
+		for (int i = 0; i < count; ++i) {
+			sstr << "		_UTL_SOA_MEMBER_NAME(X" << i << ")" << (i != count - 1 ? "," : "") << " \\\n";
+		}
+		sstr << "	}; \\\n";
+		sstr << "} \\\n";
+		
+		/// MARK: Conversion Value Type -> Const Reference
+		sstr << "/* Conversion Value Type -> Const Reference */ \\\n";
+		sstr << "Name::operator __##Name##_soa_const_reference() const { \\\n";
+		sstr << "	return { \\\n";
+		for (int i = 0; i < count; ++i) {
+			sstr << "		_UTL_SOA_MEMBER_NAME(X" << i << ")" << (i != count - 1 ? "," : "") << " \\\n";
+		}
+		sstr << "	}; \\\n";
+		sstr << "} \\\n";
 		
 		/// MARK: Comparison
 		sstr << "\\\n";

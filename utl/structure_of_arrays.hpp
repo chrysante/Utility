@@ -1,49 +1,75 @@
 #pragma once
 
-/**
-Generic Structure of Arrays Class
-Value Types need to be declared with the UTL_SOA_TYPE macro.
- [ Example:
-	namespace ... [optional] {
-		UTL_SOA_TYPE(Particle,
-					(int, id),
-					(float2, position),
-					(float2, position),
-					(float4, color));
-	}
- 
-	The UTL_SOA_TYPE macro then declares multiple structures, especially the following
-	
-		struct Particle {
-			int id;
-			float2 position;
-			float2 position;
-			float4 color;
-		};
-	 
-		struct __Particle_reference { [exposition only]
-			int& id;
-			float2& position;
-			float2& position;
-			float4& color;
-		};
-	 
-		struct __Particle_const_reference { [exposition only]
-			int const& id;
-			float2 const& position;
-			float2 const& position;
-			float4 const& color;
-		};
-	
-	and additional template machinery used by the utl::structure_of_arrays<Particle> class.
-	Reference Types are accessible via utl::structure_of_arrays<Particle>::reference/const_reference
- 
-	utl::structure_of_arrays<Particle> then behaves similarly to std::vector<Particle> however all members of Particle are stored in seperate arrays to improve cache locality
-	when iterating over individual members or subsets of the entire Particle structure.
- 
- ]
- 
- */
+#ifndef __UTL_STRUCTURE_OF_ARRAYS_INCLUDED__
+#define __UTL_STRUCTURE_OF_ARRAYS_INCLUDED__
+
+// Generic Structure of Arrays Class
+// Value Types need to be declared with the UTL_SOA_TYPE macro.
+// Example:
+//		namespace ... [optional] {
+//			UTL_SOA_TYPE( Particle,
+//				(int, id),
+//				(float2, position),
+//				(float2, position),
+//				(float4, color)
+//			);
+//		}
+//
+//	The UTL_SOA_TYPE macro then defines multiple structures, especially the following:
+//
+//		struct Particle {
+//			int    id;
+//			float2 position;
+//			float2 position;
+//			float4 color;
+//
+//			using reference = __Particle_reference;
+//			using const_reference = __Particle_const_reference;
+//
+//			struct members {
+//				using id       = /* implementation defined */;
+//				using position = /* implementation defined */;
+//				using position = /* implementation defined */;
+//				using color    = /* implementation defined */;
+//			};
+//			template <std::size_t I>
+//			auto& get();
+//			template <std::size_t I>
+//			auto const& get() const;
+//		};
+//
+//		struct __Particle_reference { [exposition only]
+//			int&    id;
+//			float2& position;
+//			float2& position;
+//			float4& color;
+//
+//			template <std::size_t I>
+//			auto& get() const;
+//		};
+//
+//		struct __Particle_const_reference { [exposition only]
+//			int const&    id;
+//			float2 const& position;
+//			float2 const& position;
+//			float4 const& color;
+//
+//			template <std::size_t I>
+//			auto const& get() const;
+//		};
+//
+//	It also defines additional template machinery used by the utl::structure_of_arrays<Particle> class.
+//	Subset Types and Subset Reference/Pointer Types of the Particle structure are also provided.
+//
+//	utl::structure_of_arrays<Particle> then behaves similarly to std::vector<Particle>, however all
+//	members of Particle are stored in seperate arrays to improve cache locality when iterating over
+//	individual members or subsets of the entire Particle structure.
+//	Allocations are batched, so for the above Particle structure one allocation is performed
+//	for the for arrays in utl::structure_of_arrays<Particle>.
+//	All STL Algorithms should work with utl::structure_of_arrays<...>.
+//
+//
+
 
 #include "__base.hpp"
 _UTL_SYSTEM_HEADER_
@@ -53,7 +79,7 @@ _UTL_SYSTEM_HEADER_
 #include "__memory_resource_base.hpp"
 #include "common.hpp"
 #include "math.hpp"
-
+#include "concepts.hpp"
 
 #include <tuple>
 #include <memory>
@@ -83,6 +109,14 @@ namespace utl {
 	template <__soa_type, typename... Members>
 	class soa_view;
 
+	/// MARK: Generic Member Getter
+	template <std::size_t I, typename T>
+	auto& __soa_get_member(T& t) { return t.template get<I>(); }
+	template <std::size_t I, typename T>
+	auto const& __soa_get_member(T const& t) { return t.template get<I>(); }
+	template <std::size_t I, typename T>
+	auto&& __soa_get_member(T&& t) { return std::move(t.template get<I>()); }
+	
 	/// MARK: - Partial Types
 	enum struct __soa_type_kind {
 		value, reference, const_reference, pointer, const_pointer
@@ -362,7 +396,7 @@ namespace utl {
 		using difference_type = std::ptrdiff_t;
 		using value_type = typename SOAImpl::value_type;
 		using pointer = std::conditional_t<IsConst, typename SOAImpl::const_pointer, typename SOAImpl::pointer>;
-		using reference = typename SOAImpl::reference;
+		using reference = std::conditional_t<IsConst, typename SOAImpl::const_reference, typename SOAImpl::reference>;;
 		
 		/// Constructors
 		explicit __soa_iterator(__soa_ptr_type ptr): _ptr(ptr) {}
@@ -397,6 +431,19 @@ namespace utl {
 		__soa_iterator& operator--() {
 			(--std::get<I>(_ptr), ...);
 			return *this;
+		}
+		
+		/// Postfix Increment / Decrement
+		__soa_iterator operator++(int) {
+			__soa_iterator const tmp = *this;
+			(++std::get<I>(_ptr), ...);
+			return tmp;
+		}
+		
+		__soa_iterator operator--(int) {
+			__soa_iterator const tmp = *this;
+			(--std::get<I>(_ptr), ...);
+			return tmp;
 		}
 		
 		/// Arithmetic
@@ -441,6 +488,10 @@ namespace utl {
 			bool const result = std::get<0>(_ptr) == std::get<0>(rhs._ptr);
 			(__utl_assert_audit(result == (std::get<I>(_ptr) == std::get<I>(rhs._ptr))), ...);
 			return result;
+		}
+		
+		bool operator!=(__soa_iterator const& rhs) const {
+			return !(*this == rhs);
 		}
 		
 		bool operator<(__soa_iterator const& rhs) const {
@@ -515,13 +566,15 @@ namespace utl {
 		using __member_indices = std::index_sequence<_Members::index...>;
 		using __members = std::tuple<_Members...>;
 		
+		static constexpr std::size_t __invalid_index = std::size_t(-1);
+		
 		static constexpr std::array<std::size_t, __member_count> __make_index_map() {
 			std::array<std::size_t, __member_count> result{};
 			std::array const member_indices = { _Members::index... };
 			for (std::size_t i = 0; i < __member_count; ++i) {
 				auto itr = std::find(member_indices.begin(), member_indices.end(), i);
 				if (itr == member_indices.end()) {
-					result[i] = std::size_t(-1);
+					result[i] = __invalid_index;
 				}
 				else {
 					result[i] = itr - member_indices.begin();
@@ -534,7 +587,7 @@ namespace utl {
 		template <typename Member>
 		static constexpr bool __has_member() {
 			constexpr std::size_t mapped_index = __index_map[Member::index];
-			if (mapped_index == std::size_t(-1)) {
+			if (mapped_index == __invalid_index) {
 				return false;
 			}
 			if (!std::is_const_v<Member>) {
@@ -545,7 +598,7 @@ namespace utl {
 		
 		/// MARK: Member Types
 		using value_type = typename __soa_type_maker<Meta, __members, __soa_type_kind::value>::type;
-		using allocator_type = __allocator;
+		using allocator_type = _Allocator;
 		using size_type = std::size_t;
 		using difference_type = std::ptrdiff_t;
 		using reference = typename __soa_type_maker<Meta, __members, __soa_type_kind::reference>::type;
@@ -554,16 +607,16 @@ namespace utl {
 		using const_pointer = typename __soa_type_maker<Meta, __members, __soa_type_kind::const_pointer>::type;
 		using iterator = __soa_iterator<__soa_impl, std::tuple<T...>, std::index_sequence<I...>, false>;
 		using const_iterator = __soa_iterator<__soa_impl, std::tuple<T const...>, std::index_sequence<I...>, true>;
-		using reverse_iterator = std::reverse_iterator<__soa_iterator<__soa_impl, std::tuple<T...>, std::index_sequence<I...>, false>>;
-		using const_reverse_iterator = std::reverse_iterator<__soa_iterator<__soa_impl, std::tuple<T const...>, std::index_sequence<I...>, true>>;
+		using reverse_iterator = std::reverse_iterator<iterator>;
+		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		
 		/// MARK: Constructors
 		__soa_impl(): __allocator{} {}
 		__soa_impl(__allocator const& alloc): __allocator(alloc) {}
 		__soa_impl(std::size_t size, __allocator const& alloc = {}): __allocator(alloc) {
 			reserve(size);
-			(__construct(__begin<I>(), __end<I>()), ...);
 			this->_size = size;
+			(__construct(__begin<I>(), __end<I>()), ...);
 		}
 		__soa_impl(std::initializer_list<value_type> ilist, __allocator const& alloc = {}): __allocator(alloc) {
 			reserve(ilist.size());
@@ -572,7 +625,7 @@ namespace utl {
 			}
 		}
 		
-		/// Copy Ctor
+		/// Copy Constructor
 		__soa_impl(__soa_impl const& rhs, __allocator const& alloc = {}): __allocator(alloc) {
 			if constexpr (__is_container) {
 				reserve(rhs._size);
@@ -585,10 +638,10 @@ namespace utl {
 		}
 		void __copy_view(auto const& rhs) {
 			this->_data = rhs._data;
-			this->_size   = rhs._size;
+			this->_size = rhs._size;
 		}
 		
-		/// Move Ctor
+		/// Move Constructor
 		__soa_impl(__soa_impl&& rhs, __allocator const& alloc = {}): __allocator(alloc) {
 			if constexpr (__is_container) {
 				if (__get_allocator() == rhs.__get_allocator()) {
@@ -663,8 +716,8 @@ namespace utl {
 		/// Emplace Back
 		template <typename ...U>
 		void __emplace_back_impl(U&&... u) {
-			__grow_to(size() + 1);
-			((__begin<I>()[size()] = std::move(u)), ...);
+			__grow_to_least(size() + 1);
+			(__construct_at(__end<I>(), UTL_FORWARD(u)), ...);
 			++this->_size;
 		}
 		
@@ -684,30 +737,51 @@ namespace utl {
 		}
 		
 		/// Insert
-		static void __uninit_shift_right(auto begin, auto end, std::ptrdiff_t offset) {
+		void __uninit_shift_right(auto begin, auto end, std::ptrdiff_t offset) {
 			__utl_assert(offset >= 0);
-			for (auto __it = end - offset; __it != end; ++__it) {
-				*(__it + offset) = *__it;
+			std::ptrdiff_t const __min_offset = std::min(offset, end - begin);
+			for (auto __it = end - __min_offset; __it != end; ++__it) {
+				__construct_at(__it + offset, std::move(*__it));
 			}
 			std::shift_right(begin, end, offset);
 		}
 		
-		void __insert_impl(std::size_t index, auto&& value) {
+		template <typename It>
+		void __insert_impl(std::size_t index, It begin, It end) {
 			__utl_expect(index >= 0);
 			__utl_expect(index <= size());
 			// somewhat naive implementation, doing unnecesary copies and shifts when reallocating
-			__grow_to(size() + 1);
-			(__uninit_shift_right(__begin<I>() + index, __end<I>(), 1), ...);
-			++this->_size;
-			(*this)[index] = UTL_FORWARD(value);
+			auto const count = end - begin;
+			__utl_expect(count >= 1);
+			__grow_to_least(size() + count);
+			(__uninit_shift_right(__begin<I>() + index, __end<I>(), count), ...);
+			{
+				std::size_t i = index;
+				std::size_t const total_end = index + count;
+				std::size_t const intermed_end = std::min(total_end, size());
+				for (; i < intermed_end; ++i, ++begin) {
+					// here we assign
+					(*this)[i] = *begin;
+				}
+				for (; i < total_end; ++i, ++begin) {
+					// here we construct
+					(__construct_at(__begin<I>() + i, __soa_get_member<I>(*begin)), ...);
+				}
+			}
+			this->_size += count;
 		}
 		
 		void insert(std::size_t index, value_type const& value) requires (__is_container) {
-			__insert_impl(index, value);
+			__insert_impl(index, &value, &value + 1);
 		}
 		
 		void insert(std::size_t index, value_type&& value) requires (__is_container) {
-			__insert_impl(index, std::move(value));
+			__insert_impl(index, std::make_move_iterator(&value), std::make_move_iterator(&value + 1));
+		}
+		
+		template <input_iterator_for<value_type> It>
+		void insert(std::size_t index, It begin, It end) requires (__is_container) {
+			__insert_impl(index, begin, end);
 		}
 		
 		void insert(const_iterator itr, value_type const& value) requires (__is_container) {
@@ -716,6 +790,11 @@ namespace utl {
 		
 		void insert(const_iterator itr, value_type&& value) requires (__is_container) {
 			insert(__itr_to_index(itr), std::move(value));
+		}
+		
+		template <input_iterator_for<value_type> It>
+		void insert(const_iterator itr, It begin, It end) requires (__is_container) {
+			insert(__itr_to_index(itr), begin, end);
 		}
 
 		/// Erase
@@ -748,22 +827,34 @@ namespace utl {
 				return;
 			}
 			std::tuple<T*...> new_array = __allocate(new_cap);
-			(__relocate_one<I>(std::get<I>(new_array)), ...);
+			(__relocate(__begin<I>(), __end<I>(), std::get<I>(new_array)), ...);
 			__deallocate(this->_data, this->_cap);
 			this->_data = new_array;
 			this->_cap = new_cap;
 		}
 		
-		template <std::size_t J>
-		void __relocate_one(auto* new_array) {
-			__uninitialized_move(__begin<J>(), __end<J>(), new_array);
-			__destroy(__begin<J>(), __end<J>());
+		/// Shrink to fit
+		void shrink_to_fit() requires(__is_container) {
+			/* no-op */
 		}
 		
 		/// Clear
 		void clear() requires (__is_container) {
 			(__destroy(__begin<I>(), __end<I>()), ...);
 			this->_size = 0;
+		}
+		
+		/// Swap
+		void swap(structure_of_arrays<__soa_type>& rhs) requires(__is_container) {
+			if (__get_allocator() == rhs.__get_allocator()) {
+				// we can swap pointers
+				std::swap(this->__member_data(), rhs.__member_data());
+			}
+			else {
+				auto tmp = std::move(*this);
+				*this = std::move(rhs);
+				rhs = std::move(tmp);
+			}
 		}
 		
 		/// MARK: Views
@@ -807,7 +898,7 @@ namespace utl {
 		std::size_t capacity() const requires (__is_container) { return this->_cap; }
 		bool empty() const { return size() == 0; }
 		
-		allocator_type get_allocator() const { return __get_allocator(); }
+		allocator_type get_allocator() const { return allocator_type(__get_allocator()); }
 		
 		/// MARK: Accessors
 		reference front() {
@@ -1038,11 +1129,11 @@ namespace utl {
 			return index;
 		}
 		
-		std::size_t __recommend_size(std::size_t new_size) {
+		std::size_t __recommend_size(std::size_t new_size) const {
 			return std::max(new_size, size() * 2);
 		}
 		
-		void __grow_to(std::size_t min_cap) {
+		void __grow_to_least(std::size_t min_cap) {
 			if (this->_cap <= min_cap) {
 				reserve(__recommend_size(min_cap));
 			}
@@ -1080,6 +1171,11 @@ namespace utl {
 			}
 		}
 		
+		void __relocate(auto begin, auto end, auto out) {
+			__uninitialized_move(begin, end, out);
+			__destroy(begin, end);
+		}
+		
 		void __destroy_this() {
 			static_assert(__is_container);
 			(__destroy(__begin<I>(), __end<I>()), ...);
@@ -1102,11 +1198,14 @@ namespace utl {
 			throw std::logic_error("utl::structure_of_arrays<...>::out_of_bounds");
 		}
 		
+		__data_base& __member_data() { return *this; }
+		__data_base const& __member_data() const { return *this; }
+		
 		/// MARK: Memory Allocation
 		struct __buffer_info {
 			std::size_t total_size;
 			std::size_t base_align;
-			std::array<std::size_t, __member_count> offset;
+			std::array<std::size_t, __member_count> member_offset;
 		};
 		
 		static __buffer_info __make_buffer_info(std::size_t obj_count) {
@@ -1120,7 +1219,7 @@ namespace utl {
 			
 			std::size_t total_size = 0;
 			for (std::size_t i = 0; i < __member_count; ++i) {
-				result.offset[i] = total_size;
+				result.member_offset[i] = total_size;
 				std::size_t const i_size = size[i] * obj_count;
 				
 				total_size += round_up_pow_two(i_size, alignment[i + 1]);
@@ -1131,7 +1230,7 @@ namespace utl {
 		}
 		
 		static std::tuple<T*...> __decompose_buffer_pointer(void* ptr, __buffer_info const& info) {
-			return { (T*)((char*)ptr + info.offset[I])... };
+			return { (T*)((char*)ptr + info.member_offset[I])... };
 		}
 		
 		void* __allocate_raw(std::size_t size, std::size_t alignment) {
@@ -1153,7 +1252,6 @@ namespace utl {
 			return __decompose_buffer_pointer(buffer, buffer_info);
 		}
 		
-		// convenience
 		void __deallocate(std::tuple<T*...> const& ptr, std::size_t obj_count) {
 			__deallocate((void*)std::get<0>(ptr), obj_count);
 		}
@@ -1170,6 +1268,13 @@ namespace utl {
 		}
 	};
 	
-	
+	/// MARK: Free Functions
+	template <typename ST, typename Allocator = std::allocator<ST>>
+	void swap(structure_of_arrays<ST, Allocator>& a, structure_of_arrays<ST, Allocator>& b) {
+		a.swap(b);
+	}
+
 	
 }
+
+#endif __UTL_STRUCTURE_OF_ARRAYS_INCLUDED__

@@ -7,23 +7,83 @@
 
 namespace {
 	
+	struct __LifetimeCounterBase {
+		bool _doCount = true;
+		bool operator==(__LifetimeCounterBase const&) const = default;
+	};
+	
+	class LifetimeCounter: __LifetimeCounterBase {
+	public:
+		LifetimeCounter() {
+			_inc();
+		}
+		
+		explicit LifetimeCounter(bool doCount): __LifetimeCounterBase{ doCount } {
+			_inc();
+		}
+		
+		LifetimeCounter(LifetimeCounter const& rhs) {
+			_inc();
+		}
+		
+		LifetimeCounter(LifetimeCounter&&) {
+			_inc();
+		}
+		
+		~LifetimeCounter() {
+			_dec();
+		}
+		
+		LifetimeCounter& operator=(LifetimeCounter const&)& {
+			return *this;
+		}
+		
+		LifetimeCounter& operator=(LifetimeCounter&&)& {
+			return *this;
+		}
+		
+		bool operator==(LifetimeCounter const&) const = default;
+		
+		static int liveObjects() { return _liveObjects; }
+		static void reset() { _liveObjects = 0; }
+		
+	private:
+		void _inc() const {
+			if (_doCount) {
+				++_liveObjects;
+			}
+		}
+		void _dec() const {
+			if (_doCount) {
+				--_liveObjects;
+			}
+		}
+		static int _liveObjects;
+	};
+	
+	int LifetimeCounter::_liveObjects;
+	
 	UTL_SOA_TYPE(Particle,
 				 (float,  position),
 				 (int,    id),
 				 (double, color),
-				 (int,    size)
+				 (int,    size),
+				 (LifetimeCounter, counter)
 	);
 	
 }
 
 static void testPushBack(auto const& s, std::size_t size) {
 	CHECK(s.size() == size);
+	CHECK(LifetimeCounter::liveObjects() == size);
 	for (std::size_t i = 0; i < size; ++i) {
 		CHECK(s[i].id == (int)i);
 	}
 }
 
 static void testPushBack(auto& s) {
+	LifetimeCounter::reset();
+	
 	s.push_back({ .id = 0 });
 	testPushBack(s, 1);
 	s.push_back({ .id = 1 });
@@ -143,6 +203,7 @@ TEST_CASE("std::sort(structure_of_arrays)") {
 }
 
 TEST_CASE("structure_of_arrays::insert") {
+	LifetimeCounter::reset();
 	utl::structure_of_arrays<Particle> s;
 	for (int i = 0; i < 3; ++i) {
 		s.push_back(Particle{ .id = i });
@@ -156,6 +217,7 @@ TEST_CASE("structure_of_arrays::insert") {
 		CHECK(s[1].id == 0);
 		CHECK(s[2].id == 1);
 		CHECK(s[3].id == 2);
+		CHECK(LifetimeCounter::liveObjects() == 4);
 	}
 	SECTION("insert center") {
 		s.insert(1, Particle{ .id = -1 });
@@ -165,6 +227,7 @@ TEST_CASE("structure_of_arrays::insert") {
 		CHECK(s[1].id == -1);
 		CHECK(s[2].id == 1);
 		CHECK(s[3].id == 2);
+		CHECK(LifetimeCounter::liveObjects() == 4);
 	}
 	SECTION("insert back") {
 		s.insert(3, Particle{ .id = -1 });
@@ -174,27 +237,83 @@ TEST_CASE("structure_of_arrays::insert") {
 		CHECK(s[1].id == 1);
 		CHECK(s[2].id == 2);
 		CHECK(s[3].id == -1);
+		CHECK(LifetimeCounter::liveObjects() == 4);
+	}
+}
+
+TEST_CASE("structure_of_arrays::insert range") {
+	LifetimeCounter::reset();
+	utl::structure_of_arrays<Particle> s;
+	for (int i = 0; i < 3; ++i) {
+		s.push_back(Particle{ .id = i });
+	}
+	REQUIRE(s.size() == 3);
+	Particle p[3] = {
+		{ .id = -1, .counter{ false } },
+		{ .id = -2, .counter{ false } },
+		{ .id = -3, .counter{ false } }
+	};
+	SECTION("insert front") {
+		s.insert(0, p, p + 3);
+		CHECK(s.size() == 6);
+		CHECK(s.capacity() >= 6);
+		CHECK(s[0].id == -1);
+		CHECK(s[1].id == -2);
+		CHECK(s[2].id == -3);
+		CHECK(s[3].id == 0);
+		CHECK(s[4].id == 1);
+		CHECK(s[5].id == 2);
+		CHECK(LifetimeCounter::liveObjects() == 6);
+	}
+	SECTION("insert center") {
+		s.insert(1, p, p + 3);
+		CHECK(s.size() == 6);
+		CHECK(s.capacity() >= 6);
+		CHECK(s[0].id == 0);
+		CHECK(s[1].id == -1);
+		CHECK(s[2].id == -2);
+		CHECK(s[3].id == -3);
+		CHECK(s[4].id == 1);
+		CHECK(s[5].id == 2);
+		CHECK(LifetimeCounter::liveObjects() == 6);
+	}
+	SECTION("insert back") {
+		s.insert(3, p, p + 3);
+		CHECK(s.size() == 6);
+		CHECK(s.capacity() >= 6);
+		CHECK(s[0].id == 0);
+		CHECK(s[1].id == 1);
+		CHECK(s[2].id == 2);
+		CHECK(s[3].id == -1);
+		CHECK(s[4].id == -2);
+		CHECK(s[5].id == -3);
+		CHECK(LifetimeCounter::liveObjects() == 6);
 	}
 }
 
 TEST_CASE("structure_of_arrays::insert [empty]") {
+	LifetimeCounter::reset();
 	utl::structure_of_arrays<Particle> s;
 	s.insert(0, Particle{ .id = -1 });
 	CHECK(s.size() == 1);
 	CHECK(s.capacity() >= 1);
 	CHECK(s[0].id == -1);
+	CHECK(LifetimeCounter::liveObjects() == 1);
 }
 
 TEST_CASE("structure_of_arrays::erase") {
+	LifetimeCounter::reset();
 	utl::structure_of_arrays<Particle> s;
 	for (int i = 0; i < 4; ++i) {
 		s.push_back(Particle{ .id = i });
 	}
+	CHECK(LifetimeCounter::liveObjects() == 4);
 	
 	REQUIRE(s.size() == 4);
 	SECTION("erase front") {
 		s.erase(0);
 		CHECK(s.size() == 3);
+		CHECK(LifetimeCounter::liveObjects() == 3);
 		CHECK(s[0].id == 1);
 		CHECK(s[1].id == 2);
 		CHECK(s[2].id == 3);
@@ -202,6 +321,7 @@ TEST_CASE("structure_of_arrays::erase") {
 	SECTION("erase center") {
 		s.erase(1);
 		CHECK(s.size() == 3);
+		CHECK(LifetimeCounter::liveObjects() == 3);
 		CHECK(s[0].id == 0);
 		CHECK(s[1].id == 2);
 		CHECK(s[2].id == 3);
@@ -209,6 +329,7 @@ TEST_CASE("structure_of_arrays::erase") {
 	SECTION("erase back") {
 		s.erase(3);
 		CHECK(s.size() == 3);
+		CHECK(LifetimeCounter::liveObjects() == 3);
 		CHECK(s[0].id == 0);
 		CHECK(s[1].id == 1);
 		CHECK(s[2].id == 2);
@@ -216,21 +337,29 @@ TEST_CASE("structure_of_arrays::erase") {
 }
 
 TEST_CASE("structure_of_arrays::erase to empty") {
+	LifetimeCounter::reset();
 	utl::structure_of_arrays<Particle> s = { Particle{} };
+	CHECK(LifetimeCounter::liveObjects() == 1);
 	s.erase(0);
 	CHECK(s.size() == 0);
+	CHECK(LifetimeCounter::liveObjects() == 0);
 }
 
 TEST_CASE("structure_of_arrays::erase to empty with iterator") {
+	LifetimeCounter::reset();
 	SECTION("single element") {
 		utl::structure_of_arrays<Particle> s = { Particle{} };
+		CHECK(LifetimeCounter::liveObjects() == 1);
 		s.erase(s.begin());
 		CHECK(s.size() == 0);
+		CHECK(LifetimeCounter::liveObjects() == 0);
 	}
 	SECTION("multiple elements") {
 		utl::structure_of_arrays<Particle> s(10);
+		CHECK(LifetimeCounter::liveObjects() == 10);
 		s.erase(s.begin(), s.end());
 		CHECK(s.size() == 0);
+		CHECK(LifetimeCounter::liveObjects() == 0);
 	}
 }
 
@@ -268,6 +397,27 @@ TEST_CASE("structure_of_arrays::erase range to empty") {
 	utl::structure_of_arrays<Particle> s(8);
 	s.erase(0, 8);
 	CHECK(s.size() == 0);
+}
+
+TEST_CASE("structure_of_arrays::swap") {
+	utl::structure_of_arrays<Particle> s = {
+		Particle{ .id = 0 },
+		Particle{ .id = 1 },
+		Particle{ .id = 2 }
+	};
+	utl::structure_of_arrays<Particle> t = {
+		Particle{ .id = 0 },
+		Particle{ .id = -1 }
+	};
+	s.swap(t);
+	CHECK(t.size() == 3);
+	for (int i = 0; i < 3; ++i) {
+		CHECK(t[i].id == i);
+	}
+	CHECK(s.size() == 2);
+	for (int i = 0; i < 2; ++i) {
+		CHECK(s[i].id == -i);
+	}
 }
 
 TEST_CASE("structure_of_arrays iterate") {
