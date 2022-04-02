@@ -2,7 +2,7 @@
 
 #include "__debug.hpp"
 
-#if defined(__GNUC__) || defined(__clang__)
+#if UTL_GCC
 
 #include <cxxabi.h>
 
@@ -14,7 +14,7 @@ std::string utl::__demangle_name(char const* mangled_name) {
 											   &status);
 	__utl_assert(status == 0, "Name demangling failed");
 	
-	std::string result(demangled_name);
+	std::string const result(demangled_name);
 	std::free(demangled_name);
 	return result;
 }

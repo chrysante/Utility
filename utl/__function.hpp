@@ -29,14 +29,14 @@ namespace utl {
 #include "bit.hpp"
 #include "concepts.hpp"
 
-#define UTL_INTERNAL_LOCAL_FUNCTION_SIZE_IN_WORDS 3
+#define _UTL_LOCAL_FUNCTION_SIZE_IN_WORDS 3
 
 #if UTL_ANNOTATE_UTL_FUNCTION_ALLOCATION 
-#define UTL_INTERNAL_LOGF_ALLOC(S, A) utl_log("utl::function allocates: (size = {}, align = {})", S, A)
-#define UTL_INTERNAL_LOGF_DEALLOC(P, S, A) utl_log("utl::function deallocates: (p = {}, size = {}, align = {})", P, S, A)
+#define _UTL_LOGF_ALLOC(S, A) utl_log("utl::function allocates: (size = {}, align = {})", S, A)
+#define _UTL_LOGF_DEALLOC(P, S, A) utl_log("utl::function deallocates: (p = {}, size = {}, align = {})", P, S, A)
 #else // UTL_ANNOTATE_UTL_FUNCTION_ALLOCATION
-#define UTL_INTERNAL_LOGF_ALLOC(...)
-#define UTL_INTERNAL_LOGF_DEALLOC(...)
+#define _UTL_LOGF_ALLOC(...)
+#define _UTL_LOGF_DEALLOC(...)
 #endif // UTL_ANNOTATE_UTL_FUNCTION_ALLOCATION
 
 
@@ -118,7 +118,7 @@ namespace utl {
 		
 	public:
 		using result_type = R;
-		static constexpr std::size_t sbo_size = UTL_INTERNAL_LOCAL_FUNCTION_SIZE_IN_WORDS * sizeof(void*);
+		static constexpr std::size_t sbo_size = _UTL_LOCAL_FUNCTION_SIZE_IN_WORDS * sizeof(void*);
 		
 	public:
 		// MARK: constructors
@@ -227,7 +227,7 @@ namespace utl::_private::functionDetails {
 	
 	inline constexpr std::size_t LocalFunctionStoragePtrCount = 4;
 	
-	inline constexpr std::size_t MaxLocalFunctionSize = ptrSize * UTL_INTERNAL_LOCAL_FUNCTION_SIZE_IN_WORDS;
+	inline constexpr std::size_t MaxLocalFunctionSize = ptrSize * _UTL_LOCAL_FUNCTION_SIZE_IN_WORDS;
 	inline constexpr std::size_t MaxLocalFunctionAlign = alignof(std::max_align_t);
 	
 //	template <typename F>
@@ -497,11 +497,11 @@ namespace utl::_private::functionDetails {
 		}
 		
 		[[nodiscard]] void* allocate(std::size_t size, std::size_t align) {
-			UTL_INTERNAL_LOGF_ALLOC(size, align);
+			_UTL_LOGF_ALLOC(size, align);
 			return ::operator new(size, static_cast<std::align_val_t>(align));
 		}
 		void deallocate(void* p, std::size_t size, std::size_t align) noexcept {
-			UTL_INTERNAL_LOGF_DEALLOC(p, size, align);
+			_UTL_LOGF_DEALLOC(p, size, align);
 			::operator delete(p, size, static_cast<std::align_val_t>(align));
 		}
 		
@@ -509,7 +509,7 @@ namespace utl::_private::functionDetails {
 		static_assert(sizeof(FunctionVTableStorage) == sizeof(void*));
 		FunctionVTableStorage vTableStorage;
 		void* functionStorage;
-		char _placeholder[(UTL_INTERNAL_LOCAL_FUNCTION_SIZE_IN_WORDS - 2) * sizeof(void*)];
+		char _placeholder[(_UTL_LOCAL_FUNCTION_SIZE_IN_WORDS - 2) * sizeof(void*)];
 		std::nullptr_t _heapIndicator{}; // this is always null if this is of type HeapFunctionObjectStorage
 	};
 	
@@ -520,7 +520,7 @@ namespace utl::_private::functionDetails {
 		}
 		
 	private: // data
-		std::nullptr_t _placeholder[UTL_INTERNAL_LOCAL_FUNCTION_SIZE_IN_WORDS + 1] = {};
+		std::nullptr_t _placeholder[_UTL_LOCAL_FUNCTION_SIZE_IN_WORDS + 1] = {};
 	};
 	
 	
@@ -557,7 +557,7 @@ namespace utl::_private::functionDetails {
 		
 		// this can be called on its own
 		bool isNullFunction() const noexcept {
-			static constexpr std::size_t localSize = (UTL_INTERNAL_LOCAL_FUNCTION_SIZE_IN_WORDS + 1) * sizeof(void*);
+			static constexpr std::size_t localSize = (_UTL_LOCAL_FUNCTION_SIZE_IN_WORDS + 1) * sizeof(void*);
 			static constexpr std::nullptr_t null[localSize] = {};
 			return std::memcmp(this, null, localSize) == 0;
 		}
@@ -703,4 +703,4 @@ namespace utl::_private::functionDetails {
 }
 
 
-static_assert(sizeof(utl::function<void()>) == (UTL_INTERNAL_LOCAL_FUNCTION_SIZE_IN_WORDS + 1) * sizeof(void*));
+static_assert(sizeof(utl::function<void()>) == (_UTL_LOCAL_FUNCTION_SIZE_IN_WORDS + 1) * sizeof(void*));

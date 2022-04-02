@@ -135,6 +135,16 @@ namespace utl {
 	template <typename T>
 	concept __utl_referenceable = std::is_object_v<std::remove_reference_t<T>>;
 	
+	template <typename T, typename U>
+	concept weakly_equality_comparable_with =
+		requires(const std::remove_reference_t<T>& t,
+				 const std::remove_reference_t<U>& u) {
+			{ t == u } -> boolean_testable;
+			{ t != u } -> boolean_testable;
+			{ u == t } -> boolean_testable;
+			{ u != t } -> boolean_testable;
+		};
+	
 	template <typename I>
 	concept iterator =
 		requires(I i) {
@@ -145,6 +155,9 @@ namespace utl {
 	
 	template <typename I, typename T>
 	concept iterator_for = iterator<I> && std::convertible_to<typename std::iterator_traits<I>::value_type, T>;
+	
+	template <typename S, typename I>
+	concept sentinel_for = iterator<I> && weakly_equality_comparable_with<I, S>;
 	
 	template <typename I>
 	concept input_iterator =
@@ -205,6 +218,12 @@ namespace utl {
 	
 	template <typename I, typename T>
 	concept random_access_iterator_for = random_access_iterator<I> && std::convertible_to<typename std::iterator_traits<I>::value_type, T>;
+
+	template <typename R>
+	concept range = requires(R&& r) {
+		{ r.begin() } -> input_iterator;
+		{ r.end() } -> sentinel_for<decltype(r.begin())>;
+	};
 	
 }
 

@@ -49,37 +49,37 @@ _UTL_SYSTEM_HEADER_
 
 
 /// MARK: UTL_WITH_INDEX_SEQUENCE
-#define UTL_INTERNAL_INDEX_SEQ_HELPER_TEMPLATE_PARAMS(...) \
-	UTL_VFUNC(UTL_INTERNAL_INDEX_SEQ_HELPER_TEMPLATE_PARAMS, __VA_ARGS__)
-#define UTL_INTERNAL_INDEX_SEQ_HELPER_TEMPLATE_PARAMS2(name1, size1) \
+#define _UTL_INDEX_SEQ_HELPER_TEMPLATE_PARAMS(...) \
+	UTL_VFUNC(_UTL_INDEX_SEQ_HELPER_TEMPLATE_PARAMS, __VA_ARGS__)
+#define _UTL_INDEX_SEQ_HELPER_TEMPLATE_PARAMS2(name1, size1) \
 	<::std::size_t... name1>
-#define UTL_INTERNAL_INDEX_SEQ_HELPER_TEMPLATE_PARAMS4(name1, size1, name2, size2) \
+#define _UTL_INDEX_SEQ_HELPER_TEMPLATE_PARAMS4(name1, size1, name2, size2) \
 	<::std::size_t... name1, ::std::size_t... name2>
-#define UTL_INTERNAL_INDEX_SEQ_HELPER_TEMPLATE_PARAMS6(name1, size1, name2, size2, name3, size3) \
+#define _UTL_INDEX_SEQ_HELPER_TEMPLATE_PARAMS6(name1, size1, name2, size2, name3, size3) \
 	<::std::size_t... name1, ::std::size_t... name2, ::std::size_t... name3>
 
-#define UTL_INTERNAL_INDEX_SEQ_HELPER_FUNCTION_PARAMS(...) \
-	UTL_VFUNC(UTL_INTERNAL_INDEX_SEQ_HELPER_FUNCTION_PARAMS, __VA_ARGS__)
-#define UTL_INTERNAL_INDEX_SEQ_HELPER_FUNCTION_PARAMS2(name1, size1) \
+#define _UTL_INDEX_SEQ_HELPER_FUNCTION_PARAMS(...) \
+	UTL_VFUNC(_UTL_INDEX_SEQ_HELPER_FUNCTION_PARAMS, __VA_ARGS__)
+#define _UTL_INDEX_SEQ_HELPER_FUNCTION_PARAMS2(name1, size1) \
 	(::utl::index_sequence<name1...>)
-#define UTL_INTERNAL_INDEX_SEQ_HELPER_FUNCTION_PARAMS4(name1, size1, name2, size2) \
+#define _UTL_INDEX_SEQ_HELPER_FUNCTION_PARAMS4(name1, size1, name2, size2) \
 	(::utl::index_sequence<name1...>, ::utl::index_sequence<name2...>)
-#define UTL_INTERNAL_INDEX_SEQ_HELPER_FUNCTION_PARAMS6(name1, size1, name2, size2, name3, size3) \
+#define _UTL_INDEX_SEQ_HELPER_FUNCTION_PARAMS6(name1, size1, name2, size2, name3, size3) \
 	(::utl::index_sequence<name1...>, ::utl::index_sequence<name2...>, ::utl::index_sequence<name3...>)
 
-#define UTL_INTERNAL_INDEX_SEQ_HELPER_FUNCTION_INVOKE(...) \
-	UTL_VFUNC(UTL_INTERNAL_INDEX_SEQ_HELPER_FUNCTION_INVOKE, __VA_ARGS__)
-#define UTL_INTERNAL_INDEX_SEQ_HELPER_FUNCTION_INVOKE2(name1, size1) \
+#define _UTL_INDEX_SEQ_HELPER_FUNCTION_INVOKE(...) \
+	UTL_VFUNC(_UTL_INDEX_SEQ_HELPER_FUNCTION_INVOKE, __VA_ARGS__)
+#define _UTL_INDEX_SEQ_HELPER_FUNCTION_INVOKE2(name1, size1) \
 	(::utl::make_index_sequence<size1>{})
-#define UTL_INTERNAL_INDEX_SEQ_HELPER_FUNCTION_INVOKE4(name1, size1, name2, size2) \
+#define _UTL_INDEX_SEQ_HELPER_FUNCTION_INVOKE4(name1, size1, name2, size2) \
 	(::utl::make_index_sequence<size1>{}, ::utl::make_index_sequence<size2>{})
-#define UTL_INTERNAL_INDEX_SEQ_HELPER_FUNCTION_INVOKE6(name1, size1, name2, size2, name3, size3) \
+#define _UTL_INDEX_SEQ_HELPER_FUNCTION_INVOKE6(name1, size1, name2, size2, name3, size3) \
 	(::utl::make_index_sequence<size1>{}, ::utl::make_index_sequence<size2>{}, ::utl::make_index_sequence<size3>{})
 
 #define UTL_WITH_INDEX_SEQUENCE(params, ...) \
-	[&] UTL_INTERNAL_INDEX_SEQ_HELPER_TEMPLATE_PARAMS params \
-	UTL_INTERNAL_INDEX_SEQ_HELPER_FUNCTION_PARAMS params __VA_ARGS__ \
-	UTL_INTERNAL_INDEX_SEQ_HELPER_FUNCTION_INVOKE params
+	[&] _UTL_INDEX_SEQ_HELPER_TEMPLATE_PARAMS params \
+	_UTL_INDEX_SEQ_HELPER_FUNCTION_PARAMS params __VA_ARGS__ \
+	_UTL_INDEX_SEQ_HELPER_FUNCTION_INVOKE params
 
 /// MARK: Enum Operators
 #if UTL_CPP

@@ -103,7 +103,7 @@ namespace utl {
 
 #define UTL_MAKE_LOG_MACRO(Logger, LogLevelMask, FirstArg, ...) \
 	Logger.log(UTL_MAKE_SOURCE_INFO(), LogLevelMask,            \
-			   UTL_INTERNAL_WRAP_LOG_STATEMENT_USING_DECL(FirstArg) __VA_OPT__(,) __VA_ARGS__)
+			   _UTL_WRAP_LOG_STATEMENT_USING_DECL(FirstArg) __VA_OPT__(,) __VA_ARGS__)
 
 
 
@@ -118,7 +118,7 @@ namespace utl {
 }
 
 
-#define UTL_INTERNAL_WRAP_LOG_STATEMENT_USING_DECL(...) [&]() {                  \
+#define _UTL_WRAP_LOG_STATEMENT_USING_DECL(...) [&]() {                  \
 	[[maybe_unused]] constexpr utl::log_level trace   = utl::log_level::trace;   \
 	[[maybe_unused]] constexpr utl::log_level info    = utl::log_level::info;    \
 	[[maybe_unused]] constexpr utl::log_level debug   = utl::log_level::debug;   \

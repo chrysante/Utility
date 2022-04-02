@@ -264,6 +264,58 @@ namespace utl::pmr {
 	
 	static_assert(sizeof(monotonic_buffer_resource::__BufferNodeHeader) == monotonic_buffer_resource::__chunk_align);
 	
+	/// MARK: - stack_buffer
+	inline constexpr std::size_t __utl_dynamic_size = (std::size_t)-1;
+	inline constexpr std::size_t __utl_alloca_size_limit = 1 << 20; // 1 megabyte
+	
+	template <std::size_t Size>
+	class stack_buffer {
+	public:
+		void*       data()       { return _data; }
+		void const* data() const { return _data; }
+		std::size_t size() const { return Size; };
+		
+	private:
+		alignas(std::max_align_t) char _data[Size];
+	};
+	
+	template <>
+	class stack_buffer<__utl_dynamic_size> {
+	public:
+		stack_buffer(void* data, std::size_t size):
+			stack_buffer(data, size, get_default_resource())
+		{}
+		
+		stack_buffer(void* data, std::size_t size, memory_resource* fallback): _fallback(fallback), _data(data), _size(size) {
+			if (_size > __utl_alloca_size_limit) {
+				__utl_assert(_data == nullptr);
+				_data = _fallback->allocate(_size);
+			}
+		}
+		
+		~stack_buffer() {
+			if (_size > __utl_alloca_size_limit) {
+				_fallback->deallocate(_data, _size);
+			}
+		}
+		
+		void*       data()       { return _data; }
+		void const* data() const { return _data; }
+		std::size_t size() const { return _size; };
+		
+	private:
+		memory_resource* _fallback;
+		void* _data;
+		std::size_t _size;
+	};
+	
+	using dynamic_stack_buffer = stack_buffer<__utl_dynamic_size>;
+	
+#define UTL_MAKE_DYNAMIC_STACK_BUFFER(SIZE, ...)                          \
+::utl::pmr::dynamic_stack_buffer(                                         \
+	SIZE <= ::utl::pmr::__utl_alloca_size_limit ? alloca(SIZE) : nullptr, \
+	SIZE __VA_OPT__(,) __VA_ARGS__)
+	
 	/// MARK: - monitor_resource
 	class monitor_resource: public memory_resource {
 	public:

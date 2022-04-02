@@ -76,6 +76,24 @@ TEST_CASE("pmr::structure_of_arrays::push_back") {
 	testPushBack(s);
 }
 
+TEST_CASE("pmr::structure_of_arrays copy construct (resource equal)") {
+	utl::pmr::structure_of_arrays<Particle> s;
+	s.push_back({ .id = 0 });
+	s.push_back({ .id = 1 });
+	
+	utl::pmr::structure_of_arrays<Particle> t = s;
+	
+	CHECK(s.size() == 2);
+	CHECK(s.capacity() >= 2);
+	CHECK(s[0].id == 0);
+	CHECK(s[1].id == 1);
+	
+	CHECK(t.size() == 2);
+	CHECK(t.capacity() >= 2);
+	CHECK(t[0].id == 0);
+	CHECK(t[1].id == 1);
+}
+
 TEST_CASE("pmr::structure_of_arrays move construct (resource equal)") {
 	utl::pmr::structure_of_arrays<Particle> s;
 	s.push_back({ .id = 0 });

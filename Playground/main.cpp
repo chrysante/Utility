@@ -1,17 +1,21 @@
-#include "utl/structure_of_arrays.hpp"
-#include "mtl/mtl.hpp"
 #include <iostream>
-#include "utl/typeinfo.hpp"
-#include "utl/concepts.hpp"
+#include <algorithm>
+#include <vector>
 
-#include "utl/utility.hpp"
-#include "utl/vector.hpp"
-#include <random> 
 
-UTL_STATIC_INIT {
-	std::cout << "before main()?\n";
-};
 
 int main() {
-	std::cout << "called main()\n";
+	std::vector<int> v = { 0, 1, 3, 4 };
+	auto range = std::equal_range(v.begin(), v.end(), 2);
+	for (auto i = range.first; i != range.second; ++i) {
+		std::cout << *i << std::endl;
+	}
+	std::cout << std::boolalpha;
+	std::cout << (range.first == v.end()) << std::endl;
+	std::cout << (range.second == v.end()) << std::endl;
+	
+	std::cout << std::to_address(range.first) << std::endl;
+	std::cout << std::to_address(range.second) << std::endl;
+	std::cout << std::to_address(v.end()) << std::endl;
+	
 }

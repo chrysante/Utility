@@ -12,13 +12,13 @@ _UTL_SYSTEM_HEADER_
 #include <algorithm>
 
 
-#define UTL_INTERNAL_FUNCTION_OBJECT_DEF(obj_name, impl) \
+#define _UTL_FUNCTION_OBJECT_DEF(obj_name, impl) \
 struct obj_name##_t { \
 	__utl_nodiscard constexpr auto operator() impl \
 } inline constexpr obj_name{}
 
 
-#define UTL_INTERNAL_BIN_FUNCTION_OBJECT_DEF(obj_name, operator_name, op, extendDef) \
+#define _UTL_BIN_FUNCTION_OBJECT_DEF(obj_name, operator_name, op, extendDef) \
 struct obj_name##_t { \
 	template <typename T, typename U> \
 	requires(has_operator_##operator_name<T, U>::value) \
@@ -66,19 +66,19 @@ namespace utl {
 		}
 	} inline constexpr minus{};
 	
-	UTL_INTERNAL_BIN_FUNCTION_OBJECT_DEF(multiplies,  multiply,     *, true);
-	UTL_INTERNAL_BIN_FUNCTION_OBJECT_DEF(divides,     divide,       /, false);
-	UTL_INTERNAL_BIN_FUNCTION_OBJECT_DEF(modulo,      modulo,       %, false);
-	UTL_INTERNAL_BIN_FUNCTION_OBJECT_DEF(equals,      equals,      ==, false);
-	UTL_INTERNAL_BIN_FUNCTION_OBJECT_DEF(less,        less,         <, false);
-	UTL_INTERNAL_BIN_FUNCTION_OBJECT_DEF(less_eq,     less_eq,     <=, false);
-	UTL_INTERNAL_BIN_FUNCTION_OBJECT_DEF(greater,     greater,      >, false);
-	UTL_INTERNAL_BIN_FUNCTION_OBJECT_DEF(greater_eq,  greater_eq,  >=, false);
-	UTL_INTERNAL_BIN_FUNCTION_OBJECT_DEF(unequals,    unequals,    !=, false);
-	UTL_INTERNAL_BIN_FUNCTION_OBJECT_DEF(logical_and, logical_and, &&, true);
-	UTL_INTERNAL_BIN_FUNCTION_OBJECT_DEF(logical_or,  logical_or,  ||, true);
+	_UTL_BIN_FUNCTION_OBJECT_DEF(multiplies,  multiply,     *, true);
+	_UTL_BIN_FUNCTION_OBJECT_DEF(divides,     divide,       /, false);
+	_UTL_BIN_FUNCTION_OBJECT_DEF(modulo,      modulo,       %, false);
+	_UTL_BIN_FUNCTION_OBJECT_DEF(equals,      equals,      ==, false);
+	_UTL_BIN_FUNCTION_OBJECT_DEF(less,        less,         <, false);
+	_UTL_BIN_FUNCTION_OBJECT_DEF(less_eq,     less_eq,     <=, false);
+	_UTL_BIN_FUNCTION_OBJECT_DEF(greater,     greater,      >, false);
+	_UTL_BIN_FUNCTION_OBJECT_DEF(greater_eq,  greater_eq,  >=, false);
+	_UTL_BIN_FUNCTION_OBJECT_DEF(unequals,    unequals,    !=, false);
+	_UTL_BIN_FUNCTION_OBJECT_DEF(logical_and, logical_and, &&, true);
+	_UTL_BIN_FUNCTION_OBJECT_DEF(logical_or,  logical_or,  ||, true);
 	
-#undef UTL_INTERNAL_BIN_FUNCTION_OBJECT_DEF
+#undef _UTL_BIN_FUNCTION_OBJECT_DEF
 	
 	namespace __utl_function_objects_impl {
 		__utl_nodiscard constexpr auto signed_sqrt(arithmetic auto x) {
@@ -118,92 +118,92 @@ namespace utl {
 		}
 	}
 	
-	UTL_INTERNAL_FUNCTION_OBJECT_DEF(abs, (auto const& x) const {
+	_UTL_FUNCTION_OBJECT_DEF(abs, (auto const& x) const {
 		using ::std::abs;
 		return abs(x);
 	});
 	
-	UTL_INTERNAL_FUNCTION_OBJECT_DEF(sqrt, (auto const& x) const {
+	_UTL_FUNCTION_OBJECT_DEF(sqrt, (auto const& x) const {
 		using ::std::sqrt;
 		return sqrt(x);
 	});
 	
-	UTL_INTERNAL_FUNCTION_OBJECT_DEF(signed_sqrt, (auto const& x) const {
+	_UTL_FUNCTION_OBJECT_DEF(signed_sqrt, (auto const& x) const {
 		using __utl_function_objects_impl::signed_sqrt;
 		return signed_sqrt(x);
 	});
 	
-	UTL_INTERNAL_FUNCTION_OBJECT_DEF(signed_pow, (auto const& x, auto const& y) const {
+	_UTL_FUNCTION_OBJECT_DEF(signed_pow, (auto const& x, auto const& y) const {
 		using __utl_function_objects_impl::signed_pow;
 		return signed_pow(x, y);
 	});
 	
-	UTL_INTERNAL_FUNCTION_OBJECT_DEF(exp, (auto const& x) const {
+	_UTL_FUNCTION_OBJECT_DEF(exp, (auto const& x) const {
 		using ::std::exp;
 		return exp(x);
 	});
 	
-	UTL_INTERNAL_FUNCTION_OBJECT_DEF(min, (auto const& x, auto const& y) const {
+	_UTL_FUNCTION_OBJECT_DEF(min, (auto const& x, auto const& y) const {
 		using ::std::min;
 		return min(x, y);
 	});
-	UTL_INTERNAL_FUNCTION_OBJECT_DEF(max, (auto const& x, auto const& y) const {
+	_UTL_FUNCTION_OBJECT_DEF(max, (auto const& x, auto const& y) const {
 		using ::std::max;
 		return max(x, y);
 	});
 	
-	UTL_INTERNAL_FUNCTION_OBJECT_DEF(screen_blend, (auto const& x, auto const& y) const {
+	_UTL_FUNCTION_OBJECT_DEF(screen_blend, (auto const& x, auto const& y) const {
 		return 1 - (1 - x) * (1 - y);
 	});
 	
-	UTL_INTERNAL_FUNCTION_OBJECT_DEF(one_minus, (auto const& x) const {
+	_UTL_FUNCTION_OBJECT_DEF(one_minus, (auto const& x) const {
 		return 1 - x;
 	});
 	
-	UTL_INTERNAL_FUNCTION_OBJECT_DEF(ceil_divide, (auto const& x, auto const& y) const {
+	_UTL_FUNCTION_OBJECT_DEF(ceil_divide, (auto const& x, auto const& y) const {
 		using __utl_function_objects_impl::ceil_divide;
 		return ceil_divide(x, y);
 	});
 	
-	UTL_INTERNAL_FUNCTION_OBJECT_DEF(ceil_divide_pow_two, (auto const& x, auto const& y) const {
+	_UTL_FUNCTION_OBJECT_DEF(ceil_divide_pow_two, (auto const& x, auto const& y) const {
 		using __utl_function_objects_impl::ceil_divide_pow_two;
 		return ceil_divide_pow_two(x, y);
 	});
 	
-	UTL_INTERNAL_FUNCTION_OBJECT_DEF(floor, (auto const& x) const {
+	_UTL_FUNCTION_OBJECT_DEF(floor, (auto const& x) const {
 		using std::floor;
 		return floor(x);
 	});
 	
-	UTL_INTERNAL_FUNCTION_OBJECT_DEF(ceil, (auto const& x) const {
+	_UTL_FUNCTION_OBJECT_DEF(ceil, (auto const& x) const {
 		using std::ceil;
 		return ceil(x);
 	});
 	
-	UTL_INTERNAL_FUNCTION_OBJECT_DEF(fract, (auto const& x) const {
+	_UTL_FUNCTION_OBJECT_DEF(fract, (auto const& x) const {
 		using __utl_function_objects_impl::fract;
 		return fract(x);
 	});
 	
-	UTL_INTERNAL_FUNCTION_OBJECT_DEF(mod, (auto const& x, auto const& y) const {
+	_UTL_FUNCTION_OBJECT_DEF(mod, (auto const& x, auto const& y) const {
 		using __utl_function_objects_impl::mod;
 		return mod(x, y);
 	});
 	
-	UTL_INTERNAL_FUNCTION_OBJECT_DEF(is_positive, (auto const& x) const {
+	_UTL_FUNCTION_OBJECT_DEF(is_positive, (auto const& x) const {
 		return x > 0;
 	});
-	UTL_INTERNAL_FUNCTION_OBJECT_DEF(is_non_positive, (auto const& x) const {
+	_UTL_FUNCTION_OBJECT_DEF(is_non_positive, (auto const& x) const {
 		return x <= 0;
 	});
-	UTL_INTERNAL_FUNCTION_OBJECT_DEF(is_negative, (auto const& x) const {
+	_UTL_FUNCTION_OBJECT_DEF(is_negative, (auto const& x) const {
 		return x < 0;
 	});
-	UTL_INTERNAL_FUNCTION_OBJECT_DEF(is_non_negative, (auto const& x) const {
+	_UTL_FUNCTION_OBJECT_DEF(is_non_negative, (auto const& x) const {
 		return x >= 0;
 	});
 	
-	UTL_INTERNAL_FUNCTION_OBJECT_DEF(identity, (auto&& x) const {
+	_UTL_FUNCTION_OBJECT_DEF(identity, (auto&& x) const {
 		return UTL_FORWARD(x);
 	});
 	

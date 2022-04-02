@@ -625,7 +625,7 @@ namespace utl {
 		constexpr void pop_back() noexcept {
 			__utl_expect(!empty(), "pop_back() called on empty vector");
 			this->_set_size(this->_size() - 1);
-			_destroy_elem(_end());
+			_destroy_at(_end());
 		}
 		
 		/// MARK: erase

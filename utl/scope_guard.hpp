@@ -56,7 +56,7 @@ namespace utl {
 		
 	}
 	
-#define UTL_INTERNAL_SCOPE_GUARD_SPECIALIZATION(Name, Armed, Type) \
+#define _UTL_SCOPE_GUARD_SPECIALIZATION(Name, Armed, Type) \
 	template <invocable F> \
 	class Name: public _private::basic_scope_guard<F, Armed, _private::scope_guard_type::Type> { \
 		using base = _private::basic_scope_guard<F, Armed, _private::scope_guard_type::Type>; \
@@ -66,14 +66,14 @@ namespace utl {
 	template <typename F> \
 	Name(F) -> Name<F>
 	
-	UTL_INTERNAL_SCOPE_GUARD_SPECIALIZATION(scope_guard,               false, any);
-	UTL_INTERNAL_SCOPE_GUARD_SPECIALIZATION(scope_guard_success,       false, success);
-	UTL_INTERNAL_SCOPE_GUARD_SPECIALIZATION(scope_guard_failure,       false, failure);
-	UTL_INTERNAL_SCOPE_GUARD_SPECIALIZATION(armed_scope_guard,         true,  any);
-	UTL_INTERNAL_SCOPE_GUARD_SPECIALIZATION(armed_scope_guard_success, true,  success);
-	UTL_INTERNAL_SCOPE_GUARD_SPECIALIZATION(armed_scope_guard_failure, true,  failure);
+	_UTL_SCOPE_GUARD_SPECIALIZATION(scope_guard,               false, any);
+	_UTL_SCOPE_GUARD_SPECIALIZATION(scope_guard_success,       false, success);
+	_UTL_SCOPE_GUARD_SPECIALIZATION(scope_guard_failure,       false, failure);
+	_UTL_SCOPE_GUARD_SPECIALIZATION(armed_scope_guard,         true,  any);
+	_UTL_SCOPE_GUARD_SPECIALIZATION(armed_scope_guard_success, true,  success);
+	_UTL_SCOPE_GUARD_SPECIALIZATION(armed_scope_guard_failure, true,  failure);
 	
-#undef UTL_INTERNAL_SCOPE_GUARD_SPECIALIZATION
+#undef _UTL_SCOPE_GUARD_SPECIALIZATION
 	
 }
 

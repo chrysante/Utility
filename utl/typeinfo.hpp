@@ -12,7 +12,7 @@ namespace utl {
 	/// Brittle implementation using __PRETTY_FUNCTION__
 	/// If it doesn't work correctly, change the 1 below to 0 to
 	/// use stable but non-constexpr rtti fallback implementation
-#if defined(__GNUC__) || defined(__clang__)
+#if UTL_GCC
 	template <typename T>
 	constexpr auto __ctti_nameof_impl() {
 		auto constexpr prettySize = std::size(__PRETTY_FUNCTION__);
@@ -21,7 +21,7 @@ namespace utl {
 		utl::basic_static_string pretty = __PRETTY_FUNCTION__;
 		return pretty.template substr<prettySize - beginSize-2>(beginSize);
 	}
-#elif defined(_MSC_VER)
+#elif UTL_MSVC
 	template <typename T>
 	constexpr auto __ctti_nameof_impl() {
 		constexpr utl::basic_static_string pretty = __FUNCSIG__;
@@ -30,8 +30,6 @@ namespace utl {
 
 		return pretty.template substr<prettySize - beginSize - 7>(beginSize);
 	}
-#else 
-#	error
 #endif
 	
 	template <typename T>

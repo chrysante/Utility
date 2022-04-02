@@ -1,4 +1,4 @@
-#define UTL_INTERNAL_ASSERT_WITH_EXCEPTIONS 1
+#define _UTL_ASSERT_WITH_EXCEPTIONS 1
 
 #include "Catch2.hpp"
 #include "StdoutReroute.hpp"
