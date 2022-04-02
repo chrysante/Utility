@@ -73,6 +73,8 @@ namespace utl {
 		sstr << "struct Name; \\\n";
 		sstr << "struct __##Name##_soa_reference; \\\n";
 		sstr << "struct __##Name##_soa_const_reference; \\\n";
+		sstr << "struct __##Name##_soa_pointer; \\\n";
+		sstr << "struct __##Name##_soa_const_pointer; \\\n";
 		
 		sstr << "\\\n";
 		/// MARK: Members Bases
@@ -103,6 +105,8 @@ namespace utl {
 		sstr << "	operator Name() const; \\\n";
 		sstr << "	operator __##Name##_soa_const_reference() const; \\\n";
 		
+		sstr << "	__##Name##_soa_pointer operator&() const; \\\n";
+		
 		/* Swap */
 		sstr << "	/* Swap */ \\\n";
 		sstr << "	friend constexpr void swap(__##Name##_soa_reference const& a, __##Name##_soa_reference const& b) { \\\n";
@@ -125,6 +129,9 @@ namespace utl {
 		}
 		
 		sstr << "	operator Name() const; \\\n";
+		
+		sstr << "	__##Name##_soa_const_pointer operator&() const; \\\n";
+		
 		/// End
 		sstr << "}; /* End Const Reference */ \\\n";
 		sstr << "\\\n";
@@ -135,6 +142,8 @@ namespace utl {
 		sstr << "	using element_type = Name; \\\n";
 		sstr << "	/* Members */ \\\n";
 		declareMembers(sstr, count, { .referenceQualifier = "*" });
+		
+		sstr << "	__##Name##_soa_reference operator*() const; \\\n";
 		/// End
 		sstr << "}; /* End Pointer */ \\\n";
 		sstr << "\\\n";
@@ -145,6 +154,8 @@ namespace utl {
 		sstr << "	using element_type = Name const; \\\n";
 		sstr << "	/* Members */ \\\n";
 		declareMembers(sstr, count, { .referenceQualifier = "const*" });
+		
+		sstr << "	__##Name##_soa_const_reference operator*() const; \\\n";
 		/// End
 		sstr << "}; /* End Const Pointer */ \\\n";
 		sstr << "\\\n";
@@ -296,6 +307,34 @@ namespace utl {
 		}
 		sstr << "	}; \\\n";
 		sstr << "} \\\n";
+		
+		/// MARK: Reference::operator&
+		sstr << "/* Reference::operator& */ \\\n";
+		for (std::array const constness = { "", "const_" };
+			 auto c: constness)
+		{
+			sstr << "inline __##Name##_soa_" << c << "pointer __##Name##_soa_" << c << "reference::operator&() const { \\\n";
+			sstr << "	return { \\\n";
+			for (int i = 0; i < count; ++i) {
+				sstr << "		&_UTL_SOA_MEMBER_NAME(X" << i << ")" << (i == count - 1 ? "" : ",") << " \\\n";
+			}
+			sstr << "	}; \\\n";
+			sstr << "} \\\n";
+		}
+		
+		/// MARK: Pointer::operator*
+		sstr << "/* Reference::operator* */ \\\n";
+		for (std::array const constness = { "", "const_" };
+			 auto c: constness)
+		{
+			sstr << "inline __##Name##_soa_" << c << "reference __##Name##_soa_" << c << "pointer::operator*() const { \\\n";
+			sstr << "	return { \\\n";
+			for (int i = 0; i < count; ++i) {
+				sstr << "		*_UTL_SOA_MEMBER_NAME(X" << i << ")" << (i == count - 1 ? "" : ",") << " \\\n";
+			}
+			sstr << "	}; \\\n";
+			sstr << "} \\\n";
+		}
 		
 		/// MARK: Comparison
 		sstr << "\\\n";

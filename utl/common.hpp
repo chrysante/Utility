@@ -82,12 +82,10 @@ _UTL_SYSTEM_HEADER_
 	UTL_INTERNAL_INDEX_SEQ_HELPER_FUNCTION_INVOKE params
 
 /// MARK: Enum Operators
-#if defined(UTL_CPP)
+#if UTL_CPP
 #	define _UTL_NSSTD std
-#elif defined(UTL_METAL)
+#elif UTL_METAL
 #	define _UTL_NSSTD metal
-#else
-#	error Unsupported Language
 #endif
 
 #define _UTL_ENUM_UNARY_PREFIX_OPERATOR(TYPE, RESULT_TYPE, OP) \
@@ -105,15 +103,13 @@ inline constexpr TYPE operator OP(TYPE a, typename _UTL_NSSTD::underlying_type<T
 	return static_cast<TYPE>(static_cast<typename _UTL_NSSTD::underlying_type<TYPE>::type>(a) OP b); \
 }
 
-#if defined(UTL_CPP)
+#if UTL_CPP
 #	define _UTL_ENUM_ASSIGNMENT(TYPE, OP) \
 		inline constexpr TYPE& operator OP##=(TYPE& a, TYPE b) { \
 			return a = a OP b; \
 		}
-#elif defined(UTL_METAL)
+#elif UTL_METAL
 #	define _UTL_ENUM_ASSIGNMENT(TYPE, OP) // Not supported in Metal
-#else
-#	error
 #endif
 
 #define UTL_ENUM_OPERATORS(TYPE) \
@@ -127,10 +123,7 @@ inline constexpr TYPE operator OP(TYPE a, typename _UTL_NSSTD::underlying_type<T
 	_UTL_ENUM_UNARY_PREFIX_OPERATOR(TYPE, bool, !) \
 	constexpr bool test(TYPE value) { return !!value; }
 
-
-
-
-#ifdef UTL_CPP // Guard here because general purpose header may be included in shader source
+#if UTL_CPP // Guard here because general purpose header may be included in shader source
 
 #include <utility>
 #include <type_traits>
@@ -250,6 +243,21 @@ namespace utl {
 	template <auto...> struct ctprint;
 	#define UTL_CTPRINT(...) ::utl::ctprint<__VA_ARGS__> UTL_ANONYMOUS_VARIABLE(_UTL_CTPRINT)
 
+	/// MARK: UTL_STATIC_INIT
+#if UTL_GCC
+	#define UTL_STATIC_INIT \
+		__attribute__((constructor)) static void UTL_ANONYMOUS_VARIABLE(__utl_static_init_)()
+#else
+	namespace utl {
+		template <typename F>
+		struct __utl_static_init {
+			__utl_static_init(F&& f) { f(); }
+		};
+	}
+	#define UTL_STATIC_INIT \
+		utl::__utl_static_init UTL_ANONYMOUS_VARIABLE(__utl_static_init_) = []
+#endif
+	
 	/// MARK: Iota
 	template <typename T>
 	class iota {

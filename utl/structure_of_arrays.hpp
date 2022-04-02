@@ -1,8 +1,4 @@
-#pragma once
-
-#ifndef __UTL_STRUCTURE_OF_ARRAYS_INCLUDED__
-#define __UTL_STRUCTURE_OF_ARRAYS_INCLUDED__
-
+//
 // Generic Structure of Arrays Class
 // Value Types need to be declared with the UTL_SOA_TYPE macro.
 // Example:
@@ -32,6 +28,7 @@
 //				using position = /* implementation defined */;
 //				using color    = /* implementation defined */;
 //			};
+//
 //			template <std::size_t I>
 //			auto& get();
 //			template <std::size_t I>
@@ -70,6 +67,10 @@
 //
 //
 
+#pragma once
+
+#ifndef __UTL_STRUCTURE_OF_ARRAYS_INCLUDED__
+#define __UTL_STRUCTURE_OF_ARRAYS_INCLUDED__
 
 #include "__base.hpp"
 _UTL_SYSTEM_HEADER_
@@ -205,6 +206,30 @@ namespace utl {
 	
 	template <typename Meta, typename... Members, __soa_type_kind Kind>
 	struct __soa_partial_element<Meta, std::tuple<Members...>, Kind>: __soa_element_member_base<Meta, Members, Kind>... {
+		static constexpr std::size_t __member_count = sizeof...(Members);
+		
+		static constexpr bool __this_is_value = Kind == __soa_type_kind::value;
+		static constexpr bool __this_is_reference = Kind == __soa_type_kind::reference || Kind == __soa_type_kind::const_reference;
+		static constexpr bool __this_is_pointer = Kind == __soa_type_kind::pointer || Kind == __soa_type_kind::const_pointer;
+		
+		static constexpr auto __reference_kind = []{
+			if (Kind == __soa_type_kind::reference || Kind == __soa_type_kind::value || Kind == __soa_type_kind::pointer) {
+				return __soa_type_kind::reference;
+			}
+			else {
+				return __soa_type_kind::const_reference;
+			}
+		}();
+		
+		static constexpr auto __pointer_kind = []{
+			if (Kind == __soa_type_kind::reference || Kind == __soa_type_kind::value || Kind == __soa_type_kind::pointer) {
+				return __soa_type_kind::pointer;
+			}
+			else {
+				return __soa_type_kind::const_pointer;
+			}
+		}();
+		
 		__soa_partial_element() = default;
 		
 		template <typename M>
@@ -236,6 +261,7 @@ namespace utl {
 		template <__soa_type_kind K>
 		using __corresponding_type = typename __soa_type_maker<Meta, std::tuple<Members...>, K>::type;
 		
+		/// Operator=
 		constexpr __soa_partial_element& operator=(__corresponding_type<__soa_type_kind::const_reference> const& rhs)
 			requires(Kind != __soa_type_kind::const_reference)
 		{
@@ -243,8 +269,33 @@ namespace utl {
 			return *this;
 		}
 		
-		constexpr operator __corresponding_type<__soa_type_kind::const_reference>() const {
+		/// Conversion to const_reference
+		constexpr operator __corresponding_type<__soa_type_kind::const_reference>() const requires(!__this_is_pointer) {
 			return { __member_base<Members>::__get()... };
+		}
+		
+		/// Operator&
+		constexpr __corresponding_type<__pointer_kind> operator&() const requires(__this_is_reference) {
+			return UTL_WITH_INDEX_SEQUENCE((I, __member_count), {
+				return __corresponding_type<__pointer_kind>{
+					&get<I>()...
+				};
+			});
+		}
+		constexpr __soa_partial_element* operator&() requires(__this_is_value) {
+			return this;
+		}
+		constexpr __soa_partial_element const* operator&() const requires(__this_is_value) {
+			return this;
+		}
+		
+		/// Operator*
+		constexpr __corresponding_type<__reference_kind> operator*() const requires(__this_is_pointer) {
+			return UTL_WITH_INDEX_SEQUENCE((I, __member_count), {
+				return __corresponding_type<__reference_kind>{
+					*get<I>()...
+				};
+			});
 		}
 		
 		template <std::size_t I>
@@ -479,8 +530,8 @@ namespace utl {
 		 operator-> is not usable. It requires to return a raw pointer, but we can't form a raw pointer to our value type, because of the memory layout.
 		 */
 		/*
-		pointer operator->() const {
-			return { std::get<I>(_ptr)... };
+		reference const* operator->() const {
+			return reinterpret_cast<reference const*>(this);
 		}
 		 */
 		
@@ -1218,17 +1269,16 @@ namespace utl {
 			static constexpr std::array<std::size_t, __member_count + 1> alignment = {
 				alignof(T)..., 1 /* append 1 here to make algorithm below simpler, because we don't have to branch on last element */
 			};
+			static constexpr std::size_t max_align = *std::max_element(alignment.begin(), alignment.end());
 			
 			__buffer_info result;
-			result.base_align = alignment[0];
+			result.base_align = max_align;
 			
 			std::size_t total_size = 0;
 			for (std::size_t i = 0; i < __member_count; ++i) {
 				result.member_offset[i] = total_size;
 				std::size_t const i_size = size[i] * obj_count;
-				
-				total_size += i_size;
-				total_size = round_up_pow_two(total_size, alignment[i + 1]);
+				total_size = round_up_pow_two(total_size + i_size, alignment[i + 1]);
 			}
 			
 			result.total_size = total_size;
@@ -1248,6 +1298,7 @@ namespace utl {
 			
 			return result;
 		}
+		
 		void __deallocate_raw(void* ptr, std::size_t size, std::size_t alignment) {
 			size = ceil_divide_pow_two(size, __soa_max_align);
 			if (ptr == nullptr) {
@@ -1259,7 +1310,7 @@ namespace utl {
 		
 		std::tuple<T*...> __allocate(std::size_t obj_count) {
 			auto const buffer_info = __make_buffer_info(obj_count);
-			void* const buffer = __allocate_raw(buffer_info.total_size, 32);
+			void* const buffer = __allocate_raw(buffer_info.total_size, buffer_info.base_align);
 			return __decompose_buffer_pointer(buffer, buffer_info);
 		}
 		

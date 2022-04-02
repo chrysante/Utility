@@ -1,15 +1,31 @@
 #pragma once
 
-/// MARK: Check Compiler Compatibility
-#if !(__clang__ || __GNUC__ || _MSC_VER)
+/// MARK: Detect Language
+#if defined(__METAL_VERSION__)
+#	define UTL_METAL 1
+#elif defined(__cplusplus)
+#	define UTL_CPP 1
+#	if __cplusplus < 202002L
+#		error Requires C++20
+#	endif
+#else
+#	error Unsupported Language
+#endif
+
+/// MARK: Detect Compiler
+#if defined(__GNUC__) || defined(__clang__)
+#	define UTL_GCC 1
+#elif defined(_MSC_VER)
+#	define UTL_MSVC 1
+#else
 #	error Unsupported Compiler
 #endif
 
 /// MARK: System Header
-#if __GNUC__ || __clang__
-#define _UTL_SYSTEM_HEADER_ _Pragma("GCC system_header")
+#if UTL_GCC
+#	define _UTL_SYSTEM_HEADER_ _Pragma("GCC system_header")
 #else
-#define _UTL_SYSTEM_HEADER_
+#	define _UTL_SYSTEM_HEADER_
 #endif
 
 _UTL_SYSTEM_HEADER_
@@ -19,23 +35,15 @@ _UTL_SYSTEM_HEADER_
 #	define UTL_DEBUG_LEVEL 0
 #endif
 
-/// MARK: UTL_CPP
-#if defined(__cplusplus) && !defined(__METAL_VERSION__)
-#	define UTL_CPP
-#	if __cplusplus < 202002L
-#		error Requires c++20
-#	endif
-#endif
-
-/// MARK: UTL_METAL
-#ifdef __METAL_VERSION__
-#	define UTL_METAL
-#endif
-
 #ifdef UTL_CPP // guard here because general purpose header may be included in shader source
 
 /// MARK: Attributes
-#if defined(__GNUC__) || defined(__clang__)
+/*
+ UTL_LIKELY and UTL_UNLIKELY attributes are used like this:
+ if UTL_LIKELY (x == 0) { ... }
+ if UTL_UNLIKELY (x == 1) { ... }
+ */
+#if UTL_GCC
 #	define UTL_LIKELY(...)   (__builtin_expect((__VA_ARGS__), 1))
 #	define UTL_UNLIKELY(...) (__builtin_expect((__VA_ARGS__), 0))
 #else 
@@ -43,7 +51,7 @@ _UTL_SYSTEM_HEADER_
 #	define UTL_UNLIKELY(...) (__VA_ARGS__)
 #endif
 
-#if defined(__GNUC__) || defined(__clang__)
+#if UTL_GCC
 
 #	define __utl_pure                 __attribute__((const))
 #	define __utl_nodiscard            [[nodiscard]]
@@ -60,7 +68,7 @@ _UTL_SYSTEM_HEADER_
 #		define __utl_interface_export  __attribute__((nodebug))
 #	endif // UTL_DEBUG_LEVEL > 1
 
-#else // defined(__GNUC__) || defined(__clang__)
+#else // UTL_GCC
 
 #	define __utl_pure
 #	define __utl_nodiscard
@@ -78,13 +86,13 @@ _UTL_SYSTEM_HEADER_
 #		define __utl_interface_export
 #	endif // UTL_DEBUG_LEVEL > 1
 
-#endif // defined(__GNUC__) || defined(__clang__)
+#endif // UTL_GCC
 
 /// MARK: Sanitizers
-#if defined(__GNUC__) || defined(__clang__)
+#if UTL_GCC
 #	define _UTL_DISABLE_UBSAN_INTEGER __attribute__((no_sanitize("integer")))
-#else // defined(__GNUC__) || defined(__clang__)
+#else // UTL_GCC
 #	define _UTL_DISABLE_UBSAN_INTEGER
-#endif // defined(__GNUC__) || defined(__clang__)
+#endif // UTL_GCC
 
 #endif // UTL_CPP

@@ -25,14 +25,25 @@ namespace {
 				 (double, color),
 				 (int,    size),
 				 (LifetimeCounter, counter),
-				 (Overaligned, overaligned)
+				 (Overaligned,     overaligned)
 	);
 	
 }
 
-static void testPushBack(auto const& s, std::size_t size) {
+static void testAlignment(void const* ptr, std::size_t alignment) {
+	CHECK((std::uintptr_t)ptr % alignment == 0);
+}
+
+template <typename A>
+static void testPushBack(utl::structure_of_arrays<Particle, A> const& s, std::size_t size) {
 	CHECK(s.size() == size);
 	CHECK(LifetimeCounter::liveObjects() == size);
+	testAlignment(s.data().position,    alignof(float));
+	testAlignment(s.data().id,          alignof(int));
+	testAlignment(s.data().color,       alignof(float));
+	testAlignment(s.data().size,        alignof(int));
+	testAlignment(s.data().counter,     alignof(LifetimeCounter));
+	testAlignment(s.data().overaligned, alignof(Overaligned));
 	for (std::size_t i = 0; i < size; ++i) {
 		CHECK(s[i].id == (int)i);
 	}
@@ -198,7 +209,7 @@ TEST_CASE("structure_of_arrays::insert") {
 	}
 }
 
-TEST_CASE("structure_of_arrays::insert range") {
+TEST_CASE("structure_of_arrays::insert [range]") {
 	LifetimeCounter::reset();
 	utl::structure_of_arrays<Particle> s;
 	for (int i = 0; i < 3; ++i) {
@@ -256,6 +267,49 @@ TEST_CASE("structure_of_arrays::insert [empty]") {
 	CHECK(s.capacity() >= 1);
 	CHECK(s[0].id == -1);
 	CHECK(LifetimeCounter::liveObjects() == 1);
+}
+
+TEST_CASE("structure_of_arrays::insert [range2]") {
+	LifetimeCounter::reset();
+	utl::structure_of_arrays<Particle> s = { Particle{ .id = -1 } };
+	Particle p[5] = {
+		{ .id = 0, .counter{ false } },
+		{ .id = 1, .counter{ false } },
+		{ .id = 2, .counter{ false } },
+		{ .id = 3, .counter{ false } },
+		{ .id = 4, .counter{ false } }
+	};
+	s.insert(0, p, p + 5);
+	CHECK(s.size() == 6);
+	CHECK(s.capacity() >= 6);
+	CHECK(s[0].id == 0);
+	CHECK(s[1].id == 1);
+	CHECK(s[2].id == 2);
+	CHECK(s[3].id == 3);
+	CHECK(s[4].id == 4);
+	CHECK(s[5].id == -1);
+	CHECK(LifetimeCounter::liveObjects() == 6);
+}
+
+TEST_CASE("structure_of_arrays::insert [empty, range]") {
+	LifetimeCounter::reset();
+	utl::structure_of_arrays<Particle> s;
+	Particle p[5] = {
+		{ .id = 0, .counter{ false } },
+		{ .id = 1, .counter{ false } },
+		{ .id = 2, .counter{ false } },
+		{ .id = 3, .counter{ false } },
+		{ .id = 4, .counter{ false } }
+	};
+	s.insert(0, p, p + 5);
+	CHECK(s.size() == 5);
+	CHECK(s.capacity() >= 5);
+	CHECK(s[0].id == 0);
+	CHECK(s[1].id == 1);
+	CHECK(s[2].id == 2);
+	CHECK(s[3].id == 3);
+	CHECK(s[4].id == 4);
+	CHECK(LifetimeCounter::liveObjects() == 5);
 }
 
 TEST_CASE("structure_of_arrays::erase") {
