@@ -1267,23 +1267,26 @@ namespace utl {
 	
 	// MARK: - weird set operatioms
 	template <typename T, typename A>
-	bool is_set(utl::vector<T, A> a) {
-		return std::unique(a.begin(), a.end()) == a.end();
-	}
-	
-	template <typename T, typename A>
 	bool is_sorted(utl::vector<T, A> const& a) {
 		return std::is_sorted(a.begin(), a.end());
 	}
 	
 	template <typename T, typename A>
+	bool is_unique(utl::vector<T, A> const& a) {
+		__utl_expect_audit(is_sorted(a));
+		return std::adjacent_find(a.begin(), a.end()) == a.end();
+	}
+	
+	template <typename T, typename A>
 	vector<T, A> set_union(utl::vector<T, A> const& a, utl::vector<T, A> const& b) {
-		__utl_assert(is_set(a), "a must be unique");
-		__utl_assert(is_set(b), "b must be unique");
-		__utl_assert(is_sorted(a), "a must be sorted");
-		__utl_assert(is_sorted(b), "b must be sorted");
-		utl::vector<T, A> result;
+		__utl_expect_audit(is_sorted(a), "a must be sorted");
+		__utl_expect_audit(is_unique(a), "a must be unique");
 		
+		__utl_expect_audit(is_sorted(b), "b must be sorted");
+		__utl_expect_audit(is_unique(b), "b must be unique");
+		
+		utl::vector<T, A> result;
+		result.reserve(std::max(a.size(), b.size()));
 		std::set_union(a.begin(), a.end(),
 					   b.begin(), b.end(),
 					   std::inserter(result, result.end()));
@@ -1292,12 +1295,14 @@ namespace utl {
 	
 	template <typename T, typename A>
 	utl::vector<T, A> set_difference(utl::vector<T, A> const& a, utl::vector<T, A> const& b) {
-		__utl_assert(is_set(a), "a must be unique");
-		__utl_assert(is_set(b), "b must be unique");
-		__utl_assert(is_sorted(a), "a must be sorted");
-		__utl_assert(is_sorted(b), "b must be sorted");
-		utl::vector<T, A> result;
+		__utl_expect_audit(is_sorted(a), "a must be sorted");
+		__utl_expect_audit(is_unique(a), "a must be unique");
 		
+		__utl_expect_audit(is_sorted(b), "b must be sorted");
+		__utl_expect_audit(is_unique(b), "b must be unique");
+		
+		utl::vector<T, A> result;
+		result.reserve(std::max(a.size(), b.size()));
 		std::set_difference(a.begin(), a.end(),
 							b.begin(), b.end(),
 							std::inserter(result, result.end()));
@@ -1306,12 +1311,14 @@ namespace utl {
 	
 	template <typename T, typename A>
 	utl::vector<T, A> set_intersection(utl::vector<T, A> const& a, utl::vector<T, A> const& b) {
-		__utl_assert(is_set(a), "a must be unique");
-		__utl_assert(is_set(b), "b must be unique");
-		__utl_assert(is_sorted(a), "a must be sorted");
-		__utl_assert(is_sorted(b), "b must be sorted");
-		utl::vector<T, A> result;
+		__utl_expect_audit(is_sorted(a), "a must be sorted");
+		__utl_expect_audit(is_unique(a), "a must be unique");
 		
+		__utl_expect_audit(is_sorted(b), "b must be sorted");
+		__utl_expect_audit(is_unique(b), "b must be unique");
+		
+		utl::vector<T, A> result;
+		result.reserve(std::max(a.size(), b.size()));
 		std::set_intersection(a.begin(), a.end(),
 							  b.begin(), b.end(),
 							  std::inserter(result, result.end()));
@@ -1320,12 +1327,14 @@ namespace utl {
 	
 	template <typename T, typename A>
 	utl::vector<T, A> set_symmetric_difference(utl::vector<T, A> const& a, utl::vector<T, A> const& b) {
-		__utl_assert(is_set(a), "a must be unique");
-		__utl_assert(is_set(b), "b must be unique");
-		__utl_assert(is_sorted(a), "a must be sorted");
-		__utl_assert(is_sorted(b), "b must be sorted");
-		vector<T, A> result;
+		__utl_expect_audit(is_sorted(a), "a must be sorted");
+		__utl_expect_audit(is_unique(a), "a must be unique");
 		
+		__utl_expect_audit(is_sorted(b), "b must be sorted");
+		__utl_expect_audit(is_unique(b), "b must be unique");
+		
+		utl::vector<T, A> result;
+		result.reserve(std::max(a.size(), b.size()));
 		std::set_symmetric_difference(a.begin(), a.end(),
 									  b.begin(), b.end(),
 									  std::inserter(result, result.end()));

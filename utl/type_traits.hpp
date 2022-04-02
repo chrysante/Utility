@@ -394,14 +394,14 @@ namespace utl::_private {
 
 namespace utl {
 	
-	template <typename U, typename... T>
-	struct contains: std::integral_constant<bool, _private::contains_impl<U, T...>()> {};
-	
-	template <typename... T>
-	struct is_unique: std::integral_constant<bool, _private::is_unique_impl<T...>()> {};
-	
-	template <typename U, typename... T>
-	struct first_index_of: std::integral_constant<std::size_t, _private::first_index_of_impl<0, U, T...>()> {};
+//	template <typename U, typename... T>
+//	struct contains: std::integral_constant<bool, _private::contains_impl<U, T...>()> {};
+//	
+//	template <typename... T>
+//	struct is_unique: std::integral_constant<bool, _private::is_unique_impl<T...>()> {};
+//	
+//	template <typename U, typename... T>
+//	struct first_index_of: std::integral_constant<std::size_t, _private::first_index_of_impl<0, U, T...>()> {};
 	
 	template <typename T>
 	inline constexpr bool template_true = true;

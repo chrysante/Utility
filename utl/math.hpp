@@ -9,6 +9,9 @@ _UTL_SYSTEM_HEADER_
 
 namespace utl {
 	
+	template <integral To, integral From>
+	constexpr To narrow_cast(From x); // fwd decl
+	
 	template <integral T>
 	constexpr int log2(T x) {
 		if constexpr (signed_integral<T>) {
@@ -64,17 +67,23 @@ namespace utl {
 		return t * (1 - alpha) + u * alpha;
 	}
 	
-	constexpr auto __round_up_impl(auto x, std::size_t multiple_of, auto&& modfn) noexcept {
+	constexpr auto __round_up_impl(auto x, auto multiple_of, auto&& modfn) noexcept {
 		auto const remainder = modfn(x, multiple_of);
 		return remainder == 0 ? x : x + multiple_of - remainder;
 	}
 	
-	constexpr auto round_up(unsigned_integral auto x, std::size_t multiple_of) noexcept {
-		return __round_up_impl(x, multiple_of, [](auto x, auto y) { return x % y; });
+	template <integral T, integral U>
+	constexpr auto round_up(T x, U multiple_of) {
+		return __round_up_impl(narrow_cast<std::make_unsigned_t<T>>(x),
+							   narrow_cast<std::make_unsigned_t<U>>(multiple_of),
+							   [](auto x, auto y) { return x % y; });
 	}
 	
-	constexpr auto round_up_pow_two(unsigned_integral auto x, std::size_t multiple_of) noexcept {
-		return __round_up_impl(x, multiple_of, [](auto x, auto y) { return fast_mod_pow_two(x, y); });
+	template <integral T, integral U>
+	constexpr auto round_up_pow_two(T x, U multiple_of) {
+		return __round_up_impl(narrow_cast<std::make_unsigned_t<T>>(x),
+							   narrow_cast<std::make_unsigned_t<U>>(multiple_of),
+							   [](auto x, auto y) { return fast_mod_pow_two(x, y); });
 	}
 	
 	template <typename T>
@@ -89,3 +98,5 @@ namespace utl {
 	}
 	
 }
+
+#include "utility.hpp"

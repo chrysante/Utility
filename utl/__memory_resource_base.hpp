@@ -9,20 +9,19 @@ _UTL_SYSTEM_HEADER_
 #include <exception>
 
 namespace utl::pmr {
+	
 	class memory_resource;
 	class monotonic_buffer_resource;
 	class unsynchronized_pool_resource;
 	class synchronized_pool_resource;
 	class monitor_resource;
 	
-	
 	memory_resource* new_delete_resource() noexcept;
 	memory_resource* null_memory_resource() noexcept;
 	memory_resource* get_default_resource();
 	void set_default_resource(memory_resource*);
+
 }
-
-
 
 namespace utl::pmr {
 
@@ -66,6 +65,7 @@ namespace utl::pmr {
 	class polymorphic_allocator {
 	public:
 		using value_type = T;
+		
 	public:
 		polymorphic_allocator() noexcept: m_resource(get_default_resource()) {}
 		polymorphic_allocator(polymorphic_allocator const&) = default;
@@ -99,7 +99,7 @@ namespace utl::pmr {
 				}
 			}
 			else {
-				new (p) U(std::forward<Args>(args)...);
+				::new ((void*)p) U(std::forward<Args>(args)...);
 			}
 		}
 		
@@ -187,7 +187,7 @@ namespace utl::pmr {
 		}
 		
 		void do_deallocate(void* memory, std::size_t size, std::size_t alignment) final {
-			// empty
+			__utl_debugbreak("must not be called since this resource never handed out any memory");
 		}
 		
 		bool do_is_equal(memory_resource const& rhs) const noexcept final {
