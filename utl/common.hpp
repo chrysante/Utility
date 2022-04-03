@@ -128,6 +128,7 @@ inline constexpr TYPE operator OP(TYPE a, typename _UTL_NSSTD::underlying_type<T
 #include <utility>
 #include <type_traits>
 #include <cstdint>
+#include <ios>
 
 namespace utl {
 	
@@ -248,15 +249,48 @@ namespace utl {
 	#define UTL_STATIC_INIT \
 		__attribute__((constructor)) static void UTL_ANONYMOUS_VARIABLE(__utl_static_init_)()
 #else
-	namespace utl {
-		template <typename F>
-		struct __utl_static_init {
-			__utl_static_init(F&& f) { f(); }
-		};
-	}
+	
+	template <typename F>
+	struct __utl_static_init {
+		__utl_static_init(F&& f) { f(); }
+	};
 	#define UTL_STATIC_INIT \
 		utl::__utl_static_init UTL_ANONYMOUS_VARIABLE(__utl_static_init_) = []
 #endif
+
+	
+	struct __utl_ios_state_store {
+		explicit __utl_ios_state_store(std::ios_base& stream): stream(stream), flags(stream.flags()) {}
+		~__utl_ios_state_store() { stream.flags(flags); }
+		std::ios_base& stream;
+		std::ios_base::fmtflags flags;
+	};
+
+	#define UTL_STORE_STREAM_STATE(stream) \
+	::utl::__utl_ios_state_store UTL_ANONYMOUS_VARIABLE(__utl_stream_state_store)(stream)
+
+	template <typename ContainerAdapter>
+	decltype(auto) __utl_get_container_impl(auto&& a) {
+		static_assert(std::is_lvalue_reference_v<decltype(a)>);
+		
+		using __container_type = typename ContainerAdapter::container_type;
+		
+		struct Hack: ContainerAdapter {
+			static __container_type& get(ContainerAdapter& a) { return a.*&Hack::c; }
+			static __container_type const& get(ContainerAdapter const& a) { return a.*&Hack::c; }
+		};
+		return Hack::get(a);
+	}
+	
+	template <class ContainerAdapter>
+	typename ContainerAdapter::container_type& get_container(ContainerAdapter& a) {
+		return __utl_get_container_impl<ContainerAdapter>(a);
+	}
+	
+	template <class ContainerAdapter>
+	typename ContainerAdapter::container_type const& get_container(ContainerAdapter const& a) {
+		return __utl_get_container_impl<ContainerAdapter>(a);
+	}
 	
 	/// MARK: Iota
 	template <typename T>

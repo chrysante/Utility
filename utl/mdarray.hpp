@@ -38,9 +38,7 @@ namespace utl {
 		size_type size() const { return __size; }
 		
 		value_type const& operator()(size_type index) const& {
-			UTL_WITH_INDEX_SEQUENCE((I, Dimensions), {
-				(__utl_expect(index[I] < __size[I]), ...);
-			});
+			__utl_expect(mtl::map(index, __size, utl::less).fold(utl::logical_and));
 			return (*this)[__expand_index(index)];
 		}
 		value_type& operator()(size_type index)& {

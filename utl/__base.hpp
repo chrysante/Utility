@@ -21,6 +21,11 @@
 #	error Unsupported Compiler
 #endif
 
+/// MARK: Systems
+#if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
+#	define UTL_POSIX 1
+#endif
+
 /// MARK: System Header
 #if UTL_GCC
 #	define _UTL_SYSTEM_HEADER_ _Pragma("GCC system_header")

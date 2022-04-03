@@ -10,6 +10,9 @@ _UTL_SYSTEM_HEADER_
 #include "type_traits.hpp"
 #include <bit>
 #include <memory>
+#include <iosfwd>
+#include <chrono>
+#include <thread>
 
 namespace utl {
 	
@@ -73,18 +76,45 @@ namespace utl {
 		}
 	}
 	
-	constexpr char* align_to(void* p, std::size_t align) {
-		auto const rest = fast_mod_pow_two((std::uintptr_t)p, align);
-		if (!rest) {
-			return (char*)p;
-		}
-		return (char*)p + align - rest;
+	/// MARK: exit_state
+	enum struct exit_state {
+		success, failure, timeout
+	};
+	
+	template <typename = void>
+	inline std::ostream& operator<<(std::ostream& str, exit_state s) {
+		char const* const names[] = {
+			"success", "failure", "timeout"
+		};
+		auto const index = static_cast<int>(s);
+		__utl_bounds_check(index, 0, 3);
+		auto hti = [](auto&& x) -> decltype(auto) { return UTL_FORWARD(x); };
+		return hti(str) << names[index];
 	}
 	
-}
-
-
-namespace utl {
+	/// MARK: busy_wait
+	void busy_wait(std::predicate auto&& cond) {
+		while (!cond()){
+			std::this_thread::yield();
+		}
+	}
+	
+	/// MARK: timed_busy_wait
+	template <typename R, typename P>
+	exit_state timed_busy_wait(std::chrono::duration<R, P> timeout, std::predicate auto&& cond) {
+		auto const begin = std::chrono::high_resolution_clock::now();
+		while (true) {
+			auto const now = std::chrono::high_resolution_clock::now();
+			auto const elapsed = std::chrono::duration_cast<std::chrono::duration<R, P>>(now - begin);
+			if (cond()) {
+				return exit_state::success;
+			}
+			if (elapsed >= timeout) {
+				return exit_state::timeout;
+			}
+			std::this_thread::yield();
+		}
+	}
 	
 	/// MARK: Reverse Container Adaptor
 	template <typename C>

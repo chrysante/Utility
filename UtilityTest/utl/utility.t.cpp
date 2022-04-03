@@ -19,6 +19,18 @@ TEST_CASE("round_up") {
 	CHECK(utl::round_up_pow_two(12u, 1) == 12);
 }
 
+TEST_CASE("round_down") {
+	CHECK(utl::round_down(12u, 4) == 12);
+	CHECK(utl::round_down(13u, 4) == 12);
+	CHECK(utl::round_down(0u, 3) == 0);
+	CHECK(utl::round_down(3u, 3) == 3);
+	CHECK(utl::round_down(12u, 1) == 12);
+	
+	CHECK(utl::round_down_pow_two(12u, 4) == 12);
+	CHECK(utl::round_down_pow_two(13u, 4) == 12);
+	CHECK(utl::round_down_pow_two(12u, 1) == 12);
+}
+
 TEST_CASE("fast_mod_pow_two") {
 	CHECK(utl::fast_mod_pow_two(5u, 2) == 1);
 	CHECK(utl::fast_mod_pow_two(13u, 4) == 1);

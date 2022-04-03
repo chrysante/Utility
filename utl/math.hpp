@@ -86,6 +86,25 @@ namespace utl {
 							   [](auto x, auto y) { return fast_mod_pow_two(x, y); });
 	}
 	
+	constexpr auto __round_down_impl(auto x, auto multiple_of, auto&& modfn) noexcept {
+		auto const remainder = modfn(x, multiple_of);
+		return x - remainder;
+	}
+	
+	template <integral T, integral U>
+	constexpr auto round_down(T x, U multiple_of) {
+		return __round_down_impl(narrow_cast<std::make_unsigned_t<T>>(x),
+								 narrow_cast<std::make_unsigned_t<U>>(multiple_of),
+								 [](auto x, auto y) { return x % y; });
+	}
+	
+	template <integral T, integral U>
+	constexpr auto round_down_pow_two(T x, U multiple_of) {
+		return __round_down_impl(narrow_cast<std::make_unsigned_t<T>>(x),
+								 narrow_cast<std::make_unsigned_t<U>>(multiple_of),
+								 [](auto x, auto y) { return fast_mod_pow_two(x, y); });
+	}
+	
 	template <typename T>
 	requires requires(T&& t) { { t * t } -> convertible_to<T>; }
 	constexpr T ipow(T base, int exp) {

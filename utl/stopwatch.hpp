@@ -37,7 +37,7 @@ namespace utl {
 			_start_point = now;
 		}
 
-		template <typename Rep = typename Clock::duration::rep, typename Units = typename Clock::duration>
+		template <typename Units = typename Clock::duration, typename Rep = typename Clock::duration::rep>
 		Rep elapsed_time() const
 		{
 			auto const now = _now();

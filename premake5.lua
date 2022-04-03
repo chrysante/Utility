@@ -111,6 +111,10 @@ filter { "system:macosx"}
     }
 filter {}
 
+sysincludedirs {
+    "."
+}
+
 files { 
     "Playground/**.hpp",
     "Playground/**.cpp"

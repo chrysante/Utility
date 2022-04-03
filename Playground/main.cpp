@@ -1,21 +1,32 @@
+#include <utl/common.hpp>
+#include <utl/vector.hpp>
+#include <stack>
 #include <iostream>
-#include <algorithm>
-#include <vector>
 
+struct M {
+	void f() {}
+};
 
+struct X {
+protected: M m;
+};
+
+struct Y: X {
+	static M& getMember(X& x) { return x.*&Y::m; }
+};
 
 int main() {
-	std::vector<int> v = { 0, 1, 3, 4 };
-	auto range = std::equal_range(v.begin(), v.end(), 2);
-	for (auto i = range.first; i != range.second; ++i) {
-		std::cout << *i << std::endl;
-	}
-	std::cout << std::boolalpha;
-	std::cout << (range.first == v.end()) << std::endl;
-	std::cout << (range.second == v.end()) << std::endl;
+
+	X x;
+	Y::getMember(x);
 	
-	std::cout << std::to_address(range.first) << std::endl;
-	std::cout << std::to_address(range.second) << std::endl;
-	std::cout << std::to_address(v.end()) << std::endl;
+	std::stack<int, utl::vector<int>> S;
+	S.push(0);
+	S.push(1);
+	S.push(2);
+	
+	for (auto&& i: utl::get_container(utl::as_const(S))) {
+		std::cout << i << std::endl;
+	}
 	
 }

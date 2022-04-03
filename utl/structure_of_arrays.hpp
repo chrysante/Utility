@@ -538,7 +538,7 @@ namespace utl {
 		/// Comparison
 		bool operator==(__soa_iterator const& rhs) const {
 			bool const result = std::get<0>(_ptr) == std::get<0>(rhs._ptr);
-			(__utl_assert_audit(result == (std::get<I>(_ptr) == std::get<I>(rhs._ptr))), ...);
+			(((void)I, __utl_assert_audit(result == (std::get<I>(_ptr) == std::get<I>(rhs._ptr)))), ...);
 			return result;
 		}
 		
