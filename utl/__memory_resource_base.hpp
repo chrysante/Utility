@@ -7,6 +7,7 @@ _UTL_SYSTEM_HEADER_
 #include "concepts.hpp"
 #include "type_traits.hpp"
 #include <exception>
+#include <new>
 
 namespace utl::pmr {
 	
@@ -134,18 +135,18 @@ namespace utl::pmr {
 		return !(lhs == rhs);
 	}
 	
-	/// MARK: - polymorphic_delete
+	/// MARK: - polymorphic_deleter
 	template <typename T>
-	struct polymorphic_delete {
-		template <typename> friend struct polymorphic_delete;
+	struct polymorphic_deleter {
+		template <typename> friend struct polymorphic_deleter;
 		
 		static_assert(!std::is_function<T>::value,
-					  "polymorphic_delete cannot be instantiated for function types");
+					  "polymorphic_deleter cannot be instantiated for function types");
 	
-		constexpr polymorphic_delete() noexcept = default;
+		constexpr polymorphic_deleter() noexcept = default;
 	
 		template <typename U> requires convertible_to<U*, T*>
-		polymorphic_delete(polymorphic_delete<U> const& rhs) noexcept:
+		polymorphic_deleter(polymorphic_deleter<U> const& rhs) noexcept:
 			_resource(rhs._resource)
 		{}
 
@@ -159,6 +160,21 @@ namespace utl::pmr {
 		memory_resource* _resource;
 	};
 
+	/// MARK: polymorphic_new
+	template <typename T, typename... Args> requires(std::is_constructible_v<T, Args...>)
+	T* polymorphic_new(memory_resource* resource, Args&&... args) {
+		void* result = resource->allocate(sizeof(T), alignof(T));
+		result = ::new ((void*)result) T(UTL_FORWARD(args)...);
+		return static_cast<T*>(result);
+	}
+	
+	/// MARK: polymorphic_delete
+	template <typename T>
+	void polymorphic_delete(memory_resource* resource, T* address) {
+		std::destroy_at(address);
+		resource->deallocate(address, sizeof(T), alignof(T));
+	}
+	
 	/// MARK: - new_delete_resource
 	class __utl_new_delete_resource: public memory_resource {
 		void* do_allocate(std::size_t size, std::size_t alignment) final {

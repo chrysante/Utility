@@ -28,6 +28,7 @@ namespace utl {
 	}
 	
 	/// MARK: unsafe_bit_cast
+	/// Same as bit_cast but not checking for trivial copyability. Simple call to memcpy
 	template <typename To, typename From>
 	requires (sizeof(To) == sizeof(From))
 	To unsafe_bit_cast(From const& from) noexcept {

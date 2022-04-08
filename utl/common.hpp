@@ -241,7 +241,7 @@ namespace utl {
 	using make_type_sequence = typename __utl_make_type_sequence_impl<T, N>::type;
 	
 	/// MARK: UTL_CTPRINT
-	template <auto...> struct ctprint;
+	template <auto...> struct ctprint; /* undefined so instanciating it will give a compiler error like 'Implicit instanciation of utl::ctprint<VALUES>' */
 	#define UTL_CTPRINT(...) ::utl::ctprint<__VA_ARGS__> UTL_ANONYMOUS_VARIABLE(_UTL_CTPRINT)
 
 	/// MARK: UTL_STATIC_INIT
@@ -258,7 +258,7 @@ namespace utl {
 		utl::__utl_static_init UTL_ANONYMOUS_VARIABLE(__utl_static_init_) = []
 #endif
 
-	
+	/// MARK: UTL_STORE_STREAM_STATE
 	struct __utl_ios_state_store {
 		explicit __utl_ios_state_store(std::ios_base& stream): stream(stream), flags(stream.flags()) {}
 		~__utl_ios_state_store() { stream.flags(flags); }
@@ -269,6 +269,8 @@ namespace utl {
 	#define UTL_STORE_STREAM_STATE(stream) \
 	::utl::__utl_ios_state_store UTL_ANONYMOUS_VARIABLE(__utl_stream_state_store)(stream)
 
+	/// MARK: get_container
+	/// Get (legal) access to the container of STL container adapters
 	template <typename ContainerAdapter>
 	decltype(auto) __utl_get_container_impl(auto&& a) {
 		static_assert(std::is_lvalue_reference_v<decltype(a)>);
@@ -293,6 +295,8 @@ namespace utl {
 	}
 	
 	/// MARK: Iota
+	/// Unlike std::itoa, can be used as range argument in a range-based for loop like this:
+	/// for (int i: utl::iota<int>(0, 10); Aquivalent to: for (int i = 0; i < 10; ++i)
 	template <typename T>
 	class iota {
 		static_assert(std::is_integral_v<T>);

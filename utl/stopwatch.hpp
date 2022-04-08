@@ -64,6 +64,6 @@ namespace utl {
 
 	using precise_stopwatch   = stopwatch<>;
 	using system_stopwatch    = stopwatch<std::chrono::system_clock>;
-	using monotonic_stopwatch = stopwatch<std::chrono::steady_clock>;
+	using steady_stopwatch = stopwatch<std::chrono::steady_clock>;
 	
 }

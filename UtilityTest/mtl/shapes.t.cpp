@@ -5,20 +5,14 @@
 
 TEST_CASE("mtl::rectangle") {
 	mtl::rectangle<float> R = { { 1, 1 }, { 2, 2 } };
+
+	using namespace Catch::literals;
 	
-	CHECK(mtl::is_normalized(R));
-	
-	R.extend *= -1;
-	
-	CHECK(!mtl::is_normalized(R));
-	
-//	CHECK(area(R) == Catch::Approx(9));
-//	CHECK(area(normalize(R)) == Catch::Approx(9));
-	
+	CHECK(area(R) == 4.0_a);
 }
 
 
-TEST_CASE("mtl::rectangle overlap") {
+TEST_CASE("mtl::rectangle intersect") {
 	{
 		mtl::rectangle<float> const R = { { 0, 0 }, { 2, 2 } };
 		mtl::rectangle<float> const S = { { 1, 1 }, { 0.5, 0.5 } };
@@ -40,7 +34,7 @@ TEST_CASE("mtl::rectangle overlap") {
 	}
 	
 	{
-		mtl::rectangle<float> const R = { { 4, 1 }, { -4, -1 } };
+		mtl::rectangle<float> const R = { { 0, 0 }, { 4, 1 } };
 		mtl::rectangle<float> const S = { { 1, 4 }, { 1, 4 } };
 		CHECK(!do_intersect(R, S));
 		CHECK(!do_intersect(S, R));

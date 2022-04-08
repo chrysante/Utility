@@ -54,7 +54,8 @@ namespace utl {
 		__utl_expect(y >= 0);
 		__utl_expect(std::popcount(y) == 1);
 		int const e = utl::log2(y);
-		return ~(~T{} << e) & x;
+		T const mask = ~(std::numeric_limits<T>::max() << e); /* eg. for uint8 with e = 3: 00000111  */
+		return mask & x;
 	}
 	template <integral T, integral U> requires unsigned_integral<std::common_type_t<T, U>>
 	constexpr std::common_type_t<T, U> fast_mod_pow_two(T x, U y) {

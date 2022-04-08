@@ -3,6 +3,7 @@
 #include "__base.hpp"
 _UTL_SYSTEM_HEADER_
 
+#include "common.hpp"
 #include <string>
 
 #if defined(UTL_ASSERT_WITH_EXCEPTIONS)
@@ -42,6 +43,14 @@ _UTL_SYSTEM_HEADER_
 // __utl_bounds_check
 #define __utl_bounds_check(index, lower, upper) \
 	(__utl_expect(index >= lower), __utl_expect(index < upper))
+
+// utl_debug
+#if UTL_DEBUG_LEVEL > 0
+#	define __utl_debug(...) __VA_ARGS__
+#else // UTL_DEBUG_LEVEL > 0
+#	define __utl_debug(...) 
+#endif // UTL_DEBUG_LEVEL > 0
+
 
 // __utl_debugbreak
 #if defined(UTL_ASSERT_WITH_EXCEPTIONS)

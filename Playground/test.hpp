@@ -1,22 +1,23 @@
-//
-//  test.hpp
-//  Playground
-//
-//  Created by chrysante on 16.03.22.
-//
+#pragma once
 
-#ifndef test_hpp
-#define test_hpp
+#include <utl/pimpl.hpp>
 
-#include <stdio.h>
-
-#endif /* test_hpp */
-
-
-namespace X {
-	template <typename>
-	struct Y {
-		friend void f(Y);
-		void g();
+namespace engine {
+	
+	class Texture {
+	public:
+		Texture();
+		Texture(Texture const&) = delete;
+		~Texture();
+		
+		void bind();
+		void* native();
+		
+	public:
+		class Impl;
+		
+	private:
+		utl::local_pimpl<Impl, 16, 8> _impl;
 	};
+	
 }

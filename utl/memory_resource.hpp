@@ -109,7 +109,7 @@ namespace utl::pmr {
 		memory_resource* upstream_resource() const {
 			return _upstream;
 		}
-
+	private:
 		/// MARK: DoAllocate
 		/*
 		 Allocates storage.
@@ -151,6 +151,8 @@ namespace utl::pmr {
 			this == &rhs;
 		}
 
+	public:
+		
 		/// MARK: Internals
 		static constexpr std::size_t __min_chunk_size = 128;
 		static constexpr std::size_t __chunk_align = 32; /* something to satisfy most to all requirements */
@@ -264,61 +266,66 @@ namespace utl::pmr {
 	
 	static_assert(sizeof(monotonic_buffer_resource::__BufferNodeHeader) == monotonic_buffer_resource::__chunk_align);
 	
-	/// MARK: - stack_buffer
-	inline constexpr std::size_t __utl_dynamic_size = (std::size_t)-1;
-	inline constexpr std::size_t __utl_alloca_size_limit = 1 << 20; // 1 megabyte
-	
-	template <std::size_t Size>
-	class stack_buffer {
-	public:
-		void*       data()       { return _data; }
-		void const* data() const { return _data; }
-		std::size_t size() const { return Size; };
-		
-	private:
-		alignas(std::max_align_t) char _data[Size];
+	/// MARK: - pool_options
+	struct pool_options {
+		std::size_t max_blocks_per_chunk;
+		std::size_t largest_required_pool_block;
 	};
 	
-	template <>
-	class stack_buffer<__utl_dynamic_size> {
+	/// MARK: - unsynchronized_pool_resource
+	class unsynchronized_pool_resource: public memory_resource {
 	public:
-		stack_buffer(void* data, std::size_t size):
-			stack_buffer(data, size, get_default_resource())
+		/// MARK: Constructors
+		unsynchronized_pool_resource(): unsynchronized_pool_resource(get_default_resource()) {}
+		
+		explicit unsynchronized_pool_resource(memory_resource* upstream):
+			unsynchronized_pool_resource(pool_options{}, upstream)
 		{}
 		
-		stack_buffer(void* data, std::size_t size, memory_resource* fallback): _fallback(fallback), _data(data), _size(size) {
-			if (_size > __utl_alloca_size_limit) {
-				__utl_assert(_data == nullptr);
-				_data = _fallback->allocate(_size);
-			}
+		explicit unsynchronized_pool_resource(pool_options const& options):
+			unsynchronized_pool_resource(options, get_default_resource())
+		{}
+		
+		unsynchronized_pool_resource(pool_options const& options,
+									 memory_resource* upstream):
+			_upstream(upstream), _options(__sanitize_options(options))
+		{
+			
 		}
 		
-		~stack_buffer() {
-			if (_size > __utl_alloca_size_limit) {
-				_fallback->deallocate(_data, _size);
-			}
+		unsynchronized_pool_resource(unsynchronized_pool_resource const&) = delete;
+		
+		/// MARK: Destructor
+		~unsynchronized_pool_resource() {
+			
 		}
 		
-		void*       data()       { return _data; }
-		void const* data() const { return _data; }
-		std::size_t size() const { return _size; };
+		
+		
+		/// MARK: UpstreamResource
+		memory_resource* upstream_resource() const {
+			return _upstream;
+		}
+		
+		/// MARK: Options
+		pool_options options() const {
+			return _options;
+		}
+		
+		static pool_options __sanitize_options(pool_options const& options) {
+			return options;
+		}
 		
 	private:
-		memory_resource* _fallback;
-		void* _data;
-		std::size_t _size;
+		memory_resource* _upstream;
+		pool_options _options;
 	};
 	
-	using dynamic_stack_buffer = stack_buffer<__utl_dynamic_size>;
-	
-#define UTL_MAKE_DYNAMIC_STACK_BUFFER(SIZE, ...)                          \
-::utl::pmr::dynamic_stack_buffer(                                         \
-	SIZE <= ::utl::pmr::__utl_alloca_size_limit ? alloca(SIZE) : nullptr, \
-	SIZE __VA_OPT__(,) __VA_ARGS__)
 	
 	/// MARK: - monitor_resource
 	class monitor_resource: public memory_resource {
 	public:
+		monitor_resource(): monitor_resource(get_default_resource()) {}
 		explicit monitor_resource(memory_resource* upstream): _upstream(upstream) {}
 		
 		memory_resource* upstream() { return _upstream; }

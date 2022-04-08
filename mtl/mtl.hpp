@@ -5,6 +5,7 @@
 
 #include "core.hpp"
 #include "ext.hpp"
+#include "shapes.hpp"
 
 #endif // __MTL_MTL_HPP_INCLUDED__
 

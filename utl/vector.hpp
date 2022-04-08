@@ -27,7 +27,7 @@ _UTL_SYSTEM_HEADER_
 	 class vector {
 	 public:
 		// Implements the interface of std::vector<T, A>, with the exception that
-		// iterator validity if not guaranteed after move operations. This enables the
+		// iterator validity is not guaranteed after move operations. This enables the
 		// implementation of small_vector<T, N, A> (see below).
 	 };
 	 
@@ -44,7 +44,7 @@ _UTL_SYSTEM_HEADER_
 		bool uses_inline_buffer() const noexcept;
 	 };
 	 
-	 // Holds the maximum value so that sizeof(small_vector<T>) == 64
+	 // The maximum value so that sizeof(small_vector) == 64
 	 template <typename T, typename A>
 	 constexpr std::size_t default_inline_capacity;
  
@@ -330,8 +330,13 @@ namespace utl {
 		constexpr ~vector() {
 			_destroy_elems();
 			if (!this->_uses_inline_buffer()) {
-//				__utl_assert(this->_begin() != nullptr, "must not be null");
-//				__utl_assert(this->capacity() > 0, "must be positive");
+				/**
+				 * It's actually not necessary to maintain the inline buffer flag if we are empty
+				 */
+/*
+				__utl_assert(this->_begin() != nullptr, "must not be null");
+				__utl_assert(this->capacity() > 0, "must be positive");
+ */
 				this->_deallocate(this->_begin(), this->capacity());
 			}
 		}

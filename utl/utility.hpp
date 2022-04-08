@@ -76,6 +76,22 @@ namespace utl {
 		}
 	}
 	
+	/// MARK: - stack_buffer
+	template <std::size_t Size, std::size_t Alignment = alignof(std::max_align_t)>
+	class stack_buffer {
+	public:
+		stack_buffer() = default;
+		stack_buffer(stack_buffer const&) = default;
+		stack_buffer& operator=(stack_buffer const&) = default;
+		
+		void*       data()       { return _data; }
+		void const* data() const { return _data; }
+		std::size_t size() const { return Size; };
+		
+	private:
+		alignas(Alignment) char _data[Size];
+	};
+	
 	/// MARK: exit_state
 	enum struct exit_state {
 		success, failure, timeout

@@ -1,32 +1,36 @@
-#include <utl/common.hpp>
-#include <utl/vector.hpp>
-#include <stack>
 #include <iostream>
+#include <mtl/mtl.hpp>
 
-struct M {
-	void f() {}
-};
+#include <utl/aabb_tree.hpp>
+#include <utl/memory_resource.hpp>
+#include <utl/structure_of_arrays.hpp>
+#include <utl/hash.hpp>
 
-struct X {
-protected: M m;
-};
+#include <random>
 
-struct Y: X {
-	static M& getMember(X& x) { return x.*&Y::m; }
-};
+
+namespace {
+	
+//	UTL_SOA_TYPE(Boid,
+//				 (mtl::float3, position),
+//				 (mtl::float3, direction),
+//				 (float, speed),
+//				 (mtl::float4, color));
+//
+//	struct SpacialHash {
+//		std::size_t operator()(mtl::float3 const& position) const {
+//			mtl::vector3<std::int64_t> intpos = mtl::map(position, gridSize, [](float a, float b) { return std::size_t(a / b); });
+//			return utl::hash_combine_range(intpos.begin(), intpos.end());
+//		}
+//		
+//		mtl::float3 gridSize;
+//	};
+	
+}
 
 int main() {
-
-	X x;
-	Y::getMember(x);
 	
-	std::stack<int, utl::vector<int>> S;
-	S.push(0);
-	S.push(1);
-	S.push(2);
 	
-	for (auto&& i: utl::get_container(utl::as_const(S))) {
-		std::cout << i << std::endl;
-	}
+	
 	
 }

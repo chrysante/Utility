@@ -77,7 +77,7 @@ _UTL_SYSTEM_HEADER_
 
 #include "__debug.hpp"
 #include "__soa_generated.hpp"
-#include "__memory_resource_base.hpp"
+#include "__memory_resource_base.hpp" /* only for utl::pmr::structure_of_array typedef */
 #include "__function_objects.hpp"
 #include "common.hpp"
 #include "math.hpp"
