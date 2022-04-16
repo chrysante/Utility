@@ -51,15 +51,25 @@ _UTL_SYSTEM_HEADER_
 #	define __utl_debug(...) 
 #endif // UTL_DEBUG_LEVEL > 0
 
-
 // __utl_debugbreak
 #if defined(UTL_ASSERT_WITH_EXCEPTIONS)
 #	define __utl_debugbreak(...) (throw std::runtime_error("Assertion Failed"))
 #else // defined(UTL_ASSERT_WITH_EXCEPTIONS)
 #	if __GNUC__ || __clang__
-#		define __utl_debugbreak(...) __builtin_trap()
+#		define __utl_debugbreak(...) __builtin_debugtrap()
 #	else // __GNUC__ || __clang__
 #		define __utl_debugbreak(...) __debugbreak()
+#	endif // __GNUC__ || __clang__
+#endif // defined(UTL_ASSERT_WITH_EXCEPTIONS)
+
+// __utl_debugfail
+#if defined(UTL_ASSERT_WITH_EXCEPTIONS)
+#	define __utl_debugfail(...) (throw std::runtime_error("Assertion Failed"))
+#else // defined(UTL_ASSERT_WITH_EXCEPTIONS)
+#	if __GNUC__ || __clang__
+#		define __utl_debugfail(...) __builtin_trap()
+#	else // __GNUC__ || __clang__
+#		define __utl_debugfail(...) __debugbreak()
 #	endif // __GNUC__ || __clang__
 #endif // defined(UTL_ASSERT_WITH_EXCEPTIONS)
 

@@ -9,6 +9,7 @@ _UTL_SYSTEM_HEADER_
 #include <cstddef>
 #include <array>
 
+#include "__function_objects.hpp"
 #include "../mtl/vector.hpp"
 #include "../mtl/ext.hpp"
 

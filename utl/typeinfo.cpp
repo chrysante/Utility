@@ -53,6 +53,6 @@ std::string utl::qualified_function_name(std::string_view pretty) {
 		return std::string(pretty.substr(begin, end - begin));
 	}
 	catch (...) {
-		__utl_debugbreak();
+		__utl_debugfail();
 	}
 }

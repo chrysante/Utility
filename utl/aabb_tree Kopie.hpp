@@ -1,6 +1,3 @@
-
-#if 0
-
 #pragma once
 
 #include "__base.hpp"
@@ -12,11 +9,10 @@ _UTL_SYSTEM_HEADER_
 #include "vector.hpp"
 #include "__memory_resource_base.hpp"
 #include "../mtl/shapes.hpp"
-#include "format.hpp"
+#include "stdio.hpp"
 #include "mdarray.hpp"
 
 #include <stack>
-#include <string>
 
 namespace utl {
 	
@@ -37,10 +33,10 @@ namespace utl {
 		using aabb_tree = utl::aabb_tree<T, AABB, pmr::polymorphic_allocator<T>>;
 	}
 	
+	/// MARK: - Tree Node
 	struct __aabb_branch_tag {};
 	struct __aabb_leaf_tag {};
 	
-	/// MARK: - Tree Node
 	template <typename T, typename AABB>
 	struct __aabb_tree_node {
 		__aabb_tree_node(int height, AABB const& aabb, __aabb_branch_tag, __aabb_tree_node* left, __aabb_tree_node* right):
@@ -89,8 +85,8 @@ namespace utl {
 		}
 	}
 	
-	template <typename, typename, typename>
-	struct __aabb_tree_formatter;
+	template <typename T, typename AABB, typename Allocator>
+	void print(aabb_tree<T, AABB, Allocator> const&);
 	
 	/// MARK: - Tree
 	template <typename T, typename AABB, typename Allocator>
@@ -105,8 +101,8 @@ namespace utl {
 		using __node_allocator = typename std::allocator_traits<Allocator>::template rebind_alloc<__aabb_tree_node<T, AABB>>;
 		using __node_allocator_traits = std::allocator_traits<__node_allocator>;
 		
-		template <typename, typename, typename>
-		friend struct __aabb_tree_formatter;
+		template <typename _T, typename _AABB, typename _A>
+		friend void print(aabb_tree<_T, _AABB, _A> const&);
 		
 	public:
 		/// MARK: Constructors
@@ -582,17 +578,6 @@ namespace utl {
 			return 1 + __node_count_rec(head->left) + __node_count_rec(head->right);
 		}
 		
-		std::size_t leaf_count() const {
-			return _root ? __leaf_count_rec(_root) : 0;
-		}
-		
-		static std::size_t __leaf_count_rec(__node* head) {
-			if (head->is_leaf()) {
-				return 1;
-			}
-			return __leaf_count_rec(head->left) + __leaf_count_rec(head->right);
-		}
-		
 		
 	private:
 		__node* __deep_copy_rec(__node const* from) {
@@ -630,8 +615,107 @@ namespace utl {
 	private:
 		__node* _root = nullptr;
 	};
+
+	template <typename T, typename AABB>
+	void __draw_node(__aabb_tree_node<T, AABB> const* node,
+					 bool parent_left,
+					 int level,
+					 int edge_len,
+					 int leaf_width,
+					 mdarray<utl::vector<char>, 2>& canvas,
+					 mtl::int2 cursor_pos)
+	{
+		using namespace mtl;
+		if (node->is_branch()) {
+			if (level == 0) {
+				for (int i = 0; i < edge_len; ++i) {
+					canvas(cursor_pos + int2{ -i, 3 * i / edge_len }) = '/';
+					canvas(cursor_pos + int2{ i + 1, 3 * i / edge_len }) = '\\';
+				}
+			}
+			else if (level == 1) {
+				for (int i = 0; i < edge_len; ++i) {
+					canvas(cursor_pos + int2{ -i, i / 2 }) = '/';
+					canvas(cursor_pos + int2{ i + 1, i / 2 }) = '\\';
+				}
+			}
+			else {
+				for (int i = 0; i < edge_len; ++i) {
+					canvas(cursor_pos + int2{ -i, i }) = '/';
+					canvas(cursor_pos + int2{ i + 1, i }) = '\\';
+				}
+			}
+		}
+		else {
+			std::string const value = utl::format("{:^{}}", node->value, leaf_width);
+			for (int i = 0; i < leaf_width; ++i) {
+				int const index_offset_x = i - leaf_width / 2 + 1 + !parent_left;
+				auto const index = cursor_pos + int2{ index_offset_x, 0 };
+				if (index.x >= canvas.size().x) {
+					continue;
+				}
+				canvas(index) = value[i];
+			}
+		}
+	}
 	
+	template <typename T, typename AABB>
+	void __draw_tree_rec(__aabb_tree_node<T, AABB> const* head,
+						 bool parent_left,
+						 int level,
+						 int edge_len,
+						 int leaf_width,
+						 mdarray<utl::vector<char>, 2>& canvas,
+						 mtl::int2 cursor_pos)
+	{
+		using namespace mtl;
+		__draw_node(head, parent_left, level, edge_len, leaf_width, canvas, cursor_pos);
+		if (head->is_branch()) {
+			int cursor_offset_y = level == 0 ? 3 : level == 1 ? edge_len / 2 : edge_len;
+			__draw_tree_rec(head->left, true, level + 1, edge_len / 2, leaf_width, canvas, cursor_pos + int2{ -edge_len, cursor_offset_y });
+			__draw_tree_rec(head->right, false, level + 1, edge_len / 2, leaf_width, canvas, cursor_pos + int2{ edge_len, cursor_offset_y });
+		}
+	}
 	
+	template <typename T, typename AABB, typename Allocator>
+	void print(aabb_tree<T, AABB, Allocator> const& tree) {
+		if (tree.empty()) {
+			utl::print("∅\n");
+			return;
+		}
+		
+		
+		
+		int const height = tree.height();
+		int const max_leaf_count = ipow(2, height);
+		int const leaf_width = 4;
+		int const column_count = leaf_width * max_leaf_count;
+		
+		
+		mdarray<utl::vector<char>, 2> canvas(column_count, column_count / 2);
+		std::fill(canvas.begin(), canvas.end(), ' ');
+		
+		int const begin_edge_len = column_count / 4;
+		
+		using namespace mtl;
+		__draw_tree_rec(tree._root, 0, 0, begin_edge_len, leaf_width, canvas, int2{ column_count / 2, 0 });
+		
+		int y_end = canvas.size().y;
+		for (; y_end >= 0; --y_end) {
+			for (int x = 0; x < canvas.size().x; ++x) {
+				if (canvas(x, y_end - 1) != ' ') {
+					goto present;
+				}
+			}
+		}
+		
+		present:
+		for (int y = 0; y < y_end; ++y) {
+			for (int x = 0; x < canvas.size().x; ++x) {
+				std::cout.put(canvas(x, y));
+			}
+			std::cout.put('\n');
+		}
+	}
 	
 }
-#endif

@@ -8,19 +8,28 @@ _MTL_SYSTEM_HEADER_
 
 #include "vector.hpp"
 
+#include <algorithm>
+#include <iosfwd>
+
 namespace _VMTL {
 	
 	/// MARK: - AABB
 	template <typename T = double, std::size_t Dim = 3, vector_options O = vector_options{}>
 	class AABB {
 	public:
-		AABB(vector<T, Dim, O> const& bottom_left = 0, vector<T, Dim, O> const& size = 0): _origin(bottom_left), _size(size) {
+		AABB(vector<T, Dim, O> const& lower_bound = 0, vector<T, Dim, O> const& size = 0): _origin(lower_bound), _size(size) {
 			__mtl_expect(map(size, [](auto x) { return x >= 0; }).fold(__mtl_logical_and));
 		}
 		
-		vector<T, Dim, O> bottom_left() const { return _origin; };
+		vector<T, Dim, O> lower_bound() const { return _origin; };
+		vector<T, Dim, O> upper_bound() const { return _origin + _size; };
+		
+		[[deprecated("Replaced by lower_bound()")]]
+		vector<T, Dim, O> bottom_left() const { return lower_bound(); };
+		[[deprecated("Replaced by upper_bound()")]]
+		vector<T, Dim, O> top_right() const { return upper_bound(); };
+		
 		vector<T, Dim, O> size() const { return _size; };
-		vector<T, Dim, O> top_right() const { return _origin + _size; };
 		
 	private:
 		vector<T, Dim, O> _origin;
@@ -29,14 +38,21 @@ namespace _VMTL {
 	
 	template <typename T, std::size_t Dim, vector_options O>
 	std::ostream& operator<<(std::ostream& str, AABB<T, Dim, O> const& aabb) {
-		return str << "mtl::AABB{ .bottom_left = " << aabb.bottom_left() << ", .top_right = " << aabb.top_right() << " }";
+		return [](auto& x) -> auto& { return x; }(str) << "mtl::AABB{ .lower_bound = " << aabb.lower_bound() << ", .upper_bound = " << aabb.upper_bound() << " }";
 	}
 	
 	template <typename... T, std::size_t Dim, vector_options... O>
 	constexpr AABB<__mtl_promote(T...), Dim, combine(O...)> enclosing(AABB<T, Dim, O> const&... aabb) {
-		auto const bottom_left = map(aabb.bottom_left()..., [](auto&&... bl){ return _VMTL::min(bl...); });
-		auto const top_right = map(aabb.top_right()..., [](auto&&... tr){ return _VMTL::max(tr...); });
-		return { bottom_left, top_right - bottom_left };
+		auto const lower_bound = map(aabb.lower_bound()..., [](auto&&... bl){ return _VMTL::min(bl...); });
+		auto const upper_bound = map(aabb.upper_bound()..., [](auto&&... tr){ return _VMTL::max(tr...); });
+		return { lower_bound, upper_bound - lower_bound };
+	}
+	
+	template <typename T, std::size_t Dim, vector_options O>
+	constexpr bool encloses(AABB<T, Dim, O> const& bigger, AABB<T, Dim, O> const& smaller) {
+		return
+			map(bigger.lower_bound(), smaller.lower_bound(), [](auto b, auto s) { return b - T(0.001) <= s; }).fold(__mtl_logical_and) &&
+			map(bigger.upper_bound(), smaller.upper_bound(), [](auto b, auto s) { return b + T(0.001) >= s; }).fold(__mtl_logical_and);
 	}
 	
 	template <typename T = double, vector_options O = vector_options{}>
@@ -44,17 +60,41 @@ namespace _VMTL {
 	
 	template <typename T, std::size_t Dim, vector_options O, typename U, vector_options P>
 	constexpr bool operator==(AABB<T, Dim, O> r, AABB<U, Dim, P> s) {
-		return r.bottom_left() == s.bottom_left() && r.size() == s.size();
+		return r.lower_bound() == s.lower_bound() && r.size() == s.size();
 	}
 	
 	template <typename T, std::size_t Dim, vector_options O>
-	constexpr T volume(AABB<T, Dim, O> const& r) {
-		return fold(r.size(), mtl::__mtl_multiplies);
+	constexpr T volume(AABB<T, Dim, O> const& b) {
+		return fold(b.size(), mtl::__mtl_multiplies);
+	}
+	
+	template <typename T, std::size_t Dim, vector_options O>
+	constexpr T surface_area(AABB<T, Dim, O> const& b) {
+		static_assert(Dim >= 1 && Dim <= 3, "Too lazy to implement higher dimensions");
+		
+		auto size = b.size();
+		
+		if constexpr (Dim == 1) {
+			return size[0];
+		}
+		else if constexpr (Dim == 2) {
+			return 2 * (size[0] + size[1]);
+		}
+		else if constexpr (Dim == 3) {
+			return 2 * (size[0] * size[1] +
+						size[1] * size[2] +
+						size[2] * size[0]);
+		}
 	}
 	
 	template <typename T, vector_options O>
 	constexpr T area(rectangle<T, O> const& r) {
 		return volume(r);
+	}
+	
+	template <typename T, vector_options O>
+	constexpr T circumference(rectangle<T, O> const& r) {
+		return surface_area(r);
 	}
 	
 	
@@ -175,7 +215,7 @@ namespace _VMTL {
 	/// Box - Point
 	template <typename T, std::size_t Dim, vector_options O, typename U, vector_options P>
 	constexpr bool do_intersect(AABB<T, Dim, O> r, vector<U, Dim, P> const& p) {
-		return map(r.bottom_left(), r.size(), p,
+		return map(r.lower_bound(), r.size(), p,
 				   [](auto o, auto e, auto p) { return p >= o && p <= o + e; }).fold(mtl::__mtl_logical_and);
 	}
 	
@@ -188,8 +228,8 @@ namespace _VMTL {
 	/// Box - Box
 	template <typename T, std::size_t Dim, vector_options O, typename U, vector_options P>
 	constexpr bool do_intersect(AABB<T, Dim, O> const& a, AABB<U, Dim, P> const& b) {
-		return map(a.bottom_left(), a.top_right(),
-				   b.bottom_left(), b.top_right(),
+		return map(a.lower_bound(), a.upper_bound(),
+				   b.lower_bound(), b.upper_bound(),
 				   [](auto aMin, auto aMax,
 					  auto bMin, auto bMax) { return aMin <= bMax && aMax >= bMin; }).fold(__mtl_logical_and);
 	}
@@ -217,7 +257,7 @@ namespace _VMTL {
 	/// Sphere - Box
 	template <typename T, std::size_t Dim, vector_options O, typename U, vector_options P>
 	constexpr bool do_intersect(sphere<T, Dim, O> const& sphere, AABB<U, Dim, P> const& box) {
-		auto const closest_point_to_sphere = map(box.bottom_left(), box.size(), sphere.origin(),
+		auto const closest_point_to_sphere = map(box.lower_bound(), box.size(), sphere.origin(),
 												 [](auto bMin, auto bMax, auto sOrigin) {
 			return std::max(bMin, std::min(sOrigin, bMax));
 		});

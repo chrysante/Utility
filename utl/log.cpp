@@ -29,7 +29,7 @@ namespace utl {
 			case log_level::fatal:
 				return format_codes::background_red | format_codes::light_gray | format_codes::bold;
 			default:
-				__utl_debugbreak("invalid log_level");
+				__utl_debugfail("invalid log_level");
 		}
 	}
 	
@@ -49,7 +49,7 @@ namespace utl {
 				case log_level::fatal:
 					return format_codes::background_red | format_codes::bold | format_codes::light_gray;
 				default:
-					__utl_debugbreak("invalid log_level");
+					__utl_debugfail("invalid log_level");
 			}
 		}() | format_codes::italic;
 	}
