@@ -19,7 +19,11 @@ _MTL_SYSTEM_HEADER_
 
 // MARK: Customization Points
 #ifndef MTL_DEBUG_LEVEL
-#	define MTL_DEBUG_LEVEL 0
+#	ifdef NDEBUG
+#		define MTL_DEBUG_LEVEL 0
+#	else
+#		define MTL_DEBUG_LEVEL 1
+#	endif
 #endif
 
 #ifndef MTL_SAFE_MATH

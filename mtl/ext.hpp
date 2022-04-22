@@ -10,47 +10,18 @@ _MTL_SYSTEM_HEADER_
 #include "__common.hpp"
 #include "vector.hpp"
 #include "matrix.hpp"
+#include "quaternion.hpp"
 #include <cmath>
+#include <concepts>
 
 namespace _VMTL {
 
 	/// MARK: - 4x4 Matrix Factories
-	/// ortho() -> Orthogonal Projection Matrix
-	template <handedness H = default_handedness, real_scalar T, vector_options O = vector_options{}>
-	__mtl_mathfunction __mtl_interface_export
-	constexpr matrix4x4<T, O> ortho(T const& left,
-									T const& right,
-									T const& bottom,
-									T const& top,
-									T const& zNear,
-									T const& zFar)
-	{
-		if constexpr (H == left_handed) {
-			return {
-				T(2) / (right - left), 0,                     0,                     -(right + left) / (right - left),
-				0,                     T(2) / (top - bottom), 0,                     -(top + bottom) / (top - bottom),
-				0,                     0,                     T(1) / (zFar - zNear), -zNear / (zFar - zNear),
-				0,                     0,                     0,                      1
-			};
-		}
-		else {
-			static_assert(H == right_handed);
-			matrix4x4<T, O> Result(1);
-			Result.__mtl_at(0, 0) =   T(2) / (right - left);
-			Result.__mtl_at(1, 1) =   T(2) / (top - bottom);
-			Result.__mtl_at(2, 2) = - T(1) / (zFar - zNear);
-			Result.__mtl_at(0, 3) = - (right + left) / (right - left);
-			Result.__mtl_at(1, 3) = - (top + bottom) / (top - bottom);
-			Result.__mtl_at(2, 3) = - zNear / (zFar - zNear);
-			return Result;
-		}
-	}
-	
 	/// look_at() -> View Matrix
 	template <handedness H = default_handedness,
-			  typename T, vector_options O,
-			  typename U, vector_options P,
-			  typename V, vector_options Q>
+			  typename T = double, vector_options O = vector_options{},
+			  typename U = T, vector_options P = O,
+			  typename V = T, vector_options Q = O>
 	__mtl_mathfunction __mtl_interface_export
 	constexpr matrix4x4<__mtl_promote(T, U, V), combine(O, P, Q)>
 	look_at(vector3<T, O> const& eye,
@@ -99,6 +70,37 @@ namespace _VMTL {
 			Result.__mtl_at(0, 3) = -dot(s, eye);
 			Result.__mtl_at(1, 3) = -dot(u, eye);
 			Result.__mtl_at(2, 3) =  dot(f, eye);
+			return Result;
+		}
+	}
+	
+	/// ortho() -> Orthogonal Projection Matrix
+	template <handedness H = default_handedness, real_scalar T, vector_options O = vector_options{}>
+	__mtl_mathfunction __mtl_interface_export
+	constexpr matrix4x4<T, O> ortho(T const& left,
+									T const& right,
+									T const& bottom,
+									T const& top,
+									T const& zNear,
+									T const& zFar)
+	{
+		if constexpr (H == left_handed) {
+			return {
+				T(2) / (right - left), 0,                     0,                     -(right + left) / (right - left),
+				0,                     T(2) / (top - bottom), 0,                     -(top + bottom) / (top - bottom),
+				0,                     0,                     T(1) / (zFar - zNear), -zNear / (zFar - zNear),
+				0,                     0,                     0,                      1
+			};
+		}
+		else {
+			static_assert(H == right_handed);
+			matrix4x4<T, O> Result(1);
+			Result.__mtl_at(0, 0) =   T(2) / (right - left);
+			Result.__mtl_at(1, 1) =   T(2) / (top - bottom);
+			Result.__mtl_at(2, 2) = - T(1) / (zFar - zNear);
+			Result.__mtl_at(0, 3) = - (right + left) / (right - left);
+			Result.__mtl_at(1, 3) = - (top + bottom) / (top - bottom);
+			Result.__mtl_at(2, 3) = - zNear / (zFar - zNear);
 			return Result;
 		}
 	}
@@ -155,14 +157,88 @@ namespace _VMTL {
 		}
 	}
 	
-	template <typename T, vector_options O>
+	template <std::floating_point T, vector_options O>
 	constexpr matrix4x4<T, O> translation(vector3<T, O> const& offset) {
 		return {
-			T(0), T(0), T(0), offset.__mtl_at(0),
-			T(0), T(0), T(0), offset.__mtl_at(1),
-			T(0), T(0), T(0), offset.__mtl_at(2),
-			T(0), T(0), T(0), T(0)
+			T(1), T(0), T(0), offset.__mtl_at(0),
+			T(0), T(1), T(0), offset.__mtl_at(1),
+			T(0), T(0), T(1), offset.__mtl_at(2),
+			T(0), T(0), T(0), T(1)
 		};
+	}
+	
+	template <std::floating_point T, vector_options O = vector_options{}>
+	constexpr matrix4x4<T, O> rotation(quaternion<T> const& q) {
+		return {
+			2 * (__mtl_sqr(q[0]) + __mtl_sqr(q[1])) - 1, 2 * (q[1] * q[2] - q[0] * q[3]),             2 * (q[1] * q[3] + q[0] * q[2]),             0,
+			2 * (q[1] * q[2] + q[0] * q[3]),             2 * (__mtl_sqr(q[0]) + __mtl_sqr(q[2])) - 1, 2 * (q[2] * q[3] - q[0] * q[1]),             0,
+			2 * (q[1] * q[3] - q[0] * q[2]),             2 * (q[2] * q[3] + q[0] * q[1]),             2 * (__mtl_sqr(q[0]) + __mtl_sqr(q[3])) - 1, 0,
+			0,                                           0,                                           0,                                           1
+		};
+	}
+	
+	template <std::floating_point T, vector_options O = vector_options{}>
+	constexpr matrix4x4<T, O> scale(vector3<T> const& s) {
+		return {
+			s[0], 0, 0, 0,
+			0, s[1], 0, 0,
+			0, 0, s[2], 0,
+			0, 0, 0,    1
+		};
+	}
+	
+	template <std::floating_point T, vector_options O = vector_options{}>
+	constexpr matrix4x4<T, O> scale(T s) {
+		scale({ s, s, s });
+	}
+	
+	template <std::floating_point T, vector_options O = vector_options{}>
+	constexpr matrix4x4<T, O> make_transform(vector3<T, O> const& position, quaternion<T> const& orientation, vector3<T, O> const& s) {
+		return translation(position) * rotation(orientation) * scale(s);
+	}
+	
+	constexpr auto to_quaternion(real_scalar auto roll, real_scalar auto pitch, real_scalar auto yaw) {
+		// Abbreviations for the various angular functions
+		using T = __mtl_floatify(__mtl_promote(decltype(yaw), decltype(pitch), decltype(roll)));
+		double cy = std::cos(yaw * T(0.5));
+		double sy = std::sin(yaw * T(0.5));
+		double cp = std::cos(pitch * T(0.5));
+		double sp = std::sin(pitch * T(0.5));
+		double cr = std::cos(roll * T(0.5));
+		double sr = std::sin(roll * T(0.5));
+
+		return quaternion<T>{
+			cr * cp * cy + sr * sp * sy,
+			sr * cp * cy - cr * sp * sy,
+			cr * sp * cy + sr * cp * sy,
+			cr * cp * sy - sr * sp * cy
+		};
+	}
+	
+	template <typename T>
+	constexpr quaternion<__mtl_floatify(T)> to_quaternion(vector3<T> const& euler) {
+		return to_quaternion(euler.__mtl_at(0), euler.__mtl_at(1), euler.__mtl_at(2));
+	}
+	
+	template <std::floating_point T>
+	constexpr vector3<T> to_euler(quaternion<T> const& q) {
+		// roll (x-axis rotation)
+		T const sinr_cosp = 2 * (q.__mtl_at(0) * q.__mtl_at(1) + q.__mtl_at(2) * q.__mtl_at(3));
+		T const cosr_cosp = 1 - 2 * (q.__mtl_at(1) * q.__mtl_at(1) + q.__mtl_at(2) * q.__mtl_at(2));
+		T const roll = std::atan2(sinr_cosp, cosr_cosp);
+
+		// pitch (y-axis rotation)
+		T const sinp = 2 * (q.__mtl_at(0) * q.__mtl_at(2) - q.__mtl_at(3) * q.__mtl_at(1));
+		T const pitch = std::abs(sinp) >= 1 ?
+			std::copysign(mtl::constants<T>::pi / 2, sinp) : // use 90 degrees if out of range
+			std::asin(sinp);
+
+		// yaw (z-axis rotation)
+		T const siny_cosp = 2 * (q.__mtl_at(0) * q.__mtl_at(3) + q.__mtl_at(1) * q.__mtl_at(2));
+		T const cosy_cosp = 1 - 2 * (q.__mtl_at(2) * q.__mtl_at(2) + q.__mtl_at(3) * q.__mtl_at(3));
+		T const yaw = std::atan2(siny_cosp, cosy_cosp);
+
+		return { roll, pitch, yaw };
 	}
 	
 	/// MARK: - Color

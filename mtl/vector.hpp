@@ -495,28 +495,28 @@ namespace _VMTL {
 		/// Some more Constructors
 		// vector3(vector2, scalar)
 		__mtl_always_inline __mtl_interface_export
-		constexpr vector(vector<T, 2, O> const& a, T const& b): vector(a.__mtl_at(0), a.__mtl_at(1), b) {}
+		constexpr vector(vector<T, 2, O> const& a, T const& b) requires (Size == 3): vector(a.__mtl_at(0), a.__mtl_at(1), b) {}
 		// vector3(scalar, vector2)
 		__mtl_always_inline __mtl_interface_export
-		constexpr vector(T const& a, vector<T, 2, O> const& b): vector(a, b.__mtl_at(0), b.__mtl_at(1)) {}
+		constexpr vector(T const& a, vector<T, 2, O> const& b) requires (Size == 3): vector(a, b.__mtl_at(0), b.__mtl_at(1)) {}
 		// vector4(vector2, s, s)
 		__mtl_always_inline __mtl_interface_export
-		constexpr vector(vector<T, 2, O> const& a, T const& b, T const& c): vector(a.__mtl_at(0), a.__mtl_at(1), b, c) {}
+		constexpr vector(vector<T, 2, O> const& a, T const& b, T const& c) requires (Size == 4): vector(a.__mtl_at(0), a.__mtl_at(1), b, c) {}
 		// vector4(scalar, vector2, scalar)
 		__mtl_always_inline __mtl_interface_export
-		constexpr vector(T const& a, vector<T, 2, O> const& b, T const& c): vector(a, b.__mtl_at(0), b.__mtl_at(1), c) {}
+		constexpr vector(T const& a, vector<T, 2, O> const& b, T const& c) requires (Size == 4): vector(a, b.__mtl_at(0), b.__mtl_at(1), c) {}
 		// vector4(scalar, scalar, vector2)
 		__mtl_always_inline __mtl_interface_export
-		constexpr vector(T const& a, T const& b, vector<T, 2, O> const& c): vector(a, b, c.__mtl_at(0), c.__mtl_at(1)) {}
+		constexpr vector(T const& a, T const& b, vector<T, 2, O> const& c) requires (Size == 4): vector(a, b, c.__mtl_at(0), c.__mtl_at(1)) {}
 		// vector4(vector2, vector2)
 		__mtl_always_inline __mtl_interface_export
-		vector(vector<T, 2, O> const& a, vector<T, 2, O> const& b): vector(a.__mtl_at(0), a.__mtl_at(1), b.__mtl_at(0), b.__mtl_at(1)) {}
-		// vector(vector3, scalar)
+		vector(vector<T, 2, O> const& a, vector<T, 2, O> const& b) requires (Size == 4): vector(a.__mtl_at(0), a.__mtl_at(1), b.__mtl_at(0), b.__mtl_at(1)) {}
+		// vector4(vector3, scalar)
 		__mtl_always_inline __mtl_interface_export
-		vector(vector<T, 3, O> const& a, T const& b): vector(a.__mtl_at(0), a.__mtl_at(1), a.__mtl_at(2), b) {}
+		vector(vector<T, 3, O> const& a, T const& b) requires (Size == 4): vector(a.__mtl_at(0), a.__mtl_at(1), a.__mtl_at(2), b) {}
 		// vector4(scalar, vector3)
 		__mtl_always_inline __mtl_interface_export
-		vector(T const& a, vector<T, 3, O> const& b): vector(a, b.__mtl_at(0), b.__mtl_at(1), b.__mtl_at(2)) {}
+		vector(T const& a, vector<T, 3, O> const& b) requires (Size == 4): vector(a, b.__mtl_at(0), b.__mtl_at(1), b.__mtl_at(2)) {}
 		
 		vector& operator=(vector const&)& = default;
 		

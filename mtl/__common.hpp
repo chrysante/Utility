@@ -45,9 +45,9 @@ namespace _VMTL {
 	};
 	
 	/// MARK: - Forward Declarations
-	template <typename T>
+	template <typename>
 	struct complex;
-	template <typename T>
+	template <typename>
 	struct quaternion;
 	
 	template <typename, std::size_t, vector_options = vector_options{}>
@@ -511,6 +511,18 @@ namespace _VMTL {
 	template <typename T, typename U>
 	bool operator==(U const& r, approx<T> const& l) {
 		return l.__mtl_comp_eq(r);
+	}
+	
+	/// MARK: - Helpers
+	template <real_scalar T>
+	constexpr __mtl_floatify(T) to_radians(T degrees) {
+		using F = __mtl_floatify(T);
+		return degrees * constants<F>::pi / 180;
+	}
+	
+	template <std::floating_point T>
+	constexpr T to_degrees(T radians) {
+		return radians / constants<T>::pi * 180;
 	}
 	
 	/// MARK: - Functions on Builtins

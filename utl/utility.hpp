@@ -41,6 +41,14 @@ namespace utl {
 		}
 	}
 
+	/// MARK: down_cast
+	template <typename To, typename From> requires (std::is_base_of_v<From, std::remove_pointer_t<To>> && std::is_pointer_v<To>)
+	To down_cast(From* from) noexcept {
+		__utl_assert(dynamic_cast<To>(from) != nullptr);
+		return static_cast<To>(from);
+	}
+	
+	
 	template <typename T>
 	void uninitialized_relocate(T* from, T* to) {
 		if constexpr (utl::is_trivially_relocatable<T>::value) {
@@ -131,6 +139,42 @@ namespace utl {
 			std::this_thread::yield();
 		}
 	}
+	
+	/// MARK: Enumerate
+	template <typename E> requires (std::is_enum_v<E>)
+	class enumerate {
+	public:
+		using integer = std::underlying_type_t<E>;
+		
+		enumerate() requires requires { E::_count; }:
+			_first(0), _last((integer)E::_count)
+		{}
+		enumerate(integer last):
+			_first(0), _last(last)
+		{}
+		enumerate(integer first, integer last):
+			_first(first), _last(last)
+		{}
+		
+		struct iterator {
+			explicit iterator(integer value): _value(value) {}
+			iterator& operator++() {
+				++_value;
+				return *this;
+			}
+			friend bool operator==(iterator const&, iterator const&) = default;
+			E operator*() const { return (E)_value; }
+		
+		private:
+			integer _value;
+		};
+		
+		iterator begin() const { return iterator(_first); }
+		iterator end() const { return iterator(_last); }
+		
+	private:
+		integer _first, _last;
+	};
 	
 	/// MARK: Reverse Container Adaptor
 	template <typename C>

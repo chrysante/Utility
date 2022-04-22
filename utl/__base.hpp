@@ -37,7 +37,11 @@ _UTL_SYSTEM_HEADER_
 
 /// MARK: UTL_DEBUG_LEVEL
 #ifndef UTL_DEBUG_LEVEL
-#	define UTL_DEBUG_LEVEL 0
+#	ifdef NDEBUG
+#		define UTL_DEBUG_LEVEL 0
+#	else
+#		define UTL_DEBUG_LEVEL 1
+#	endif
 #endif
 
 #ifdef UTL_CPP // guard here because general purpose header may be included in shader source

@@ -5,13 +5,27 @@
 #include <utl/stdio.hpp>
 #include <random>
 #include <utl/mdarray.hpp>
+#include <utl/typeinfo.hpp>
 
 using namespace mtl::short_types;
 
+namespace mtl {
+	
+
+	
+}
 
 int main() {
 	
-	mdarray<utl::vector<bool>> 
+	float3 const v = { 1, 0, 0 };
+	quaternion_float const q = mtl::make_rotation(mtl::constants<>::pi / 2, { 0, 1, 0 });
+	
+	utl::print("v = {}\n", v);
+	utl::print("q = {}\n", q);
+	
+	float3 const rotated = mtl::rotate(v, q);
+	
+	utl::print("rotated = {}\n", rotated);
 	
 }
 

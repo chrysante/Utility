@@ -513,6 +513,19 @@ namespace _VMTL {
 	template <real_scalar T>
 	quaternion<__mtl_floatify(T)> atan(quaternion<T> const& z);
 	
+	/// MARK: Helpers
+	template <real_scalar T, typename U = T, vector_options O = vector_options{}>
+	constexpr quaternion<__mtl_floatify(__mtl_promote(T, U))> make_rotation(T angle, vector3<U, O> const& axis) {
+		using V = __mtl_floatify(__mtl_promote(T, U));
+		return quaternion<V>(std::cos(angle / 2), std::sin(angle / 2) * normalize(axis));
+	}
+	
+	template <real_scalar T = double, typename U = T, vector_options O = vector_options{}>
+	constexpr vector3<__mtl_floatify(__mtl_promote(T, U)), O> rotate(vector3<T, O> const& v, quaternion<U> const& q) {
+		using V = __mtl_floatify(__mtl_promote(T, U));
+		return imag(q * quaternion<V>(0, v) * conj(q));
+	}
+	
 }
 
 /// MARK: - Decomposition
