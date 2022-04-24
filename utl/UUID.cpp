@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <ostream>
+#include <sstream>
 #include "format.hpp"
 
 #include <random>
@@ -26,9 +27,29 @@ namespace utl {
 		return UUID(_generate());
 	}
 	
+	UUID UUID::from_string(std::string_view str) {
+		return from_string(std::string(str));
+	}
+	
+	UUID UUID::from_string(std::string&& str) {
+		std::istringstream sstr(std::move(str));
+		std::array<std::uint32_t, 4> ints;
+		
+		std::hex(sstr);
+		
+		for (int i = 0; i < 4; ++i) {
+			sstr >> ints[i];
+		}
+		return utl::bit_cast<UUID>(ints);
+	}
+	
+	std::string UUID::to_string() const {
+		auto const data = utl::bit_cast<std::array<std::uint32_t, 4>>(this->value());
+		return utl::format("{:x} {:x} {:x} {:x}", data[0], data[1], data[2], data[3]);
+	}
+	
 	std::ostream& operator<<(std::ostream& str, UUID id) {
-		auto const data = utl::bit_cast<std::array<std::uint32_t, 4>>(id.value());
-		return str << utl::format("{:x} {:x} {:x} {:x}", data[0], data[1], data[2], data[3]);
+		return str << id.to_string();
 	}
 	
 }

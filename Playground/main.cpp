@@ -4,28 +4,30 @@
 #include <mtl/mtl.hpp>
 #include <utl/stdio.hpp>
 #include <random>
+#include <sstream>
 #include <utl/mdarray.hpp>
 #include <utl/typeinfo.hpp>
 
+#include <utl/UUID.hpp>
+
 using namespace mtl::short_types;
 
-namespace mtl {
-	
 
-	
-}
 
 int main() {
 	
-	float3 const v = { 1, 0, 0 };
-	quaternion_float const q = mtl::make_rotation(mtl::constants<>::pi / 2, { 0, 1, 0 });
+	utl::UUID id = utl::UUID::generate();
 	
-	utl::print("v = {}\n", v);
-	utl::print("q = {}\n", q);
 	
-	float3 const rotated = mtl::rotate(v, q);
+	std::string text = id.to_string();
 	
-	utl::print("rotated = {}\n", rotated);
+	
+	std::cout << "Emitted: " << text << std::endl;
+	
+	
+	utl::UUID id2 = utl::UUID::from_string(text);
+	
+	std::cout << "Read:    " << id2 << std::endl;
 	
 }
 

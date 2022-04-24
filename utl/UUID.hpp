@@ -7,6 +7,7 @@ _UTL_SYSTEM_HEADER_
 #include <cstddef>
 #include <functional>
 #include <array>
+#include <string>
 #include "bit.hpp"
 #include "hash.hpp"
 
@@ -32,6 +33,11 @@ namespace utl {
 			return UUID(value);
 		}
 		
+		static UUID from_string(std::string_view);
+		static UUID from_string(std::string&&);
+		
+		std::string to_string() const;
+		
 	private:
 		UUID(value_type v): _value(v) {}
 		
@@ -42,6 +48,8 @@ namespace utl {
 	inline bool operator==(UUID a, UUID b) noexcept {
 		return a.value() == b.value();
 	}
+	
+	inline bool is_null(UUID const& id) { return id == UUID{}; }
 	
 	std::ostream& operator<<(std::ostream& str, UUID id);
 	
