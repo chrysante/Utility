@@ -241,6 +241,70 @@ namespace _VMTL {
 		return { roll, pitch, yaw };
 	}
 	
+	/// MARK: - Matrix Decomposition
+	/// Decompose Rotation matrix (special orthogonal / determinant 1) to a quaternion
+	template <std::floating_point T, vector_options O>
+	constexpr quaternion<T> decompose_rotation(matrix3x3<T, O> m) {
+		T const tr = trace(m);
+		if (tr > 0) {
+			T const S = std::sqrt(tr + T(1.0)) * 2; // S=4*qw
+			return {
+				T(0.25) * S,
+				(m.__mtl_at(2, 1) - m.__mtl_at(1, 2)) / S,
+				(m.__mtl_at(0, 2) - m.__mtl_at(2, 0)) / S,
+				(m.__mtl_at(1, 0) - m.__mtl_at(0, 1)) / S
+			};
+		}
+		else if (m.__mtl_at(0, 0) > m.__mtl_at(1, 1) && m.__mtl_at(0, 0) > m.__mtl_at(2, 2)) {
+			T const S = std::sqrt(T(1.0) + m.__mtl_at(0, 0) - m.__mtl_at(1, 1) - m.__mtl_at(2, 2)) * 2; // S=4*qx
+			return {
+				(m.__mtl_at(2, 1) - m.__mtl_at(1, 2)) / S,
+				0.25 * S,
+				(m.__mtl_at(0, 1) + m.__mtl_at(1, 0)) / S,
+				(m.__mtl_at(0, 2) + m.__mtl_at(2, 0)) / S
+			};
+		}
+		else if (m.__mtl_at(1, 1) > m.__mtl_at(2, 2)) {
+			T const S = std::sqrt(T(1.0) + m.__mtl_at(1, 1) - m.__mtl_at(0, 0) - m.__mtl_at(2, 2)) * 2; // S=4*qy
+			return {
+				(m.__mtl_at(0, 2) - m.__mtl_at(2, 0)) / S,
+				(m.__mtl_at(0, 1) + m.__mtl_at(1, 0)) / S,
+				0.25 * S,
+				(m.__mtl_at(1, 2) + m.__mtl_at(2, 1)) / S
+			};
+		}
+		else {
+			float S = std::sqrt(T(1.0) + m.__mtl_at(2, 2) - m.__mtl_at(0, 0) - m.__mtl_at(1, 1)) * 2; // S=4*qz
+			return {
+				(m.__mtl_at(1, 0) - m.__mtl_at(0, 1)) / S,
+				(m.__mtl_at(0, 2) + m.__mtl_at(2, 0)) / S,
+				(m.__mtl_at(1, 2) + m.__mtl_at(2, 1)) / S,
+				T(0.25) * S
+			};
+		}
+	}
+	
+	/// Deompose a 4x4 affine (what about shearing?) transform matrix into translation, orientation and scale
+	template <std::floating_point T, vector_options O>
+	constexpr std::tuple<vector3<T, O>, quaternion<T>, vector3<T, O>> decompose_transform(matrix4x4<T, O> t) {
+		vector3<T, O> translation = t.column(3).swizzle(0, 1, 2);
+		vector3<T, O> scale = {
+			norm(t.column(0)),
+			norm(t.column(1)),
+			norm(t.column(2))
+		};
+		
+		for (int i = 0; i < 3; ++i) {
+			t.set_column(i, t.column(i) / scale[i]);
+		}
+		
+		return {
+			translation,
+			decompose_rotation(dimension_cast<3, 3>(t)),
+			scale
+		};
+	}
+	
 	/// MARK: - Color
 	template <typename = double4> struct colors;
 	

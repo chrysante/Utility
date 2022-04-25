@@ -13,21 +13,22 @@
 using namespace mtl::short_types;
 
 
+using namespace mtl;
+
+
+
+namespace mtl {
+	
+
+	
+	
+	
+	
+}
+
 
 int main() {
-	
-	utl::UUID id = utl::UUID::generate();
-	
-	
-	std::string text = id.to_string();
-	
-	
-	std::cout << "Emitted: " << text << std::endl;
-	
-	
-	utl::UUID id2 = utl::UUID::from_string(text);
-	
-	std::cout << "Read:    " << id2 << std::endl;
+
 	
 }
 

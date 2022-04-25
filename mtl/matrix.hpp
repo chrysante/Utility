@@ -952,6 +952,14 @@ namespace _VMTL {
 		});
 	}
 	
+	/// Trace
+	template <scalar T, std::size_t N, vector_options O>
+	constexpr T trace(matrix<T, N, N, O> const& m) {
+		return __mtl_with_index_sequence((I, N), {
+			return (m.__mtl_at(I, I) + ...);
+		});
+	}
+	
 	/// Inverse
 	template <scalar T, vector_options O>
 	constexpr matrix2x2<T, O> __mtl_inverse(matrix2x2<T, O> const& m) {
