@@ -327,7 +327,7 @@ namespace _VMTL {
 	};
 	inline constexpr handedness left_handed = handedness::left_handed;
 	inline constexpr handedness right_handed = handedness::right_handed;
-	inline constexpr handedness default_handedness = handedness::left_handed;
+	inline constexpr handedness default_handedness = handedness::right_handed;
 	
 	/// MARK: Basic Algorithms
 	template <typename T>

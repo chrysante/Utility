@@ -139,24 +139,58 @@ namespace _VMTL {
 		T const top = range;
 		if constexpr (H == left_handed) {
 			matrix<T, 4, 4, O> result{};
-			result(0, 0) = (T(2) * near) / (right - left);
-			result(1, 1) = (T(2) * near) / (top - bottom);
-			result(2, 2) =  T(1);
-			result(3, 2) =  T(1);
-			result(2, 3) = -T(2) * near;
+			result.__mtl_at(0, 0) = (T(2) * near) / (right - left);
+			result.__mtl_at(1, 1) = (T(2) * near) / (top - bottom);
+			result.__mtl_at(2, 2) =  T(1);
+			result.__mtl_at(3, 2) =  T(1);
+			result.__mtl_at(2, 3) = -T(2) * near;
 			return result;
 		}
 		else {
 			matrix<T, 4, 4, O> result{};
-			result(0, 0) = (T(2) * near) / (right - left);
-			result(1, 1) = (T(2) * near) / (top - bottom);
-			result(2, 2) = -T(1);
-			result(3, 2) = -T(1);
-			result(2, 3) = -T(2) * near;
+			result.__mtl_at(0, 0) = (T(2) * near) / (right - left);
+			result.__mtl_at(1, 1) = (T(2) * near) / (top - bottom);
+			result.__mtl_at(2, 2) = -T(1);
+			result.__mtl_at(3, 2) = -T(1);
+			result.__mtl_at(2, 3) = -T(2) * near;
 			return result;
 		}
 	}
 	
+	template <handedness H = default_handedness, vector_options O = vector_options{}>
+	constexpr auto perspective(real_scalar auto const& field_of_view,
+							   real_scalar auto const& aspect_ratio,
+							   real_scalar auto const& near,
+							   real_scalar auto const& far)
+	{
+		using T = __mtl_promote(__mtl_decltype_stripped(field_of_view),
+								__mtl_decltype_stripped(aspect_ratio),
+								__mtl_decltype_stripped(near),
+								__mtl_decltype_stripped(far));
+		__mtl_expect(std::abs(aspect_ratio - std::numeric_limits<T>::epsilon()) > T(0));
+
+		T const tanHalfFovy = std::tan(field_of_view / T(2));
+		
+		if constexpr (H == left_handed) {
+			matrix<T, 4, 4, O> result{};
+			result.__mtl_at(0, 0) = T(1) / (aspect_ratio * tanHalfFovy);
+			result.__mtl_at(1, 1) = T(1) / (tanHalfFovy);
+			result.__mtl_at(2, 2) = far / (far - near);
+			result.__mtl_at(3, 2) = T(1);
+			result.__mtl_at(2, 3) = -(far * near) / (far - near);
+			return result;
+		}
+		else {
+			matrix<T, 4, 4, O> result{};
+			result.__mtl_at(0, 0) = T(1) / (aspect_ratio * tanHalfFovy);
+			result.__mtl_at(1, 1) = T(1) / (tanHalfFovy);
+			result.__mtl_at(2, 2) = far / (near - far);
+			result.__mtl_at(3, 2) = - T(1);
+			result.__mtl_at(2, 3) = -(far * near) / (far - near);
+			return result;
+		}
+	}
+
 	template <std::floating_point T, vector_options O>
 	constexpr matrix4x4<T, O> translation(vector3<T, O> const& offset) {
 		return {
