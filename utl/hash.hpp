@@ -2,9 +2,13 @@
 
 #include "__base.hpp"
 _UTL_SYSTEM_HEADER_
+
+#include "common.hpp"
+#include "concepts.hpp"
+
 #include <utility>
 #include <string_view>
-#include "concepts.hpp"
+
 
 namespace utl {
 	
@@ -46,6 +50,15 @@ namespace utl {
 	struct hash<std::pair<T, U>> {
 		std::size_t operator()(std::pair<T, U> const& p) const {
 			return utl::hash_combine(p.first, p.second);
+		}
+	};
+	
+	template <typename... T>
+	struct hash<std::tuple<T...>> {
+		std::size_t operator()(std::tuple<T...> const& t) const {
+			return UTL_WITH_INDEX_SEQUENCE((I, sizeof...(T)), {
+				return utl::hash_combine(std::get<I>(t)...);
+			});
 		}
 	};
 	

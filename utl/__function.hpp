@@ -12,7 +12,7 @@ namespace utl {
 	 * requires target to be copy constructible
 	 */
 	template <typename>
-	class function /* : unique_function<> */; // undefined
+	class function /* : unique_function<...> */; // undefined
 	
 	
 	/*

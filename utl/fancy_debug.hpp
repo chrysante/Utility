@@ -25,7 +25,7 @@ _UTL_SYSTEM_HEADER_
 								  _UTL_DEBUG_WRAP_VALUES(__VA_ARGS__),             \
 								  _UTL_DEBUG_TO_STRINGS(__VA_ARGS__),              \
 								  _UTL_DEBUG_PARSE_EXPRESSIONS(__VA_ARGS__))       \
-	? (void)0 : (void)__utl_debugbreak()                                           \
+	? (void)0 : (void)__utl_debugfail()                                           \
 )
 
 #define UTL_FANCY_BOUNDS_CHECK(ModuleName, DebugLevel, index, lower, upper)                        \
