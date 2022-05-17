@@ -7,7 +7,7 @@ _UTL_SYSTEM_HEADER_
 
 namespace utl {
 	
-	bool is_hidden(std::filesystem::path const& p) {
+	inline bool is_hidden(std::filesystem::path const& p) {
 		auto const name = p.filename();
 		return name != ".." && name != "."  && name.string()[0] == '.';
 	}
