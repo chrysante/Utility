@@ -35,7 +35,7 @@ namespace utl {
 	template <typename T>
 	inline constexpr auto __ctti_nameof = __ctti_nameof_impl<T>();
 	
-	std::string __demangle_name(char const*);
+	std::string demangle_name(char const*);
 	
 #if 1
 	template <typename T>
@@ -47,7 +47,7 @@ namespace utl {
 	
 	template <typename T>
 	std::string dynamic_nameof(T& value) {
-		return __demangle_name(typeid(value).name());
+		return demangle_name(typeid(value).name());
 	}
 	
 	std::string qualified_function_name(std::string_view pretty);

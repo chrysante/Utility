@@ -6,7 +6,7 @@
 
 #include <cxxabi.h>
 
-std::string utl::__demangle_name(char const* mangled_name) {
+std::string utl::demangle_name(char const* mangled_name) {
 	int status = 0;
 	char* demangled_name = abi::__cxa_demangle(mangled_name,
 											   nullptr,
@@ -21,7 +21,7 @@ std::string utl::__demangle_name(char const* mangled_name) {
 
 #else
 
-std::string utl::__demangle_name(char const* mangled_name) {
+std::string utl::demangle_name(char const* mangled_name) {
 	return mangled_name;
 }
 

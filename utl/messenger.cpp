@@ -4,6 +4,13 @@
 
 namespace utl {
 	
+	__message_registry __message_registry::_inst{};
+	
+	extern const __message __invalid_message = []{
+		__message_registry::get().add(__invalid_message_id, "Invalid Message");
+		return __message{ __invalid_message_id };
+	}();
+	
 	listener_id::listener_id(listener_id const& rhs):
 		_messenger(nullptr),
 		_mid(rhs._mid),
@@ -72,8 +79,8 @@ namespace utl {
 		v.erase(litr);
 	}
 	
-	void messenger::send_message(__message const& msg) {
-		auto const itr = _listeners.find(msg.id);
+	void messenger::do_send_message(__message const& msg) {
+		auto const itr = _listeners.find(msg.id());
 		if (itr == _listeners.end() || itr->second.empty()) {
 //			utl_log(warning,
 //					"No listener for message '{}' [id = {}]\n"

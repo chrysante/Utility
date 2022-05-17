@@ -53,8 +53,8 @@ _UTL_SYSTEM_HEADER_
  if UTL_UNLIKELY (x == 1) { ... }
  */
 #if UTL_GCC
-#	define UTL_LIKELY(...)   (__builtin_expect((__VA_ARGS__), 1))
-#	define UTL_UNLIKELY(...) (__builtin_expect((__VA_ARGS__), 0))
+#	define UTL_LIKELY(...)   (__builtin_expect(bool(__VA_ARGS__), 1))
+#	define UTL_UNLIKELY(...) (__builtin_expect(bool(__VA_ARGS__), 0))
 #else 
 #	define UTL_LIKELY(...)   (__VA_ARGS__)
 #	define UTL_UNLIKELY(...) (__VA_ARGS__)

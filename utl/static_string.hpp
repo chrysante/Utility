@@ -64,6 +64,13 @@ namespace utl {
 	
 	template <std::size_t N, std::size_t M>
 	requires (N != M)
-	constexpr bool operator==(basic_static_string<N> const&, basic_static_string<M> const&) { return false; }
+	constexpr bool operator==(basic_static_string<N> const& a, basic_static_string<M> const& b) {
+		return std::string_view(a) == std::string_view(b);
+	}
+	
+	template <std::size_t N>
+	constexpr bool operator==(basic_static_string<N> const& a, std::string const& b) {
+		return std::string_view(a) == b;
+	}
 	
 }

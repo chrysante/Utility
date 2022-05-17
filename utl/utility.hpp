@@ -48,6 +48,13 @@ namespace utl {
 		return static_cast<To>(from);
 	}
 	
+	template <typename To, typename From> requires (std::is_base_of_v<From, std::remove_reference_t<To>> && std::is_reference_v<To>)
+	To down_cast(From& from) noexcept {
+		using ToPtr = std::remove_reference_t<To>*;
+		__utl_assert(dynamic_cast<ToPtr>(&from) != nullptr);
+		return static_cast<To>(from);
+	}
+	
 	
 	template <typename T>
 	void uninitialized_relocate(T* from, T* to) {

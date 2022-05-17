@@ -637,6 +637,9 @@ namespace utl {
 		/// (1)
 		__utl_interface_export
 		constexpr iterator erase(const_iterator cpos) {
+			if (empty()) {
+				return end();
+			}
 			__utl_bounds_check(cpos, begin(), end());
 			iterator pos = const_cast<iterator>(cpos);
 			this->_left_shift_range(pos + 1, end(), -1);
