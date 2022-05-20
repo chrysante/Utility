@@ -148,23 +148,12 @@ namespace utl {
 	}
 	
 	/// MARK: Enumerate
-	template <typename E> requires (std::is_enum_v<E>)
-	class enumerate {
+	template <typename E>
+	class __utl_enumerate_enum {
 	public:
 		using integer = std::underlying_type_t<E>;
 		
-		enumerate() requires requires { E::_count; }:
-			_first(0), _last((integer)E::_count)
-		{}
-		enumerate(integer last):
-			_first(0), _last(last)
-		{}
-		enumerate(integer first, integer last):
-			_first(first), _last(last)
-		{}
-		
 		struct iterator {
-			explicit iterator(integer value): _value(value) {}
 			iterator& operator++() {
 				++_value;
 				return *this;
@@ -172,16 +161,71 @@ namespace utl {
 			friend bool operator==(iterator const&, iterator const&) = default;
 			E operator*() const { return (E)_value; }
 		
-		private:
 			integer _value;
 		};
 		
-		iterator begin() const { return iterator(_first); }
-		iterator end() const { return iterator(_last); }
+		iterator begin() const { return iterator{ _first }; }
+		iterator end() const { return iterator{ _last }; }
 		
-	private:
 		integer _first, _last;
 	};
+	
+	template <typename E> requires (std::is_enum_v<E>)
+	__utl_enumerate_enum<E> enumerate() requires requires { E::_count; } {
+		return { 0, to_underlying(E::_count) };
+	}
+	
+	template <typename E> requires (std::is_enum_v<E>)
+	__utl_enumerate_enum<E> enumerate(std::underlying_type_t<E> last) {
+		return { 0, last };
+	}
+	
+	template <typename E> requires (std::is_enum_v<E>)
+	__utl_enumerate_enum<E> enumerate(std::underlying_type_t<E> first,
+									  std::underlying_type_t<E> last)
+	{
+		return { 0, last };
+	}
+	
+	template <typename Itr, typename Sentinel>
+	struct __utl_enumerate_range {
+		template <typename I>
+		struct iterator {
+			iterator& operator++() {
+				++itr; ++index;
+				return *this;
+			}
+			
+			std::pair<std::size_t, decltype(*std::declval<I>())> operator*() {
+				return { index, *itr };
+			}
+			
+			template <typename J>
+			bool operator!=(iterator<J> const& rhs) const { return itr != rhs.itr; }
+			
+			std::size_t index;
+			I itr;
+		};
+		
+		iterator<Itr> begin() const { return { 0, _begin }; }
+		iterator<Sentinel> end() const { return { 0, _end }; }
+		
+		Itr _begin;
+		Sentinel _end;
+	};
+	
+	template <typename Itr, typename Sentinel>
+	__utl_enumerate_range<Itr, Sentinel> enumerate(Itr begin, Sentinel end) {
+		return __utl_enumerate_range{ begin, end };
+	}
+	
+	template <typename Range>
+	auto enumerate(Range&& range) {
+		return __utl_enumerate_range<decltype(range.begin()), decltype(range.end())>{
+			range.begin(), range.end()
+		};
+	}
+	
 	
 	/// MARK: Reverse Container Adaptor
 	template <typename C>
