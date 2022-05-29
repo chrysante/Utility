@@ -2,6 +2,8 @@
 
 #include "__debug.hpp"
 
+#if 0
+
 namespace utl {
 	
 	__message_registry __message_registry::_inst{};
@@ -96,3 +98,5 @@ namespace utl {
 	}
 	
 }
+
+#endif

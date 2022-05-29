@@ -727,8 +727,13 @@ namespace _VMTL {
 	_MTL_FUNCOBJ_DEF_(__mtl_divides,     (auto const& a, auto const& b), a / b);
 	_MTL_FUNCOBJ_DEF_(__mtl_modulo,      (auto const& a, auto const& b), a % b);
 	_MTL_FUNCOBJ_DEF_(__mtl_equals,      (auto const& a, auto const& b), a == b);
+	_MTL_FUNCOBJ_DEF_(__mtl_less,        (auto const& a, auto const& b), a < b);
+	_MTL_FUNCOBJ_DEF_(__mtl_less_eq,     (auto const& a, auto const& b), a <= b);
+	_MTL_FUNCOBJ_DEF_(__mtl_greater,     (auto const& a, auto const& b), a > b);
+	_MTL_FUNCOBJ_DEF_(__mtl_greater_eq,  (auto const& a, auto const& b), a >= b);
 	_MTL_FUNCOBJ_DEF_(__mtl_logical_and, (auto const& a, auto const& b), a && b);
 	_MTL_FUNCOBJ_DEF_(__mtl_logical_or,  (auto const& a, auto const& b), a || b);
+	_MTL_FUNCOBJ_DEF_(__mtl_logical_not, (auto const& a), !a);
 	
 	struct __mtl_abs_t {
 		constexpr auto operator()(auto const& a) const {

@@ -641,7 +641,7 @@ namespace utl {
 				return end();
 			}
 			__utl_bounds_check(cpos, begin(), end());
-			iterator pos = const_cast<iterator>(cpos);
+			iterator const pos = const_cast<iterator>(cpos);
 			this->_left_shift_range(pos + 1, end(), -1);
 			_destroy_elems(end() - 1, end());
 			_set_size(size() - 1);
@@ -654,7 +654,26 @@ namespace utl {
 		}
 		/// (2)
 		__utl_interface_export __utl_always_inline
-		constexpr iterator erase(const_iterator first, const_iterator last);
+		constexpr iterator erase(const_iterator cfirst, const_iterator clast) {
+			if (empty()) {
+				return end();
+			}
+			__utl_expect(cfirst <= clast);
+			__utl_bounds_check(cfirst, begin(), end() + 1);
+			__utl_bounds_check(clast, begin(), end() + 1);
+			
+			iterator const first = const_cast<iterator>(cfirst);
+			iterator const last = const_cast<iterator>(clast);
+			
+			if (first == last) {
+				return last;
+			}
+			auto const erase_count = last - first;
+			this->_left_shift_range(last + 1, end(), -erase_count);
+			_destroy_elems(end() - erase_count, end());
+			_set_size(size() - erase_count);
+			return first;
+		}
 		
 		/// MARK: resize
 		/// (1)
@@ -841,7 +860,7 @@ namespace utl {
 		
 		constexpr static void _left_shift_range(T* begin, T* end, std::ptrdiff_t offset) noexcept(std::is_nothrow_move_assignable_v<T>) {
 			__utl_expect(offset < 0, "offset must be negative");
-			for (auto i = begin + offset, j = begin; j != end; ++i, ++j) {
+			for (auto i = begin + offset, j = begin; j < end; ++i, ++j) {
 				*i = std::move(*j);
 			}
 		}

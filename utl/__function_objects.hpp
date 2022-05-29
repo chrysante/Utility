@@ -207,6 +207,14 @@ namespace utl {
 		return UTL_FORWARD(x);
 	});
 	
+	_UTL_FUNCTION_OBJECT_DEF(deref, (auto&& x) const -> decltype(auto) {
+		return *x;
+	});
+	
+	_UTL_FUNCTION_OBJECT_DEF(noop, (auto&&...) const {
+		
+	});
+	
 	
 	
 	

@@ -232,6 +232,7 @@ namespace _VMTL {
 	private:
 		union {
 			T __data[Size];
+			struct { T hue, saturation, value, alpha; };
 			struct {
 				T x;
 				union {
@@ -301,6 +302,11 @@ namespace _VMTL {
 		using __mtl_base::b;
 		using __mtl_base::ba;
 		using __mtl_base::a;
+		
+		using __mtl_base::hue;
+		using __mtl_base::saturation;
+		using __mtl_base::value;
+		using __mtl_base::alpha;
 	};
 	
 	/// MARK: Size = 3
@@ -317,6 +323,7 @@ namespace _VMTL {
 	private:
 		union {
 			T __data[3];
+			struct { T hue, saturation, value; };
 			struct {
 				T x;
 				union {
@@ -353,6 +360,10 @@ namespace _VMTL {
 		using __mtl_base::g;
 		using __mtl_base::gb;
 		using __mtl_base::b;
+		
+		using __mtl_base::hue;
+		using __mtl_base::saturation;
+		using __mtl_base::value;
 	};
 	
 	/// MARK: Size = 2
@@ -614,6 +625,36 @@ namespace _VMTL {
 			*this = *this % rhs;
 			return *this;
 		}
+		
+		/// MARK: Vector<bool> Members
+		__mtl_always_inline __mtl_interface_export
+		constexpr bool all() const requires(std::is_same_v<T, bool>) {
+			return fold(__mtl_logical_and);
+		}
+		__mtl_always_inline __mtl_interface_export
+		constexpr bool any() const requires(std::is_same_v<T, bool>) {
+			return fold(__mtl_logical_or);
+		}
+		__mtl_always_inline __mtl_interface_export
+		constexpr vector& flip() requires(std::is_same_v<T, bool>) {
+			*this = map(__mtl_logical_not);
+			return *this;
+		}
+		
+		/// MARK: Min, Max
+		__mtl_always_inline __mtl_interface_export
+		constexpr T min() const requires real_scalar<T> {
+			return __mtl_with_index_sequence((I, Size), {
+				return min(__mtl_at(I)...);
+			});
+		}
+		
+		__mtl_always_inline __mtl_interface_export
+		constexpr T max() const requires real_scalar<T> {
+			return __mtl_with_index_sequence((I, Size), {
+				return max(__mtl_at(I)...);
+			});
+		}
 	};
 	
 	/// deduction guide
@@ -874,13 +915,31 @@ namespace _VMTL {
 		return a / fast_norm(a);
 	}
 	
+	/// Element-wise Minimum of Vectors
+	template <real_scalar T, real_scalar... U, std::size_t Size, vector_options O, vector_options... P>
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr vector<__mtl_promote(T, U...), Size, combine(O, P...)> min(vector<T, Size, O> const& v, vector<U, Size, P> const&... w) {
+		return vector<__mtl_promote(T, U...), Size, combine(O, P...)>([&](std::size_t i) {
+			return map(v, w..., [](auto&&... x) { return _VMTL::min(x...); });
+		});
+	}
+	
+	/// Element-wise Maximum of Vectors
+	template <real_scalar T, real_scalar... U, std::size_t Size, vector_options O, vector_options... P>
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr vector<__mtl_promote(T, U...), Size, combine(O, P...)> max(vector<T, Size, O> const& v, vector<U, Size, P> const&... w) {
+		return vector<__mtl_promote(T, U...), Size, combine(O, P...)>([&](std::size_t i) {
+			return map(v, w..., [](auto&&... x) { return _VMTL::max(x...); });
+		});
+	}
+	
 	/// Element-wise Absolute Value of Vector
 	template <scalar T, std::size_t Size, vector_options O>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr auto abs(vector<T, Size, O> const& a) {
 		return a.map(_VMTL::__mtl_abs);
 	}
-
+	
 	/// Element-wise Square Root of Vector
 	template <scalar T, std::size_t Size, vector_options O>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
@@ -946,6 +1005,35 @@ namespace _VMTL {
 			a.__mtl_at(2) * b.__mtl_at(0) - a.__mtl_at(0) * b.__mtl_at(2),
 			a.__mtl_at(0) * b.__mtl_at(1) - a.__mtl_at(1) * b.__mtl_at(0)
 		};
+	}
+
+	/// MARK: Boolean Operators
+	template <real_scalar T, real_scalar U, std::size_t Size, vector_options O, vector_options P>
+	__mtl_mathfunction __mtl_interface_export
+	constexpr vector<bool, Size, combine(O, P)>
+	operator<(vector<T, Size, O> const& a, vector<U, Size, P> const& b) {
+		return map(a, b, __mtl_less);
+	}
+	
+	template <real_scalar T, real_scalar U, std::size_t Size, vector_options O, vector_options P>
+	__mtl_mathfunction __mtl_interface_export
+	constexpr vector<bool, Size, combine(O, P)>
+	operator<=(vector<T, Size, O> const& a, vector<U, Size, P> const& b) {
+		return map(a, b, __mtl_less_eq);
+	}
+	
+	template <real_scalar T, real_scalar U, std::size_t Size, vector_options O, vector_options P>
+	__mtl_mathfunction __mtl_interface_export
+	constexpr vector<bool, Size, combine(O, P)>
+	operator>(vector<T, Size, O> const& a, vector<U, Size, P> const& b) {
+		return map(a, b, __mtl_greater);
+	}
+	
+	template <real_scalar T, real_scalar U, std::size_t Size, vector_options O, vector_options P>
+	__mtl_mathfunction __mtl_interface_export
+	constexpr vector<bool, Size, combine(O, P)>
+	operator>=(vector<T, Size, O> const& a, vector<U, Size, P> const& b) {
+		return map(a, b, __mtl_greater_eq);
 	}
 	
 }

@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "__base.hpp"
 _UTL_SYSTEM_HEADER_
 
@@ -148,43 +147,37 @@ namespace utl {
 	}
 	
 	/// MARK: Enumerate
-	template <typename E>
-	class __utl_enumerate_enum {
-	public:
-		using integer = std::underlying_type_t<E>;
-		
-		struct iterator {
-			iterator& operator++() {
-				++_value;
-				return *this;
-			}
-			friend bool operator==(iterator const&, iterator const&) = default;
-			E operator*() const { return (E)_value; }
-		
-			integer _value;
-		};
-		
-		iterator begin() const { return iterator{ _first }; }
-		iterator end() const { return iterator{ _last }; }
-		
-		integer _first, _last;
-	};
-	
 	template <typename E> requires (std::is_enum_v<E>)
-	__utl_enumerate_enum<E> enumerate() requires requires { E::_count; } {
-		return { 0, to_underlying(E::_count) };
-	}
-	
-	template <typename E> requires (std::is_enum_v<E>)
-	__utl_enumerate_enum<E> enumerate(std::underlying_type_t<E> last) {
-		return { 0, last };
-	}
-	
-	template <typename E> requires (std::is_enum_v<E>)
-	__utl_enumerate_enum<E> enumerate(std::underlying_type_t<E> first,
+	auto enumerate(std::underlying_type_t<E> first,
 									  std::underlying_type_t<E> last)
 	{
-		return { 0, last };
+		class enum_range {
+		public:
+			using integer = std::underlying_type_t<E>;
+			
+			struct iterator {
+				iterator& operator++() {
+					++_value;
+					return *this;
+				}
+				bool operator==(iterator const&) const = default;
+				E operator*() const { return (E)_value; }
+			
+				integer _value;
+			};
+			
+			iterator begin() const { return iterator{ _first }; }
+			iterator end() const { return iterator{ _last }; }
+			
+			integer _first, _last;
+		};
+		
+		return enum_range{ 0, last };
+	}
+	
+	template <typename E> requires (std::is_enum_v<E>)
+	auto enumerate(std::underlying_type_t<E> last = to_underlying(E::_count)) {
+		return enumerate<E>(0, last);
 	}
 	
 	template <typename Itr, typename Sentinel>
@@ -211,23 +204,66 @@ namespace utl {
 		iterator<Sentinel> end() const { return { 0, _end }; }
 		
 		Itr _begin;
-		Sentinel _end;
+		[[no_unique_address]] Sentinel _end;
 	};
 	
 	template <typename Itr, typename Sentinel>
-	__utl_enumerate_range<Itr, Sentinel> enumerate(Itr begin, Sentinel end) {
-		return __utl_enumerate_range{ begin, end };
+	auto enumerate(Itr begin, Sentinel end) {
+		return __utl_enumerate_range<Itr, Sentinel>{ begin, end };
 	}
 	
 	template <typename Range>
-	auto enumerate(Range&& range) {
-		return __utl_enumerate_range<decltype(range.begin()), decltype(range.end())>{
-			range.begin(), range.end()
-		};
+	auto enumerate(Range&& range)
+		requires requires { begin(range); end(range); } ||
+				 requires { std::begin(range); std::end(range); } ||
+				 requires { range.end(); range.begin(); }
+	{
+		using std::begin;
+		using std::end;
+		return enumerate(begin(range), end(range));
 	}
 	
+	/// MARK: Transform Range
+	template <typename Itr, typename Sentinel, typename Transform>
+	struct __transform_range {
+		template <typename I>
+		struct iterator {
+			iterator& operator++() {
+				++itr;
+				return *this;
+			}
+			
+			decltype(auto) operator*() {
+				return std::invoke(transform, *itr);
+			}
+			
+			template <typename J>
+			bool operator!=(iterator<J> const& rhs) const { return itr != rhs.itr; }
+			
+			I itr;
+			[[no_unique_address]] Transform transform;
+		};
+		
+		iterator<Itr> begin() const { return { _begin, transform }; }
+		iterator<Sentinel> end() const { return { _end, transform }; }
+		
+		Itr _begin;
+		[[no_unique_address]] Sentinel _end;
+		[[no_unique_address]] Transform transform;
+	};
 	
-	/// MARK: Reverse Container Adaptor
+	template <typename Itr, typename Sentinel>
+	auto transform_range(Itr begin, Sentinel end, std::invocable<decltype(*begin)> auto&& transform) {
+		return __transform_range<Itr, Sentinel, std::decay_t<decltype(transform)>>{ begin, end, UTL_FORWARD(transform) };
+	}
+	
+	auto transform_range(auto&& range, auto&& transform) {
+		using std::begin;
+		using std::end;
+		return transform_range(begin(range), end(range), UTL_FORWARD(transform));
+	}
+	
+	/// MARK: Reverse Range Adaptor
 	template <typename C>
 	class __reverse_adapter {
 		static_assert(!std::is_reference_v<C>);
@@ -276,10 +312,83 @@ namespace utl {
 		return __reverse_adapter<C>(std::move(c));
 	}
 	
-}
 
+	
+	/// MARK: Lifetime Events
+	template <typename Sub>
+	struct lifetime;
+//	{
+//		constexpr void copy_construct(Sub const& from, Sub& to) {}
+//		constexpr void copy_assign(Sub const& from, Sub& to) {}
+//		constexpr void move_construct(Sub& from, Sub& to) noexcept {}
+//		constexpr void move_assign(Sub& from, Sub& to) noexcept {}
+//		constexpr void destruct(Sub&) noexcept {}
+//	};
+	
+	template <typename Sub>
+	constexpr void __execute_lt_cc(Sub const& from, Sub& to) {
+		if constexpr (requires{
+			lifetime<Sub>::copy_construct(from, to);
+		}) {
+			lifetime<Sub>::copy_construct(from, to);
+		}
+	}
+	template <typename Sub>
+	constexpr void __execute_lt_ca(Sub const& from, Sub& to) {
+		if constexpr (requires{
+			lifetime<Sub>::copy_assign(from, to);
+		}) {
+			lifetime<Sub>::copy_assign(from, to);
+		}
+	}
+	template <typename Sub>
+	constexpr void __execute_lt_mc(Sub& from, Sub& to) noexcept {
+		if constexpr (requires{
+			lifetime<Sub>::move_construct(from, to);
+		}) {
+			lifetime<Sub>::move_construct(from, to);
+		}
+	}
+	template <typename Sub>
+	constexpr void __execute_lt_ma(Sub& from, Sub& to) noexcept {
+		if constexpr (requires{
+			lifetime<Sub>::move_assign(from, to);
+		}) {
+			lifetime<Sub>::move_assign(from, to);
+		}
+	}
+	template <typename Sub>
+	constexpr void __execute_lt_d(Sub& self) {
+		if constexpr (requires{
+			lifetime<Sub>::destruct(self);
+		}) {
+			lifetime<Sub>::destruct(self);
+		}
+	}
+	
+	template <typename Sub>
+	struct lifetime_events {
+		lifetime_events() = default;
+		constexpr lifetime_events(lifetime_events const& rhs) {
+			__execute_lt_cc(static_cast<Sub const&>(rhs), static_cast<Sub&>(*this));
+		}
+		constexpr lifetime_events& operator=(lifetime_events const& rhs) {
+			__execute_lt_ca(static_cast<Sub const&>(rhs), static_cast<Sub&>(*this));
+			return *this;
+		}
+		constexpr lifetime_events(lifetime_events&& rhs) noexcept {
+			__execute_lt_mc(static_cast<Sub&>(rhs), static_cast<Sub&>(*this));
+		}
+		constexpr lifetime_events& operator=(lifetime_events&& rhs) noexcept {
+			__execute_lt_ma(static_cast<Sub&>(rhs), static_cast<Sub&>(*this));
+			return *this;
+		}
+		constexpr ~lifetime_events() noexcept {
+			__execute_lt_d(static_cast<Sub&>(*this));
+		}
+	};
 
-namespace utl {
+	
 	
 	template <typename T, typename = int, std::size_t IntWidth = utl::log2(alignof(T))>
 	class pointer_int_pair;

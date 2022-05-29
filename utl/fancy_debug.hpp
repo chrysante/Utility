@@ -4,6 +4,7 @@
 #include "__base.hpp"
 _UTL_SYSTEM_HEADER_
 
+#include <concepts>
 #include "common.hpp"
 #include "__debug.hpp"
 #include "log.hpp"
@@ -34,12 +35,12 @@ UTL_FANCY_ASSERT(ModuleName, DebugLevel, precondition, index <  upper, "Index ab
 
 /// MARK: - Implementation
 // _UTL_DEBUG_WRAP_VALUES
-#define _UTL_DEBUG_WRAP_VALUE_USING_DECL(...) [&]{ \
+#define _UTL_DEBUG_WRAP_VALUE_USING_DECL(...) [&] { \
 	using ::utl::__utl_debug_level::_default;                   \
 	using ::utl::__utl_debug_level::audit;                      \
 	return __VA_ARGS__;                            \
 }
-#define _UTL_DEBUG_WRAP_VALUE(...) [&]{            \
+#define _UTL_DEBUG_WRAP_VALUE(...) [&] {            \
 	return __VA_ARGS__;                            \
 }
 
@@ -141,7 +142,7 @@ namespace utl {
 	constexpr bool __utl_fassert(__utl_assertion_kind kind,
 								 char const* module_name,
 								 source_info data,
-								 invocable_r<bool> auto&& cond,
+								 std::predicate auto&& cond,
 								 char const* expr,
 								 auto&& expanded)
 	{
@@ -159,7 +160,7 @@ namespace utl {
 	constexpr bool __utl_fassert(__utl_assertion_kind kind,
 								 char const* module_name,
 								 source_info data,
-								 invocable_r<bool> auto&& cond,
+								 std::predicate auto&& cond,
 								 invocable_r<char const*> auto&& message,
 								 char const* cond_expr,
 								 char const*,
@@ -181,7 +182,7 @@ namespace utl {
 								 char const* module_name,
 								 source_info data,
 								 invocable_r<__utl_assert_level> auto&& level,
-								 invocable_r<bool> auto&& cond,
+								 std::predicate auto&& cond,
 								 char const*,
 								 char const* cond_expr,
 								 auto&&,
@@ -204,7 +205,7 @@ namespace utl {
 								 char const* module_name,
 								 source_info data,
 								 invocable_r<__utl_assert_level> auto&& level,
-								 invocable_r<bool> auto&& cond,
+								 std::predicate auto&& cond,
 								 invocable_r<char const*> auto&& message,
 								 char const*,
 								 char const* expr,

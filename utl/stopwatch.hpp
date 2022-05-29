@@ -9,7 +9,11 @@ namespace utl {
 	
 	template <typename Clock = std::chrono::high_resolution_clock>
 	class stopwatch {
-	public:		
+	public:
+		using clock = Clock;
+		using time_point = typename clock::time_point;
+		using duration = typename clock::duration;
+		
 		void pause() {
 			if (_paused) {
 				return;

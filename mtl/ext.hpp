@@ -158,6 +158,7 @@ namespace _VMTL {
 	}
 	
 	template <handedness H = default_handedness, vector_options O = vector_options{}>
+	__mtl_mathfunction __mtl_interface_export
 	constexpr auto perspective(real_scalar auto const& field_of_view,
 							   real_scalar auto const& aspect_ratio,
 							   real_scalar auto const& near,
@@ -191,7 +192,9 @@ namespace _VMTL {
 		}
 	}
 
+	/// MARK: Transforms
 	template <std::floating_point T, vector_options O>
+	__mtl_mathfunction __mtl_interface_export
 	constexpr matrix4x4<T, O> translation(vector3<T, O> const& offset) {
 		return {
 			T(1), T(0), T(0), offset.__mtl_at(0),
@@ -202,6 +205,7 @@ namespace _VMTL {
 	}
 	
 	template <std::floating_point T, vector_options O = vector_options{}>
+	__mtl_mathfunction __mtl_interface_export
 	constexpr matrix4x4<T, O> rotation(quaternion<T> const& q) {
 		return {
 			2 * (__mtl_sqr(q[0]) + __mtl_sqr(q[1])) - 1, 2 * (q[1] * q[2] - q[0] * q[3]),             2 * (q[1] * q[3] + q[0] * q[2]),             0,
@@ -212,6 +216,7 @@ namespace _VMTL {
 	}
 	
 	template <std::floating_point T, vector_options O = vector_options{}>
+	__mtl_mathfunction __mtl_interface_export
 	constexpr matrix4x4<T, O> scale(vector3<T> const& s) {
 		return {
 			s[0], 0, 0, 0,
@@ -222,15 +227,18 @@ namespace _VMTL {
 	}
 	
 	template <std::floating_point T, vector_options O = vector_options{}>
+	__mtl_mathfunction __mtl_interface_export
 	constexpr matrix4x4<T, O> scale(T s) {
 		scale({ s, s, s });
 	}
 	
 	template <std::floating_point T, vector_options O = vector_options{}>
+	__mtl_mathfunction __mtl_interface_export
 	constexpr matrix4x4<T, O> make_transform(vector3<T, O> const& position, quaternion<T> const& orientation, vector3<T, O> const& s) {
 		return translation(position) * rotation(orientation) * scale(s);
 	}
 	
+	__mtl_mathfunction __mtl_interface_export
 	constexpr auto to_quaternion(real_scalar auto roll, real_scalar auto pitch, real_scalar auto yaw) {
 		// Abbreviations for the various angular functions
 		using T = __mtl_floatify(__mtl_promote(decltype(yaw), decltype(pitch), decltype(roll)));
@@ -250,11 +258,13 @@ namespace _VMTL {
 	}
 	
 	template <typename T>
+	__mtl_mathfunction __mtl_interface_export
 	constexpr quaternion<__mtl_floatify(T)> to_quaternion(vector3<T> const& euler) {
 		return to_quaternion(euler.__mtl_at(0), euler.__mtl_at(1), euler.__mtl_at(2));
 	}
 	
 	template <std::floating_point T>
+	__mtl_mathfunction __mtl_interface_export
 	constexpr vector3<T> to_euler(quaternion<T> const& q) {
 		// roll (x-axis rotation)
 		T const sinr_cosp = 2 * (q.__mtl_at(0) * q.__mtl_at(1) + q.__mtl_at(2) * q.__mtl_at(3));
@@ -278,6 +288,7 @@ namespace _VMTL {
 	/// MARK: - Matrix Decomposition
 	/// Decompose Rotation matrix (special orthogonal / determinant 1) to a quaternion
 	template <std::floating_point T, vector_options O>
+	__mtl_mathfunction __mtl_interface_export
 	constexpr quaternion<T> decompose_rotation(matrix3x3<T, O> m) {
 		T const tr = trace(m);
 		if (tr > 0) {
@@ -320,6 +331,7 @@ namespace _VMTL {
 	
 	/// Deompose a 4x4 affine (what about shearing?) transform matrix into translation, orientation and scale
 	template <std::floating_point T, vector_options O>
+	__mtl_mathfunction __mtl_interface_export
 	constexpr std::tuple<vector3<T, O>, quaternion<T>, vector3<T, O>> decompose_transform(matrix4x4<T, O> t) {
 		vector3<T, O> translation = t.column(3).swizzle(0, 1, 2);
 		vector3<T, O> scale = {
@@ -360,8 +372,7 @@ namespace _VMTL {
 		static constexpr vector<T, 3, O> white  = colors<vector<T, 4, O>>::white.swizzle(0, 1, 2);
 	};
 	
-	template <typename T, vector_options O>
-	requires std::is_floating_point_v<T>
+	template <std::floating_point T, vector_options O>
 	struct colors<vector<T, 4, O>> {
 		static constexpr vector<T, 4, O> hex(std::uint32_t value) {
 			value = mtl::__mtl_byte_swap(value);
@@ -381,6 +392,98 @@ namespace _VMTL {
 		static constexpr vector<T, 4, O> white  = { 1.0, 1.0, 1.0, 1.0 };
 	};
 
+	template <real_scalar T = float, vector_options O = vector_options{}>
+	__mtl_mathfunction __mtl_interface_export
+	constexpr vector3<__mtl_floatify(T), O> rgb_to_hsv(vector3<T, O> const& rgb) {
+		using F = __mtl_floatify(T);
+		float K = F(0);
+		auto [r, g, b] = rgb;
+		
+		if (g < b)
+		{
+			std::swap(g, b);
+			K = -1.f;
+		}
+		if (r < g)
+		{
+			std::swap(r, g);
+			K = -2.f / 6.f - K;
+		}
+
+		F const chroma = r - (g < b ? g : b);
+		F const x = chroma == F(0) ? F(0) : (g - b) / (F(6) * chroma);
+		F const s = r == F(0) ? F(0) : chroma / r;
+		return {
+			std::abs(K + x), s, r
+		};
+	};
+	
+	template <real_scalar T, real_scalar U, real_scalar V>
+	__mtl_mathfunction __mtl_interface_export
+	constexpr vector3<__mtl_floatify(T)> rgb_to_hsv(T const& r, U const& g, V const& b) {
+		return rgb_to_hsv({ r, b, g });
+	}
+	
+	template <real_scalar T = float, vector_options O = vector_options{}>
+	__mtl_mathfunction __mtl_interface_export
+	constexpr vector4<__mtl_floatify(T), O> rgba_to_hsva(vector4<T, O> const& rgba) {
+		return { rgb_to_hsv(rgba.swizzle(0, 1, 2)), rgba.__mtl_at(3) };
+	}
+	
+	template <real_scalar T, real_scalar U, real_scalar V, real_scalar W>
+	__mtl_mathfunction __mtl_interface_export
+	constexpr vector4<__mtl_floatify(T)> rgba_to_hsva(T const& r, U const& g, V const& b, W const& a) {
+		return rgba_to_hsva({ r, b, g, a });
+	}
+	
+	template <real_scalar T = float, vector_options O = vector_options{}>
+	__mtl_mathfunction __mtl_interface_export
+	constexpr vector3<__mtl_floatify(T), O> hsv_to_rgb(vector3<T, O> const& hsv) {
+		using V = vector3<__mtl_floatify(T), O>;
+		using F = __mtl_floatify(T);
+		
+		auto [h, s, v] = hsv;
+		
+		if (s == F(0)) { // gray
+			return V(v);
+		}
+
+		h = std::fmod(h, F(1)) / (F(60) / F(360));
+		int const   i = (int)h;
+		F const f = h - (F)i;
+		F const p = v * (F(1) - s);
+		F const q = v * (F(1) - s * f);
+		F const t = v * (F(1) - s * (F(1) - f));
+
+		switch (i) {
+			case 0: return { v, t, p };
+			case 1: return { q, v, p };
+			case 2: return { p, v, t };
+			case 3: return { p, q, v };
+			case 4: return { t, p, v };
+			case 5:
+			default: return { v, p, q };
+		}
+	}
+
+	template <real_scalar T, real_scalar U, real_scalar V>
+	__mtl_mathfunction __mtl_interface_export
+	constexpr vector3<__mtl_floatify(T)> hsv_to_rgb(T const& h, U const& s, V const& v) {
+		return hsv_to_rgb({ h, s, v });
+	}
+	
+	template <real_scalar T = float, vector_options O = vector_options{}>
+	__mtl_mathfunction __mtl_interface_export
+	constexpr vector4<__mtl_floatify(T), O> hsva_to_rgba(vector4<T, O> const& hsva) {
+		return { hsv_to_rgb(hsva.swizzle(0, 1, 2)), hsva.__mtl_at(3) };
+	}
+	
+	template <real_scalar T, real_scalar U, real_scalar V, real_scalar W>
+	__mtl_mathfunction __mtl_interface_export
+	constexpr vector4<__mtl_floatify(T)> hsva_to_rgba(T const& h, U const& s, V const& v, W const& a) {
+		return hsva_to_rgba({ h, s, v, a });
+	}
+	
 }
 
 
