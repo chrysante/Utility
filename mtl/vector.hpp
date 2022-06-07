@@ -919,18 +919,14 @@ namespace _VMTL {
 	template <real_scalar T, real_scalar... U, std::size_t Size, vector_options O, vector_options... P>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr vector<__mtl_promote(T, U...), Size, combine(O, P...)> min(vector<T, Size, O> const& v, vector<U, Size, P> const&... w) {
-		return vector<__mtl_promote(T, U...), Size, combine(O, P...)>([&](std::size_t i) {
-			return map(v, w..., [](auto&&... x) { return _VMTL::min(x...); });
-		});
+		return map(v, w..., [](auto&&... x) { return _VMTL::min(x...); });
 	}
 	
 	/// Element-wise Maximum of Vectors
 	template <real_scalar T, real_scalar... U, std::size_t Size, vector_options O, vector_options... P>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr vector<__mtl_promote(T, U...), Size, combine(O, P...)> max(vector<T, Size, O> const& v, vector<U, Size, P> const&... w) {
-		return vector<__mtl_promote(T, U...), Size, combine(O, P...)>([&](std::size_t i) {
-			return map(v, w..., [](auto&&... x) { return _VMTL::max(x...); });
-		});
+		return map(v, w..., [](auto&&... x) { return _VMTL::max(x...); });
 	}
 	
 	/// Element-wise Absolute Value of Vector

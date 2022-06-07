@@ -987,25 +987,25 @@ namespace utl {
 	/// MARK: - class small_vector
 	template <typename T, std::size_t N, typename Allocator>
 	class small_vector: public vector<T, Allocator> {
-		using __mtl_base = vector<T, Allocator>;
+		using __utl_base = vector<T, Allocator>;
 				
 	public:
 		/// MARK: Member Types
-		using typename __mtl_base::value_type;
-		using typename __mtl_base::allocator_type;
-		using typename __mtl_base::size_type;
-		using typename __mtl_base::difference_type;
+		using typename __utl_base::value_type;
+		using typename __utl_base::allocator_type;
+		using typename __utl_base::size_type;
+		using typename __utl_base::difference_type;
 		
-		using typename __mtl_base::reference;
-		using typename __mtl_base::const_reference;
-		using typename __mtl_base::pointer;
-		using typename __mtl_base::const_pointer;
+		using typename __utl_base::reference;
+		using typename __utl_base::const_reference;
+		using typename __utl_base::pointer;
+		using typename __utl_base::const_pointer;
 		
-		using typename __mtl_base::iterator;
-		using typename __mtl_base::const_iterator;
+		using typename __utl_base::iterator;
+		using typename __utl_base::const_iterator;
 		
-		using typename __mtl_base::reverse_iterator;
-		using typename __mtl_base::const_reverse_iterator;
+		using typename __utl_base::reverse_iterator;
+		using typename __utl_base::const_reverse_iterator;
 		
 	public:
 		/// MARK: Constructors
@@ -1013,19 +1013,19 @@ namespace utl {
 		__utl_interface_export __utl_always_inline
 		constexpr small_vector() noexcept(noexcept(Allocator()))
 		requires std::is_default_constructible_v<Allocator>:
-			__mtl_base(_storage_begin(), {}, N, true) {}
+			__utl_base(_storage_begin(), {}, N, true) {}
 		
 		/// (2)
 		__utl_interface_export __utl_always_inline
 		constexpr explicit small_vector(Allocator const& alloc) noexcept:
-			__mtl_base(alloc, _storage_begin(), {}, N, true) {}
+			__utl_base(alloc, _storage_begin(), {}, N, true) {}
 		
 		/// (3)
 		__utl_interface_export __utl_always_inline
 		constexpr small_vector(std::size_t count,
 							   T const& value,
 							   Allocator const& alloc = Allocator()):
-			__mtl_base(alloc, no_init)
+			__utl_base(alloc, no_init)
 		{
 			_count_constructor_prep(count);
 			for (auto i = this->begin(); i != this->end(); ++i) {
@@ -1037,7 +1037,7 @@ namespace utl {
 		__utl_interface_export __utl_always_inline
 		constexpr explicit small_vector(std::size_t count,
 										Allocator const& alloc = Allocator()):
-			__mtl_base(alloc, no_init)
+			__utl_base(alloc, no_init)
 		{
 			_count_constructor_prep(count);
 			for (auto i = this->begin(); i != this->end(); ++i) {
@@ -1051,7 +1051,7 @@ namespace utl {
 											utl::no_init_t,
 											Allocator const& alloc = Allocator())
 			requires(std::is_trivial_v<T>):
-			__mtl_base(alloc, no_init)
+			__utl_base(alloc, no_init)
 		{
 			_count_constructor_prep(count);
 		}
@@ -1062,7 +1062,7 @@ namespace utl {
 		constexpr small_vector(InputIt first, InputIt last,
 							   Allocator const& alloc = Allocator())
 		requires requires{ { *first } -> convertible_to<T>; }:
-			__mtl_base(alloc, no_init)
+			__utl_base(alloc, no_init)
 		{
 			_count_constructor_prep(std::distance(first, last));
 			this->_copy_construct_range(first, last, this->begin());
@@ -1071,7 +1071,7 @@ namespace utl {
 		/// (6)
 		__utl_interface_export __utl_always_inline
 		constexpr small_vector(small_vector const& rhs):
-			__mtl_base(rhs._alloc(), no_init)
+			__utl_base(rhs._alloc(), no_init)
 		{
 			_copy_constructor_impl(rhs);
 		}
@@ -1079,7 +1079,7 @@ namespace utl {
 		template <std::size_t M>
 		__utl_interface_export __utl_always_inline
 		constexpr small_vector(small_vector<T, M, Allocator> const& rhs):
-			__mtl_base(rhs._alloc(), no_init)
+			__utl_base(rhs._alloc(), no_init)
 		{
 			_copy_constructor_impl(rhs);
 		}
@@ -1087,7 +1087,7 @@ namespace utl {
 		/// (6b)
 		__utl_interface_export __utl_always_inline
 		constexpr small_vector(vector<T, Allocator> const& rhs):
-			__mtl_base(rhs._alloc(), no_init)
+			__utl_base(rhs._alloc(), no_init)
 		{
 			_copy_constructor_impl(rhs);
 		}
@@ -1095,7 +1095,7 @@ namespace utl {
 		/// (7)
 		__utl_interface_export __utl_always_inline
 		constexpr small_vector(small_vector const& rhs, Allocator const& alloc):
-			__mtl_base(alloc, no_init)
+			__utl_base(alloc, no_init)
 		{
 			_copy_constructor_impl(rhs);
 		}
@@ -1103,7 +1103,7 @@ namespace utl {
 		template <std::size_t M>
 		__utl_interface_export __utl_always_inline
 		constexpr small_vector(small_vector<T, M, Allocator> const& rhs, Allocator const& alloc):
-			__mtl_base(alloc, no_init)
+			__utl_base(alloc, no_init)
 		{
 			_copy_constructor_impl(rhs);
 		}
@@ -1111,7 +1111,7 @@ namespace utl {
 		/// (7b)
 		__utl_interface_export __utl_always_inline
 		constexpr small_vector(vector<T, Allocator> const& rhs, Allocator const& alloc):
-			__mtl_base(alloc, no_init)
+			__utl_base(alloc, no_init)
 		{
 			_copy_constructor_impl(rhs);
 		}
@@ -1119,7 +1119,7 @@ namespace utl {
 		/// (8)
 		__utl_interface_export __utl_always_inline
 		constexpr small_vector(small_vector&& rhs) noexcept:
-			__mtl_base(std::move(rhs._alloc()), no_init)
+			__utl_base(std::move(rhs._alloc()), no_init)
 		{
 			_move_constructor_impl<0>(std::move(rhs));
 		}
@@ -1127,14 +1127,14 @@ namespace utl {
 		template <std::size_t M>
 		__utl_interface_export __utl_always_inline
 		constexpr small_vector(small_vector<T, M, Allocator>&& rhs) noexcept:
-			__mtl_base(std::move(rhs._alloc()), no_init)
+			__utl_base(std::move(rhs._alloc()), no_init)
 		{
 			_move_constructor_impl<M>(std::move(rhs));
 		}
 		/// (8b)
 		__utl_interface_export __utl_always_inline
 		constexpr small_vector(vector<T, Allocator>&& rhs) noexcept:
-			__mtl_base(std::move(rhs._alloc()), no_init)
+			__utl_base(std::move(rhs._alloc()), no_init)
 		{
 			_move_constructor_impl<0>(std::move(rhs));
 		}
@@ -1142,7 +1142,7 @@ namespace utl {
 		/// (9)
 		__utl_interface_export __utl_always_inline
 		constexpr small_vector(small_vector&& rhs, Allocator const& alloc) noexcept:
-			__mtl_base(alloc, no_init)
+			__utl_base(alloc, no_init)
 		{
 			_move_constructor_impl<N>(std::move(rhs));
 		}
@@ -1150,14 +1150,14 @@ namespace utl {
 		template <std::size_t M>
 		__utl_interface_export __utl_always_inline
 		constexpr small_vector(small_vector<T, M, Allocator>&& rhs, Allocator const& alloc) noexcept:
-			__mtl_base(alloc, no_init)
+			__utl_base(alloc, no_init)
 		{
 			_move_constructor_impl(std::move(rhs));
 		}
 		/// (9b)
 		__utl_interface_export __utl_always_inline
 		constexpr small_vector(vector<T, Allocator>&& rhs, Allocator const& alloc) noexcept:
-			__mtl_base(alloc, no_init)
+			__utl_base(alloc, no_init)
 		{
 			_move_constructor_impl(std::move(rhs));
 		}
@@ -1166,18 +1166,18 @@ namespace utl {
 		__utl_interface_export __utl_always_inline
 		constexpr small_vector(std::initializer_list<T> ilist,
 							   Allocator const& alloc = Allocator()):
-			__mtl_base(alloc, no_init)
+			__utl_base(alloc, no_init)
 		{
 			_count_constructor_prep(ilist.size());
 			this->_copy_construct_range(ilist.begin(), ilist.end(), this->_begin());
 		}
 		
 		/// MARK: operator=
-		using __mtl_base::operator=;
+		using __utl_base::operator=;
 		/// (1)
 		__utl_interface_export __utl_always_inline
 		constexpr small_vector& operator=(small_vector const& other)& {
-			static_cast<__mtl_base&>(*this) = static_cast<__mtl_base const&>(other);
+			static_cast<__utl_base&>(*this) = static_cast<__utl_base const&>(other);
 			return *this;
 		}
 		/// (2)
@@ -1185,13 +1185,13 @@ namespace utl {
 		constexpr small_vector& operator=(small_vector&& other)& noexcept(std::allocator_traits<Allocator>::propagate_on_container_move_assignment::value ||
 																		  std::allocator_traits<Allocator>::is_always_equal::value)
 		{
-			static_cast<__mtl_base&>(*this) = static_cast<__mtl_base&&>(other);
+			static_cast<__utl_base&>(*this) = static_cast<__utl_base&&>(other);
 			return *this;
 		}
 		/// (3)
 		__utl_interface_export __utl_always_inline
 		constexpr small_vector& operator=(std::initializer_list<T> ilist)& {
-			static_cast<__mtl_base&>(*this) = ilist;
+			static_cast<__utl_base&>(*this) = ilist;
 			return *this;
 		}
 		
@@ -1278,8 +1278,8 @@ namespace utl {
 		const_pointer _storage_begin() const noexcept { return reinterpret_cast<const_pointer>(_storage); }
 		const_pointer _storage_end() const noexcept { return reinterpret_cast<const_pointer>(_storage) + N; }
 		
-		__mtl_base& _as_base() noexcept { return static_cast<__mtl_base&>(*this); }
-		__mtl_base const& _as_base() const noexcept { return static_cast<__mtl_base const&>(*this); }
+		__utl_base& _as_base() noexcept { return static_cast<__utl_base&>(*this); }
+		__utl_base const& _as_base() const noexcept { return static_cast<__utl_base const&>(*this); }
 		
 		alignas (N != 0 ? alignof(T) : 1) char _storage[sizeof(T) * N];
 	};

@@ -330,46 +330,46 @@ namespace _VMTL {
 	inline constexpr handedness default_handedness = handedness::right_handed;
 	
 	/// MARK: Basic Algorithms
-	template <typename T>
+	template <typename T> requires (std::is_arithmetic_v<T>)
 	constexpr T const& max(T const& a, T const& b) {
 		return (a < b) ? b : a;
 	}
 
-	template <typename T>
+	template <typename T> requires (std::is_arithmetic_v<T>)
 	constexpr T& max(T& a, T& b) {
 		return const_cast<T&>(max(const_cast<T const&>(a),
 								  const_cast<T const&>(b)));
 	}
 
-	template <typename T>
+	template <typename T> requires (std::is_arithmetic_v<T>)
 	constexpr T const& max(T const& a, _VMTL::same_as<T> auto const& b, _VMTL::same_as<T> auto const&... c) {
 		return max(max(a, b), c...);
 	}
 
-	template <typename T>
+	template <typename T> requires (std::is_arithmetic_v<T>)
 	constexpr T& max(T& a, _VMTL::same_as<T> auto& b, _VMTL::same_as<T> auto&... c) {
 		return const_cast<T&>(max(const_cast<T const&>(a),
 								  const_cast<T const&>(b),
 								  const_cast<T const&>(c)...));
 	}
 	
-	template <typename T>
+	template <typename T> requires (std::is_arithmetic_v<T>)
 	constexpr T const& min(T const& a, T const& b) {
 		return (b < a) ? b : a;
 	}
 
-	template <typename T>
+	template <typename T> requires (std::is_arithmetic_v<T>)
 	constexpr T& min(T& a, T& b) {
 		return const_cast<T&>(min(const_cast<T const&>(a),
 								  const_cast<T const&>(b)));
 	}
 
-	template <typename T>
+	template <typename T> requires (std::is_arithmetic_v<T>)
 	constexpr T const& min(T const& a, _VMTL::same_as<T> auto const& b, _VMTL::same_as<T> auto const&... c) {
 		return min(min(a, b), c...);
 	}
 
-	template <typename T>
+	template <typename T> requires (std::is_arithmetic_v<T>)
 	constexpr T& min(T& a, _VMTL::same_as<T> auto& b, _VMTL::same_as<T> auto&... c) {
 		return const_cast<T&>(min(const_cast<T const&>(a),
 								  const_cast<T const&>(b),

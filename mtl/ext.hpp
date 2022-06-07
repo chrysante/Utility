@@ -390,6 +390,8 @@ namespace _VMTL {
 		static constexpr vector<T, 4, O> pink   = { 1.0, 0.0, 1.0, 1.0 };
 		static constexpr vector<T, 4, O> black  = { 0.0, 0.0, 0.0, 1.0 };
 		static constexpr vector<T, 4, O> white  = { 1.0, 1.0, 1.0, 1.0 };
+		
+		static constexpr vector<T, 4, O> clear  = { 0.0, 0.0, 0.0, 0.0 };
 	};
 
 	template <real_scalar T = float, vector_options O = vector_options{}>
