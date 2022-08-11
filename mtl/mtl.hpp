@@ -3,9 +3,14 @@
 #ifndef __MTL_MTL_HPP_INCLUDED__
 #define __MTL_MTL_HPP_INCLUDED__
 
-#include "core.hpp"
-#include "ext.hpp"
-#include "shapes.hpp"
+#include "__vector.hpp"
+#include "__matrix.hpp"
+#include "__complex.hpp"
+#include "__quaternion.hpp"
+#include "__ext.hpp"
+#include "__shapes.hpp"
+
+#include "__undef.hpp"
 
 #endif // __MTL_MTL_HPP_INCLUDED__
 

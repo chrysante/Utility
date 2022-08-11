@@ -1,7 +1,6 @@
 #include "Catch2.hpp"
 
-#include <mtl/quaternion.hpp>
-#include <mtl/matrix.hpp>
+#include <mtl/mtl.hpp>
 
 TEST_CASE("quaternion multiplication") {
 	mtl::quaternion<int> const a = { 1, 2, 3, 4 };

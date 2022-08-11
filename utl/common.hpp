@@ -299,12 +299,13 @@ namespace utl {
 	}
 	
 	/// MARK: Iota
-	/// Unlike std::itoa, can be used as range argument in a range-based for loop like this:
+	/// Unlike std::itoa, utl::iota can be used as range argument in a range-based for loop like this:
 	/// for (int i: utl::iota<int>(0, 10); Aquivalent to: for (int i = 0; i < 10; ++i)
-	template <typename T>
-	class iota {
-		static_assert(std::is_integral_v<T>);
-		
+	template <typename>
+	class iota;
+	
+	template <std::integral T>
+	class iota<T> {
 	public:
 		using value_type = T;
 		using size_type = std::conditional_t<std::is_signed_v<T>, std::ptrdiff_t, std::size_t>;
@@ -313,12 +314,15 @@ namespace utl {
 		class iterator {
 			template <typename>
 			friend class iota;
+			
+			__utl_interface_export
 			constexpr explicit iterator(value_type i):
 				_i(i) {}
 			
 		public:
 			__utl_interface_export
 			constexpr value_type operator*() const { return _i; }
+			
 			__utl_interface_export
 			constexpr iterator& operator++() {
 				++_i;

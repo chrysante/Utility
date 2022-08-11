@@ -6,7 +6,7 @@
 #include "__base.hpp"
 _MTL_SYSTEM_HEADER_
 
-#include "vector.hpp"
+#include "__vector.hpp"
 
 #include <algorithm>
 #include <iosfwd>
@@ -38,7 +38,7 @@ namespace _VMTL {
 	
 	template <typename T, std::size_t Dim, vector_options O>
 	std::ostream& operator<<(std::ostream& str, AABB<T, Dim, O> const& aabb) {
-		return [](auto& x) -> auto& { return x; }(str) << "mtl::AABB{ .lower_bound = " << aabb.lower_bound() << ", .upper_bound = " << aabb.upper_bound() << " }";
+		return [](auto& x) -> auto& { return x; }(str) << "AABB{ .lower_bound = " << aabb.lower_bound() << ", .upper_bound = " << aabb.upper_bound() << " }";
 	}
 	
 	template <typename... T, std::size_t Dim, vector_options... O>
@@ -65,7 +65,7 @@ namespace _VMTL {
 	
 	template <typename T, std::size_t Dim, vector_options O>
 	constexpr T volume(AABB<T, Dim, O> const& b) {
-		return fold(b.size(), mtl::__mtl_multiplies);
+		return fold(b.size(), _VMTL::__mtl_multiplies);
 	}
 	
 	template <typename T, std::size_t Dim, vector_options O>
@@ -216,7 +216,7 @@ namespace _VMTL {
 	template <typename T, std::size_t Dim, vector_options O, typename U, vector_options P>
 	constexpr bool do_intersect(AABB<T, Dim, O> r, vector<U, Dim, P> const& p) {
 		return map(r.lower_bound(), r.size(), p,
-				   [](auto o, auto e, auto p) { return p >= o && p <= o + e; }).fold(mtl::__mtl_logical_and);
+				   [](auto o, auto e, auto p) { return p >= o && p <= o + e; }).fold(_VMTL::__mtl_logical_and);
 	}
 	
 	/// Point - Box
@@ -270,8 +270,6 @@ namespace _VMTL {
 	constexpr bool do_intersect(AABB<U, Dim, P> a, sphere<T, Dim, O> b) {
 		return do_intersect(b, a);
 	}
-	
-	
 	
 }
 

@@ -8,9 +8,9 @@ _MTL_SYSTEM_HEADER_
 
 
 #include "__common.hpp"
-#include "vector.hpp"
-#include "matrix.hpp"
-#include "quaternion.hpp"
+#include "__vector.hpp"
+#include "__matrix.hpp"
+#include "__quaternion.hpp"
 #include <cmath>
 #include <concepts>
 
@@ -274,7 +274,7 @@ namespace _VMTL {
 		// pitch (y-axis rotation)
 		T const sinp = 2 * (q.__mtl_at(0) * q.__mtl_at(2) - q.__mtl_at(3) * q.__mtl_at(1));
 		T const pitch = std::abs(sinp) >= 1 ?
-			std::copysign(mtl::constants<T>::pi / 2, sinp) : // use 90 degrees if out of range
+			std::copysign(_VMTL::constants<T>::pi / 2, sinp) : // use 90 degrees if out of range
 			std::asin(sinp);
 
 		// yaw (z-axis rotation)
@@ -375,7 +375,7 @@ namespace _VMTL {
 	template <std::floating_point T, vector_options O>
 	struct colors<vector<T, 4, O>> {
 		static constexpr vector<T, 4, O> hex(std::uint32_t value) {
-			value = mtl::__mtl_byte_swap(value);
+			value = _VMTL::__mtl_byte_swap(value);
 			vector<std::uint8_t, 4, O> chars;
 			std::memcpy(&chars, &value, sizeof(value));
 			return vector<T, 4, O>(chars) / T((1 << 8) - 1);

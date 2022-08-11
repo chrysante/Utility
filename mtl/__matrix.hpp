@@ -11,10 +11,7 @@ _MTL_SYSTEM_HEADER_
 #include "__typedefs.hpp"
 #include "__arithmetic.hpp"
 
-#include "vector.hpp"
-
-
-#include "__std_concepts.hpp"
+#include "__vector.hpp"
 
 #include <iosfwd>
 #include <sstream>
@@ -117,11 +114,11 @@ namespace _VMTL {
 	struct columns_tag{} inline constexpr columns{};
 
 	/// MARK: Map
-	template <typename... T, std::size_t R, std::size_t C, vector_options... O, _VMTL::invocable<T...> F>
+	template <typename... T, std::size_t R, std::size_t C, vector_options... O, std::invocable<T...> F>
 	__mtl_mathfunction __mtl_always_inline
 	constexpr auto __map_impl(F&& f, matrix<T, R, C, O> const&... m) {
 		using U = std::invoke_result_t<F, T...>;
-		if constexpr (mtl::same_as<U, void>) {
+		if constexpr (std::same_as<U, void>) {
 			for (std::size_t i = 0; i < R * C; ++i) {
 				std::invoke(__mtl_forward(f), m.__mtl_at(i)...);
 			}
@@ -132,7 +129,7 @@ namespace _VMTL {
 		}
 	}
 	
-	template <typename T0, std::size_t R, std::size_t C, vector_options O0, _VMTL::invocable<T0> F>
+	template <typename T0, std::size_t R, std::size_t C, vector_options O0, std::invocable<T0> F>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr auto map(matrix<T0, R, C, O0> const& m0,
 					   F&& f) 
@@ -142,7 +139,7 @@ namespace _VMTL {
 	
 	template <typename T0, typename T1, std::size_t R, std::size_t C,
 			  vector_options O0, vector_options O1,
-			  _VMTL::invocable<T0, T1> F>
+			  std::invocable<T0, T1> F>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr auto map(matrix<T0, R, C, O0> const& m0,
 					   matrix<T1, R, C, O1> const& m1,
@@ -153,7 +150,7 @@ namespace _VMTL {
 	
 	template <typename T0, typename T1, typename T2, std::size_t R, std::size_t C,
 			  vector_options O0, vector_options O1, vector_options O2,
-			  _VMTL::invocable<T0, T1, T2> F>
+			  std::invocable<T0, T1, T2> F>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr auto map(matrix<T0, R, C, O0> const& m0,
 					   matrix<T1, R, C, O1> const& m1,
@@ -165,7 +162,7 @@ namespace _VMTL {
 	
 	template <typename T0, typename T1, typename T2, typename T3, std::size_t R, std::size_t C,
 			  vector_options O0, vector_options O1, vector_options O2, vector_options O3,
-			  _VMTL::invocable<T0, T1, T2, T3> F>
+			  std::invocable<T0, T1, T2, T3> F>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr auto map(matrix<T0, R, C, O0> const& m0,
 					   matrix<T1, R, C, O1> const& m1,
@@ -178,7 +175,7 @@ namespace _VMTL {
 	
 	template <typename T0, typename T1, typename T2, typename T3, typename T4, std::size_t R, std::size_t C,
 			  vector_options O0, vector_options O1, vector_options O2, vector_options O3, vector_options O4,
-			  _VMTL::invocable<T0, T1, T2, T3, T4> F>
+			  std::invocable<T0, T1, T2, T3, T4> F>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr auto map(matrix<T0, R, C, O0> const& m0,
 					   matrix<T1, R, C, O1> const& m1,
@@ -192,7 +189,7 @@ namespace _VMTL {
 	
 	template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, std::size_t R, std::size_t C,
 			  vector_options O0, vector_options O1, vector_options O2, vector_options O3, vector_options O4, vector_options O5,
-			  _VMTL::invocable<T0, T1, T2, T3, T4, T5> F>
+			  std::invocable<T0, T1, T2, T3, T4, T5> F>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr auto map(matrix<T0, R, C, O0> const& m0,
 					   matrix<T1, R, C, O1> const& m1,
@@ -544,7 +541,7 @@ namespace _VMTL {
 			__matrix_base(columns, std::invoke(f, ColumnI)...) {}
 		
 		/// Conversion Constructor
-		template <_VMTL::convertible_to<T> U, vector_options P>
+		template <std::convertible_to<T> U, vector_options P>
 		__mtl_always_inline __mtl_interface_export
 		constexpr __matrix_base(matrix<U, Rows, Columns, P> const& rhs): __mtl_base{ static_cast<T>(rhs.__mtl_at(AllI))... } {}
 		
@@ -754,14 +751,14 @@ namespace _VMTL {
 		constexpr T const* data() const { return this->__data; }
 		
 		/// swizzle:
-		template <_VMTL::convertible_to<std::size_t>... I>
+		template <std::convertible_to<std::size_t>... I>
 		__mtl_always_inline __mtl_interface_export
 		constexpr matrix<T, sizeof...(I), Columns, O> row_swizzle(I... i) const
 		requires(sizeof...(I) > 0)
 		{
 			return { _VMTL::rows, row(i)... };
 		}
-		template <_VMTL::convertible_to<std::size_t>... I>
+		template <std::convertible_to<std::size_t>... I>
 		__mtl_always_inline __mtl_interface_export
 		constexpr matrix<T, Rows, sizeof...(I), O> column_swizzle(I... i) const
 		requires(sizeof...(I) > 0)
@@ -772,7 +769,7 @@ namespace _VMTL {
 		
 		/// Map
 		__mtl_always_inline __mtl_interface_export
-		constexpr auto map(_VMTL::invocable<T> auto&& f) const { return _VMTL::map(*this, __mtl_forward(f)); }
+		constexpr auto map(std::invocable<T> auto&& f) const { return _VMTL::map(*this, __mtl_forward(f)); }
 		
 		/// Fold
 		__mtl_always_inline __mtl_interface_export
@@ -820,7 +817,7 @@ namespace _VMTL {
  
 	/// MARK: - Operators
 	template <typename T, typename U = T, std::size_t Rows, std::size_t Columns, vector_options O, vector_options P = O>
-	requires requires(T&& t, U&& u) { { t == u } -> _VMTL::convertible_to<bool>; }
+	requires requires(T&& t, U&& u) { { t == u } -> std::convertible_to<bool>; }
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr bool operator==(matrix<T, Rows, Columns, O> const& m,
 							  matrix<U, Rows, Columns, P> const& n) {
@@ -828,7 +825,7 @@ namespace _VMTL {
 	}
 	
 	template <typename T, scalar U, std::size_t Rows, std::size_t Columns, vector_options O>
-	requires requires(T&& t, U&& u) { { t == u } -> _VMTL::convertible_to<bool>; }
+	requires requires(T&& t, U&& u) { { t == u } -> std::convertible_to<bool>; }
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr bool operator==(matrix<T, Rows, Columns, O> const& m,
 							  U const& x) {
@@ -836,7 +833,7 @@ namespace _VMTL {
 	}
 	
 	template <scalar T, typename U, std::size_t Rows, std::size_t Columns, vector_options O>
-	requires requires(T&& t, U&& u) { { t == u } -> _VMTL::convertible_to<bool>; }
+	requires requires(T&& t, U&& u) { { t == u } -> std::convertible_to<bool>; }
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr bool operator==(T const& x,
 							  matrix<U, Rows, Columns, O> const& m) {
@@ -844,7 +841,7 @@ namespace _VMTL {
 	}
 	
 	template <typename T, std::size_t Rows, std::size_t Columns, vector_options O>
-	requires requires(T&& t, std::ostream& str) { { str << t } -> _VMTL::convertible_to<std::ostream&>; }
+	requires requires(T&& t, std::ostream& str) { { str << t } -> std::convertible_to<std::ostream&>; }
 	__mtl_interface_export
 	std::ostream& operator<<(std::ostream& _str, matrix<T, Rows, Columns, O> const& m) {
 		/// To stop the compiler from checking operations on str, since only <iosfwd> is included
@@ -972,7 +969,7 @@ namespace _VMTL {
 	}
 	template <scalar T, vector_options O>
 	__mtl_mathfunction __mtl_interface_export
-		constexpr matrix2x2<__mtl_floatify(T), O> inverse(matrix2x2<T, O> const& m) {
+	constexpr matrix2x2<__mtl_floatify(T), O> inverse(matrix2x2<T, O> const& m) {
 		if constexpr (std::is_floating_point_v<T>) {
 			return __mtl_inverse(m);
 		}
@@ -982,7 +979,7 @@ namespace _VMTL {
 	}
 	template <typename T, vector_options O> requires (std::is_integral_v<T>)
 	__mtl_mathfunction __mtl_interface_export
-		constexpr matrix2x2<__mtl_floatify(T), O> integral_inverse(matrix2x2<T, O> const& m) {
+	constexpr matrix2x2<__mtl_floatify(T), O> integral_inverse(matrix2x2<T, O> const& m) {
 		return __mtl_inverse(m);
 	}
 	template <scalar T, vector_options O>
@@ -1003,7 +1000,7 @@ namespace _VMTL {
 	}
 	template <scalar T, vector_options O>
 	__mtl_mathfunction __mtl_interface_export
-		constexpr matrix3x3<__mtl_floatify(T), O> inverse(matrix3x3<T, O> const& m) {
+	constexpr matrix3x3<__mtl_floatify(T), O> inverse(matrix3x3<T, O> const& m) {
 		if constexpr (std::is_floating_point_v<T>) {
 			return __mtl_inverse(m);
 		}
@@ -1012,8 +1009,8 @@ namespace _VMTL {
 		}
 	}
 	template <typename T, vector_options O> requires (std::is_integral_v<T>)
-		__mtl_mathfunction __mtl_interface_export
-		constexpr matrix3x3<__mtl_floatify(T), O> integral_inverse(matrix3x3<T, O> const& m) {
+	__mtl_mathfunction __mtl_interface_export
+	constexpr matrix3x3<__mtl_floatify(T), O> integral_inverse(matrix3x3<T, O> const& m) {
 		return __mtl_inverse(m);
 	}
 	template <scalar T, vector_options O>
@@ -1141,7 +1138,7 @@ namespace _VMTL {
 	}
 	template <scalar T, vector_options O>
 	__mtl_mathfunction __mtl_interface_export
-		constexpr matrix4x4<__mtl_floatify(T), O> inverse(matrix4x4<T, O> const& m) {
+	constexpr matrix4x4<__mtl_floatify(T), O> inverse(matrix4x4<T, O> const& m) {
 		if constexpr (std::is_floating_point_v<T>) {
 			return __mtl_inverse(m);
 		}
@@ -1150,8 +1147,8 @@ namespace _VMTL {
 		}
 	}
 	template <typename T, vector_options O> requires (std::is_integral_v<T>)
-		__mtl_mathfunction __mtl_interface_export
-		constexpr matrix4x4<__mtl_floatify(T), O> integral_inverse(matrix4x4<T, O> const& m) {
+	__mtl_mathfunction __mtl_interface_export
+	constexpr matrix4x4<__mtl_floatify(T), O> integral_inverse(matrix4x4<T, O> const& m) {
 		return __mtl_inverse(m);
 	}
 	

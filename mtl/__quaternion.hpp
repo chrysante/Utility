@@ -10,10 +10,9 @@ _MTL_SYSTEM_HEADER_
 #define __MTL_DECLARE_QUATERNION_TYPEDEFS__
 #include "__typedefs.hpp"
 
-#include "vector.hpp"
-#include "complex.hpp"
+#include "__vector.hpp"
+#include "__complex.hpp"
 
-#include "__std_concepts.hpp"
 #include <cmath>
 #include <iosfwd>
 
@@ -51,7 +50,7 @@ namespace _VMTL {
 		constexpr quaternion(_VMTL::vector<T, 4, __mtl_options> const& v): __mtl_base(v) {}
 		
 		/// Conversion Constructor
-		template <_VMTL::convertible_to<T> U>
+		template <std::convertible_to<T> U>
 		constexpr quaternion(quaternion<U> const& rhs): __mtl_base(rhs) {}
 		
 		quaternion& operator=(quaternion const&)& = default;
@@ -129,7 +128,7 @@ namespace _VMTL {
 		inline namespace quaternion_literals {
 			/*
 			 _i* literals are defined in complex.hpp and can be used in conjunction with these
-			 ‘using namespace mtl::quaternion_literals;' also pulls in the _i* complex literals
+			 'using namespace mtl::quaternion_literals;' also pulls in the _i* complex literals
 			 */
 			inline constexpr quaternion<double>             operator"" _j(long double x) { return { 0, 0, static_cast<double>(x), 0 }; }
 			inline constexpr quaternion<float>              operator"" _jf(long double x) { return { 0, 0, static_cast<float>(x), 0 }; }
@@ -301,35 +300,35 @@ namespace _VMTL {
 	
 	/// MARK: - operator==
 	template <typename T, typename U>
-	requires requires(T&& t, U&& u) { { t == u } -> _VMTL::convertible_to<bool>; }
+	requires requires(T&& t, U&& u) { { t == u } -> std::convertible_to<bool>; }
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr bool operator==(quaternion<T> const& a, quaternion<U> const& b) {
 		return __as_vector(a) == __as_vector(b);
 	}
 	
 	template <typename T, typename U>
-	requires requires(T&& t, U&& u) { { t == u } -> _VMTL::convertible_to<bool>; }
+	requires requires(T&& t, U&& u) { { t == u } -> std::convertible_to<bool>; }
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr bool operator==(quaternion<T> const& a, complex<U> const& b) {
 		return real(a) == real(b) && a.__mtl_at(1) == imag(b) && a.__mtl_at(2) == 0 && a.__mtl_at(3) == 0;
 	}
 	
 	template <typename T, real_scalar U>
-	requires requires(T&& t, U&& u) { { t == u } -> _VMTL::convertible_to<bool>; }
+	requires requires(T&& t, U&& u) { { t == u } -> std::convertible_to<bool>; }
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr bool operator==(quaternion<T> const& a, U const& b) {
 		return real(a) == b && a.__mtl_at(1) == 0 && a.__mtl_at(2) == 0 && a.__mtl_at(3) == 0;
 	}
 	
 	template <typename T, typename U>
-	requires requires(T&& t, U&& u) { { t == u } -> _VMTL::convertible_to<bool>; }
+	requires requires(T&& t, U&& u) { { t == u } -> std::convertible_to<bool>; }
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr bool operator==(complex<T> const& a, quaternion<U> const& b) {
 		return real(a) == real(b) && imag(a) == b.__mtl_at(1) && 0 == b.__mtl_at(2) && 0 == b.__mtl_at(3);
 	}
 	
 	template <real_scalar T, typename U>
-	requires requires(T&& t, U&& u) { { t == u } -> _VMTL::convertible_to<bool>; }
+	requires requires(T&& t, U&& u) { { t == u } -> std::convertible_to<bool>; }
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr bool operator==(T const& a, quaternion<U> const& b) {
 		return a == real(b) && 0 == b.__mtl_at(1) && 0 == b.__mtl_at(2) && 0 == b.__mtl_at(3);
@@ -531,24 +530,21 @@ namespace _VMTL {
 /// MARK: - Decomposition
 namespace _VMTL {
 
-	template <std::size_t I, typename T>
+	template <std::size_t I, typename T> requires (I < 2)
 	auto const& get(quaternion<T> const& v) {
 		if constexpr (I == 0) {
 			return v.__mtl_at(0);
 		}
 		else {
-			static_assert(I == 1);
 			return v.imag;
 		}
-		
 	}
-	template <std::size_t I, typename T>
+	template <std::size_t I, typename T> requires (I < 2)
 	auto& get(quaternion<T>& v) {
 		if constexpr (I == 0) {
 			return v.__mtl_at(0);
 		}
 		else {
-			static_assert(I == 1);
 			return v.imag;
 		}
 	}
@@ -574,6 +570,5 @@ template <typename T>
 struct std::tuple_element<1, _VMTL::quaternion<T>> {
 	using type = typename _VMTL::quaternion<T>::__imag_t;
 };
-
 
 #endif // __MTL_QUATERNION_HPP_INCLUDED__

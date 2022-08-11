@@ -10,9 +10,8 @@ _MTL_SYSTEM_HEADER_
 #define __MTL_DECLARE_COMPLEX_TYPEDEFS__
 #include "__typedefs.hpp"
 
-#include "vector.hpp"
+#include "__vector.hpp"
 
-#include "__std_concepts.hpp"
 #include <cmath>
 #include <iosfwd>
 
@@ -47,7 +46,7 @@ namespace _VMTL {
 		explicit constexpr complex(quaternion<T> const& q): __mtl_base(q.__mtl_at(0), q.__mtl_at(1)) {}
 		
 		/// Conversion Constructor
-		template <_VMTL::convertible_to<T> U>
+		template <std::convertible_to<T> U>
 		__mtl_always_inline __mtl_interface_export
 		constexpr complex(complex<U> const& rhs): __mtl_base(rhs) {}
 		
@@ -241,19 +240,19 @@ namespace _VMTL {
 	
 	/// MARK: - operator==
 	template <typename T, typename U>
-	requires requires(T&& t, U&& u) { { t == u } -> _VMTL::convertible_to<bool>; }
+	requires requires(T&& t, U&& u) { { t == u } -> std::convertible_to<bool>; }
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr bool operator==(complex<T> const& a, complex<U> const& b) {
 		return __as_vector(a) == __as_vector(b);
 	}
 	template <typename T, real_scalar U>
-	requires requires(T&& t, U&& u) { { t == u } -> _VMTL::convertible_to<bool>; }
+	requires requires(T&& t, U&& u) { { t == u } -> std::convertible_to<bool>; }
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr bool operator==(complex<T> const& a, U const& b) {
 		return real(a) == b && imag(a) == 0;
 	}
 	template <real_scalar T, typename U>
-	requires requires(T&& t, U&& u) { { t == u } -> _VMTL::convertible_to<bool>; }
+	requires requires(T&& t, U&& u) { { t == u } -> std::convertible_to<bool>; }
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr bool operator==(T const& a, complex<U> const& b) {
 		return a == real(b) && 0 == imag(b);
@@ -604,3 +603,4 @@ struct std::tuple_element<I, _VMTL::complex<T>> {
 };
 
 #endif // __MTL_COMPLEX_HPP_INCLUDED__
+

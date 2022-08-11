@@ -10,7 +10,7 @@ namespace {
 }
 
 #define _wrap(...) _wrap_type<__VA_ARGS__>{}
-#define _wrap_promote(...) _wrap(__mtl_promote(__VA_ARGS__))
+#define _wrap_promote(...) _wrap(mtl::promote_t<__VA_ARGS__>)
 
 TEST_CASE("promote") {
 	using namespace mtl;

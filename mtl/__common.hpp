@@ -9,7 +9,7 @@ _MTL_SYSTEM_HEADER_
 #include <cmath>
 #include <utility>
 #include <iosfwd>
-#include "__std_concepts.hpp"
+#include <concepts>
 
 #define __MTL_DECLARE_STDINT_TYPEDEFS__
 #include "__typedefs.hpp"
@@ -39,7 +39,7 @@ namespace _VMTL {
 		
 		bool __packed = MTL_DEFAULT_PACKED;
 		
-		friend constexpr vector_options combine(_VMTL::same_as<vector_options> auto const&... o) {
+		friend constexpr vector_options combine(std::same_as<vector_options> auto const&... o) {
 			return { .__packed = (o.packed() && ...) };
 		}
 	};
@@ -47,11 +47,13 @@ namespace _VMTL {
 	/// MARK: - Forward Declarations
 	template <typename>
 	struct complex;
+	
 	template <typename>
 	struct quaternion;
 	
 	template <typename, std::size_t, vector_options = vector_options{}>
 	struct vector;
+	
 	template <typename, std::size_t, std::size_t, vector_options = vector_options{}>
 	struct matrix;
 	
@@ -101,6 +103,17 @@ namespace _VMTL {
 	struct is_matrix<matrix<T, R, C, O> volatile> : std::true_type {};
 	template <typename T, std::size_t R, std::size_t C, vector_options O>
 	struct is_matrix<matrix<T, R, C, O> const volatile> : std::true_type {};
+	
+	template <typename T>
+	struct __is_extern_type_impl: std::conjunction<
+		std::negation<is_complex<T>>,
+		std::negation<is_quaternion<T>>,
+		std::negation<is_vector<T>>,
+		std::negation<is_matrix<T>>
+	> {};
+	
+	template <typename T>
+	struct __is_extern_type: __is_extern_type_impl<std::decay_t<T>> {};
 	
 	template <typename T>
 	struct is_scalar: std::disjunction<is_real_scalar<T>, is_complex<T>, is_quaternion<T>> {};
@@ -182,6 +195,34 @@ namespace _VMTL {
 	template <typename T, std::size_t N, vector_options O>
 	struct get_vector_options<vector<T, N, O> const volatile> { static constexpr vector_options value = O; };
 	
+	template <typename...>
+	struct __mtl_template_true_type: std::true_type {};
+	
+	template <typename...>
+	struct __mtl_template_false_type: std::false_type {};
+	
+	/// MARK: Tuple Size
+	template <typename T, std::size_t = sizeof(T)>
+	std::true_type __is_defined_impl(T *);
+	std::false_type __is_defined_impl(...);
+	
+	template <typename T>
+	using __is_defined = decltype(__is_defined_impl(std::declval<T*>()));
+	
+	template <typename T, std::size_t N>
+	concept __tuple_of_size = __is_defined<std::tuple_size<std::decay_t<T>>>::value && (std::tuple_size<std::decay_t<T>>::value == N);
+	
+	template <typename, typename, typename...>
+	struct __tuple_conversion_test;
+	
+	template <typename T, typename... Args, std::size_t... I>
+	struct __tuple_conversion_test<T, std::index_sequence<I...>, Args...> {
+		static constexpr bool value = (requires(T&& t) { { get<I>(t) } -> std::convertible_to<Args>; } && ...);
+	};
+	
+	template <typename T, typename... Args>
+	concept __tuple_of_types = __tuple_of_size<T, sizeof...(Args)> && __tuple_conversion_test<T, std::index_sequence_for<Args...>, Args...>::value;
+	
 	/// MARK: - Concepts
 	template <typename T>
 	concept real_scalar = is_real_scalar<T>::value;
@@ -189,7 +230,13 @@ namespace _VMTL {
 	concept scalar      = is_scalar<T>::value;
 	
 	template <typename T, typename U, typename ... V>
-	concept __mtl_any_of = (_VMTL::same_as<T, U> || (_VMTL::same_as<T, V> || ...));
+	concept __mtl_any_of = (std::same_as<T, U> || (std::same_as<T, V> || ...));
+	
+	template <class F, class R, class... Args>
+	concept invocable_r = /*invocable<F, Args...> && */ std::convertible_to<std::invoke_result_t<F, Args...>, R>;
+	
+	template <class R, class F, class... Args>
+	concept regular_invocable_r = invocable_r<R, F, Args...>;
 	
 	/// MARK: Floatify
 #define __mtl_floatify(__type) typename _MTL_floatify<__type>::type
@@ -342,12 +389,12 @@ namespace _VMTL {
 	}
 
 	template <typename T> requires (std::is_arithmetic_v<T>)
-	constexpr T const& max(T const& a, _VMTL::same_as<T> auto const& b, _VMTL::same_as<T> auto const&... c) {
+	constexpr T const& max(T const& a, std::same_as<T> auto const& b, std::same_as<T> auto const&... c) {
 		return max(max(a, b), c...);
 	}
 
 	template <typename T> requires (std::is_arithmetic_v<T>)
-	constexpr T& max(T& a, _VMTL::same_as<T> auto& b, _VMTL::same_as<T> auto&... c) {
+	constexpr T& max(T& a, std::same_as<T> auto& b, std::same_as<T> auto&... c) {
 		return const_cast<T&>(max(const_cast<T const&>(a),
 								  const_cast<T const&>(b),
 								  const_cast<T const&>(c)...));
@@ -365,12 +412,12 @@ namespace _VMTL {
 	}
 
 	template <typename T> requires (std::is_arithmetic_v<T>)
-	constexpr T const& min(T const& a, _VMTL::same_as<T> auto const& b, _VMTL::same_as<T> auto const&... c) {
+	constexpr T const& min(T const& a, std::same_as<T> auto const& b, std::same_as<T> auto const&... c) {
 		return min(min(a, b), c...);
 	}
 
 	template <typename T> requires (std::is_arithmetic_v<T>)
-	constexpr T& min(T& a, _VMTL::same_as<T> auto& b, _VMTL::same_as<T> auto&... c) {
+	constexpr T& min(T& a, std::same_as<T> auto& b, std::same_as<T> auto&... c) {
 		return const_cast<T&>(min(const_cast<T const&>(a),
 								  const_cast<T const&>(b),
 								  const_cast<T const&>(c)...));
@@ -610,25 +657,26 @@ namespace _VMTL {
 	}
 	MTL_FOR_EACH_BUILTIN_ARITHMETIC_TYPE(MTL_IPOW);
 #undef MTL_IPOW
-	
+
+#undef MTL_FOR_EACH_BUILTIN_ARITHMETIC_TYPE
 #undef MTL_FOR_EACH_BUILTIN_TYPE
 	
 	// MARK: - Hypot
 	template <_VMTL::__mtl_any_of<float, double, long double> T>
 	__mtl_mathfunction __mtl_pure
-	inline T fast_hypot(T a, _VMTL::same_as<T> auto... b) {
+	inline T fast_hypot(T a, std::same_as<T> auto... b) {
 		return std::sqrt(((a * a) + ... + (b * b)));
 	}
 
 	template <_VMTL::__mtl_any_of<float, double, long double> T>
 	__mtl_mathfunction __mtl_pure
-	inline T __mtl_safe_hypot(T a, _VMTL::same_as<T> auto b) {
+	inline T __mtl_safe_hypot(T a, std::same_as<T> auto b) {
 		return std::hypot(a, b);
 	}
 	
 	template <_VMTL::__mtl_any_of<float, double, long double> T>
 	__mtl_mathfunction __mtl_pure
-	inline T __mtl_safe_hypot(T a, _VMTL::same_as<T> auto... b) {
+	inline T __mtl_safe_hypot(T a, std::same_as<T> auto... b) {
 		/// Make all arguments positive ...
 		  a = std::abs(a);
 		((b = std::abs(b)), ...);
@@ -647,9 +695,9 @@ namespace _VMTL {
 	
 	template <_VMTL::__mtl_any_of<float, double, long double> T>
 	__mtl_mathfunction __mtl_pure
-	inline T __mtl_hypot(T a, _VMTL::same_as<T> auto... b) {
+	inline T __mtl_hypot(T a, std::same_as<T> auto... b) {
 		T sum_of_squares = ((a * a) + ... + (b * b));
-		/// Only use __mtl_safe_hypot if necessary. This is about 5 times faster on non-overflowing inputs and only ~10% slower on always-overflowing inputs
+		/// Only use __mtl_safe_hypot if necessary. This is about 5 times faster on non-overflowing inputs and about 10% slower on always-overflowing inputs
 		__mtl_safe_math_if (isinf(sum_of_squares)) {
 			return __mtl_safe_hypot(a, b...);
 		}
@@ -667,7 +715,7 @@ namespace _VMTL {
 	// MARK: - pHypot
 	template <_VMTL::__mtl_any_of<float, double, long double> T>
 	__mtl_mathfunction __mtl_pure
-	inline T __mtl_safe_phypot(T p, T a, _VMTL::same_as<T> auto... b) {
+	inline T __mtl_safe_phypot(T p, T a, std::same_as<T> auto... b) {
 		  a = std::abs(a);
 		((b = std::abs(b)), ...);
 		std::swap(a, _VMTL::max(a, b...));
@@ -680,7 +728,7 @@ namespace _VMTL {
 	
 	template <_VMTL::__mtl_any_of<float, double, long double> T>
 	__mtl_mathfunction __mtl_pure
-	inline T __mtl_phypot(T p, T a, _VMTL::same_as<T> auto... b) {
+	inline T __mtl_phypot(T p, T a, std::same_as<T> auto... b) {
 		T sum_of_powers = ((std::pow(std::abs(a), p) + ... + (std::pow(std::abs(b), p))));
 		__mtl_safe_math_if (isinf(sum_of_powers)) {
 			return __mtl_safe_phypot(p, a, b...);
@@ -750,6 +798,5 @@ namespace _VMTL {
 	} inline constexpr __mtl_sqrt{};
 	
 }
-
 
 #endif // __MTL_COMMON_HPP_INCLUDED__

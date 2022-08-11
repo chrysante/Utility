@@ -138,12 +138,12 @@ TEST_CASE("arithmetic matrix instantiation test", "[matrix][vector][quaternion][
 	using namespace mtl;
 	static_assert(requires {
 		{ matrix3x3<complex<float>>{} * quaternion<int>{} }
-		-> mtl::same_as<matrix3x3<quaternion<float>>>;
+		-> std::same_as<matrix3x3<quaternion<float>>>;
 	});
 	
 	static_assert(requires {
 		{ matrix3x3<complex<float>>{} * vector3<quaternion<int>>{} }
-		-> mtl::same_as<vector3<quaternion<float>>>;
+		-> std::same_as<vector3<quaternion<float>>>;
 	});
 }
 

@@ -1,8 +1,9 @@
 #include "Catch2.hpp"
 
-#include <mtl/vector.hpp>
+#include <mtl/mtl.hpp>
 #include <utl/functional.hpp>
 #include <array>
+#include <tuple>
 
 using namespace mtl::short_types;
 
@@ -103,6 +104,124 @@ VECTOR_TEST_CASE("vector conversion", "[vector]") {
 	}
 }
 
+template <typename, std::size_t>
+struct Vec;
+
+template <typename T>
+struct Vec<T, 2> {
+	T x, y;
+	bool operator==(Vec const&) const = default;
+};
+template <typename T>
+struct Vec<T, 3> {
+	T x, y, z;
+};
+template <typename T>
+struct Vec<T, 4> {
+	T x, y, z, w;
+};
+
+template <typename T>
+struct Vec4_2 {
+	Vec4_2() = default;
+	Vec4_2(T x, T y, T z, T w): x(x), y(y), z(z), w(w) {}
+	T x, y, z, w;
+};
+
+TEST_CASE("extern vector type conversion", "[vector]") {
+	SECTION("Size = 2") {
+		Vec<int, 2> const ex = { 1, 2 };
+		mtl::int2 const v = ex;
+		CHECK(v == mtl::int2{ 1, 2 });
+		Vec<int, 2> const ex2 = v;
+		CHECK(ex2.x == 1);
+		CHECK(ex2.y == 2);
+	}
+	SECTION("Size = 3") {
+		Vec<int, 3> const ex = { 1, 2, 3 };
+		mtl::int3 const v = ex;
+		CHECK(v == mtl::int3{ 1, 2, 3 });
+		Vec<int, 3> const ex2 = v;
+		CHECK(ex2.x == 1);
+		CHECK(ex2.y == 2);
+		CHECK(ex2.z == 3);
+	}
+	SECTION("Size = 4") {
+		Vec<int, 4> const ex = { 1, 2, 3, 4 };
+		mtl::int4 const v = ex;
+		CHECK(v == mtl::int4{ 1, 2, 3, 4 });
+		Vec<int, 4> const ex2 = v;
+		CHECK(ex2.x == 1);
+		CHECK(ex2.y == 2);
+		CHECK(ex2.z == 3);
+		CHECK(ex2.w == 4);
+	}
+}
+
+TEST_CASE("extern vector type conversion 2", "[vector]") {
+	Vec4_2<int> const ex = { 1, 2, 3, 4 };
+	mtl::int4 const v = ex;
+	CHECK(v == mtl::int4{ 1, 2, 3, 4 });
+	Vec4_2<int> const ex2 = v;
+	CHECK(ex2.x == 1);
+	CHECK(ex2.y == 2);
+	CHECK(ex2.z == 3);
+	CHECK(ex2.w == 4);
+}
+
+TEST_CASE("vector tuple conversion", "[vector]") {
+	std::tuple<int, int, int, int> const t = { 1, 2, 3, 4 };
+	mtl::int4 const v = t;
+	CHECK(v == mtl::int4{ 1, 2, 3, 4 });
+	std::tuple<int, int, int, int> const s = v;
+	CHECK(std::get<0>(s) == 1);
+	CHECK(std::get<1>(s) == 2);
+	CHECK(std::get<2>(s) == 3);
+	CHECK(std::get<3>(s) == 4);
+}
+
+TEST_CASE("vector tuple conversion 2", "[vector]") {
+	std::tuple<int, float, double, char> const t = { 1, 2, 3, 4 };
+	mtl::int4 const v = t;
+	CHECK(v == mtl::int4{ 1, 2, 3, 4 });
+	std::tuple<int, float, double, char> const s = v;
+	CHECK(std::get<0>(s) == 1);
+	CHECK(std::get<1>(s) == 2);
+	CHECK(std::get<2>(s) == 3);
+	CHECK(std::get<3>(s) == 4);
+}
+
+TEST_CASE("vector array conversion", "[vector]") {
+	std::array<int, 4> const t = { 1, 2, 3, 4 };
+	mtl::int4 const v = t;
+	CHECK(v == mtl::int4{ 1, 2, 3, 4 });
+	std::array<int, 4> const s = v;
+	CHECK(s[0] == 1);
+	CHECK(s[1] == 2);
+	CHECK(s[2] == 3);
+	CHECK(s[3] == 4);
+}
+
+TEST_CASE("vector quaternion conversion", "[vector]") {
+	mtl::quaternion_int const q = { 1, 2, 3, 4 };
+	mtl::int4 const v = q;
+	CHECK(v == mtl::int4{ 1, 2, 3, 4 });
+	mtl::quaternion_int const r = v;
+	CHECK(r.x == 1);
+	CHECK(r.y == 2);
+	CHECK(r.z == 3);
+	CHECK(r.w == 4);
+}
+
+TEST_CASE("vector complex conversion", "[vector]") {
+	mtl::complex_int const z = { 1, 2 };
+	mtl::int2 const v = z;
+	CHECK(v == mtl::int2{ 1, 2 });
+	mtl::complex_int const r = z;
+	CHECK(r.x == 1);
+	CHECK(r.y == 2);
+}
+
 TEST_CASE("vector deduction guide", "[vector]") {
 	mtl::vector v = { 1, 1.4, 2u };
 	static_assert(std::is_same_v<decltype(v)::value_type, double>);
@@ -128,4 +247,12 @@ TEST_CASE("fold(vector)", "[vector]") {
 	
 	static_assert(std::is_same_v<decltype(lf), double const>);
 	static_assert(std::is_same_v<decltype(rf), double const>);
+}
+
+TEST_CASE("vector<bool>", "[vector]") {
+	int3 const i = { 1, 2, 3 };
+	float3 const f = { .1, .2, .3 };
+	CHECK((i > f).all());
+	float3 const g = { 1.1, .2, .3 };
+	CHECK((i < g).any());
 }

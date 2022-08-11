@@ -1,6 +1,6 @@
 #include "Catch2.hpp"
 
-#include <mtl/matrix.hpp>
+#include <mtl/__matrix.hpp>
 #include <utl/functional.hpp>
 
 #define TYPE_LIST(O) \

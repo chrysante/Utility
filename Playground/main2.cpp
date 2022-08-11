@@ -108,11 +108,3 @@ public:
 private:
 	int sceneData[2];
 };
-
-int main() {
-	MyApp theApp;
-	theApp.run();
-	
-	
-	
-}

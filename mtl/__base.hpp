@@ -123,7 +123,7 @@ _MTL_SYSTEM_HEADER_
 #if MTL_SAFE_MATH
 #	define __mtl_safe_math_if(...) if (__VA_ARGS__)
 #else
-#	define __mtl_safe_math_if(...) if ((0))
+#	define __mtl_safe_math_if(...) if constexpr ((0))
 #endif
 
 #endif // __MTL_BASE_HPP_INCLUDED__
