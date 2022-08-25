@@ -173,6 +173,115 @@ namespace _VMTL {
 		return map(b, [&a](auto b) { return a % b; });
 	}
 	
+	/// MARK: Bitwise And
+	/// Bitwise and Vector by Vector (element-wise)
+	template <scalar T, scalar U, std::size_t Size, vector_options O, vector_options P>
+	requires requires(T&& t, U&& u) { t & u; }
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr vector<__mtl_promote(T, U), Size, combine(O, P)>
+	operator&(vector<T, Size, O> const& a,
+			  vector<U, Size, P> const& b) {
+		return map(a, b, _VMTL::__mtl_and);
+	}
+
+	/// Bitwise and Vector by Scalar (element-wise)
+	template <scalar T, scalar U, std::size_t Size, vector_options O>
+	requires requires(T&& t, U&& u) { t & u; }
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr vector<__mtl_promote(T, U), Size, O>
+	operator&(vector<T, Size, O> const& a,
+			  U const& b) {
+		return map(a, [&b](auto a) { return a & b; });
+	}
+
+	/// Bitwise and Scalar by Vector (element-wise)
+	template <scalar T, scalar U, std::size_t Size, vector_options O>
+	requires requires(T&& t, U&& u) { t & u; }
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr vector<__mtl_promote(T, U), Size, O>
+	operator&(T const& a,
+			  vector<U, Size, O> const& b) {
+		return map(b, [&a](auto b) { return a & b; });
+	}
+	
+	/// MARK: Bitwise Or
+	/// Bitwise or Vector by Vector (element-wise)
+	template <scalar T, scalar U, std::size_t Size, vector_options O, vector_options P>
+	requires requires(T&& t, U&& u) { t | u; }
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr vector<__mtl_promote(T, U), Size, combine(O, P)>
+	operator|(vector<T, Size, O> const& a,
+			  vector<U, Size, P> const& b) {
+		return map(a, b, _VMTL::__mtl_or);
+	}
+
+	/// Bitwise and Vector by Scalar (element-wise)
+	template <scalar T, scalar U, std::size_t Size, vector_options O>
+	requires requires(T&& t, U&& u) { t | u; }
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr vector<__mtl_promote(T, U), Size, O>
+	operator|(vector<T, Size, O> const& a,
+			  U const& b) {
+		return map(a, [&b](auto a) { return a | b; });
+	}
+
+	/// Bitwise and Scalar by Vector (element-wise)
+	template <scalar T, scalar U, std::size_t Size, vector_options O>
+	requires requires(T&& t, U&& u) { t | u; }
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr vector<__mtl_promote(T, U), Size, O>
+	operator|(T const& a,
+			  vector<U, Size, O> const& b) {
+		return map(b, [&a](auto b) { return a | b; });
+	}
+	
+	/// MARK: Bitwise Xor
+	/// Bitwise xor Vector by Vector (element-wise)
+	template <scalar T, scalar U, std::size_t Size, vector_options O, vector_options P>
+	requires requires(T&& t, U&& u) { t ^ u; }
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr vector<__mtl_promote(T, U), Size, combine(O, P)>
+	operator^(vector<T, Size, O> const& a,
+			  vector<U, Size, P> const& b) {
+		return map(a, b, _VMTL::__mtl_xor);
+	}
+
+	/// Bitwise and Vector by Scalar (element-wise)
+	template <scalar T, scalar U, std::size_t Size, vector_options O>
+	requires requires(T&& t, U&& u) { t ^ u; }
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr vector<__mtl_promote(T, U), Size, O>
+	operator^(vector<T, Size, O> const& a,
+			  U const& b) {
+		return map(a, [&b](auto a) { return a ^ b; });
+	}
+
+	/// Bitwise and Scalar by Vector (element-wise)
+	template <scalar T, scalar U, std::size_t Size, vector_options O>
+	requires requires(T&& t, U&& u) { t ^ u; }
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr vector<__mtl_promote(T, U), Size, O>
+	operator^(T const& a,
+			  vector<U, Size, O> const& b) {
+		return map(b, [&a](auto b) { return a ^ b; });
+	}
+	
+	/// MARK: Unary Bitwise Not
+	template <typename T, std::size_t Size, vector_options O>
+	requires requires(T&& t) { ~t; }
+	__mtl_always_inline __mtl_interface_export
+	constexpr auto operator~(vector<T, Size, O> const& a) {
+		return map(a, __mtl_not);
+	}
+	
+	/// MARK: Unary Logical Not
+	template <typename T, std::size_t Size, vector_options O>
+	requires requires(T&& t) { !t; }
+	__mtl_always_inline __mtl_interface_export
+	constexpr auto operator!(vector<T, Size, O> const& a) {
+		return map(a, __mtl_logical_not);
+	}
+	
 	/// MARK: - Matrix Arithmetic
 	///
 	///

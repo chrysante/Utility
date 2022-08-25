@@ -454,6 +454,7 @@ namespace _VMTL {
 		__mtl_always_inline __mtl_interface_export
 		constexpr __vector_base(vector<U, Size, P> const& rhs): __mtl_base{ static_cast<T>(rhs.__mtl_at(I))... } {}
 		
+		/// Construct from foreign tuple type
 		template <__tuple_of_types<AllT...> Tuple>
 		__mtl_always_inline __mtl_interface_export
 		constexpr __vector_base(Tuple&& t)
@@ -489,7 +490,7 @@ namespace _VMTL {
 			} && (_VMTL::__is_extern_type<VectorType>::value):
 			__mtl_base{ v.x, v.y, v.z, v.w } {}
 		
-		/// Convert to other vector type
+		/// Convert to foreign vector type
 		template <typename VectorType>
 		requires requires {
 			VectorType{ (I, std::declval<T>())... };
@@ -664,28 +665,39 @@ namespace _VMTL {
 			return *this;
 		}
 		__mtl_always_inline __mtl_interface_export
-		constexpr vector& operator%=(vector const& rhs)& requires(std::is_integral_v<T>) {
+		constexpr vector& operator%=(vector const& rhs)& requires std::integral<T> {
 			*this = *this % rhs;
 			return *this;
 		}
 		__mtl_always_inline __mtl_interface_export
-		constexpr vector& operator%=(T const& rhs)& requires(std::is_integral_v<T>) {
+		constexpr vector& operator%=(T const& rhs)& requires std::integral<T> {
 			*this = *this % rhs;
+			return *this;
+		}
+		__mtl_always_inline __mtl_interface_export
+		constexpr vector& operator&=(vector const& rhs)& {
+			*this = *this & rhs;
+			return *this;
+		}
+		__mtl_always_inline __mtl_interface_export
+		constexpr vector& operator|=(vector const& rhs)& {
+			*this = *this | rhs;
+			return *this;
+		}
+		__mtl_always_inline __mtl_interface_export
+		constexpr vector& operator^=(vector const& rhs)& {
+			*this = *this ^ rhs;
 			return *this;
 		}
 		
 		/// MARK: Vector<bool> Members
 		__mtl_always_inline __mtl_interface_export
-		constexpr bool all() const requires(std::is_same_v<T, bool>) {
+		constexpr bool all() const requires std::convertible_to<T, bool> {
 			return fold(__mtl_logical_and);
 		}
 		__mtl_always_inline __mtl_interface_export
-		constexpr bool any() const requires(std::is_same_v<T, bool>) {
+		constexpr bool any() const requires std::convertible_to<T, bool> {
 			return fold(__mtl_logical_or);
-		}
-		__mtl_always_inline __mtl_interface_export
-		constexpr vector operator!() const requires(std::is_same_v<T, bool>) {
-			return map(__mtl_logical_not);
 		}
 		
 		/// MARK: Min, Max
@@ -847,6 +859,42 @@ namespace _VMTL {
 		});
 	}
 	
+	/// isnan
+	template <typename T, std::size_t Size, vector_options O>
+	constexpr vector<bool, Size, O> isnan(vector<T, Size, O> const& m) {
+		return vector<bool, Size, O>([&](std::size_t i) {
+			using std::isnan;
+			return isnan(m.__mtl_at(i));
+		});
+	}
+	
+	/// isinf
+	template <typename T, std::size_t Size, vector_options O>
+	constexpr vector<bool, Size, O> isinf(vector<T, Size, O> const& m) {
+		return vector<bool, Size, O>([&](std::size_t i) {
+			using std::isinf;
+			return isinf(m.__mtl_at(i));
+		});
+	}
+	
+	/// isfinite
+	template <typename T, std::size_t Size, vector_options O>
+	constexpr vector<bool, Size, O> isfinite(vector<T, Size, O> const& m) {
+		return vector<bool, Size, O>([&](std::size_t i) {
+			using std::isfinite;
+			return isfinite(m.__mtl_at(i));
+		});
+	}
+	
+	/// isnormal
+	template <typename T, std::size_t Size, vector_options O>
+	constexpr vector<bool, Size, O> isnormal(vector<T, Size, O> const& m) {
+		return vector<bool, Size, O>([&](std::size_t i) {
+			using std::isnormal;
+			return isnormal(m.__mtl_at(i));
+		});
+	}
+	
 	/// MARK: - Vector Math Functions
 	/// Dot Product of two Vectors
 	template <scalar T, scalar U, std::size_t Size, vector_options O, vector_options P>
@@ -916,6 +964,24 @@ namespace _VMTL {
 				return _VMTL::phypot(p, pnorm(p, a.__mtl_at(I))...);
 			});
 		}
+	}
+	
+	///  Sum Norm of vector
+	template <typename T, std::size_t Size, vector_options O>
+	constexpr auto sum_norm(vector<T, Size, O> const& v) {
+		return __mtl_with_index_sequence((I, Size), {
+			using std::abs;
+			return (abs(v.__mtl_at(I)) + ...);
+		});
+	}
+	
+	///  Maximum Norm of vector
+	template <typename T, std::size_t Size, vector_options O>
+	constexpr auto max_norm(vector<T, Size, O> const& v) {
+		return __mtl_with_index_sequence((I, Size), {
+			using std::abs;
+			return max(abs(v.__mtl_at(I))...);
+		});
 	}
 	
 	/// Length of Vector (same as Norm, Euclidian)

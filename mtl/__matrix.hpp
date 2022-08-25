@@ -766,7 +766,6 @@ namespace _VMTL {
 			return { _VMTL::columns, column(i)... };
 		}
 		
-		
 		/// Map
 		__mtl_always_inline __mtl_interface_export
 		constexpr auto map(std::invocable<T> auto&& f) const { return _VMTL::map(*this, __mtl_forward(f)); }
@@ -813,6 +812,36 @@ namespace _VMTL {
 			*this = *this % rhs;
 			return *this;
 		}
+		
+		/// MARK: Matrix<bool> Members
+		__mtl_always_inline __mtl_interface_export
+		constexpr bool all() const requires std::convertible_to<T, bool> {
+			return fold(__mtl_logical_and);
+		}
+		__mtl_always_inline __mtl_interface_export
+		constexpr bool any() const requires std::convertible_to<T, bool> {
+			return fold(__mtl_logical_or);
+		}
+		__mtl_always_inline __mtl_interface_export
+		constexpr auto operator!() const requires requires(T&& t) { !t; } {
+			return map(__mtl_logical_not);
+		}
+		
+		/// MARK: Min, Max
+		__mtl_always_inline __mtl_interface_export
+		constexpr T min() const requires real_scalar<T> {
+			return __mtl_with_index_sequence((I, Rows * Columns), {
+				return min(this->__mtl_at(I)...);
+			});
+		}
+		
+		__mtl_always_inline __mtl_interface_export
+		constexpr T max() const requires real_scalar<T> {
+			return __mtl_with_index_sequence((I, Rows * Columns), {
+				return max(this->__mtl_at(I)...);
+			});
+		}
+
 	};
  
 	/// MARK: - Operators
@@ -820,7 +849,8 @@ namespace _VMTL {
 	requires requires(T&& t, U&& u) { { t == u } -> std::convertible_to<bool>; }
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr bool operator==(matrix<T, Rows, Columns, O> const& m,
-							  matrix<U, Rows, Columns, P> const& n) {
+							  matrix<U, Rows, Columns, P> const& n)
+	{
 		return _VMTL::fold(_VMTL::map(m, n, _VMTL::__mtl_equals), _VMTL::__mtl_logical_and);
 	}
 	
@@ -828,7 +858,8 @@ namespace _VMTL {
 	requires requires(T&& t, U&& u) { { t == u } -> std::convertible_to<bool>; }
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr bool operator==(matrix<T, Rows, Columns, O> const& m,
-							  U const& x) {
+							  U const& x)
+	{
 		return m == _VMTL::matrix<U, Rows, Columns, O>(x);
 	}
 	
@@ -836,7 +867,8 @@ namespace _VMTL {
 	requires requires(T&& t, U&& u) { { t == u } -> std::convertible_to<bool>; }
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr bool operator==(T const& x,
-							  matrix<U, Rows, Columns, O> const& m) {
+							  matrix<U, Rows, Columns, O> const& m)
+	{
 		return m == x;
 	}
 	
@@ -862,7 +894,6 @@ namespace _VMTL {
 #else // MTL_UNICODE_MATH_PARANTHESES
 			"|", "|", "|", "|", "|", "|"
 #endif // MTL_UNICODE_MATH_PARANTHESES
-			
 		};
 		vector<char const*, Rows> left_bracket = brackets[1];
 		left_bracket[0] = brackets[0];
@@ -889,6 +920,15 @@ namespace _VMTL {
 	constexpr matrix<T, Columns, Rows, Options> transpose(matrix<T, Rows, Columns, Options> const& m) {
 		return matrix<T, Columns, Rows, Options>([&](std::size_t i, std::size_t j) {
 			return m.__mtl_at(j, i);
+		});
+	}
+	
+	/// Conjugate Transpose
+	template <typename T, std::size_t Rows, std::size_t Columns, vector_options Options>
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr matrix<T, Columns, Rows, Options> conj_transpose(matrix<T, Rows, Columns, Options> const& m) {
+		return matrix<T, Columns, Rows, Options>([&](std::size_t i, std::size_t j) {
+			return conj(m.__mtl_at(j, i));
 		});
 	}
 	
@@ -923,8 +963,68 @@ namespace _VMTL {
 		});
 	}
 
+	/// isnan
+	template <typename T, std::size_t Rows, std::size_t Columns, vector_options O>
+	constexpr matrix<bool, Rows, Columns, O> isnan(matrix<T, Rows, Columns, O> const& m) {
+		return matrix<bool, Rows, Columns, O>([&](std::size_t i) {
+			using std::isnan;
+			return isnan(m.__mtl_at(i));
+		});
+	}
+	
+	/// isinf
+	template <typename T, std::size_t Rows, std::size_t Columns, vector_options O>
+	constexpr matrix<bool, Rows, Columns, O> isinf(matrix<T, Rows, Columns, O> const& m) {
+		return matrix<bool, Rows, Columns, O>([&](std::size_t i) {
+			using std::isinf;
+			return isinf(m.__mtl_at(i));
+		});
+	}
+	
+	/// isfinite
+	template <typename T, std::size_t Rows, std::size_t Columns, vector_options O>
+	constexpr matrix<bool, Rows, Columns, O> isfinite(matrix<T, Rows, Columns, O> const& m) {
+		return matrix<bool, Rows, Columns, O>([&](std::size_t i) {
+			using std::isfinite;
+			return isfinite(m.__mtl_at(i));
+		});
+	}
+	
+	/// isnormal
+	template <typename T, std::size_t Rows, std::size_t Columns, vector_options O>
+	constexpr matrix<bool, Rows, Columns, O> isnormal(matrix<T, Rows, Columns, O> const& m) {
+		return matrix<bool, Rows, Columns, O>([&](std::size_t i) {
+			using std::isnormal;
+			return isnormal(m.__mtl_at(i));
+		});
+	}
 	
 	/// MARK: - Matrix Math Functions
+	/// Row Sum Norm
+	template <typename T, std::size_t Rows, std::size_t Columns, vector_options O>
+	constexpr auto row_sum_norm(matrix<T, Rows, Columns, O> const& m) {
+		return __mtl_with_index_sequence((I, Columns), {
+			return max(sum_norm(m.row(I))...);
+		});
+	}
+	
+	/// Column Sum Norm
+	template <typename T, std::size_t Rows, std::size_t Columns, vector_options O>
+	constexpr auto column_sum_norm(matrix<T, Rows, Columns, O> const& m) {
+		return __mtl_with_index_sequence((I, Columns), {
+			return max(sum_norm(m.column(I))...);
+		});
+	}
+	
+	/// Maximum Norm
+	template <typename T, std::size_t Rows, std::size_t Columns, vector_options O>
+	constexpr auto max_norm(matrix<T, Rows, Columns, O> const& m) {
+		return __mtl_with_index_sequence((I, Rows * Columns), {
+			using std::abs;
+			return max(abs(m.__mtl_at(I))...);
+		});
+	}
+	
 	/// Determinant
 	template <scalar T, vector_options O>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export

@@ -16,6 +16,7 @@ _UTL_SYSTEM_HEADER_
 #include <stdexcept>
 #include <bit>
 #include <iosfwd>
+#include <compare>
 
 
 /// Synopsis
@@ -95,7 +96,7 @@ namespace utl {
 	
 	// MARK: - class vector
 	template <typename T, typename Allocator>
-	class vector: public /*private*/ Allocator {
+	class vector: private Allocator {
 	public:
 		/// MARK: Member Types
 		using value_type = T;
@@ -120,7 +121,7 @@ namespace utl {
 		__utl_interface_export __utl_always_inline
 		constexpr vector() noexcept(noexcept(Allocator()))
 			requires std::is_default_constructible_v<Allocator>:
-			vector({}, {}, 0, true) {}
+			vector(__private_tag{}, {}, {}, 0, true) {}
 		
 		/// (2)
 		__utl_interface_export __utl_always_inline
@@ -166,7 +167,8 @@ namespace utl {
 								  utl::no_init_t,
 								  Allocator const& alloc = Allocator())
 			requires(std::is_trivial_v<T>):
-			vector(alloc,
+			vector(__private_tag{},
+				   alloc,
 				   nullptr,
 				   count,
 				   count,
@@ -307,7 +309,8 @@ namespace utl {
 		__utl_interface_export __utl_always_inline
 		constexpr vector(std::initializer_list<T> ilist,
 						 Allocator const& alloc):
-			vector(alloc,
+			vector(__private_tag{},
+				   alloc,
 				   nullptr,
 				   ilist.size(),
 				   ilist.size(),
@@ -669,7 +672,7 @@ namespace utl {
 				return last;
 			}
 			auto const erase_count = last - first;
-			this->_left_shift_range(last + 1, end(), -erase_count);
+			this->_left_shift_range(last, end(), -erase_count);
 			_destroy_elems(end() - erase_count, end());
 			_set_size(size() - erase_count);
 			return first;
@@ -877,12 +880,14 @@ namespace utl {
 			throw std::out_of_range("utl::vector out of bounds");
 		}
 		
-		constexpr vector(T* begin, std::size_t size, std::size_t capacity, bool inplace) noexcept:
+	public:
+		constexpr vector(__private_tag, T* begin, std::size_t size, std::size_t capacity, bool inplace) noexcept:
 			Allocator(), _begin_inline_(begin, inplace), _size_((size_type)size), _cap_(static_cast<size_type>(capacity)) {}
 		
-		constexpr vector(auto&& alloc, T* begin, std::size_t size, std::size_t capacity, bool inplace) noexcept:
+		constexpr vector(__private_tag, auto&& alloc, T* begin, std::size_t size, std::size_t capacity, bool inplace) noexcept:
 			Allocator(UTL_FORWARD(alloc)), _begin_inline_(begin, inplace), _size_((size_type)size), _cap_((size_type)capacity) {}
 		
+	private:
 		constexpr pointer _begin() const noexcept { return _begin_inline_.pointer(); }
 		constexpr void _set_begin(pointer p) noexcept { _begin_inline_.pointer(p); }
 		constexpr auto _size() const noexcept { return _size_; }
@@ -1013,7 +1018,7 @@ namespace utl {
 		__utl_interface_export __utl_always_inline
 		constexpr small_vector() noexcept(noexcept(Allocator()))
 		requires std::is_default_constructible_v<Allocator>:
-			__utl_base(_storage_begin(), {}, N, true) {}
+			__utl_base(__private_tag{}, _storage_begin(), {}, N, true) {}
 		
 		/// (2)
 		__utl_interface_export __utl_always_inline
@@ -1283,6 +1288,12 @@ namespace utl {
 		
 		alignas (N != 0 ? alignof(T) : 1) char _storage[sizeof(T) * N];
 	};
+
+	
+//	template <typename T0, typename T1, typename A0, typename A1>
+//	auto operator<=>(vector<T0, A0> const& a, vector<T1, A1> const& b) {
+//		if (
+//	}
 	
 }
 

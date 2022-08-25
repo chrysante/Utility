@@ -42,12 +42,13 @@ namespace _VMTL {
 	public:
 		/// Value Constructors
 		quaternion() = default;
-		constexpr quaternion(T real): __mtl_base(real, 0, 0, 0) {}
-		template <vector_options P>
+		constexpr quaternion(T const& real): __mtl_base(real, 0, 0, 0) {}
+		template <vector_options P = __mtl_quaternion_vector_options>
 		constexpr quaternion(T const& real,  _VMTL::vector<T, 3, P> const& imag): __mtl_base(real, imag.__mtl_at(0), imag.__mtl_at(1), imag.__mtl_at(2)) {}
 		constexpr quaternion(T const& a, T const& b, T const& c, T const& d): __mtl_base(a, b, c, d) {}
 		constexpr quaternion(complex<T> const& z): quaternion(z.__mtl_at(0), z.__mtl_at(1), 0, 0) {}
-		constexpr quaternion(_VMTL::vector<T, 4, __mtl_options> const& v): __mtl_base(v) {}
+		template <vector_options P = __mtl_quaternion_vector_options>
+		constexpr quaternion(_VMTL::vector<T, 4, P> const& v): __mtl_base(v) {}
 		
 		/// Conversion Constructor
 		template <std::convertible_to<T> U>
@@ -98,6 +99,7 @@ namespace _VMTL {
 	template <real_scalar T, real_scalar U, vector_options O = vector_options{}>
 	quaternion(T, _VMTL::vector<U, 3, O>) -> quaternion<__mtl_promote(T, U)>;
 	
+	/// real, imag:
 	template <typename T>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr T real(quaternion<T> const& z) { return z.__mtl_at(0); }
@@ -111,17 +113,42 @@ namespace _VMTL {
 	
 	template <typename T>
 	__mtl_mathfunction __mtl_always_inline
-	constexpr vector<T, 4, __mtl_quaternion_vector_options>& __as_vector(quaternion<T>& z) {
+	constexpr vector<T, 4, __mtl_quaternion_vector_options>& __mtl_as_vector(quaternion<T>& z) {
 		return static_cast<vector<T, 4, quaternion<T>::__mtl_options>&>(z);
 	}
 	template <typename T>
 	__mtl_mathfunction __mtl_always_inline
-	constexpr vector<T, 4, __mtl_quaternion_vector_options> const& __as_vector(quaternion<T> const& z) {
+	constexpr vector<T, 4, __mtl_quaternion_vector_options> const& __mtl_as_vector(quaternion<T> const& z) {
 		return static_cast<vector<T, 4, quaternion<T>::__mtl_options> const&>(z);
 	}
 	
-	// real, imag:
+	/// isnan
+	template <typename T>
+	constexpr bool isnan(quaternion<T> const& z) {
+		using std::isnan;
+		return isnan(z.__mtl_at(0)) || isnan(z.__mtl_at(1)) || isnan(z.__mtl_at(2)) || isnan(z.__mtl_at(3));
+	}
 	
+	/// isinf
+	template <typename T>
+	constexpr bool isinf(quaternion<T> const& z) {
+		using std::isinf;
+		return isinf(z.__mtl_at(0)) || isinf(z.__mtl_at(1)) || isinf(z.__mtl_at(2)) || isinf(z.__mtl_at(3));
+	}
+	
+	/// isfinite
+	template <typename T>
+	constexpr bool isfinite(quaternion<T> const& z) {
+		using std::isfinite;
+		return isfinite(z.__mtl_at(0)) || isfinite(z.__mtl_at(1)) || isfinite(z.__mtl_at(2)) || isfinite(z.__mtl_at(3));
+	}
+	
+	/// isnormal
+	template <typename T>
+	constexpr bool isnormal(quaternion<T> const& z) {
+		using std::isnormal;
+		return isnormal(z.__mtl_at(0)) || isnormal(z.__mtl_at(1)) || isnormal(z.__mtl_at(2)) || isnormal(z.__mtl_at(3));
+	}
 	
 	/// MARK: - Literals
 	inline namespace literals {
@@ -160,13 +187,13 @@ namespace _VMTL {
 	template <real_scalar T>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr quaternion<T> operator-(quaternion<T> const& z) {
-		return -__as_vector(z);
+		return -__mtl_as_vector(z);
 	}
 	
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr quaternion<__mtl_promote(T, U)> operator+(quaternion<T> const& a, quaternion<U> const& b) {
-		return __as_vector(a) + __as_vector(b);
+		return __mtl_as_vector(a) + __mtl_as_vector(b);
 	}
 	
 	template <real_scalar T, real_scalar U>
@@ -196,7 +223,7 @@ namespace _VMTL {
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr quaternion<__mtl_promote(T, U)> operator-(quaternion<T> const& a, quaternion<U> const& b) {
-		return __as_vector(a) - __as_vector(b);
+		return __mtl_as_vector(a) - __mtl_as_vector(b);
 	}
 	
 	template <real_scalar T, real_scalar U>
@@ -259,13 +286,13 @@ namespace _VMTL {
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr quaternion<__mtl_promote(T, U)> operator*(quaternion<T> const& a, U const& b) {
-		return __as_vector(a) * b;
+		return __mtl_as_vector(a) * b;
 	}
 	
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr quaternion<__mtl_promote(T, U)> operator*(T const& a, quaternion<U> const& b) {
-		return a * __as_vector(b);
+		return a * __mtl_as_vector(b);
 	}
 	
 	template <real_scalar T, real_scalar U>
@@ -289,7 +316,7 @@ namespace _VMTL {
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr quaternion<__mtl_promote(T, U)> operator/(quaternion<T> const& a, U const& b) {
-		return __as_vector(a) / b;
+		return __mtl_as_vector(a) / b;
 	}
 	
 	template <real_scalar T, real_scalar U>
@@ -303,7 +330,7 @@ namespace _VMTL {
 	requires requires(T&& t, U&& u) { { t == u } -> std::convertible_to<bool>; }
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr bool operator==(quaternion<T> const& a, quaternion<U> const& b) {
-		return __as_vector(a) == __as_vector(b);
+		return __mtl_as_vector(a) == __mtl_as_vector(b);
 	}
 	
 	template <typename T, typename U>
@@ -351,7 +378,7 @@ namespace _VMTL {
 	template <real_scalar T>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr quaternion<T> normalize(quaternion<T> const& z) {
-		return normalize(__as_vector(z));
+		return normalize(__mtl_as_vector(z));
 	}
 	
 	template <real_scalar T>

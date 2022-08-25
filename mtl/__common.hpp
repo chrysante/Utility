@@ -238,20 +238,40 @@ namespace _VMTL {
 	template <class R, class F, class... Args>
 	concept regular_invocable_r = invocable_r<R, F, Args...>;
 	
-	/// MARK: Floatify
-#define __mtl_floatify(__type) typename _MTL_floatify<__type>::type
+	/// MARK: __mtl_floatify
+#define __mtl_floatify(__type) __mtl_to_float_t<__type>
 	
 	template <typename>
-	struct _MTL_floatify;
+	struct __mtl_to_float;
 	
 	template <typename T>
-	requires std::is_arithmetic_v<T>
-	struct _MTL_floatify<T>           { using type = double; };
+	using __mtl_to_float_t = typename __mtl_to_float<T>::type;
+	
+	template <typename T> requires std::is_arithmetic_v<T>
+	struct __mtl_to_float<T>             { using type = double; };
 	template <>
-	struct _MTL_floatify<float>       { using type = float; };
+	struct __mtl_to_float<float>         { using type = float; };
 	template <>
-	struct _MTL_floatify<long double> { using type = long double; };
+	struct __mtl_to_float<long double>   { using type = long double; };
 
+	template <typename T>
+	struct __mtl_to_float<complex<T>>    { using type = complex<__mtl_to_float_t<T>>; };
+	
+	template <typename T>
+	struct __mtl_to_float<quaternion<T>> { using type = quaternion<__mtl_to_float_t<T>>; };
+	
+	template <typename>
+	struct __mtl_to_complex;
+	
+	template <typename T>
+	using __mtl_to_complex_t = typename __mtl_to_complex<T>::type;
+	
+	template <typename T> requires std::is_arithmetic_v<T>
+	struct __mtl_to_complex<T> { using type = complex<T>; };
+	
+	template <typename T>
+	struct __mtl_to_complex<complex<T>> { using type = complex<T>; };
+	
 	/// MARK: Stripped Decltype
 	#define __mtl_decltype_stripped(...) std::decay_t<decltype(__VA_ARGS__)>
 	
@@ -645,6 +665,12 @@ namespace _VMTL {
 	constexpr inline T __mtl_sqr(T x) { return x * x; }
 	MTL_FOR_EACH_BUILTIN_TYPE(MTL_SQR);
 #undef MTL_SQR
+
+#define MTL_CONJ(T) \
+	__mtl_mathfunction __mtl_pure __mtl_always_inline      \
+	inline constexpr T conj(T x) { return x; } 
+	MTL_FOR_EACH_BUILTIN_TYPE(MTL_CONJ);
+#undef MTL_CONJ
 	
 #define MTL_IPOW(T)                                  \
 	__mtl_mathfunction __mtl_pure                    \
@@ -774,6 +800,10 @@ namespace _VMTL {
 	_MTL_FUNCOBJ_DEF_(__mtl_multiplies,  (auto const& a, auto const& b), a * b);
 	_MTL_FUNCOBJ_DEF_(__mtl_divides,     (auto const& a, auto const& b), a / b);
 	_MTL_FUNCOBJ_DEF_(__mtl_modulo,      (auto const& a, auto const& b), a % b);
+	_MTL_FUNCOBJ_DEF_(__mtl_and,         (auto const& a, auto const& b), a & b);
+	_MTL_FUNCOBJ_DEF_(__mtl_or,          (auto const& a, auto const& b), a | b);
+	_MTL_FUNCOBJ_DEF_(__mtl_xor,         (auto const& a, auto const& b), a ^ b);
+	_MTL_FUNCOBJ_DEF_(__mtl_not,         (auto const& a), ~a);
 	_MTL_FUNCOBJ_DEF_(__mtl_equals,      (auto const& a, auto const& b), a == b);
 	_MTL_FUNCOBJ_DEF_(__mtl_less,        (auto const& a, auto const& b), a < b);
 	_MTL_FUNCOBJ_DEF_(__mtl_less_eq,     (auto const& a, auto const& b), a <= b);

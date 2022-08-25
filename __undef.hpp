@@ -32,7 +32,10 @@
 #undef __MTL_DECLARE_VECTOR_TYPEDEFS__
 #undef __MTL_DECLARE_MATRIX_TYPEDEFS__
 
+#undef __mtl_floatify
+
 #undef __mtl_forward
+
 #undef __MTL_PRIV_WIS_FT
 #undef __MTL_PRIV_WIS_FP
 #undef __MTL_PRIV_WIS_FI

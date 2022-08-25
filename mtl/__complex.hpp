@@ -110,12 +110,12 @@ namespace _VMTL {
 	
 	template <typename T>
 	__mtl_mathfunction __mtl_always_inline
-	constexpr vector<T, 2, __mtl_complex_vector_options>& __as_vector(complex<T>& z) {
+	constexpr vector<T, 2, __mtl_complex_vector_options>& __mtl_as_vector(complex<T>& z) {
 		return static_cast<vector<T, 2, complex<T>::__mtl_options>&>(z);
 	}
 	template <typename T>
 	__mtl_mathfunction __mtl_always_inline
-	constexpr vector<T, 2, __mtl_complex_vector_options> const& __as_vector(complex<T> const& z) {
+	constexpr vector<T, 2, __mtl_complex_vector_options> const& __mtl_as_vector(complex<T> const& z) {
 		return static_cast<vector<T, 2, complex<T>::__mtl_options> const&>(z);
 	}
 	
@@ -132,6 +132,34 @@ namespace _VMTL {
 			(real(z) - imag(z)) * (real(z) + imag(z)),
 			T(2) * real(z) * imag(z)
 		};
+	}
+	
+	/// isnan
+	template <typename T>
+	constexpr bool isnan(complex<T> const& z) {
+		using std::isnan;
+		return isnan(z.__mtl_at(0)) || isnan(z.__mtl_at(1));
+	}
+	
+	/// isinf
+	template <typename T>
+	constexpr bool isinf(complex<T> const& z) {
+		using std::isinf;
+		return isinf(z.__mtl_at(0)) || isinf(z.__mtl_at(1));
+	}
+	
+	/// isfinite
+	template <typename T>
+	constexpr bool isfinite(complex<T> const& z) {
+		using std::isfinite;
+		return isfinite(z.__mtl_at(0)) || isfinite(z.__mtl_at(1));
+	}
+	
+	/// isnormal
+	template <typename T>
+	constexpr bool isnormal(complex<T> const& z) {
+		using std::isnormal;
+		return isnormal(z.__mtl_at(0)) || isnormal(z.__mtl_at(1));
 	}
 	
 	/// MARK: - Literals
@@ -166,7 +194,7 @@ namespace _VMTL {
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr complex<__mtl_promote(T, U)> operator+(complex<T> const& a, complex<U> const& b) {
-		return __as_vector(a) + __as_vector(b);
+		return __mtl_as_vector(a) + __mtl_as_vector(b);
 	}
 	
 	template <real_scalar T, real_scalar U>
@@ -184,7 +212,7 @@ namespace _VMTL {
 	template <real_scalar T, real_scalar U>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr complex<__mtl_promote(T, U)> operator-(complex<T> const& a, complex<U> const& b) {
-		return __as_vector(a) - __as_vector(b);
+		return __mtl_as_vector(a) - __mtl_as_vector(b);
 	}
 	
 	template <real_scalar T, real_scalar U>
@@ -243,7 +271,7 @@ namespace _VMTL {
 	requires requires(T&& t, U&& u) { { t == u } -> std::convertible_to<bool>; }
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr bool operator==(complex<T> const& a, complex<U> const& b) {
-		return __as_vector(a) == __as_vector(b);
+		return __mtl_as_vector(a) == __mtl_as_vector(b);
 	}
 	template <typename T, real_scalar U>
 	requires requires(T&& t, U&& u) { { t == u } -> std::convertible_to<bool>; }
@@ -274,7 +302,7 @@ namespace _VMTL {
 	template <real_scalar T>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr complex<T> normalize(complex<T> const& z) {
-		return normalize(__as_vector(z));
+		return normalize(__mtl_as_vector(z));
 	}
 	///
 	template <real_scalar T>
@@ -291,25 +319,28 @@ namespace _VMTL {
 			
 	template <real_scalar T>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
-	complex<T> proj(const complex<T>& z);
+	complex<T> proj(complex<T> const& z) {
+		if (std::isinf(_VMTL::real(z)) || std::isinf(_VMTL::imag(z))) {
+			return { INFINITY, std::copysign(T(0), _VMTL::imag(z)) };
+		}
+		return z;
+	}
 	
 	template <real_scalar T, bool CheckTheta = true>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr complex<__mtl_floatify(T)> unit_polar(T const& theta) {
 		using F = __mtl_floatify(T);
-		__mtl_safe_math_if (CheckTheta && std::isnan(theta)) {
-			return { theta, theta };
+		
+		if constexpr (CheckTheta) {
+			__mtl_safe_math_if (std::isnan(theta)) {
+				return { theta, theta };
+			}
+			__mtl_safe_math_if (std::isinf(theta)) {
+				return { F(NAN), F(NAN) };
+			}
 		}
-		__mtl_safe_math_if (CheckTheta && std::isinf(theta)) {
-			return { F(NAN), F(NAN) };
-		}
-		F x = std::cos(theta);
-		__mtl_safe_math_if (std::isnan(x))
-			x = 0;
-		F y = std::sin(theta);
-		__mtl_safe_math_if (std::isnan(y))
-			y = 0;
-		return { x, y };
+		
+		return { std::cos(theta), std::sin(theta) };
 	}
 	
 	template <real_scalar T, real_scalar U>
@@ -399,8 +430,7 @@ namespace _VMTL {
 		complex<F> z = _z;
 		__mtl_safe_math_if (std::isinf(imag(z)))
 			return complex<F>(F(INFINITY), imag(z));
-		__mtl_safe_math_if (std::isinf(real(z)))
-		{
+		__mtl_safe_math_if (std::isinf(real(z))) {
 			__mtl_safe_math_if (real(z) > F(0))
 				return complex<F>(real(z), std::isnan(imag(z)) ? imag(z) : std::copysign(F(0), imag(z)));
 			return complex<F>(std::isnan(imag(z)) ? imag(z) : F(0), std::copysign(real(z), imag(z)));

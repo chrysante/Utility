@@ -339,6 +339,9 @@ namespace utl {
 		
 	public:
 		__utl_interface_export
+		constexpr iota(value_type last): _first(0), _last(last) {}
+		
+		__utl_interface_export
 		constexpr iota(value_type first, value_type last): _first(first), _last(last) {}
 		
 		__utl_interface_export
@@ -356,6 +359,12 @@ namespace utl {
 	private:
 		value_type _first, _last;
 	};
+	
+	template <std::integral T>
+	iota(T) -> iota<T>;
+	
+	template <std::integral T, std::integral U>
+	iota(T, U) -> iota<std::common_type_t<T, U>>;
 	
 }
 
