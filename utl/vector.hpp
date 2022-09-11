@@ -69,7 +69,7 @@ namespace utl {
 	/// So for 1-byte types the default size type is 64 bit wide.
 	template <typename T>
 	struct vector_size_type_selector {
-		using type = std::conditional_t<sizeof(T) == 1, std::uint64_t, std::uint32_t>;
+		using type = std::conditional_t<sizeof(T) == 1, std::size_t, std::uint32_t>;
 	};
 	
 	template <typename T, typename A>
@@ -182,7 +182,8 @@ namespace utl {
 		__utl_interface_export __utl_always_inline
 		constexpr vector(InputIt first, InputIt last,
 						 Allocator const& alloc = Allocator()):
-			vector(alloc,
+			vector(__private_tag{},
+				   alloc,
 				   nullptr,
 				   std::distance(first, last),
 				   std::distance(first, last),
@@ -195,7 +196,8 @@ namespace utl {
 		/// (6)
 		__utl_interface_export __utl_always_inline
 		constexpr vector(vector const& rhs):
-			vector(rhs._alloc(),
+			vector(__private_tag{},
+				   rhs._alloc(),
 				   nullptr,
 				   rhs.size(),
 				   rhs.size(),
@@ -250,7 +252,8 @@ namespace utl {
 		/// (8)
 		__utl_interface_export __utl_always_inline
 		constexpr vector(vector&& rhs) noexcept(std::is_nothrow_move_constructible_v<T>):
-			vector(std::move(rhs._alloc()),
+			vector(__private_tag{},
+				   std::move(rhs._alloc()),
 				   rhs.begin(),
 				   rhs.size(),
 				   rhs.size(),
@@ -958,9 +961,6 @@ namespace utl {
 	constexpr auto* data(vector<T, A>& v) { return v.data(); }
 	template <typename T, typename A>
 	constexpr auto const* data(vector<T, A> const& v) { return v.data(); }
-	
-	
-	
 	
 	/// MARK: struct __vector_config
 	template <typename T, typename A>

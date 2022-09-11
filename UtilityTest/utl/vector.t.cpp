@@ -1,5 +1,5 @@
 #include "Catch2.hpp"
-#include "utl/vector.hpp"
+#include <utl/vector.hpp>
 
 
 TEST_CASE("vector-erase") {

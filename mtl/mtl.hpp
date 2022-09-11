@@ -1,5 +1,7 @@
 #pragma once
 
+/// mtl.hpp
+
 #ifndef __MTL_MTL_HPP_INCLUDED__
 #define __MTL_MTL_HPP_INCLUDED__
 
@@ -20,7 +22,7 @@
 /// MARK: Memory Layout
 /// By default memory layout is 'Aligned', implying the following alignments:
 //  +-----------------+------------------------------------+
-//  | Data Type       | Alignment                          |
+//  | Data Type       | Alignment                          |
 //  +-----------------+------------------------------------+
 //  | vector<T, 2>    | 2 * alignof(T)                     |
 //  | vector<T, 3>    | 4 * alignof(T)                     |

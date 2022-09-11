@@ -1,5 +1,7 @@
 #pragma once
 
+/// __vector.hpp
+
 #ifndef __MTL_VECTOR_HPP_INCLUDED__
 #define __MTL_VECTOR_HPP_INCLUDED__
 
@@ -10,6 +12,8 @@ _MTL_SYSTEM_HEADER_
 #define __MTL_DECLARE_VECTOR_TYPEDEFS__
 #include "__typedefs.hpp"
 #include "__arithmetic.hpp"
+
+#include "__intrin.hpp"
 
 #include <functional>
 #include <iosfwd>
@@ -87,12 +91,12 @@ namespace _VMTL {
 		using U = std::invoke_result_t<F, T...>;
 		if constexpr (std::same_as<U, void>) {
 			for (std::size_t i = 0; i < S; ++i) {
-				std::invoke(__mtl_forward(f), v.__mtl_at(i)...);
+				std::invoke(__mtl_forward(f), v.__mtl_vec_at(i)...);
 			}
 		}
 		else {
 			constexpr auto P = combine(O...);
-			return vector<U, S, P>([&](std::size_t i) { return std::invoke(__mtl_forward(f), v.__mtl_at(i)...); });
+			return vector<U, S, P>([&](std::size_t i) { return std::invoke(__mtl_forward(f), v.__mtl_vec_at(i)...); });
 		}
 	}
 	
@@ -219,7 +223,22 @@ namespace _VMTL {
 	template <typename T, std::size_t Size, vector_options O>
 	struct __vector_data_ {
 		__vector_data_() = default;
-		constexpr __vector_data_(T const& a, T const& b, T const& c, T const& d, auto const&... r): __data{ a, b, c, d, r... } {}
+		constexpr __vector_data_(T const& a, T const& b, T const& c, T const& d, auto const&... r) : __data{ a, b, c, d, r... } {
+			if constexpr (std::is_same_v<T, float> && Size == 4 && !O.packed()) {
+				if (!std::is_constant_evaluated()) {
+					alignas(16) float arr[4]{ a, b, c, d };
+					__vec = _mm_load_ps(arr);
+				}
+			}
+#if MTL_AVX
+			else if constexpr (std::is_same_v<T, double> && Size == 4 && !O.packed()) {
+				if (!std::is_constant_evaluated()) {
+					alignas(32) double arr[4]{ a, b, c, d };
+					__vec = _mm256_load_pd(arr);
+				}
+			}
+#endif
+		}
 		
 		template <typename, std::size_t, vector_options, typename, typename>
 		friend struct __vector_base;
@@ -230,6 +249,7 @@ namespace _VMTL {
 	private:
 		union {
 			T __data[Size];
+			__simd_type_t<T, Size, O.packed()> __vec;
 			struct { T hue, saturation, value, alpha; };
 			struct {
 				T x;
@@ -281,6 +301,9 @@ namespace _VMTL {
 		using __mtl_base = __vector_data_<T, Size, O>;
 		using __mtl_base::__mtl_base;
 		
+		using __mtl_base::__data;
+		using __mtl_base::__vec;
+		
 		using __mtl_base::x;
 		using __mtl_base::xy;
 		using __mtl_base::xyz;
@@ -311,7 +334,7 @@ namespace _VMTL {
 	template <typename T, vector_options O>
 	struct __vector_data_<T, 3, O> {
 		__vector_data_() = default;
-		constexpr __vector_data_(T const& a, T const& b, T const& c): __data{ a, b, c } {}
+		constexpr __vector_data_(T const& a, T const& b, T const& c): __vec{ a, b, c } {}
 		
 		template <typename, std::size_t, vector_options, typename, typename>
 		friend struct __vector_base;
@@ -321,6 +344,7 @@ namespace _VMTL {
 	private:
 		union {
 			T __data[3];
+			typename __simd_type<T, 3, O.packed()>::type __vec;
 			struct { T hue, saturation, value; };
 			struct {
 				T x;
@@ -347,6 +371,9 @@ namespace _VMTL {
 		using __mtl_base = __vector_data_<T, 3, O>;
 		using __mtl_base::__mtl_base;
 		
+		using __mtl_base::__data;
+		using __mtl_base::__vec;
+		
 		using __mtl_base::x;
 		using __mtl_base::xy;
 		using __mtl_base::y;
@@ -368,7 +395,7 @@ namespace _VMTL {
 	template <typename T, vector_options O>
 	struct __vector_data_<T, 2, O> {
 		__vector_data_() = default;
-		constexpr __vector_data_(T const& a, T const& b): __data{ a, b } {}
+		constexpr __vector_data_(T const& a, T const& b): __vec{ a, b } {}
 		
 		template <typename, std::size_t, vector_options, typename, typename>
 		friend struct __vector_base;
@@ -379,6 +406,7 @@ namespace _VMTL {
 	private:
 		union {
 			T __data[2];
+			typename __simd_type<T, 2, O.packed()>::type __vec;
 			struct { T x, y; };
 			struct { T r, g; };
 			//  for complex
@@ -390,6 +418,9 @@ namespace _VMTL {
 	struct __vector_data<T, 2, O>: __vector_data_<T, 2, O> {
 		using __mtl_base = __vector_data_<T, 2, O>;
 		using __mtl_base::__mtl_base;
+		
+		using __mtl_base::__data;
+		using __mtl_base::__vec;
 		
 		using __mtl_base::x;
 		using __mtl_base::y;
@@ -458,7 +489,7 @@ namespace _VMTL {
 		template <__tuple_of_types<AllT...> Tuple>
 		__mtl_always_inline __mtl_interface_export
 		constexpr __vector_base(Tuple&& t)
-			requires (_VMTL::__is_extern_type<Tuple>::value):
+			requires (_VMTL::__is_foreign_type<Tuple>::value):
 			__mtl_base{ get<I>(t)... } {}
 		
 		/// Construct from foreign vector type
@@ -468,7 +499,7 @@ namespace _VMTL {
 			requires (Size == 2) && requires {
 				{ v.x } -> std::convertible_to<T>;
 				{ v.y } -> std::convertible_to<T>;
-			} && (_VMTL::__is_extern_type<VectorType>::value):
+			} && (_VMTL::__is_foreign_type<VectorType>::value):
 			__mtl_base{ v.x, v.y } {}
 		template <typename VectorType>
 		__mtl_always_inline __mtl_interface_export
@@ -477,7 +508,7 @@ namespace _VMTL {
 				{ v.x } -> std::convertible_to<T>;
 				{ v.y } -> std::convertible_to<T>;
 				{ v.z } -> std::convertible_to<T>;
-			} && (_VMTL::__is_extern_type<VectorType>::value):
+			} && (_VMTL::__is_foreign_type<VectorType>::value):
 			__mtl_base{ v.x, v.y, v.z } {}
 		template <typename VectorType>
 		__mtl_always_inline __mtl_interface_export
@@ -487,23 +518,14 @@ namespace _VMTL {
 				{ v.y } -> std::convertible_to<T>;
 				{ v.z } -> std::convertible_to<T>;
 				{ v.w } -> std::convertible_to<T>;
-			} && (_VMTL::__is_extern_type<VectorType>::value):
+			} && (_VMTL::__is_foreign_type<VectorType>::value):
 			__mtl_base{ v.x, v.y, v.z, v.w } {}
 		
 		/// Convert to foreign vector type
-		template <typename VectorType>
-		requires requires {
-			VectorType{ (I, std::declval<T>())... };
-		} && (_VMTL::__is_extern_type<VectorType>::value)
+		template <__foreign_vector_type<T, Size> VectorType>
+		constexpr operator VectorType() { return const_cast<__vector_base const&>(*this).operator VectorType(); }
+		template <__foreign_vector_type<T, Size> VectorType>
 		constexpr operator VectorType() const { return VectorType{ this->__data[I]... }; }
-		
-		template <typename VectorType>
-		requires (!requires {
-			VectorType{ (I, std::declval<T>())... };
-		}) && requires {
-			VectorType((I, std::declval<T>())...);
-		} && (_VMTL::__is_extern_type<VectorType>::value)
-		constexpr operator VectorType() const { return VectorType(this->__data[I]...); }
 	};
 
 	/// MARK: - struct vector
@@ -530,6 +552,17 @@ namespace _VMTL {
 		constexpr T const&& __mtl_at(std::size_t i) const&& {
 			__mtl_assert_audit(i < Size);
 			return std::move(this->__data[i]);
+		}
+		
+		__mtl_always_inline
+		constexpr T __mtl_vec_at(std::size_t i) const {
+			__mtl_assert_audit(i < Size);
+			if (std::is_constant_evaluated()) {
+				return this->__data[i];
+			}
+			else {
+				return __simd_type<T, Size, O.packed()>::get(this->__vec, i);
+			}
 		}
 		
 		/// MARK: Public Interface
@@ -690,6 +723,34 @@ namespace _VMTL {
 			return *this;
 		}
 		
+		template <std::integral U, vector_options P>
+		__mtl_always_inline __mtl_interface_export
+		constexpr vector& operator<<=(vector<U, Size, P> const& rhs)& {
+			*this = *this << rhs;
+			return *this;
+		}
+		
+		template <std::integral U, vector_options P>
+		__mtl_always_inline __mtl_interface_export
+		constexpr vector& operator>>=(vector<U, Size, P> const& rhs)& {
+			*this = *this >> rhs;
+			return *this;
+		}
+		
+		template <std::integral U>
+		__mtl_always_inline __mtl_interface_export
+		constexpr vector& operator<<=(U rhs)& {
+			*this = *this << rhs;
+			return *this;
+		}
+		
+		template <std::integral U>
+		__mtl_always_inline __mtl_interface_export
+		constexpr vector& operator>>=(U rhs)& {
+			*this = *this >> rhs;
+			return *this;
+		}
+		
 		/// MARK: Vector<bool> Members
 		__mtl_always_inline __mtl_interface_export
 		constexpr bool all() const requires std::convertible_to<T, bool> {
@@ -702,16 +763,30 @@ namespace _VMTL {
 		
 		/// MARK: Min, Max
 		__mtl_always_inline __mtl_interface_export
-		constexpr T min() const requires real_scalar<T> {
+		constexpr T& min() requires real_scalar<T> {
 			return __mtl_with_index_sequence((I, Size), {
-				return min(__mtl_at(I)...);
+				return _VMTL::min(__mtl_at(I)...);
 			});
 		}
 		
 		__mtl_always_inline __mtl_interface_export
-		constexpr T max() const requires real_scalar<T> {
+		constexpr T const& min() const requires real_scalar<T> {
 			return __mtl_with_index_sequence((I, Size), {
-				return max(__mtl_at(I)...);
+				return _VMTL::min(__mtl_at(I)...);
+			});
+		}
+		
+		__mtl_always_inline __mtl_interface_export
+		constexpr T& max() requires real_scalar<T> {
+			return __mtl_with_index_sequence((I, Size), {
+				return _VMTL::max(__mtl_at(I)...);
+			});
+		}
+		
+		__mtl_always_inline __mtl_interface_export
+		constexpr T const& max() const requires real_scalar<T> {
+			return __mtl_with_index_sequence((I, Size), {
+				return _VMTL::max(__mtl_at(I)...);
 			});
 		}
 	};
@@ -746,11 +821,9 @@ namespace _VMTL {
 	}
 	
 	// operator<<(std::ostream&, vector):
-	template <typename T, std::size_t Size, vector_options O>
+	template <typename CharT, typename T, std::size_t Size, vector_options O>
 	__mtl_interface_export
-	std::ostream& operator<<(std::ostream& _str, vector<T, Size, O> const& v) {
-		/// To stop the compiler from checking operations on str, since only <iosfwd> is included
-		auto& str = [](auto& x) -> decltype(auto) { return x; }(_str);
+	std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& str, vector<T, Size, O> const& v) {
 		str << '(';
 		for (bool first = true; auto&& i: v) {
 			str << (first ? ((void)(first = false), "") : ", ") << i;
@@ -1052,6 +1125,63 @@ namespace _VMTL {
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr auto sqrt(vector<T, Size, O> const& a) {
 		return a.map(_VMTL::__mtl_sqrt);
+	}
+	
+	/// Element-wise Cube Root of Vector
+	template <scalar T, std::size_t Size, vector_options O>
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr auto cbrt(vector<T, Size, O> const& a) {
+		return a.map([](T const& a) { using std::cbrt; return cbrt(a); });
+	}
+	
+	/// Element-wise Pow
+	template <scalar T, scalar U, std::size_t Size, vector_options O, vector_options P>
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr auto pow(vector<T, Size, O> const& base, vector<U, Size, P> const& exp) {
+		return map(base, exp, [](T const& b, U const& e) { using std::pow; return pow(b, e); });
+	}
+	
+	template <scalar T, scalar U, std::size_t Size, vector_options O>
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr auto pow(vector<T, Size, O> const& base, U const& exp) {
+		return base.map([&](T const& b) { using std::pow; return pow(b, exp); });
+	}
+	
+	template <scalar T, scalar U, std::size_t Size, vector_options O>
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr auto pow(T const& base, vector<U, Size, O> const& exp) {
+		return exp.map([&](U const& e) { using std::pow; return pow(base, e); });
+	}
+	
+	/// Element-wise Exponential of Vector
+	template <scalar T, std::size_t Size, vector_options O>
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr auto exp(vector<T, Size, O> const& a) {
+		return a.map([](T const& a) { using std::exp; return exp(a); });
+	}
+	
+	template <scalar T, std::size_t Size, vector_options O>
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr auto exp2(vector<T, Size, O> const& a) {
+		return a.map([](T const& a) { using std::exp2; return exp2(a); });
+	}
+	
+	template <scalar T, std::size_t Size, vector_options O>
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr auto log(vector<T, Size, O> const& a) {
+		return a.map([](T const& a) { using std::log; return log(a); });
+	}
+	
+	template <scalar T, std::size_t Size, vector_options O>
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr auto log2(vector<T, Size, O> const& a) {
+		return a.map([](T const& a) { using std::log2; return log2(a); });
+	}
+	
+	template <scalar T, std::size_t Size, vector_options O>
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr auto log10(vector<T, Size, O> const& a) {
+		return a.map([](T const& a) { using std::log10; return log10(a); });
 	}
 	
 	/// Element-wise Ceil Divide of Vector by Vector

@@ -390,10 +390,10 @@ namespace utl {
 
 	
 	
-	template <typename T, typename = int, std::size_t IntWidth = utl::log2(alignof(T))>
+	template <typename T, typename Int = int, std::size_t IntWidth = utl::log2(alignof(T))>
 	class pointer_int_pair;
-	
-	template <typename T, integral Int, std::size_t IntWidth>
+
+	template <typename T, typename Int, std::size_t IntWidth>
 	class pointer_int_pair<T*, Int, IntWidth> {
 	public:
 		static constexpr bool fits(Int i) noexcept {

@@ -115,6 +115,11 @@ namespace utl {
 	
 	/// MARK: - Additional Concepts
 	template <typename T>
+	concept __boolean_testable = std::convertible_to<T, bool> && requires(T&& t) {
+		{ !std::forward<T>(t) } -> std::convertible_to<bool>;
+	};
+	
+	template <typename T>
 	concept arithmetic = std::is_arithmetic_v<T>;
 
 	template <typename T>

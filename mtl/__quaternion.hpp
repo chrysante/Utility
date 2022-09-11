@@ -1,5 +1,7 @@
 #pragma once
 
+/// __quaternion.hpp
+
 #ifndef __MTL_QUATERNION_HPP_INCLUDED__
 #define __MTL_QUATERNION_HPP_INCLUDED__
 
@@ -46,7 +48,8 @@ namespace _VMTL {
 		template <vector_options P = __mtl_quaternion_vector_options>
 		constexpr quaternion(T const& real,  _VMTL::vector<T, 3, P> const& imag): __mtl_base(real, imag.__mtl_at(0), imag.__mtl_at(1), imag.__mtl_at(2)) {}
 		constexpr quaternion(T const& a, T const& b, T const& c, T const& d): __mtl_base(a, b, c, d) {}
-		constexpr quaternion(complex<T> const& z): quaternion(z.__mtl_at(0), z.__mtl_at(1), 0, 0) {}
+		template <std::convertible_to<T> U>
+		constexpr quaternion(complex<U> const& z): quaternion(z.__mtl_at(0), z.__mtl_at(1), 0, 0) {}
 		template <vector_options P = __mtl_quaternion_vector_options>
 		constexpr quaternion(_VMTL::vector<T, 4, P> const& v): __mtl_base(v) {}
 		
@@ -126,14 +129,14 @@ namespace _VMTL {
 	template <typename T>
 	constexpr bool isnan(quaternion<T> const& z) {
 		using std::isnan;
-		return isnan(z.__mtl_at(0)) || isnan(z.__mtl_at(1)) || isnan(z.__mtl_at(2)) || isnan(z.__mtl_at(3));
+		return isnan(z.__mtl_at(0)) || isnan(z.__mtl_at(1)) || isnan(z.__mtl_at(2)) || isnan(z.__mtl_at(3));
 	}
 	
 	/// isinf
 	template <typename T>
 	constexpr bool isinf(quaternion<T> const& z) {
 		using std::isinf;
-		return isinf(z.__mtl_at(0)) || isinf(z.__mtl_at(1)) || isinf(z.__mtl_at(2)) || isinf(z.__mtl_at(3));
+		return isinf(z.__mtl_at(0)) || isinf(z.__mtl_at(1)) || isinf(z.__mtl_at(2)) || isinf(z.__mtl_at(3));
 	}
 	
 	/// isfinite
@@ -450,7 +453,7 @@ namespace _VMTL {
 	template <real_scalar T>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	quaternion<__mtl_floatify(T)> sqrt(quaternion<T> const& z) {
-		__mtl_expect(real(z) >= 0 || imag(z) != 0);
+		__mtl_expect(real(z) >= 0 || imag(z) != 0);
 		auto const r = _VMTL::abs(z);
 		return std::sqrt(r) * (z + r) / _VMTL::abs(z + r);
 	}
@@ -577,11 +580,11 @@ namespace _VMTL {
 	}
 	template <std::size_t I, typename T>
 	auto&& get(quaternion<T>&& v) {
-		return std::move(get(v));
+		return std::move(get<I>(v));
 	}
 	template <std::size_t I, typename T>
 	auto&& get(quaternion<T> const&& v) {
-		return std::move(get(v));
+		return std::move(get<I>(v));
 	}
 	
 }

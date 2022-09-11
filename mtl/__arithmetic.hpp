@@ -1,5 +1,7 @@
 #pragma once
 
+/// __arithmetic.hpp
+
 #ifndef __MTL_ARITHMETIC_HPP_INCLUDED__
 #define __MTL_ARITHMETIC_HPP_INCLUDED__
 
@@ -7,8 +9,17 @@
 _MTL_SYSTEM_HEADER_
 
 #include "__common.hpp"
+#include "__intrin.hpp"
 
 namespace _VMTL {
+	
+	template <typename VectorType, typename T, vector_options O>
+	VectorType __mtl_load(vector<T, VectorType::size(), O> const& x) {
+		return type_cast<typename VectorType::value_type>(x);
+	}
+	
+	template <typename VectorType>
+	using __mtl_get_simd_type = __simd_type<typename VectorType::value_type, VectorType::size(), VectorType::options().packed()>;
 	
 	/// MARK: - Vector Arithmetic
 	///
@@ -93,7 +104,17 @@ namespace _VMTL {
 	constexpr vector<__mtl_promote(T, U), Size, combine(O, P)>
 	operator*(vector<T, Size, O> const& a,
 			  vector<U, Size, P> const& b) {
-		return map(a, b, _VMTL::__mtl_multiplies);
+		if (std::is_constant_evaluated()) {
+			return map(a, b, _VMTL::__mtl_multiplies);
+		}
+		
+		using result_type = vector<__mtl_promote(T, U), Size, combine(O, P)>;
+		using simd_type = __mtl_get_simd_type<result_type>;
+		
+		result_type result = __mtl_load<result_type>(a);
+		simd_type::mul(result.__vec, __mtl_load<result_type>(b).__vec);
+		
+		return result;
 	}
 
 	/// Multiply Vector by Scalar (element-wise)
@@ -101,8 +122,10 @@ namespace _VMTL {
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr vector<__mtl_promote(T, U), Size, O>
 	operator*(vector<T, Size, O> const& a,
-			  U const& b) {
-		return map(a, [&b](auto a) { return a * b; });
+			  U const& b)
+	{
+		using result_type = vector<__mtl_promote(T, U), Size, O>;
+		return a * result_type(b);
 	}
 
 	/// Multiply Scalar by Vector (element-wise)
@@ -110,8 +133,10 @@ namespace _VMTL {
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr vector<__mtl_promote(T, U), Size, O>
 	operator*(T const& a,
-			  vector<U, Size, O> const& b) {
-		return map(b, [&a](auto b) { return a * b; });
+			  vector<U, Size, O> const& b)
+	{
+		using result_type = vector<__mtl_promote(T, U), Size, O>;
+		return result_type(a) * b;
 	}
 	
 	/// MARK: Divide
@@ -120,8 +145,19 @@ namespace _VMTL {
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr vector<__mtl_promote(T, U), Size, combine(O, P)>
 	operator/(vector<T, Size, O> const& a,
-			  vector<U, Size, P> const& b) {
-		return map(a, b, _VMTL::__mtl_divides);
+			  vector<U, Size, P> const& b)
+	{
+		if (std::is_constant_evaluated()) {
+			return map(a, b, _VMTL::__mtl_divides);
+		}
+		
+		using result_type = vector<__mtl_promote(T, U), Size, combine(O, P)>;
+		using simd_type = __mtl_get_simd_type<result_type>;
+		
+		result_type result = __mtl_load<result_type>(a);
+		simd_type::div(result.__vec, __mtl_load<result_type>(b).__vec);
+		
+		return result;
 	}
 
 	/// Divide Vector by Scalar (element-wise)
@@ -129,8 +165,10 @@ namespace _VMTL {
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr vector<__mtl_promote(T, U), Size, O>
 	operator/(vector<T, Size, O> const& a,
-			  U const& b) {
-		return map(a, [&b](auto a) { return a / b; });
+			  U const& b)
+	{
+		using result_type = vector<__mtl_promote(T, U), Size, O>;
+		return a / result_type(b);
 	}
 
 	/// Divide Scalar by Vector (element-wise)
@@ -138,8 +176,10 @@ namespace _VMTL {
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr vector<__mtl_promote(T, U), Size, O>
 	operator/(T const& a,
-			  vector<U, Size, O> const& b) {
-		return map(b, [&a](auto b) { return a / b; });
+			  vector<U, Size, O> const& b)
+	{
+		using result_type = vector<__mtl_promote(T, U), Size, O>;
+		return result_type(a) / b;
 	}
 
 	/// MARK: Modulo
@@ -280,6 +320,53 @@ namespace _VMTL {
 	__mtl_always_inline __mtl_interface_export
 	constexpr auto operator!(vector<T, Size, O> const& a) {
 		return map(a, __mtl_logical_not);
+	}
+	
+	/// Bitshift Vector by Vector (element-wise)
+	template <std::integral T, std::integral U, std::size_t Size, vector_options O, vector_options P>
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr vector<T, Size, O>
+	operator<<(vector<T, Size, O> const& a,
+			  vector<U, Size, P> const& b) {
+		return map(a, b, [](T t, U u) { return t << u; });
+	}
+	
+	template <std::integral T, std::integral U, std::size_t Size, vector_options O, vector_options P>
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr vector<T, Size, O>
+	operator>>(vector<T, Size, O> const& a,
+			  vector<U, Size, P> const& b) {
+		return map(a, b, [](T t, U u) { return t >> u; });
+	}
+	
+	/// Bitshift Vector by Scalar (element-wise)
+	template <std::integral T, std::integral U, std::size_t Size, vector_options O>
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr vector<T, Size, O>
+	operator<<(vector<T, Size, O> const& a, U b) {
+		return a.map([b](T t) { return t << b; });
+	}
+	
+	template <std::integral T, std::integral U, std::size_t Size, vector_options O>
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr vector<T, Size, O>
+	operator>>(vector<T, Size, O> const& a, U b) {
+		return a.map([b](T t) { return t >> b; });
+	}
+	
+	/// Bitshift Scalar by Vector (element-wise)
+	template <std::integral T, std::integral U, std::size_t Size, vector_options O>
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr vector<T, Size, O>
+	operator<<(T a, vector<U, Size, O> const& b) {
+		return b.map([a](U u) { return a << u; });
+	}
+	
+	template <std::integral T, std::integral U, std::size_t Size, vector_options O>
+	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
+	constexpr vector<T, Size, O>
+	operator>>(T a, vector<U, Size, O> const& b) {
+		return b.map([a](U u) { return a >> u; });
 	}
 	
 	/// MARK: - Matrix Arithmetic

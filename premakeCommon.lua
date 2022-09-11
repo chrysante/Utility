@@ -12,6 +12,7 @@ function basicWorkspace (name)
     symbols "On"
     filter "configurations:Development or Release"
         optimize "Speed"
+        defines "NDEBUG"
     filter {}
 
     filter { "configurations:Debug" }

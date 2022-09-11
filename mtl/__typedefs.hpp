@@ -1,12 +1,11 @@
+/// __typedefs.hpp
+
 /// DELIBERATELY NO INCLUDE GUARDS! Sections have their own include guards.
 
 #include "__base.hpp"
 _MTL_SYSTEM_HEADER_
 
 #include "__common.hpp"
-
-
-
 	
 #ifdef __MTL_DECLARE_STDINT_TYPEDEFS__
 #ifndef __MTL_STDINT_TYPEDEFS_INCLUDED__

@@ -1,82 +1,96 @@
-#include <utl/vector.hpp>
-#include <utl/functional.hpp>
+#define _UTL_MAP_DEBUG_PRINT
 
-#include <mtl/mtl.hpp>
+#include <utl/map.hpp>
+#include <utl/typeinfo.hpp>
 #include <iostream>
+#include <vector>
+#include <random>
+#include <algorithm>
+#include <set>
 
-#include <any>
-#include <memory>
-#include <unordered_map>
-
-struct Expression {
-	virtual ~Expression() = default;
+struct Test {
+	Test(std::size_t count, bool unique = false) {
+		keys.reserve(count);
+		std::generate_n(std::back_inserter(keys), count, [&, prev = std::set<int>{}, rng = std::mt19937{ std::random_device()() }]() mutable {
+			begin:
+			int const result = std::uniform_int_distribution<>(0, count * 100)(rng);
+			if (unique && !prev.insert(result).second) {
+				goto begin;
+			}
+			return result;
+		});
+	}
 	
-	virtual std::any evaluate() const = 0;
+	
+	template <typename Hash>
+	utl::map<int, int, Hash> makeMap() const {
+		utl::map<int, int, Hash> m;
+		for (int i = 0; i < std::size(keys); ++i) {
+			m.insert(keys[i], i);
+		}
+		return m;
+	}
+	
+	template <typename Hash>
+	double getEntropy(utl::map<int, int, Hash> const& m) const {
+		std::size_t const sum_offsets = m.__sum_of_offsets();
+		double const entropy = (double)sum_offsets / m.size();
+		return entropy;
+	}
+	
+	std::vector<int> keys;
 };
 
+template <typename Hash>
+constexpr double lower = 0;
+template <typename Hash>
+constexpr double upper = 0;
 
-class Variable: public Expression {
-public:
-	Variable(std::any value): _value(std::move(value)) {}
-	
-	std::any evaluate() const override { return _value; }
+template <>
+constexpr double lower<utl::good_hash<int>> = 2;
+template <>
+constexpr double upper<utl::good_hash<int>> = 2.1;
 
-private:
-	std::any _value;
-};
+template <>
+constexpr double lower<std::hash<int>> = 1.2;
+template <>
+constexpr double upper<std::hash<int>> = 1.4;
 
-
-template <std::size_t, typename>
-class __OperationImpl;
-
-template <std::size_t Arity, std::size_t... I>
-class __OperationImpl<Arity, std::index_sequence<I...>>: public Expression {
-public:
-	template <typename T, std::size_t>
-	using __PassType = T;
-	__OperationImpl(__PassType<std::unique_ptr<Expression>, I>... operands): __operands(std::move(operands)...) {}
-	
-	std::any evaluate() const override { return __operation(std::get<I>(__operands)->evaluate()...); }
-	
-private:
-	std::tuple<__PassType<std::unique_ptr<Expression>, I>...> __operands;
-	std::function<std::any(__PassType<std::any, I> const&...)> __operation;
-};
-
-
-template <std::size_t Arity>
-class Operation: public __OperationImpl<Arity, std::make_index_sequence<Arity>> {
-public:
-	using __Base = __OperationImpl<Arity, std::make_index_sequence<Arity>>;
-	using __Base::__Base;
-	
-	using __Base::evaluate;
-};
-
-
-struct Token {
-	enum class Type {
-		name, openingBrace, closingBrace, openingParan, closingParan, operatorPlus
-	};
-	Type type;
-	
-};
-
-std::unordered_map
-
-std::vector<Token> parse(char const* text) {
-	while (text != )
+template <typename Hash>
+void test2(std::size_t count) {
+	while (true) {
+		Test t(count);
+		auto const m = t.makeMap<Hash>();
+		double const e = t.getEntropy(m);
+		if (e >= lower<Hash> && e <= upper<Hash>) {
+			m.__debug_print();
+			__utl_debugbreak();
+			break;
+		}
+	}
 }
 
-
-
-char const* MyScript = R"(
-int x = 1 + 2;
-)";
-
-int main() {
-
+int _main() {
+	std::size_t numElements = 265;
 	
+//	if (0)
+//	{
+//		test2<utl::good_hash<int>>(numElements);
+//		test2<std::hash<int>>(numElements);
+//
+//		return 0;
+//	}
+
+	double good_hash = 0, std_hash = 0;
 	
+	int const numSamples = 10'000;
+	for (int i = 0; i < numSamples; ++i) {
+		Test t(numElements);
+		
+		good_hash += t.getEntropy(t.makeMap<utl::good_hash<int>>());
+		std_hash += t.getEntropy(t.makeMap<std::hash<int>>());
+	}
+	
+	std::cout << "good_hash: " << good_hash / numSamples << std::endl;
+	std::cout << "std_hash:  " << std_hash / numSamples << std::endl;
 }
-

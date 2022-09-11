@@ -1,5 +1,11 @@
 #pragma once
 
+/// __undef.hpp
+
+#ifndef __MTL_UNDEF_HPP_INCLUDED__
+#define __MTL_UNDEF_HPP_INCLUDED__
+
+#ifndef __MTL_NO_UNDEF__
 
 #undef _MTL_SYSTEM_HEADER_
 
@@ -42,3 +48,7 @@
 #undef __mtl_with_index_sequence
 
 #undef MTL_STDLIB_HAS_CONCEPTS
+
+#endif // __MTL_NO_UNDEF__
+
+#endif // __MTL_UNDEF_HPP_INCLUDED__

@@ -36,6 +36,11 @@ files {
     "UtilityTest/**.cpp"
 }
 
+defines { "MTL_AVX=1" }
+
+filter { "system:macosx" }
+    buildoptions { "-mavx" }
+
 links "Utility"
 
 -----------------------------------------------------------------------------------------

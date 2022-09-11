@@ -1,5 +1,7 @@
 #pragma once
 
+/// __base.hpp
+
 #ifndef __MTL_BASE_HPP_INCLUDED__
 #define __MTL_BASE_HPP_INCLUDED__
 
@@ -32,6 +34,10 @@ _MTL_SYSTEM_HEADER_
 
 #ifndef MTL_DEFAULT_PACKED
 #	define MTL_DEFAULT_PACKED  0
+#endif
+
+#ifndef MTL_AVX
+#	define MTL_AVX 0
 #endif
 
 #ifndef MTL_NAMESPACE_NAME
@@ -102,8 +108,12 @@ _MTL_SYSTEM_HEADER_
 #define __mtl_expect(COND) __mtl_assert(COND)
 #define __mtl_ensure(COND) __mtl_assert(COND)
 
-#if defined(__GNUC__) || defined(__clang__)
+
+
+#if defined(__clang__)
 #	define __mtl_debugbreak(msg) __builtin_debugtrap()
+#elif defined(__GNUC__)
+#	define __mtl_debugbreak(msg) __builtin_trap()
 #elif defined(_MSC_VER)
 #	define __mtl_debugbreak(msg) __debugbreak()
 #else 

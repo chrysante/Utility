@@ -1,5 +1,7 @@
 #pragma once
 
+/// __common.hpp
+
 #ifndef __MTL_COMMON_HPP_INCLUDED__
 #define __MTL_COMMON_HPP_INCLUDED__
 
@@ -10,6 +12,7 @@ _MTL_SYSTEM_HEADER_
 #include <utility>
 #include <iosfwd>
 #include <concepts>
+#include <functional>
 
 #define __MTL_DECLARE_STDINT_TYPEDEFS__
 #include "__typedefs.hpp"
@@ -105,7 +108,7 @@ namespace _VMTL {
 	struct is_matrix<matrix<T, R, C, O> const volatile> : std::true_type {};
 	
 	template <typename T>
-	struct __is_extern_type_impl: std::conjunction<
+	struct __is_foreign_type_impl: std::conjunction<
 		std::negation<is_complex<T>>,
 		std::negation<is_quaternion<T>>,
 		std::negation<is_vector<T>>,
@@ -113,7 +116,21 @@ namespace _VMTL {
 	> {};
 	
 	template <typename T>
-	struct __is_extern_type: __is_extern_type_impl<std::decay_t<T>> {};
+	struct __is_foreign_type: __is_foreign_type_impl<std::decay_t<T>> {};
+	
+	template <typename T>
+	concept __foreign_type = __is_foreign_type<T>::value;
+	
+	template <typename Vector, typename ValueType, std::size_t N, typename = std::make_index_sequence<N>>
+	constexpr bool __is_vector_type_v = false;
+	
+	template <typename Vector, typename ValueType, std::size_t N, std::size_t... I>
+	constexpr bool __is_vector_type_v<Vector, ValueType, N, std::index_sequence<I...>> = requires(ValueType&& t) {
+		Vector{ (I, t)... };
+	};
+	
+	template <typename V, typename T, std::size_t N>
+	concept __foreign_vector_type = __foreign_type<V> && __is_vector_type_v<V, T, N>;
 	
 	template <typename T>
 	struct is_scalar: std::disjunction<is_real_scalar<T>, is_complex<T>, is_quaternion<T>> {};
@@ -460,7 +477,7 @@ namespace _VMTL {
 #define __MTL_PRIV_WIS_FP(I, S) (::std::index_sequence<I...>)
 #define __MTL_PRIV_WIS_FI(I, S) (::std::make_index_sequence<S>{})
 #define __mtl_with_index_sequence(Index, ...) \
-[&] __MTL_PRIV_WIS_FT Index __MTL_PRIV_WIS_FP Index __VA_ARGS__ __MTL_PRIV_WIS_FI Index
+[&] __MTL_PRIV_WIS_FT Index __MTL_PRIV_WIS_FP Index -> decltype(auto) __VA_ARGS__ __MTL_PRIV_WIS_FI Index
 	
 	template <typename T>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export

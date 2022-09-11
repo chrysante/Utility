@@ -1,11 +1,12 @@
 #pragma once
 
+/// __ext.hpp
+
 #ifndef __MTL_EXT_HPP_INCLUDED__
 #define __MTL_EXT_HPP_INCLUDED__
 
 #include "__base.hpp"
 _MTL_SYSTEM_HEADER_
-
 
 #include "__common.hpp"
 #include "__vector.hpp"
@@ -13,6 +14,7 @@ _MTL_SYSTEM_HEADER_
 #include "__quaternion.hpp"
 #include <cmath>
 #include <concepts>
+#include <cstring>
 
 namespace _VMTL {
 

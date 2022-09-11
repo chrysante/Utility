@@ -1,5 +1,7 @@
 #pragma once
 
+/// __matrix.hpp
+
 #ifndef __MTL_MATRIX_HPP_INCLUDED__
 #define __MTL_MATRIX_HPP_INCLUDED__
 
@@ -110,8 +112,14 @@ _MTL_SYSTEM_HEADER_
 
 namespace _VMTL {
 	
-	struct rows_tag{}    inline constexpr rows{};
-	struct columns_tag{} inline constexpr columns{};
+	/// Tag type to select matrix row constructor
+	struct rows_tag{};
+	/// Tag to select matrix row constructor
+	inline constexpr rows_tag rows{};
+	/// Tag type to select matrix column constructor
+	struct columns_tag{};
+	/// Tag to select matrix column constructor
+	inline constexpr columns_tag columns{};
 
 	/// MARK: Map
 	template <typename... T, std::size_t R, std::size_t C, vector_options... O, std::invocable<T...> F>
@@ -120,15 +128,16 @@ namespace _VMTL {
 		using U = std::invoke_result_t<F, T...>;
 		if constexpr (std::same_as<U, void>) {
 			for (std::size_t i = 0; i < R * C; ++i) {
-				std::invoke(__mtl_forward(f), m.__mtl_at(i)...);
+				std::invoke(__mtl_forward(f), m.__mtl_vec_at(i)...);
 			}
 		}
 		else {
 			constexpr auto P = combine(O...);
-			return matrix<U, R, C, P>([&](std::size_t i) { return std::invoke(__mtl_forward(f), m.__mtl_at(i)...); });
+			return matrix<U, R, C, P>([&](std::size_t i) { return std::invoke(__mtl_forward(f), m.__mtl_vec_at(i)...); });
 		}
 	}
 	
+	/// Map the unary function object f onto the matrix m0
 	template <typename T0, std::size_t R, std::size_t C, vector_options O0, std::invocable<T0> F>
 	__mtl_mathfunction __mtl_always_inline __mtl_interface_export
 	constexpr auto map(matrix<T0, R, C, O0> const& m0,
@@ -137,6 +146,7 @@ namespace _VMTL {
 		return __map_impl(__mtl_forward(f), m0);
 	}
 	
+	/// Map the binary function object f onto the matrices m0 and m1
 	template <typename T0, typename T1, std::size_t R, std::size_t C,
 			  vector_options O0, vector_options O1,
 			  std::invocable<T0, T1> F>
@@ -148,6 +158,7 @@ namespace _VMTL {
 		return __map_impl(__mtl_forward(f), m0, m1);
 	}
 	
+	/// Map the ternary function object f onto the matrices m0, m1, m2
 	template <typename T0, typename T1, typename T2, std::size_t R, std::size_t C,
 			  vector_options O0, vector_options O1, vector_options O2,
 			  std::invocable<T0, T1, T2> F>
@@ -242,7 +253,10 @@ namespace _VMTL {
 	struct __matrix_data {
 		static constexpr std::size_t __columns_in_data = Columns;
 		static constexpr std::size_t __size_in_data = Rows * Columns;
-		T __data[__size_in_data];
+		union {
+			T __data[__size_in_data];
+			__simd_type_t<T, Columns, Packed> __vec[Rows];
+		};
 		
 		__mtl_always_inline
 		constexpr T& __mtl_at(std::size_t i)& {
@@ -263,6 +277,12 @@ namespace _VMTL {
 		constexpr T const&& __mtl_at(std::size_t i) const&& {
 			__mtl_assert_audit(i < Rows * Columns);
 			return (T const&&)(__data[i]);
+		}
+		
+		__mtl_always_inline
+		constexpr T __mtl_vec_at(std::size_t i) const {
+			__mtl_assert_audit(i < Rows * Columns);
+			return __vec[i / Columns][i % Columns];
 		}
 		
 		__mtl_always_inline
@@ -289,6 +309,13 @@ namespace _VMTL {
 			__mtl_assert_audit(j < Columns);
 			return (T const&&)(__data[i * Columns + j]);
 		}
+		
+		__mtl_always_inline
+		constexpr T __mtl_vec_at(std::size_t i, std::size_t j) const {
+			__mtl_assert_audit(i < Rows);
+			__mtl_assert_audit(j < Columns);
+			return __vec[i][j];
+		}
 	};
 	
 	/// MARK: Size = N x 3, Packed = false
@@ -297,8 +324,10 @@ namespace _VMTL {
 	struct __matrix_data<T, Rows, 3, false> {
 		static constexpr std::size_t __columns_in_data = 4;
 		static constexpr std::size_t __size_in_data = __columns_in_data * Rows;
-		T __data[__size_in_data];
-		
+		union {
+			T __data[__size_in_data];
+			__simd_type_t<T, 4, false> __vec[Rows];
+		};
 		__mtl_pure __mtl_always_inline
 		static constexpr std::size_t __index(std::size_t i, std::size_t j) {
 			return i * 4 + j;
@@ -326,6 +355,12 @@ namespace _VMTL {
 		}
 		
 		__mtl_always_inline
+		constexpr T __mtl_vec_at(std::size_t index) const {
+			__mtl_assert_audit(index < Rows * 3);
+			return __vec[index / 3][index % 3];
+		}
+		
+		__mtl_always_inline
 		constexpr T& __mtl_at(std::size_t i, std::size_t j)& {
 			__mtl_assert_audit(i < Rows);
 			__mtl_assert_audit(j < 3);
@@ -348,6 +383,13 @@ namespace _VMTL {
 			__mtl_assert_audit(i < Rows);
 			__mtl_assert_audit(j < 3);
 			return (T const&&)(__data[__index(i, j)]);
+		}
+		
+		__mtl_always_inline
+		constexpr T __mtl_vec_at(std::size_t i, std::size_t j) const {
+			__mtl_assert_audit(i < Rows);
+			__mtl_assert_audit(j < 3);
+			return __vec[i][j];
 		}
 		
 		__matrix_data() = default;
@@ -661,7 +703,7 @@ namespace _VMTL {
 		
 		matrix& operator=(matrix const&)& = default;
 		
-		/// operator[]:
+		/// operator[](std::size_t):
 		__mtl_always_inline __mtl_interface_export
 		constexpr T& operator[](std::size_t index)& {
 			return const_cast<T&>(const_cast<matrix const&>(*this)[index]);
@@ -677,6 +719,25 @@ namespace _VMTL {
 		}
 		__mtl_always_inline __mtl_interface_export
 		constexpr T const&& operator[](std::size_t index) const&& {
+			return std::move(this->operator[](index));
+		}
+		/// operator[](usize2):
+		__mtl_always_inline __mtl_interface_export
+		constexpr T& operator[](usize2 index)& {
+			return const_cast<T&>(const_cast<matrix const&>(*this)[index]);
+		}
+		__mtl_always_inline __mtl_interface_export
+		constexpr T const& operator[](usize2 index) const& {
+			__mtl_bounds_check(index.__mtl_at(0), 0, Rows);
+			__mtl_bounds_check(index.__mtl_at(1), 0, Columns);
+			return this->__mtl_at(index.__mtl_at(0), index.__mtl_at(1));
+		}
+		__mtl_always_inline __mtl_interface_export
+		constexpr T&& operator[](size2 index)&& {
+			return std::move(this->operator[](index));
+		}
+		__mtl_always_inline __mtl_interface_export
+		constexpr T const&& operator[](size2 index) const&& {
 			return std::move(this->operator[](index));
 		}
 		
@@ -872,14 +933,11 @@ namespace _VMTL {
 		return m == x;
 	}
 	
-	template <typename T, std::size_t Rows, std::size_t Columns, vector_options O>
-	requires requires(T&& t, std::ostream& str) { { str << t } -> std::convertible_to<std::ostream&>; }
+	template <typename CharT, typename T, std::size_t Rows, std::size_t Columns, vector_options O>
+	requires std::is_arithmetic_v<T> && requires(T&& t, std::ostream& str) { { str << t } -> std::convertible_to<std::ostream&>; }
 	__mtl_interface_export
-	std::ostream& operator<<(std::ostream& _str, matrix<T, Rows, Columns, O> const& m) {
-		/// To stop the compiler from checking operations on str, since only <iosfwd> is included
-		auto& str = [](auto& x) -> decltype(auto) { return x; }(_str);
-		
-		std::stringstream s;
+	std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& str, matrix<T, Rows, Columns, O> const& m) {
+		std::basic_stringstream<CharT> s;
 		std::size_t len[Columns]{};
 		// hacky way to iterate over a matrix
 		(void)matrix<char, Rows, Columns, O>([&](std::size_t i, std::size_t j) {
@@ -888,17 +946,17 @@ namespace _VMTL {
 			s.str({});
 			return 0;
 		});
-		constexpr char const* brackets[6] = {
+		constexpr CharT const* brackets[6] = {
 #if MTL_UNICODE_MATH_PARANTHESES
 			"⎛", "⎜", "⎝", "⎞", "⎥", "⎠"
 #else // MTL_UNICODE_MATH_PARANTHESES
 			"|", "|", "|", "|", "|", "|"
 #endif // MTL_UNICODE_MATH_PARANTHESES
 		};
-		vector<char const*, Rows> left_bracket = brackets[1];
+		vector<CharT const*, Rows> left_bracket = brackets[1];
 		left_bracket[0] = brackets[0];
 		left_bracket[Rows - 1] = brackets[2];
-		vector<char const*, Rows> right_bracket = brackets[4];
+		vector<CharT const*, Rows> right_bracket = brackets[4];
 		right_bracket[0] = brackets[3];
 		right_bracket[Rows - 1] = brackets[5];
 		

@@ -178,16 +178,16 @@ TEST_CASE("AABB") {
 
 	mtl::AABB<float, 2> a = { { 0, 1 }, { 2, 3 } };
 	
-	CHECK(a.bottom_left() == mtl::float2{ 0, 1 });
+	CHECK(a.lower_bound() == mtl::float2{ 0, 1 });
 	CHECK(a.size() == mtl::float2{ 2, 3 });
 	
 	mtl::AABB<float, 2> b = { { -2, -2 }, { 2, 3 } };
 	
-	CHECK(b.bottom_left() == mtl::float2{ -2, -2 });
+	CHECK(b.lower_bound() == mtl::float2{ -2, -2 });
 	CHECK(b.size() == mtl::float2{ 2, 3 });
 
 	auto c = mtl::enclosing(a, b);
-	CHECK(c.bottom_left() == mtl::float2{ -2, -2 });
+	CHECK(c.lower_bound() == mtl::float2{ -2, -2 });
 	CHECK(c.size() == mtl::float2{ 4, 6 });
 	
 }
