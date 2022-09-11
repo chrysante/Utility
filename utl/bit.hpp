@@ -12,6 +12,16 @@ _UTL_SYSTEM_HEADER_
 
 namespace utl {
 	
+	/// MARK: unsafe_bit_cast
+	/// Same as bit_cast but not checking for trivial copyability. Simple call to memcpy
+	template <typename To, typename From>
+	requires (sizeof(To) == sizeof(From))
+	To unsafe_bit_cast(From const& from) noexcept {
+		typename std::aligned_storage<sizeof(To), alignof(To)>::type storage;
+		std::memcpy(&storage, &from, sizeof(To));
+		return reinterpret_cast<To&>(storage);
+	}
+	
 	/// MARK: bit_cast
 	template <typename To, typename From>
 	requires (sizeof(To) == sizeof(From) &&
@@ -21,20 +31,8 @@ namespace utl {
 #if defined(__cpp_lib_bit_cast)
 		return std::bit_cast<To>(from);
 #else
-		typename std::aligned_storage<sizeof(To), alignof(To)>::type storage;
-		std::memcpy(&storage, &from, sizeof(To));
-		return reinterpret_cast<To&>(storage);
+		return unsafe_bit_cast<To>(from);
 #endif
-	}
-	
-	/// MARK: unsafe_bit_cast
-	/// Same as bit_cast but not checking for trivial copyability. Simple call to memcpy
-	template <typename To, typename From>
-	requires (sizeof(To) == sizeof(From))
-	To unsafe_bit_cast(From const& from) noexcept {
-		typename std::aligned_storage<sizeof(To), alignof(To)>::type storage;
-		std::memcpy(&storage, &from, sizeof(To));
-		return reinterpret_cast<To&>(storage);
 	}
 	
 	/// MARK: byte_swap

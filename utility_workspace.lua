@@ -65,6 +65,29 @@ files {
 defines { "PROJECT_LOCATION=\"../../..\"" }
 
 -----------------------------------------------------------------------------------------
+-- Project Benchmark
+-----------------------------------------------------------------------------------------
+project "Benchmark"
+location "."
+kind "ConsoleApp"
+language "C++"
+filter { "system:macosx"} 
+    xcodebuildsettings { 
+
+    }
+filter {}
+
+sysincludedirs {
+    ".", "benchmark_lib/include"
+}
+
+files { 
+    "Benchmark/**.hpp",
+    "Benchmark/**.cpp"
+}
+links { "Utility", "benchmark_lib" }
+
+-----------------------------------------------------------------------------------------
 -- Project Playground
 -----------------------------------------------------------------------------------------
 project "Playground"
@@ -86,3 +109,25 @@ files {
     "Playground/**.cpp"
 }
 links "Utility"
+
+-----------------------------------------------------------------------------------------
+-- Project benchmark_lib
+-----------------------------------------------------------------------------------------
+project "benchmark_lib"
+location "."
+kind "StaticLib"
+language "C++"
+filter { "system:macosx"} 
+    xcodebuildsettings { 
+
+    }
+filter {}
+
+sysincludedirs {
+    "benchmark_lib/include",
+}
+
+files { 
+    "benchmark_lib/src/**.h",
+    "benchmark_lib/src/**.cc"
+}
