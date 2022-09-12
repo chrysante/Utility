@@ -126,14 +126,15 @@ namespace utl {
 		/// (2)
 		__utl_interface_export __utl_always_inline
 		constexpr explicit vector(Allocator const& alloc) noexcept:
-			vector(alloc, {}, {}, 0, true) {}
+		vector(__private_tag{}, alloc, {}, {}, 0, true) {}
 		
 		/// (3)
 		__utl_interface_export __utl_always_inline
 		constexpr vector(std::size_t count,
 						 T const& value,
 						 Allocator const& alloc = Allocator()):
-			vector(alloc,
+			vector(__private_tag{},
+				   alloc,
 				   nullptr,
 				   count,
 				   count,
@@ -149,7 +150,8 @@ namespace utl {
 		__utl_interface_export __utl_always_inline
 		constexpr explicit vector(std::size_t count,
 								  Allocator const& alloc = Allocator()):
-			vector(alloc,
+			vector(__private_tag{},
+				   alloc,
 				   nullptr,
 				   count,
 				   count,

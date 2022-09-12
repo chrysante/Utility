@@ -133,6 +133,7 @@ inline constexpr TYPE operator OP(TYPE a, typename _UTL_NSSTD::underlying_type<T
 #include <type_traits>
 #include <cstdint>
 #include <ios>
+#include <array>
 
 namespace utl {
 	
@@ -365,6 +366,57 @@ namespace utl {
 	
 	template <std::integral T, std::integral U>
 	iota(T, U) -> iota<std::common_type_t<T, U>>;
+
+	/// MARK: any_of, all_of
+//	template <typename, std::size_t, typename>
+//	struct __any_all_of_impl;
+//	
+//	template <typename T, std::size_t N, std::size_t... I>
+//	struct __any_all_of_impl<T, N, std::index_sequence<I...>> {
+//		template <std::size_t, typename U>
+//		using __pass_t = U;
+//		
+//		constexpr __any_all_of_impl(__pass_t<I, T> const&... t): __elems { t... } {}
+//		std::array<T, N> __elems;
+//	};
+//	
+//	template <typename T, std::size_t N>
+//	struct any_of: __any_all_of_impl<T, N, std::make_index_sequence<N>> {
+//		using __base = __any_all_of_impl<T, N, std::make_index_sequence<N>>;
+//		using __base::__base;
+//	};
+//	
+//	template <typename...T>
+//	any_of(T...) -> any_of<std::common_type_t<T...>, sizeof...(T)>;
+//
+//	template <typename T, typename U, std::size_t N>
+//	constexpr bool operator==(T const& a, any_of<U, N> const& b) {
+//		for (auto const& b_: b.__elems) {
+//			if (a == b_) {
+//				return true;
+//			}
+//		}
+//		return false;
+//	}
+//	
+//	template <typename T, std::size_t N>
+//	struct all_of: __any_all_of_impl<T, N, std::make_index_sequence<N>> {
+//		using __base = __any_all_of_impl<T, N, std::make_index_sequence<N>>;
+//		using __base::__base;
+//	};
+//	
+//	template <typename...T>
+//	all_of(T...) -> all_of<std::common_type_t<T...>, sizeof...(T)>;
+//	
+//	template <typename T, typename U, std::size_t N>
+//	constexpr bool operator==(T const& a, all_of<U, N> const& b) {
+//		for (auto const& b_: b.__elems) {
+//			if (a != b_) {
+//				return false;
+//			}
+//		}
+//		return true;
+//	}
 	
 }
 

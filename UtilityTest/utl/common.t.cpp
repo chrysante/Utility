@@ -23,4 +23,12 @@ TEST_CASE("utl::iota") {
 	
 }
 
+TEST_CASE("utl::any_of/all_of") {
+	CHECK(9 == utl::any_of{ 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+	CHECK(9 != utl::any_of{ 1, 2, 3, 4, 5, 6, 7, 8, 0 });
+	
+	CHECK(9 == utl::all_of{ 9, 9, 9, 9 });
+	CHECK(9 != utl::all_of{ 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+}
+
 
