@@ -252,6 +252,36 @@ namespace utl {
 		[[no_unique_address]] Transform transform;
 	};
 	
+	// Not sure what to think of this
+	template <typename E, std::size_t N = (std::size_t)E::_count>
+	struct __enum_serializer {
+		constexpr __enum_serializer(std::pair<E, char const*> const (&a)[N]): __data{} {
+			if constexpr (requires{ E::_count; }) {
+				static_assert(N == (std::size_t)E::_count);
+			}
+			for (std::size_t i = 0; i < N; ++i) {
+				__utl_assert((std::size_t)a[i].first == i, "Make sure every enum case is handled");
+				__data[i] = a[i].second;
+			}
+		}
+		
+		constexpr std::string_view operator[](E i) const { return __data[(std::size_t)i]; }
+		
+		std::array<std::string_view, N> __data;
+	};
+	
+	template <typename... E, std::size_t... N>
+	__enum_serializer(std::pair<E, char const[N]>...) -> __enum_serializer<std::common_type_t<E...>, sizeof...(E)>;
+
+#define UTL_SERIALIZE_ENUM(__utl_e, ...)                                 \
+	[&](auto __utl_x) {                                                  \
+		using E = ::std::decay_t<decltype(__utl_x)>;                     \
+		constexpr ::utl::__enum_serializer<E> __utl_s = { __VA_ARGS__ }; \
+		__utl_assert((::std::size_t)__utl_x < __utl_s.__data.size(),     \
+					 "Invalid enum case");                               \
+		return __utl_s[__utl_x];                                         \
+	}(__utl_e)
+	
 	template <typename Itr, typename Sentinel>
 	auto transform_range(Itr begin, Sentinel end, std::invocable<decltype(*begin)> auto&& transform) {
 		return __transform_range<Itr, Sentinel, std::decay_t<decltype(transform)>>{ begin, end, UTL_FORWARD(transform) };

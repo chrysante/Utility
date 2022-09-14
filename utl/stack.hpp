@@ -5,6 +5,7 @@
 _UTL_SYSTEM_HEADER_
 
 #include <concepts>
+#include <initializer_list>
 #include "vector.hpp"
 
 namespace utl {
@@ -26,6 +27,8 @@ namespace utl {
 		explicit stack(container_type&& cont): container_type(std::move(cont)) {}
 		template <typename InputIt>
 		stack(InputIt first, InputIt last): container_type(first, last) {}
+		
+		stack(std::initializer_list<T> ilist): container_type(ilist) {}
 		
 		/// MARK: Queries
 		using container_type::empty;
