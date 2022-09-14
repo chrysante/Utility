@@ -1,6 +1,7 @@
 Build/
 .vs/
 
+obj/
 
 **.xcworkspace
 **.xcodeproj
