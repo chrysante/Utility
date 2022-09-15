@@ -31,8 +31,8 @@ namespace utl {
 		return seed;
 	}
 	
-	template <input_iterator I, sentinel_for<I> S>
-	requires __utl_hashable<typename std::iterator_traits<I>::value_type>
+	template <typename I, typename S>
+//	requires __utl_hashable<typename std::iterator_traits<I>::value_type>
 	std::size_t hash_combine_range(I begin, S end) {
 		size_t seed = __utl_hash_seed<std::size_t>;
 		for (; begin != end; ++begin) {

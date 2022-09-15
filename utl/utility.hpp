@@ -228,17 +228,28 @@ namespace utl {
 	struct __transform_range {
 		template <typename I>
 		struct iterator {
-			iterator& operator++() {
+			using size_type = std::size_t;
+			using difference_type = std::ptrdiff_t;
+			using value_type = typename I::value_type;
+			iterator& operator++()& {
 				++itr;
 				return *this;
 			}
 			
+			iterator operator++(int)& {
+				auto result = *this;
+				++itr;
+				return result;
+			}
+						
 			decltype(auto) operator*() {
 				return std::invoke(transform, *itr);
 			}
 			
 			template <typename J>
-			bool operator!=(iterator<J> const& rhs) const { return itr != rhs.itr; }
+			bool operator==(iterator<J> const& rhs) const { return itr == rhs.itr; }
+			template <typename J>
+			bool operator!=(iterator<J> const& rhs) const { return !(*this == rhs); }
 			
 			I itr;
 			[[no_unique_address]] Transform transform;
