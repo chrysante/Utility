@@ -55,7 +55,7 @@ namespace utl {
 	}
 	
 	static std::string truncate(std::string str, int width) {
-		if (str.size() > width) {
+		if (ssize_t(str.size()) > width) {
 			auto result = str.substr(str.size() - width, width);
 			for (int i = 0; i < std::min(3, width); ++i) {
 				result[i] = '.';

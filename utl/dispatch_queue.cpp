@@ -76,7 +76,7 @@ namespace utl {
 		}
 	}
 	
-	void thread_pool::work_loop(std::size_t index) {
+	void thread_pool::work_loop([[maybe_unused]] std::size_t index) {
 		std::unique_lock lock(m_mutex);
 		while (true) {
 			if (!m_run)
