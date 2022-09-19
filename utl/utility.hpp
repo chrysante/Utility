@@ -264,9 +264,9 @@ namespace utl {
 	};
 	
 	// Not sure what to think of this
-	template <typename E, std::size_t N = (std::size_t)E::_count>
-	struct __enum_serializer {
-		constexpr __enum_serializer(std::pair<E, char const*> const (&a)[N]): __data{} {
+	template <typename E, typename T, std::size_t N = (std::size_t)E::_count>
+	struct __enum_map {
+		constexpr __enum_map(std::pair<E, T> const (&a)[N]): __data{} {
 			if constexpr (requires{ E::_count; }) {
 				static_assert(N == (std::size_t)E::_count);
 			}
@@ -276,22 +276,24 @@ namespace utl {
 			}
 		}
 		
-		constexpr std::string_view operator[](E i) const { return __data[(std::size_t)i]; }
+		constexpr T const& operator[](E i) const { return __data[(std::size_t)i]; }
 		
-		std::array<std::string_view, N> __data;
+		std::array<T, N> __data;
 	};
 	
-	template <typename... E, std::size_t... N>
-	__enum_serializer(std::pair<E, char const[N]>...) -> __enum_serializer<std::common_type_t<E...>, sizeof...(E)>;
-
-#define UTL_SERIALIZE_ENUM(__utl_e, ...)                                 \
+	template <typename... E, typename... T>
+	__enum_map(std::pair<E, T>...) -> __enum_map<std::common_type_t<E...>, std::common_type_t<T...>>;
+	
+#define UTL_MAP_ENUM(__utl_e, T, ...)                                    \
 	[&](auto __utl_x) {                                                  \
 		using E = ::std::decay_t<decltype(__utl_x)>;                     \
-		constexpr ::utl::__enum_serializer<E> __utl_s = { __VA_ARGS__ }; \
+		constexpr ::utl::__enum_map<E, T> __utl_s = { __VA_ARGS__ };     \
 		__utl_assert((::std::size_t)__utl_x < __utl_s.__data.size(),     \
 					 "Invalid enum case");                               \
 		return __utl_s[__utl_x];                                         \
 	}(__utl_e)
+	
+#define UTL_SERIALIZE_ENUM(__utl_e, ...) UTL_MAP_ENUM(__utl_e, std::string_view, __VA_ARGS__)
 	
 	template <typename Itr, typename Sentinel>
 	auto transform_range(Itr begin, Sentinel end, std::invocable<decltype(*begin)> auto&& transform) {
