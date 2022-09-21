@@ -47,9 +47,17 @@ namespace utl {
 		void emplace(Args&&... args) { this->emplace_back(UTL_FORWARD(args)...); }
 		
 		[[ nodiscard ]] T pop() {
-			T result = this->back();
+			T result = top();
 			this->pop_back();
 			return result;
+		}
+		
+		T& top() {
+			return this->back();
+		}
+		
+		T const& top() const {
+			return this->back();
 		}
 		
 		void swap(stack& rhs) { this->container_type::swap(static_cast<container_type&>(rhs)); }
