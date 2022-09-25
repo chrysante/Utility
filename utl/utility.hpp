@@ -486,7 +486,7 @@ namespace utl {
 	template <typename... F>
 	struct visitor: F... {
 		using F::operator()...;
-		explicit visitor(F... f): F(std::move(f))... {}
+		visitor(F... f): F(std::move(f))... {}
 	};
 	
 }
