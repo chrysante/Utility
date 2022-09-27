@@ -285,7 +285,7 @@ namespace utl {
 	__enum_map(std::pair<E, T>...) -> __enum_map<std::common_type_t<E...>, std::common_type_t<T...>>;
 	
 #define UTL_MAP_ENUM(__utl_e, T, ...)                                    \
-	[&](auto __utl_x) {                                                  \
+	[&](auto __utl_x) {                                                 \
 		using E = ::std::decay_t<decltype(__utl_x)>;                     \
 		constexpr ::utl::__enum_map<E, T> __utl_s = { __VA_ARGS__ };     \
 		__utl_assert((::std::size_t)__utl_x < __utl_s.__data.size(),     \
@@ -295,11 +295,18 @@ namespace utl {
 	
 #define UTL_SERIALIZE_ENUM(__utl_e, ...) UTL_MAP_ENUM(__utl_e, std::string_view, __VA_ARGS__)
 	
+#ifdef _MSC_VER
+	template <typename Itr, typename Sentinel>
+	auto transform_range(Itr begin, Sentinel end, auto&& transform) {
+		return __transform_range<Itr, Sentinel, std::decay_t<decltype(transform)>>{ begin, end, UTL_FORWARD(transform) };
+	}
+#else
 	template <typename Itr, typename Sentinel>
 	auto transform_range(Itr begin, Sentinel end, std::invocable<decltype(*begin)> auto&& transform) {
 		return __transform_range<Itr, Sentinel, std::decay_t<decltype(transform)>>{ begin, end, UTL_FORWARD(transform) };
 	}
-	
+#endif
+
 	auto transform_range(auto&& range, auto&& transform) {
 		using std::begin;
 		using std::end;

@@ -5,9 +5,15 @@
 #	define UTL_METAL 1
 #elif defined(__cplusplus)
 #	define UTL_CPP 1
-#	if __cplusplus < 202002L
-#		error Requires C++20
-#	endif
+#	ifndef _MSVC_LANG
+#		if __cplusplus < 202002L
+#			error Requires C++20
+#		endif
+#	else // _MSVC_LANG defined
+#		if _MSVC_LANG < 202002L
+#			error Requires C++20
+#		endif
+#	endif // _MSVC_LANG
 #else
 #	error Unsupported Language
 #endif

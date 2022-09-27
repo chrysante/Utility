@@ -32,7 +32,6 @@ namespace utl {
 	}
 	
 	template <typename I, typename S>
-//	requires __utl_hashable<typename std::iterator_traits<I>::value_type>
 	std::size_t hash_combine_range(I begin, S end) {
 		size_t seed = __utl_hash_seed<std::size_t>;
 		for (; begin != end; ++begin) {
@@ -56,9 +55,12 @@ namespace utl {
 	template <typename... T>
 	struct hash<std::tuple<T...>> {
 		std::size_t operator()(std::tuple<T...> const& t) const {
-			return UTL_WITH_INDEX_SEQUENCE((I, sizeof...(T)), {
+			return[&]<std::size_t... I>(std::index_sequence<I...>) {
 				return utl::hash_combine(std::get<I>(t)...);
-			});
+			}(std::make_index_sequence<sizeof...(T)>);
+			//return UTL_WITH_INDEX_SEQUENCE((I, sizeof...(T)), {
+			//	return utl::hash_combine(std::get<I>(t)...);
+			//});
 		}
 	};
 	

@@ -258,7 +258,7 @@ namespace utl {
 				   std::move(rhs._alloc()),
 				   rhs.begin(),
 				   rhs.size(),
-				   rhs.size(),
+				   rhs.capacity(),
 				   rhs._uses_inline_buffer())
 		{
 			__utl_expect(!rhs._uses_inline_buffer() || rhs.empty(), "error");

@@ -260,7 +260,7 @@ namespace utl::_private::functionDetails {
 	};
 	
 	static_assert(sizeof(FunctionVTable) == sizeof(void*));
-	static_assert(alignof(FunctionVTable) == 8);
+	//static_assert(alignof(FunctionVTable) == 1);
 	static_assert(8 == alignof(void*));
 	static_assert(alignof(FunctionVTable) == alignof(void*));
 	
