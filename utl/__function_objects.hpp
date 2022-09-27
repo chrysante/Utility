@@ -85,6 +85,8 @@ namespace utl {
 	_UTL_BIN_FUNCTION_OBJECT_DEF(unequals,    unequals,    !=, false);
 	_UTL_BIN_FUNCTION_OBJECT_DEF(logical_and, logical_and, &&, true);
 	_UTL_BIN_FUNCTION_OBJECT_DEF(logical_or,  logical_or,  ||, true);
+	_UTL_BIN_FUNCTION_OBJECT_DEF(leftshift,   leftshift,   <<, false);
+	_UTL_BIN_FUNCTION_OBJECT_DEF(rightshift,  rightshift,  >>, false);
 	
 #undef _UTL_BIN_FUNCTION_OBJECT_DEF
 	
