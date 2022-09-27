@@ -8,6 +8,7 @@ filter "system:macosx"
     }
 filter {}
     
+defines "UTL_ASSERT_WITH_EXCEPTIONS=1"
 
 files { 
     "utl/**.hpp",

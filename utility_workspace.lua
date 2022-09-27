@@ -36,7 +36,7 @@ files {
     "UtilityTest/**.cpp"
 }
 
-defines { "MTL_AVX=1" }
+defines { "MTL_AVX=1", "UTL_ASSERT_WITH_EXCEPTIONS=1" }
 
 filter { "system:macosx" }
     buildoptions { "-mavx" }

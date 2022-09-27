@@ -1,6 +1,118 @@
 #include "Catch2.hpp"
+
 #include <utl/vector.hpp>
 
+#include "LifetimeCounter.hpp"
+
+TEST_CASE("vector-move-construct") {
+	utl_test::LifetimeCounter::reset();
+	utl::vector<utl_test::LifetimeCounter> v;
+	auto const count = GENERATE(0, 1, 54, 64, 139);
+	for (int i = 0; i < count; ++i) {
+		v.emplace_back();
+	}
+	CHECK(utl_test::LifetimeCounter::liveObjects() == count);
+	auto const vSize = v.size();
+	auto const vCap = v.capacity();
+	utl::vector<utl_test::LifetimeCounter> w = std::move(v);
+	CHECK(w.size() == vSize);
+	CHECK(w.capacity() == vCap);
+	CHECK(utl_test::LifetimeCounter::liveObjects() == count);
+	w.clear();
+	CHECK(utl_test::LifetimeCounter::liveObjects() == 0);
+}
+
+TEST_CASE("vector-move-construct from small_vector") {
+	utl_test::LifetimeCounter::reset();
+	utl::small_vector<utl_test::LifetimeCounter, 100> v;
+	auto const count = GENERATE(0, 1, 54, 64, 139);
+	for (int i = 0; i < count; ++i) {
+		v.emplace_back();
+	}
+	CHECK(utl_test::LifetimeCounter::liveObjects() == count);
+	auto const vSize = v.size();
+	auto const vCap = v.capacity();
+	utl::vector<utl_test::LifetimeCounter> w = std::move(v);
+	CHECK(w.size() == vSize);
+	CHECK(utl_test::LifetimeCounter::liveObjects() == count);
+	w.clear();
+	CHECK(utl_test::LifetimeCounter::liveObjects() == 0);
+}
+
+TEST_CASE("vector-move-assign") {
+	utl_test::LifetimeCounter::reset();
+	utl::vector<utl_test::LifetimeCounter> v;
+	auto const count = GENERATE(0, 1, 54, 64, 139);
+	for (int i = 0; i < count; ++i) {
+		v.emplace_back();
+	}
+	CHECK(utl_test::LifetimeCounter::liveObjects() == count);
+	auto const vSize = v.size();
+	auto const vCap = v.capacity();
+	auto const wInitCount = GENERATE(0, 1, 54, 64, 139);
+	utl::vector<utl_test::LifetimeCounter> w(wInitCount);
+	CHECK(utl_test::LifetimeCounter::liveObjects() == count + wInitCount);
+	w = std::move(v);
+	CHECK(w.size() == vSize);
+	CHECK(w.capacity() >= vCap);
+	CHECK(utl_test::LifetimeCounter::liveObjects() == count);
+	w.clear();
+	CHECK(utl_test::LifetimeCounter::liveObjects() == 0);
+}
+
+TEST_CASE("vector-move-assign from small_vector") {
+	utl_test::LifetimeCounter::reset();
+	utl::small_vector<utl_test::LifetimeCounter, 100> v;
+	auto const count = GENERATE(0, 1, 54, 64, 139);
+	for (int i = 0; i < count; ++i) {
+		v.emplace_back();
+	}
+	CHECK(utl_test::LifetimeCounter::liveObjects() == count);
+	auto const vSize = v.size();
+	auto const vCap = v.capacity();
+	auto const wInitCount = GENERATE(0, 1, 54, 64, 139);
+	utl::vector<utl_test::LifetimeCounter> w(wInitCount);
+	CHECK(utl_test::LifetimeCounter::liveObjects() == count + wInitCount);
+	w = std::move(v);
+	CHECK(w.size() == vSize);
+	CHECK(utl_test::LifetimeCounter::liveObjects() == count);
+	w.clear();
+	CHECK(utl_test::LifetimeCounter::liveObjects() == 0);
+}
+
+TEST_CASE("vector-copy-construct") {
+	utl_test::LifetimeCounter::reset();
+	utl::vector<utl_test::LifetimeCounter> v;
+	auto const count = GENERATE(0, 1, 54, 64, 139);
+	for (int i = 0; i < count; ++i) {
+		v.emplace_back();
+	}
+	CHECK(utl_test::LifetimeCounter::liveObjects() == count);
+	utl::vector<utl_test::LifetimeCounter> w = v;
+	CHECK(w.size() == v.size());
+	CHECK(utl_test::LifetimeCounter::liveObjects() == 2 * count);
+	w.clear();
+	CHECK(utl_test::LifetimeCounter::liveObjects() == count);
+}
+
+TEST_CASE("vector-copy-assign") {
+	utl_test::LifetimeCounter::reset();
+	utl::vector<utl_test::LifetimeCounter> v;
+	auto const count = GENERATE(0, 1, 54, 64, 139);
+	for (int i = 0; i < count; ++i) {
+		v.emplace_back();
+	}
+	CHECK(utl_test::LifetimeCounter::liveObjects() == count);
+	auto const vSize = v.size();
+	auto const wInitCount = GENERATE(0, 1, 54, 64, 139);
+	utl::vector<utl_test::LifetimeCounter> w(wInitCount);
+	CHECK(utl_test::LifetimeCounter::liveObjects() == count + wInitCount);
+	w = v;
+	CHECK(w.size() == vSize);
+	CHECK(utl_test::LifetimeCounter::liveObjects() == 2 * count);
+	w.clear();
+	CHECK(utl_test::LifetimeCounter::liveObjects() == count);
+}
 
 TEST_CASE("vector-erase") {
 	SECTION("all") {

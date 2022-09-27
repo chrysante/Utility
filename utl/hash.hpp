@@ -55,12 +55,15 @@ namespace utl {
 	template <typename... T>
 	struct hash<std::tuple<T...>> {
 		std::size_t operator()(std::tuple<T...> const& t) const {
+#ifdef _MSC_VER
 			return[&]<std::size_t... I>(std::index_sequence<I...>) {
 				return utl::hash_combine(std::get<I>(t)...);
-			}(std::make_index_sequence<sizeof...(T)>);
-			//return UTL_WITH_INDEX_SEQUENCE((I, sizeof...(T)), {
-			//	return utl::hash_combine(std::get<I>(t)...);
-			//});
+			}(std::make_index_sequence<sizeof...(T)>());
+#else
+			return UTL_WITH_INDEX_SEQUENCE((I, sizeof...(T)), {
+				return utl::hash_combine(std::get<I>(t)...);
+			});
+#endif
 		}
 	};
 	

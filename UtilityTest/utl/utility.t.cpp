@@ -1,4 +1,4 @@
-#define _UTL_ASSERT_WITH_EXCEPTIONS 1
+#define UTL_ASSERT_WITH_EXCEPTIONS 1
 
 #include "Catch2.hpp"
 #include "StdoutReroute.hpp"
@@ -82,7 +82,7 @@ TEMPLATE_TEST_CASE("ipow", "", std::int64_t) {
 	}
 }
 
-#if 0
+
 TEST_CASE("narrow_cast unsigned to unsigned", "[narrow_cast]") {
 	utl_test::StdoutReroute _;
 	
@@ -164,4 +164,4 @@ TEST_CASE("narrow_cast signed to signed", "[narrow_cast]") {
 	CHECK_NOTHROW(utl::narrow_cast<std::int64_t>((utl::int128_t)-512ll));
 	CHECK_NOTHROW(utl::narrow_cast<std::int64_t>((utl::int128_t)-255ll));
 }
-#endif
+

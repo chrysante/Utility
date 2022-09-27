@@ -1,6 +1,5 @@
 #include "Catch2.hpp"
 
-#define UTL_ASSERT_WITH_EXCEPTIONS
 #include <utl/fancy_debug.hpp>
 
 #include "StdoutReroute.hpp"
