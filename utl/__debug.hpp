@@ -55,11 +55,11 @@ _UTL_SYSTEM_HEADER_
 #if UTL_ASSERT_WITH_EXCEPTIONS
 #	define __utl_debugbreak(...) (throw std::runtime_error("Assertion Failed"), (void)1)
 #else // defined(UTL_ASSERT_WITH_EXCEPTIONS)
-//#	if __GNUC__ || __clang__
-//#		define __utl_debugbreak(...) __builtin_debugtrap()
-//#	else // __GNUC__ || __clang__
-//#		define __utl_debugbreak(...) __debugbreak()
-//#	endif // __GNUC__ || __clang__
+#	if __GNUC__ || __clang__
+#		define __utl_debugbreak(...) __builtin_debugtrap()
+#	else // __GNUC__ || __clang__
+#		define __utl_debugbreak(...) __debugbreak()
+#	endif // __GNUC__ || __clang__
 #endif // defined(UTL_ASSERT_WITH_EXCEPTIONS)
 
 // __utl_debugfail
