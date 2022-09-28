@@ -433,7 +433,7 @@ namespace utl {
 				_copy_assign_range(ilist.begin(), ilist.begin() + this->_size(), this->_begin());
 				_copy_construct_range(ilist.begin() + this->_size(), ilist.end(), this->_end());
 				auto const old_end = this->end();
-				this->_end = this->begin() + ilist.size();
+				this->_set_size(ilist.size());
 				_destroy_elems(end(), old_end);
 			}
 			else {
@@ -444,7 +444,7 @@ namespace utl {
 				this->_set_size(ilist.size());
 				this->_set_cap(ilist.size());
 				this->_set_uses_inline_buffer(false);
-				copy_construct_range(ilist.begin(), ilist.end(), this->begin());
+				_copy_construct_range(ilist.begin(), ilist.end(), this->begin());
 			}
 			return *this;
 		}

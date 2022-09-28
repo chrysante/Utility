@@ -515,6 +515,21 @@ namespace utl {
 	template <typename T>
 	struct is_trivially_relocatable: std::conjunction<std::is_trivially_move_constructible<T>, std::is_trivially_destructible<T>> {};
 	
+	template<typename T,typename U>
+	struct copy_cvref {
+	private:
+		using R = std::remove_reference_t<T>;
+		using U1 = std::conditional_t<std::is_const<R>::value, std::add_const_t<U>, U>;
+		using U2 = std::conditional_t<std::is_volatile<R>::value, std::add_volatile_t<U1>, U1>;
+		using U3 = std::conditional_t<std::is_lvalue_reference<T>::value, std::add_lvalue_reference_t<U2>, U2>;
+		using U4 = std::conditional_t<std::is_rvalue_reference<T>::value, std::add_rvalue_reference_t<U3>, U3>;
+	public:
+		using type = U4;
+	};
+
+	template<typename T,typename U>
+	using copy_cvref_t = typename copy_cvref<T,U>::type;
+	
 }
 
 namespace utl {
