@@ -213,7 +213,8 @@ namespace utl {
 		template <std::size_t N>
 		__utl_interface_export __utl_always_inline
 		vector(small_vector<T, N, Allocator> const& rhs):
-			vector(rhs._alloc(),
+			vector(__private_tag{},
+				   rhs._alloc(),
 				   nullptr,
 				   rhs.size(),
 				   rhs.size(),
@@ -227,7 +228,8 @@ namespace utl {
 		/// (7)
 		__utl_interface_export __utl_always_inline
 		constexpr vector(vector const& rhs, Allocator const& alloc):
-			vector(rhs._alloc(),
+			vector(__private_tag{},
+				   rhs._alloc(),
 				   nullptr,
 				   rhs.size(),
 				   rhs.size(),
@@ -241,7 +243,8 @@ namespace utl {
 		template <std::size_t N>
 		__utl_interface_export __utl_always_inline
 		vector(small_vector<T, N, Allocator> const& rhs, Allocator const& alloc):
-			vector(rhs._alloc(),
+			vector(__private_tag{},
+				   rhs._alloc(),
 				   nullptr,
 				   rhs.size(),
 				   rhs.size(),
