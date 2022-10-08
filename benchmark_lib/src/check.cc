@@ -3,9 +3,9 @@
 namespace benchmark {
 namespace internal {
 
-static AbortHandlerT* handler = &std::abort;
+static AbortHandlerT            *handler = &std::abort;
 
-BENCHMARK_EXPORT AbortHandlerT*& GetAbortHandler() { return handler; }
+BENCHMARK_EXPORT AbortHandlerT *&GetAbortHandler() { return handler; }
 
-}  // namespace internal
-}  // namespace benchmark
+} // namespace internal
+} // namespace benchmark

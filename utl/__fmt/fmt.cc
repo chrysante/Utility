@@ -2,16 +2,16 @@
 // put all implementation-provided headers into the global module fragment
 // to prevent attachment to this module
 #if !defined(_CRT_SECURE_NO_WARNINGS) && defined(_MSC_VER)
-#  define _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
 #endif
 #if !defined(WIN32_LEAN_AND_MEAN) && defined(_WIN32)
-#  define WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
 #endif
 
 #if defined(_WIN32)
-#  ifndef NOMINMAX
-#    define NOMINMAX
-#  endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #endif
 
 #include <algorithm>
@@ -46,31 +46,29 @@
 #include <vector>
 
 #if _MSC_VER
-#  include <intrin.h>
+#include <intrin.h>
 #endif
 #if defined __APPLE__ || defined(__FreeBSD__)
-#  include <xlocale.h>
+#include <xlocale.h>
 #endif
 #if __has_include(<winapifamily.h>)
-#  include <winapifamily.h>
+#include <winapifamily.h>
 #endif
 #if (__has_include(<fcntl.h>) || defined(__APPLE__) || \
      defined(__linux__)) &&                            \
     (!defined(WINAPI_FAMILY) || (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP))
-#  include <fcntl.h>
-#  include <sys/stat.h>
-#  include <sys/types.h>
-#  ifndef _WIN32
-#    include <unistd.h>
-#  else
-#    include <io.h>
-#  endif
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#ifndef _WIN32
+#include <unistd.h>
+#else
+#include <io.h>
+#endif
 #endif
 #ifdef _WIN32
-#  include <windows.h>
+#include <windows.h>
 #endif
-
-
 
 //#define FMT_MODULE_EXPORT export
 //#define FMT_MODULE_EXPORT_BEGIN export {
@@ -85,10 +83,8 @@
 #define FMT_MODULE_EXPORT
 #define FMT_MODULE_EXPORT_BEGIN
 #define FMT_MODULE_EXPORT_END
-#define FMT_BEGIN_DETAIL_NAMESPACE \
-  namespace detail {
-#define FMT_END_DETAIL_NAMESPACE \
-  }
+#define FMT_BEGIN_DETAIL_NAMESPACE namespace detail {
+#define FMT_END_DETAIL_NAMESPACE   }
 
 // all library-provided declarations and definitions
 // must be in the module purview to be exported
@@ -103,7 +99,7 @@
 
 //// gcc doesn't yet implement private module fragments
 //#if !FMT_GCC_VERSION
-//module : private;
+// module : private;
 //#endif
 
 #include "format.cc"

@@ -14,71 +14,69 @@
 namespace benchmark {
 namespace internal {
 
-typedef std::basic_ostream<char>&(EndLType)(std::basic_ostream<char>&);
+typedef std::basic_ostream<char> &(EndLType)(std::basic_ostream<char> &);
 
 class LogType {
-  friend LogType& GetNullLogInstance();
-  friend LogType& GetErrorLogInstance();
+    friend LogType &GetNullLogInstance();
+    friend LogType &GetErrorLogInstance();
 
-  // FIXME: Add locking to output.
-  template <class Tp>
-  friend LogType& operator<<(LogType&, Tp const&);
-  friend LogType& operator<<(LogType&, EndLType*);
+    // FIXME: Add locking to output.
+    template <class Tp> friend LogType &operator<<(LogType &, Tp const &);
+    friend LogType                     &operator<<(LogType &, EndLType *);
 
- private:
-  LogType(std::ostream* out) : out_(out) {}
-  std::ostream* out_;
+  private:
+    LogType(std::ostream *out): out_(out) {}
+    std::ostream *out_;
 
-  // NOTE: we could use BENCHMARK_DISALLOW_COPY_AND_ASSIGN but we shouldn't have
-  // a dependency on benchmark.h from here.
+    // NOTE: we could use BENCHMARK_DISALLOW_COPY_AND_ASSIGN but we shouldn't
+    // have a dependency on benchmark.h from here.
 #ifndef BENCHMARK_HAS_CXX11
-  LogType(const LogType&);
-  LogType& operator=(const LogType&);
+    LogType(const LogType &);
+    LogType &operator=(const LogType &);
 #else
-  LogType(const LogType&) = delete;
-  LogType& operator=(const LogType&) = delete;
+    LogType(const LogType &)            = delete;
+    LogType &operator=(const LogType &) = delete;
 #endif
 };
 
-template <class Tp>
-LogType& operator<<(LogType& log, Tp const& value) {
-  if (log.out_) {
-    *log.out_ << value;
-  }
-  return log;
+template <class Tp> LogType &operator<<(LogType &log, Tp const &value) {
+    if (log.out_) {
+        *log.out_ << value;
+    }
+    return log;
 }
 
-inline LogType& operator<<(LogType& log, EndLType* m) {
-  if (log.out_) {
-    *log.out_ << m;
-  }
-  return log;
+inline LogType &operator<<(LogType &log, EndLType *m) {
+    if (log.out_) {
+        *log.out_ << m;
+    }
+    return log;
 }
 
-inline int& LogLevel() {
-  static int log_level = 0;
-  return log_level;
+inline int &LogLevel() {
+    static int log_level = 0;
+    return log_level;
 }
 
-inline LogType& GetNullLogInstance() {
-  static LogType null_log((std::ostream*)nullptr);
-  return null_log;
+inline LogType &GetNullLogInstance() {
+    static LogType null_log((std::ostream *)nullptr);
+    return null_log;
 }
 
-inline LogType& GetErrorLogInstance() {
-  static LogType error_log(&std::clog);
-  return error_log;
+inline LogType &GetErrorLogInstance() {
+    static LogType error_log(&std::clog);
+    return error_log;
 }
 
-inline LogType& GetLogInstanceForLevel(int level) {
-  if (level <= LogLevel()) {
-    return GetErrorLogInstance();
-  }
-  return GetNullLogInstance();
+inline LogType &GetLogInstanceForLevel(int level) {
+    if (level <= LogLevel()) {
+        return GetErrorLogInstance();
+    }
+    return GetNullLogInstance();
 }
 
-}  // end namespace internal
-}  // end namespace benchmark
+} // end namespace internal
+} // end namespace benchmark
 
 // clang-format off
 #define BM_VLOG(x)                                                               \

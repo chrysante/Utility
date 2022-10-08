@@ -3,13 +3,13 @@
 
 namespace benchmark {
 const int kNumMillisPerSecond = 1000;
-const int kNumMicrosPerMilli = 1000;
+const int kNumMicrosPerMilli  = 1000;
 const int kNumMicrosPerSecond = kNumMillisPerSecond * 1000;
-const int kNumNanosPerMicro = 1000;
-const int kNumNanosPerSecond = kNumNanosPerMicro * kNumMicrosPerSecond;
+const int kNumNanosPerMicro   = 1000;
+const int kNumNanosPerSecond  = kNumNanosPerMicro * kNumMicrosPerSecond;
 
-void SleepForMilliseconds(int milliseconds);
-void SleepForSeconds(double seconds);
-}  // end namespace benchmark
+void      SleepForMilliseconds(int milliseconds);
+void      SleepForSeconds(double seconds);
+} // end namespace benchmark
 
-#endif  // BENCHMARK_SLEEP_H_
+#endif // BENCHMARK_SLEEP_H_

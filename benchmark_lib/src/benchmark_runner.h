@@ -34,80 +34,76 @@ BM_DECLARE_string(benchmark_perf_counters);
 
 namespace internal {
 
-extern MemoryManager* memory_manager;
+extern MemoryManager *memory_manager;
 
 struct RunResults {
-  std::vector<BenchmarkReporter::Run> non_aggregates;
-  std::vector<BenchmarkReporter::Run> aggregates_only;
+    std::vector<BenchmarkReporter::Run> non_aggregates;
+    std::vector<BenchmarkReporter::Run> aggregates_only;
 
-  bool display_report_aggregates_only = false;
-  bool file_report_aggregates_only = false;
+    bool                                display_report_aggregates_only = false;
+    bool                                file_report_aggregates_only    = false;
 };
 
 class BenchmarkRunner {
- public:
-  BenchmarkRunner(const benchmark::internal::BenchmarkInstance& b_,
-                  BenchmarkReporter::PerFamilyRunReports* reports_for_family);
+  public:
+    BenchmarkRunner(const benchmark::internal::BenchmarkInstance &b_,
+                    BenchmarkReporter::PerFamilyRunReports       *reports_for_family);
 
-  int GetNumRepeats() const { return repeats; }
+    int          GetNumRepeats() const { return repeats; }
 
-  bool HasRepeatsRemaining() const {
-    return GetNumRepeats() != num_repetitions_done;
-  }
+    bool         HasRepeatsRemaining() const { return GetNumRepeats() != num_repetitions_done; }
 
-  void DoOneRepetition();
+    void         DoOneRepetition();
 
-  RunResults&& GetResults();
+    RunResults &&GetResults();
 
-  BenchmarkReporter::PerFamilyRunReports* GetReportsForFamily() const {
-    return reports_for_family;
-  }
+    BenchmarkReporter::PerFamilyRunReports *GetReportsForFamily() const { return reports_for_family; }
 
- private:
-  RunResults run_results;
+  private:
+    RunResults                                    run_results;
 
-  const benchmark::internal::BenchmarkInstance& b;
-  BenchmarkReporter::PerFamilyRunReports* reports_for_family;
+    const benchmark::internal::BenchmarkInstance &b;
+    BenchmarkReporter::PerFamilyRunReports       *reports_for_family;
 
-  const double min_time;
-  const double min_warmup_time;
-  bool warmup_done;
-  const int repeats;
-  const bool has_explicit_iteration_count;
+    const double                                  min_time;
+    const double                                  min_warmup_time;
+    bool                                          warmup_done;
+    const int                                     repeats;
+    const bool                                    has_explicit_iteration_count;
 
-  int num_repetitions_done = 0;
+    int                                           num_repetitions_done = 0;
 
-  std::vector<std::thread> pool;
+    std::vector<std::thread>                      pool;
 
-  std::vector<MemoryManager::Result> memory_results;
+    std::vector<MemoryManager::Result>            memory_results;
 
-  IterationCount iters;  // preserved between repetitions!
-  // So only the first repetition has to find/calculate it,
-  // the other repetitions will just use that precomputed iteration count.
+    IterationCount                                iters; // preserved between repetitions!
+    // So only the first repetition has to find/calculate it,
+    // the other repetitions will just use that precomputed iteration count.
 
-  PerfCountersMeasurement perf_counters_measurement;
-  PerfCountersMeasurement* const perf_counters_measurement_ptr;
+    PerfCountersMeasurement        perf_counters_measurement;
+    PerfCountersMeasurement *const perf_counters_measurement_ptr;
 
-  struct IterationResults {
-    internal::ThreadManager::Result results;
-    IterationCount iters;
-    double seconds;
-  };
-  IterationResults DoNIterations();
+    struct IterationResults {
+        internal::ThreadManager::Result results;
+        IterationCount                  iters;
+        double                          seconds;
+    };
+    IterationResults DoNIterations();
 
-  IterationCount PredictNumItersNeeded(const IterationResults& i) const;
+    IterationCount   PredictNumItersNeeded(const IterationResults &i) const;
 
-  bool ShouldReportIterationResults(const IterationResults& i) const;
+    bool             ShouldReportIterationResults(const IterationResults &i) const;
 
-  double GetMinTimeToApply() const;
+    double           GetMinTimeToApply() const;
 
-  void FinishWarmUp(const IterationCount& i);
+    void             FinishWarmUp(const IterationCount &i);
 
-  void RunWarmUp();
+    void             RunWarmUp();
 };
 
-}  // namespace internal
+} // namespace internal
 
-}  // end namespace benchmark
+} // end namespace benchmark
 
-#endif  // BENCHMARK_RUNNER_H_
+#endif // BENCHMARK_RUNNER_H_
