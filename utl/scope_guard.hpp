@@ -26,7 +26,7 @@ namespace utl {
 		template <bool Armed>
 		struct scope_guard_base2<Armed, scope_guard_type::any>: scope_guard_base1<Armed> {};
 	
-		template <invocable F, bool Armed, _private::scope_guard_type Type>
+		template <std::invocable F, bool Armed, _private::scope_guard_type Type>
 		class basic_scope_guard: _private::scope_guard_base2<Armed, Type> {
 			F _f;
 		public:
@@ -57,7 +57,7 @@ namespace utl {
 	}
 	
 #define _UTL_SCOPE_GUARD_SPECIALIZATION(Name, Armed, Type) \
-	template <invocable F> \
+	template <std::invocable F> \
 	class Name: public _private::basic_scope_guard<F, Armed, _private::scope_guard_type::Type> { \
 		using base = _private::basic_scope_guard<F, Armed, _private::scope_guard_type::Type>; \
 	public: \

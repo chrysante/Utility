@@ -1,11 +1,12 @@
 #pragma once
 
-#include "__base.hpp"
-_UTL_SYSTEM_HEADER_
-
 #include <type_traits>
 #include <string>
 #include <filesystem>
+
+#include "__base.hpp"
+
+_UTL_SYSTEM_HEADER_
 
 namespace utl {
 	
@@ -35,7 +36,7 @@ namespace utl {
 		
 		// access
 		// returns:
-		//      T as c-style function pointer, if T is a function signature
+		//      T as function pointer, if T is a function signature
 		// else T*
 		template <typename>
 		auto symbol_ptr(std::string_view name) const;

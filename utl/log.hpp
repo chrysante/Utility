@@ -3,19 +3,19 @@
 #ifndef __UTL_LOG_HPP_INCLUDED__
 #define __UTL_LOG_HPP_INCLUDED__
 
-#include "__base.hpp"
-_UTL_SYSTEM_HEADER_
-
-#include "format.hpp"
-#include "vector.hpp"
-#include "functional.hpp"
-#include "static_string.hpp"
-
 #include <chrono>
 #include <thread>
 #include <string>
 #include <ostream>
 #include <array>
+
+#include "__base.hpp"
+#include "format.hpp"
+#include "vector.hpp"
+#include "functional.hpp"
+#include "static_string.hpp"
+
+_UTL_SYSTEM_HEADER_
 
 #ifdef _WIN32
 #	define UTL_PRETTY_FUNCTION __FUNCSIG__

@@ -41,7 +41,7 @@ namespace utl {
 		
 		using namespace std::chrono_literals;
 		// wait for the thread to finish, after the timeout declare it stuck
-		auto const state = utl::timed_busy_wait(timeout, [&]() -> bool{ return context.done; });
+		auto const state = utl::timed_busy_wait(timeout, [&]() -> bool { return context.done; });
 		
 		// cleanup
 		if (context.done) {

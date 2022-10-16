@@ -15,7 +15,7 @@ _UTL_SYSTEM_HEADER_
 
 namespace utl {
 	
-	template <integral To, integral From>
+	template <std::integral To, std::integral From>
 	constexpr To narrow_cast(From x) {
 		if constexpr (std::is_signed_v<From> && std::is_unsigned_v<To>) {
 			// casting from signed to unsigned

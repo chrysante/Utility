@@ -145,7 +145,7 @@ namespace utl::pmr {
 	
 		constexpr polymorphic_deleter() noexcept = default;
 	
-		template <typename U> requires convertible_to<U*, T*>
+		template <typename U> requires std::convertible_to<U*, T*>
 		polymorphic_deleter(polymorphic_deleter<U> const& rhs) noexcept:
 			_resource(rhs._resource)
 		{}

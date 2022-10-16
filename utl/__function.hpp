@@ -91,7 +91,7 @@ namespace utl {
 		function(function const& other) = default;
 		function(function&& other) noexcept = default;
 		template <invocable_r<R, Args...> F>
-		requires (!same_as<utl::remove_cvref_t<F>, function>) && copy_constructible<F>
+		requires (!std::same_as<utl::remove_cvref_t<F>, function>) && std::copy_constructible<F>
 		function(F&& f): _base(UTL_FORWARD(f)) {}
 		
 		// MARK: operator=
@@ -100,7 +100,7 @@ namespace utl {
 		function& operator=(function&& other) noexcept = default;
 		
 		template <invocable_r<R, Args...> F>
-				  requires copy_constructible<F>
+				  requires std::copy_constructible<F>
 		function& operator=(std::reference_wrapper<F> f) noexcept {
 			function(f).swap(*this);
 		}
@@ -131,7 +131,7 @@ namespace utl {
 		unique_function(unique_function&& other) noexcept = default;
 		
 		template <invocable_r<R, Args...> F>
-		requires (!same_as<utl::remove_cvref_t<F>, unique_function>)
+		requires (!std::same_as<utl::remove_cvref_t<F>, unique_function>)
 		unique_function(F&& f): storage(UTL_FORWARD(f)) {}
 		
 		unique_function(R(*f)(Args...)): storage(f) {}
@@ -157,7 +157,7 @@ namespace utl {
 			return *this = nullfunction;
 		}
 		template <invocable_r<R, Args...> F>
-		requires (!same_as<utl::remove_cvref_t<F>, unique_function>)
+		requires (!std::same_as<utl::remove_cvref_t<F>, unique_function>)
 		unique_function& operator=(F&& f) {
 			storage = UTL_FORWARD(f);
 			return *this;

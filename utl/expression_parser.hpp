@@ -1,17 +1,17 @@
 #pragma once
 
-#include "__base.hpp"
-_UTL_SYSTEM_HEADER_
-
 #include <type_traits>
+
+#include "__base.hpp"
 #include "format.hpp"
+
+_UTL_SYSTEM_HEADER_
 
 namespace utl {
 	
 	struct expression_parser {
 		std::string expression;
 	};
-	
 	
 #define UTL_PARSE_EXPRESSION(...) ((::utl::expression_parser{} ->* __VA_ARGS__).expression)
 	

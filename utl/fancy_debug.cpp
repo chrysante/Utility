@@ -1,13 +1,13 @@
 #include "fancy_debug.hpp"
 
+#include <thread>
+#include <iomanip>
+#include <ctime>
+
 #include "stdio.hpp"
 #include "bit.hpp"
 #include "typeinfo.hpp"
 #include "functional.hpp"
-
-#include <thread>
-#include <iomanip>
-#include <ctime>
 
 namespace utl {
 	

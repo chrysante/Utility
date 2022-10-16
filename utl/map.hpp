@@ -4,7 +4,6 @@
 #define __UTL_MAP_INCLUDED__
 
 #include "__base.hpp"
-_UTL_SYSTEM_HEADER_
 
 #include "concepts.hpp"
 #include "utility.hpp"
@@ -19,6 +18,8 @@ _UTL_SYSTEM_HEADER_
 #include <iostream>
 #include <iomanip>
 #endif
+
+_UTL_SYSTEM_HEADER_
 
 namespace utl {
 

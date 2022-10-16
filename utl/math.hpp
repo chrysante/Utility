@@ -1,13 +1,13 @@
 #pragma once
 
-#include "__base.hpp"
-_UTL_SYSTEM_HEADER_
+#include <bit>
 
+#include "__base.hpp"
 #include "__debug.hpp"
 #include "concepts.hpp"
 #include "bit.hpp"
-#include <bit>
 
+_UTL_SYSTEM_HEADER_
 
 namespace utl {
 	
@@ -23,16 +23,16 @@ namespace utl {
 		return y;
 	}
 	
-	template <integral To, integral From>
+	template <std::integral To, std::integral From>
 	constexpr To narrow_cast(From x); // fwd decl
 	
-	template <integral T>
+	template <std::integral T>
 	constexpr int log2(T x) {
-		if constexpr (signed_integral<T>) {
+		if constexpr (std::signed_integral<T>) {
 			__utl_expect(x > 0, "log2 is not defined for x <= 0");
 			return log2((std::make_unsigned_t<T>)x);
 		}
-		else if constexpr (same_as<T, uint64_t>) {
+		else if constexpr (std::same_as<T, uint64_t>) {
 			__utl_expect(std::popcount(x) == 1, "x must be a power of 2");
 #if defined(__GNUC__) || defined(__clang__)
 			return __builtin_ctzl(x);
@@ -50,20 +50,20 @@ namespace utl {
 		}
 	}
 
-	template <unsigned_integral T>
+	template <std::unsigned_integral T>
 	constexpr T fast_div_pow_two(T x, T y) {
 		__utl_expect(y >= 0);
 		__utl_expect(std::popcount(y) == 1);
 		int const e = utl::log2(y);
 		return x >> e;
 	}
-	template <integral T, integral U> requires unsigned_integral<std::common_type_t<T, U>>
+	template <std::integral T, std::integral U> requires std::unsigned_integral<std::common_type_t<T, U>>
 	constexpr std::common_type_t<T, U> fast_div_pow_two(T x, U y) {
 		using X = std::common_type_t<T, U>;
 		return fast_div_pow_two((X)x, (X)y);
 	}
 	
-	template <unsigned_integral T>
+	template <std::unsigned_integral T>
 	constexpr T fast_mod_pow_two(T x, T y) {
 		__utl_expect(y >= 0);
 		__utl_expect(std::popcount(y) == 1);
@@ -71,7 +71,7 @@ namespace utl {
 		T const mask = ~(std::numeric_limits<T>::max() << e); /* eg. for uint8 with e = 3: 00000111  */
 		return mask & x;
 	}
-	template <integral T, integral U> requires unsigned_integral<std::common_type_t<T, U>>
+	template <std::integral T, std::integral U> requires std::unsigned_integral<std::common_type_t<T, U>>
 	constexpr std::common_type_t<T, U> fast_mod_pow_two(T x, U y) {
 		using X = std::common_type_t<T, U>;
 		return fast_mod_pow_two((X)x, (X)y);
@@ -87,14 +87,14 @@ namespace utl {
 		return remainder == 0 ? x : x + multiple_of - remainder;
 	}
 	
-	template <integral T, integral U>
+	template <std::integral T, std::integral U>
 	constexpr auto round_up(T x, U multiple_of) {
 		return __round_up_impl(narrow_cast<std::make_unsigned_t<T>>(x),
 							   narrow_cast<std::make_unsigned_t<U>>(multiple_of),
 							   [](auto x, auto y) { return x % y; });
 	}
 	
-	template <integral T, integral U>
+	template <std::integral T, std::integral U>
 	constexpr auto round_up_pow_two(T x, U multiple_of) {
 		return __round_up_impl(narrow_cast<std::make_unsigned_t<T>>(x),
 							   narrow_cast<std::make_unsigned_t<U>>(multiple_of),
@@ -106,14 +106,14 @@ namespace utl {
 		return x - remainder;
 	}
 	
-	template <integral T, integral U>
+	template <std::integral T, std::integral U>
 	constexpr auto round_down(T x, U multiple_of) {
 		return __round_down_impl(narrow_cast<std::make_unsigned_t<T>>(x),
 								 narrow_cast<std::make_unsigned_t<U>>(multiple_of),
 								 [](auto x, auto y) { return x % y; });
 	}
 	
-	template <integral T, integral U>
+	template <std::integral T, std::integral U>
 	constexpr auto round_down_pow_two(T x, U multiple_of) {
 		return __round_down_impl(narrow_cast<std::make_unsigned_t<T>>(x),
 								 narrow_cast<std::make_unsigned_t<U>>(multiple_of),
@@ -121,7 +121,7 @@ namespace utl {
 	}
 	
 	template <typename T>
-	requires requires(T&& t) { { t * t } -> convertible_to<T>; }
+	requires requires(T&& t) { { t * t } -> std::convertible_to<T>; }
 	constexpr T ipow(T base, int exp) {
 		__utl_expect(exp >= 0);
 		return

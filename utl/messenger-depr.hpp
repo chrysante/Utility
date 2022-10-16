@@ -260,7 +260,7 @@ namespace utl {
 		utl::function<void(__message const&)> f;
 	};
 	
-	template <typename Message, utl::invocable<Message> F>
+	template <typename Message, std::invocable<Message> F>
 	requires std::is_base_of_v<__message, Message>
 	listener make_listener(F&& f) {
 		listener result(__private_tag{});
@@ -291,7 +291,7 @@ namespace utl {
 			return register_listener(make_listener(UTL_FORWARD(f)));
 		}
 		
-		template <typename Message, utl::invocable<Message> F>
+		template <typename Message, std::invocable<Message> F>
 		requires std::is_base_of_v<__message, Message>
 		[[nodiscard]] listener_id register_listener(F&& f) {
 			return register_listener(make_listener<Message>(UTL_FORWARD(f)));

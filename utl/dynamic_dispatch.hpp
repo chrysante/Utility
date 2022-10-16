@@ -1,13 +1,14 @@
 #pragma once
 
-#include "__base.hpp"
-_UTL_SYSTEM_HEADER_
+#include <tuple>
+#include <type_traits>
 
+#include "__base.hpp"
 #include "common.hpp"
 #include "__debug.hpp"
 #include "concepts.hpp"
-#include <tuple>
-#include <type_traits>
+
+_UTL_SYSTEM_HEADER_
 
 namespace utl {
 	
@@ -162,13 +163,13 @@ namespace utl {
 
 	template <class T>
 	void dispatch(__dispatch_arg<T> const& a,
-				  utl::invocable<typename __dispatch_arg<T>::__test_type> auto&& selector) {
+				  std::invocable<typename __dispatch_arg<T>::__test_type> auto&& selector) {
 		__dispatch(__dispatch_arg_tuple{ a }, UTL_FORWARD(selector));
 	}
 	template <class T, class U>
 	void dispatch(__dispatch_arg<T> const& a,
 				  __dispatch_arg<U> const& b,
-				  utl::invocable<typename __dispatch_arg<T>::__test_type,
+				  std::invocable<typename __dispatch_arg<T>::__test_type,
 								 typename __dispatch_arg<U>::__test_type> auto&& selector) {
 		__dispatch(__dispatch_arg_tuple{ a, b }, UTL_FORWARD(selector));
 	}
@@ -176,7 +177,7 @@ namespace utl {
 	void dispatch(__dispatch_arg<T> const& a,
 				  __dispatch_arg<U> const& b,
 				  __dispatch_arg<V> const& c,
-				  utl::invocable<typename __dispatch_arg<T>::__test_type,
+				  std::invocable<typename __dispatch_arg<T>::__test_type,
 								 typename __dispatch_arg<U>::__test_type,
 								 typename __dispatch_arg<V>::__test_type> auto&& selector) {
 		__dispatch(__dispatch_arg_tuple{ a, b, c }, UTL_FORWARD(selector));
@@ -186,7 +187,7 @@ namespace utl {
 				  __dispatch_arg<U> const& b,
 				  __dispatch_arg<V> const& c,
 				  __dispatch_arg<W> const& d,
-				  utl::invocable<typename __dispatch_arg<T>::__test_type,
+				  std::invocable<typename __dispatch_arg<T>::__test_type,
 								 typename __dispatch_arg<U>::__test_type,
 								 typename __dispatch_arg<V>::__test_type,
 								 typename __dispatch_arg<W>::__test_type> auto&& selector) {
@@ -198,7 +199,7 @@ namespace utl {
 				  __dispatch_arg<V> const& c,
 				  __dispatch_arg<W> const& d,
 				  __dispatch_arg<X> const& e,
-				  utl::invocable<typename __dispatch_arg<T>::__test_type,
+				  std::invocable<typename __dispatch_arg<T>::__test_type,
 								 typename __dispatch_arg<U>::__test_type,
 								 typename __dispatch_arg<V>::__test_type,
 								 typename __dispatch_arg<W>::__test_type,
@@ -212,7 +213,7 @@ namespace utl {
 				  __dispatch_arg<W> const& d,
 				  __dispatch_arg<X> const& e,
 				  __dispatch_arg<Y> const& f,
-				  utl::invocable<typename __dispatch_arg<T>::__test_type,
+				  std::invocable<typename __dispatch_arg<T>::__test_type,
 								 typename __dispatch_arg<U>::__test_type,
 								 typename __dispatch_arg<V>::__test_type,
 								 typename __dispatch_arg<W>::__test_type,
@@ -228,7 +229,7 @@ namespace utl {
 				  __dispatch_arg<X> const& e,
 				  __dispatch_arg<Y> const& f,
 				  __dispatch_arg<Z> const& g,
-				  utl::invocable<typename __dispatch_arg<T>::__test_type,
+				  std::invocable<typename __dispatch_arg<T>::__test_type,
 								 typename __dispatch_arg<U>::__test_type,
 								 typename __dispatch_arg<V>::__test_type,
 								 typename __dispatch_arg<W>::__test_type,
@@ -246,7 +247,7 @@ namespace utl {
 				  __dispatch_arg<Y> const& f,
 				  __dispatch_arg<Z> const& g,
 				  __dispatch_arg<A> const& h,
-				  utl::invocable<typename __dispatch_arg<T>::__test_type,
+				  std::invocable<typename __dispatch_arg<T>::__test_type,
 								 typename __dispatch_arg<U>::__test_type,
 								 typename __dispatch_arg<V>::__test_type,
 								 typename __dispatch_arg<W>::__test_type,

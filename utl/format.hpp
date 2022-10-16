@@ -1,13 +1,12 @@
 #pragma once
 
-#include "__base.hpp"
-_UTL_SYSTEM_HEADER_
-
 #include <string>
 
+#include "__base.hpp"
 #include "__fmt/format.h"
 #include "__fmt/ostream.h"
 
+_UTL_SYSTEM_HEADER_
 
 namespace utl {
 	

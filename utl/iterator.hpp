@@ -1,16 +1,15 @@
 #pragma once
 
 #include "__base.hpp"
-
-_UTL_SYSTEM_HEADER_
-
 #include "__debug.hpp"
 #include "concepts.hpp"
+
+_UTL_SYSTEM_HEADER_
 
 namespace utl {
 
 	/// MARK: conversion
-	template <utl::input_iterator I, utl::invocable<typename std::iterator_traits<I>::value_type> Conversion>
+	template <utl::input_iterator I, std::invocable<typename std::iterator_traits<I>::value_type> Conversion>
 	class conversion_iterator {
 	public:
 		using __I_traits     = std::iterator_traits<I>;

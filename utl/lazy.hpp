@@ -1,15 +1,15 @@
 #pragma once
 
 #include "__base.hpp"
-_UTL_SYSTEM_HEADER_
 #include "type_traits.hpp"
 #include "functional.hpp"
 #include "concepts.hpp"
 
+_UTL_SYSTEM_HEADER_
 
 namespace utl {
 	
-	template <invocable F>
+	template <std::invocable F>
 	class lazy {
 	public:
 		using value_type = typename std::invoke_result<F>::type;

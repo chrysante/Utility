@@ -1,15 +1,15 @@
 #pragma once
 
-
-#include "__base.hpp"
-_UTL_SYSTEM_HEADER_
-
 #include <concepts>
 #include "common.hpp"
+
+#include "__base.hpp"
 #include "__debug.hpp"
 #include "log.hpp"
 #include "concepts.hpp"
 #include "expression_parser.hpp"
+
+_UTL_SYSTEM_HEADER_
 
 /// We allow four signaturs for Assertions:
 //  assert(bool)

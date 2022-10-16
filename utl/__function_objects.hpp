@@ -21,7 +21,7 @@ struct obj_name##_t { \
 #define _UTL_BIN_FUNCTION_OBJECT_DEF(obj_name, operator_name, op, extendDef) \
 struct obj_name##_t { \
 	template <typename T, typename U> \
-	requires(has_operator_##operator_name<T, U>::value) \
+    requires requires(T&& a, U&& b) { UTL_FORWARD(a) op UTL_FORWARD(b); } \
 	__utl_nodiscard constexpr auto operator()(T&& a, U&& b) const { \
 		return UTL_FORWARD(a) op UTL_FORWARD(b); \
 	} \
@@ -94,7 +94,7 @@ namespace utl {
 #undef _UTL_BIN_FUNCTION_OBJECT_DEF
 	
 	namespace __utl_function_objects_impl {
-		__utl_nodiscard constexpr auto signed_sqrt(arithmetic auto x) {
+		__utl_nodiscard constexpr auto signed_sqrt(utl::arithmetic auto x) {
 			if (std::signbit(x)) {
 				return -std::sqrt(-x);
 			}
@@ -103,7 +103,7 @@ namespace utl {
 			}
 		}
 		
-		__utl_nodiscard constexpr auto signed_pow(arithmetic auto x, arithmetic auto y) {
+		__utl_nodiscard constexpr auto signed_pow(utl::arithmetic auto x, utl::arithmetic auto y) {
 			if (std::signbit(x)) {
 				return -std::pow(-x, y);
 			}
@@ -112,21 +112,21 @@ namespace utl {
 			}
 		}
 		
-		__utl_nodiscard constexpr auto ceil_divide(unsigned_integral auto a, unsigned_integral auto b) {
+		__utl_nodiscard constexpr auto ceil_divide(std::unsigned_integral auto a, std::unsigned_integral auto b) {
 			return (a / b) + !!(a % b);
 		}
 		
-		__utl_nodiscard constexpr auto ceil_divide_pow_two(unsigned_integral auto a, unsigned_integral auto b) {
+		__utl_nodiscard constexpr auto ceil_divide_pow_two(std::unsigned_integral auto a, std::unsigned_integral auto b) {
 			return fast_div_pow_two(a, b) + !!fast_mod_pow_two(a, b);
 		}
 		
-		__utl_nodiscard constexpr auto fract(floating_point auto f) {
+		__utl_nodiscard constexpr auto fract(std::floating_point auto f) {
 			decltype(f) i;
 			auto const result = std::modf(f, &i);
 			return (result < 0) + result;
 		}
 		
-		__utl_nodiscard constexpr auto mod(floating_point auto f, floating_point auto r) {
+		__utl_nodiscard constexpr auto mod(std::floating_point auto f, std::floating_point auto r) {
 			return fract(f / r) * r;
 		}
 	}
@@ -227,113 +227,6 @@ namespace utl {
 	_UTL_FUNCTION_OBJECT_DEF(noop, (auto&&...) const {
 		
 	});
-	
-	
-	
-	
-//	namespace _private {
-//
-//		template <typename ... F>
-//		requires(sizeof...(F) > 0)
-//		class _compose {
-//		private:
-//			template <std::size_t Index, typename... T>
-//			auto _invoke_impl(T&& ... t) const {
-//				if constexpr (Index == 0) {
-//					return std::invoke(std::get<Index>(_f), UTL_FORWARD(t)...);
-//				}
-//				else {
-//					return _invoke_impl<Index - 1>(std::invoke(std::get<Index>(_f), UTL_FORWARD(t)...));
-//				}
-//
-//			}
-//
-//			template <std::size_t Index, typename T>
-//			static constexpr bool _is_invocable_rec() {
-//				if constexpr (Index == 0) {
-//					return true;
-//				}
-//				else {
-//					using Fn = std::tuple_element_t<Index - 1, std::tuple<F...>>;
-//					if constexpr (!std::is_invocable_v<Fn, T>) {
-//						return false;
-//					}
-//					else {
-//						return _is_invocable_rec<Index - 1, std::invoke_result_t<Fn, T>>();
-//					}
-//				}
-//			}
-//			template <typename ... T>
-//			static constexpr bool _is_invocable() {
-//				using LastFN = std::tuple_element_t<sizeof...(F) - 1, std::tuple<F...>>;
-//				if constexpr (!std::is_invocable_v<LastFN, T...>) {
-//					return false;
-//				}
-//				else {
-//					return _is_invocable_rec<sizeof...(F) - 1, std::invoke_result_t<LastFN, T...>>();
-//				}
-//			}
-//
-//
-//		public:
-//			explicit constexpr _compose(F... f): _f(std::move(f)...) {}
-//
-//			template <typename... T>
-//			requires(_is_invocable<T...>())
-//			constexpr auto operator()(T&& ... t) const {
-//				return _invoke_impl<sizeof...(F) - 1>(UTL_FORWARD(t)...);
-//			}
-//
-//		private:
-//			std::tuple<F...> _f;
-//		};
-//
-//		template <typename ... F>
-//		requires(sizeof...(F) > 0)
-//		class _fappend {
-//			template <std::size_t J>
-//			using Fn = std::tuple_element_t<J, std::tuple<F...>>;
-//			template <std::size_t J>
-//			using Fn = std::tuple_element_t<J, std::tuple<F...>>;
-//
-//		public:
-//			explicit constexpr _fappend(F... f): _f(std::move(f)...) {}
-//
-//			template <typename... T>
-//			requires((std::is_invocable_v<F, T...> && ...))
-//			constexpr auto operator()(T&& ... t) const {
-//				return UTL_WITH_INDEX_SEQUENCE((I, sizeof...(F)), {
-//					if constexpr ((... && !std::is_same_v<std::invoke_result_t<Fn<I>, T...>, void>)) {
-//						return std::tuple(std::invoke(std::get<I>(_f), t...)...);
-//					}
-//					else {
-//						(std::invoke(std::get<I>(_f), t...), ...);
-//					}
-//				});
-//			}
-//
-//		private:
-//			std::tuple<F...> _f;
-//		};
-//	}
-//
-//	/*
-//	 * compose(f, g, h) returns f * g * h: (...) -> f(g(h(...)))
-//	 */
-//	template <typename... F>
-//	requires(sizeof...(F) > 0 && (is_any_invocable<F>::value && ...))
-//	__utl_nodiscard constexpr _private::_compose<std::remove_cvref_t<F>...> compose(F&&... f) {
-//		return _private::_compose<std::remove_cvref_t<F>...>(UTL_FORWARD(f)...);
-//	}
-//
-//	/*
-//	 * append(f, g, h) returns (f, g, h): (...) -> (f(...), g(...), h(...))
-//	 */
-//	template <typename... F>
-//	requires(sizeof...(F) > 0 && (is_any_invocable<F>::value && ...))
-//	__utl_nodiscard constexpr _private::_fappend<std::remove_cvref_t<F>...> fappend(F&&... f) {
-//		return _private::_fappend<std::remove_cvref_t<F>...>(UTL_FORWARD(f)...);
-//	}
 
 }
 

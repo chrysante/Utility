@@ -15,214 +15,7 @@ namespace utl {
 		return false;
 #endif
 	}
-	
-}
-
-// MARK: - detectors impl
-namespace utl::_private {
-	
-	template <typename...T>
-	void generic_function(T&&...);
-	
-	template <typename T, typename U>
-	constexpr auto has_operator_add(int) -> decltype(std::declval<T>() + std::declval<U>(), bool{}) { return true; }
-	template <typename, typename>
-	constexpr auto has_operator_add(...) { return false; }
-	
-	template <typename T, typename U>
-	constexpr auto has_operator_subtract(int) -> decltype(std::declval<T>() - std::declval<U>(), bool{}) { return true; }
-	template <typename, typename>
-	constexpr auto has_operator_subtract(...) { return false; }
-	
-	template <typename T, typename U>
-	constexpr auto has_operator_multiply(int) -> decltype(std::declval<T>() * std::declval<U>(), bool{}) { return true; }
-	template <typename, typename>
-	constexpr auto has_operator_multiply(...) { return false; }
-	
-	template <typename T, typename U>
-	constexpr auto has_operator_divide(int) -> decltype(std::declval<T>() / std::declval<U>(), bool{}) { return true; }
-	template <typename, typename>
-	constexpr auto has_operator_divide(...) { return false; }
-	
-	template <typename T, typename U>
-	constexpr auto has_operator_modulo(int) -> decltype(std::declval<T>() % std::declval<U>(), bool{}) { return true; }
-	template <typename, typename>
-	constexpr auto has_operator_modulo(...) { return false; }
-	
-	template <typename T, typename U>
-	constexpr auto has_operator_equals(int) -> decltype(generic_function<bool>(std::declval<T>() == std::declval<U>()), bool{}) { return true; }
-	template <typename, typename>
-	constexpr auto has_operator_equals(...) { return false; }
-	
-	template <typename T, typename U>
-	constexpr auto has_operator_less(int) -> decltype(generic_function<bool>(std::declval<T>() < std::declval<U>()), bool{}) { return true; }
-	template <typename, typename>
-	constexpr auto has_operator_less(...) { return false; }
-	
-	template <typename T, typename U>
-	constexpr auto has_operator_less_eq(int) -> decltype(generic_function<bool>(std::declval<T>() <= std::declval<U>()), bool{}) { return true; }
-	template <typename, typename>
-	constexpr auto has_operator_less_eq(...) { return false; }
-	
-	template <typename T, typename U>
-	constexpr auto has_operator_greater(int) -> decltype(generic_function<bool>(std::declval<T>() > std::declval<U>()), bool{}) { return true; }
-	template <typename, typename>
-	constexpr auto has_operator_greater(...) { return false; }
-	
-	template <typename T, typename U>
-	constexpr auto has_operator_greater_eq(int) -> decltype(generic_function<bool>(std::declval<T>() >= std::declval<U>()), bool{}) { return true; }
-	template <typename, typename>
-	constexpr auto has_operator_greater_eq(...) { return false; }
-	
-	template <typename T, typename U>
-	constexpr auto has_operator_unequals(int) -> decltype(generic_function<bool>(std::declval<T>() != std::declval<U>()), bool{}) { return true; }
-	template <typename, typename>
-	constexpr auto has_operator_unequals(...) { return false; }
-	
-	template <typename T, typename U>
-	constexpr auto has_operator_logical_and(int) -> decltype(generic_function<bool>(std::declval<T>() && std::declval<U>()), bool{}) { return true; }
-	template <typename, typename>
-	constexpr auto has_operator_logical_and(...) { return false; }
-	
-	template <typename T>
-	constexpr auto has_operator_logical_not(int) -> decltype(!std::declval<T>(), bool{}) { return true; }
-	template <typename T>
-	constexpr auto has_operator_logical_not(...) { return false; }
-	
-	template <typename T, typename U>
-	constexpr auto has_operator_bitwise_and(int) -> decltype(generic_function<bool>(std::declval<T>() & std::declval<U>()), bool{}) { return true; }
-	template <typename, typename>
-	constexpr auto has_operator_bitwise_and(...) { return false; }
-	
-	template <typename T, typename U>
-	constexpr auto has_operator_bitwise_or(int) -> decltype(generic_function<bool>(std::declval<T>() | std::declval<U>()), bool{}) { return true; }
-	template <typename, typename>
-	constexpr auto has_operator_bitwise_or(...) { return false; }
-	
-	template <typename T, typename U>
-	constexpr auto has_operator_bitwise_xor(int) -> decltype(generic_function<bool>(std::declval<T>() ^ std::declval<U>()), bool{}) { return true; }
-	template <typename, typename>
-	constexpr auto has_operator_bitwise_xor(...) { return false; }
-	
-	template <typename T>
-	constexpr auto has_operator_bitwise_not(int) -> decltype(~std::declval<T>(), bool{}) { return true; }
-	template <typename T>
-	constexpr auto has_operator_bitwise_not(...) { return false; }
-	
-	template <typename T, typename U>
-	constexpr auto has_operator_logical_or(int) -> decltype(generic_function<bool>(std::declval<T>() || std::declval<U>()), bool{}) { return true; }
-	template <typename, typename>
-	constexpr auto has_operator_logical_or(...) { return false; }
-	
-	template <typename T, typename U>
-	constexpr auto has_operator_leftshift(int) -> decltype(std::declval<T>() << std::declval<U>(), bool{}) { return true; }
-	template <typename, typename>
-	constexpr auto has_operator_leftshift(...) { return false; }
-	
-	template <typename T, typename U>
-	constexpr auto has_operator_rightshift(int) -> decltype(std::declval<T>() >> std::declval<U>(), bool{}) { return true; }
-	template <typename, typename>
-	constexpr auto has_operator_rightshift(...) { return false; }
-
-	template <typename T>
-	void prefix_increment_test(T&& t) { ++t; }
-	
-	template <typename T>
-	constexpr auto has_operator_prefix_increment(int)
-		-> decltype(prefix_increment_test(std::declval<T>()), bool{}) { return true; }
-	template <typename>
-	constexpr auto has_operator_prefix_increment(...) { return false; }
-	
-	template <typename T>
-	constexpr auto has_operator_unary_plus(int) -> decltype(+std::declval<T>(), bool{}) { return true; }
-	template <typename T>
-	constexpr auto has_operator_unary_plus(...) { return false; }
-	
-	template <typename T>
-	constexpr auto has_operator_unary_minus(int) -> decltype(-std::declval<T>(), bool{}) { return true; }
-	template <typename T>
-	constexpr auto has_operator_unary_minus(...) { return false; }
-	
-	template <typename T>
-	constexpr auto has_operator_dereference(int) -> decltype(*std::declval<T>(), bool{}) { return true; }
-	template <typename T>
-	constexpr auto has_operator_dereference(...) { return false; }
-	
-	template <typename T, typename... Args>
-	constexpr auto is_list_initializable(int) -> decltype(T{ std::declval<Args>()... }, bool{}) { return true; }
-	template <typename, typename...>
-	constexpr auto is_list_initializable(...) { return false; }
-	
-	
-	
-}
-
-// MARK: - detectors
-namespace utl {
-	
-	template <typename T, typename U = T>
-	struct has_operator_add: std::integral_constant<bool, _private::has_operator_add<T, U>(0)> {};
-	template <typename T, typename U = T>
-	struct has_operator_subtract: std::integral_constant<bool, _private::has_operator_subtract<T, U>(0)> {};
-	template <typename T, typename U = T>
-	struct has_operator_multiply: std::integral_constant<bool, _private::has_operator_multiply<T, U>(0)> {};
-	template <typename T, typename U = T>
-	struct has_operator_divide: std::integral_constant<bool, _private::has_operator_divide<T, U>(0)> {};
-	template <typename T, typename U = T>
-	struct has_operator_modulo: std::integral_constant<bool, _private::has_operator_modulo<T, U>(0)> {};
-	
-	template <typename T, typename U = T>
-	struct has_operator_equals: std::integral_constant<bool, _private::has_operator_equals<T, U>(0)> {};
-	template <typename T, typename U = T>
-	struct has_operator_unequals: std::integral_constant<bool, _private::has_operator_unequals<T, U>(0)> {};
-	
-	template <typename T, typename U = T>
-	struct has_operator_less: std::integral_constant<bool, _private::has_operator_less<T, U>(0)> {};
-	template <typename T, typename U = T>
-	struct has_operator_less_eq: std::integral_constant<bool, _private::has_operator_less_eq<T, U>(0)> {};
-	template <typename T, typename U = T>
-	struct has_operator_greater: std::integral_constant<bool, _private::has_operator_greater<T, U>(0)> {};
-	template <typename T, typename U = T>
-	struct has_operator_greater_eq: std::integral_constant<bool, _private::has_operator_greater_eq<T, U>(0)> {};
-	
-	template <typename T, typename U = T>
-	struct has_operator_logical_and: std::integral_constant<bool, _private::has_operator_logical_and<T, U>(0)> {};
-	template <typename T, typename U = T>
-	struct has_operator_logical_or: std::integral_constant<bool, _private::has_operator_logical_or<T, U>(0)> {};
-	template <typename T>
-	struct has_operator_logical_not: std::integral_constant<bool, _private::has_operator_logical_not<T>(0)> {};
-	
-	
-	template <typename T, typename U = T>
-	struct has_operator_bitwise_and: std::integral_constant<bool, _private::has_operator_bitwise_and<T, U>(0)> {};
-	template <typename T, typename U = T>
-	struct has_operator_bitwise_or: std::integral_constant<bool, _private::has_operator_bitwise_or<T, U>(0)> {};
-	template <typename T, typename U = T>
-	struct has_operator_bitwise_xor: std::integral_constant<bool, _private::has_operator_bitwise_xor<T, U>(0)> {};
-	template <typename T>
-	struct has_operator_bitwise_not: std::integral_constant<bool, _private::has_operator_bitwise_not<T>(0)> {};
-	
-	template <typename T, typename U = T>
-	struct has_operator_leftshift: std::integral_constant<bool, _private::has_operator_leftshift<T, U>(0)> {};
-	template <typename T, typename U = T>
-	struct has_operator_rightshift: std::integral_constant<bool, _private::has_operator_rightshift<T, U>(0)> {};
-	
-	template <typename T>
-	struct has_operator_prefix_increment: std::integral_constant<bool, _private::has_operator_prefix_increment<T>(0)> {};
-	
-	template <typename T>
-	struct has_operator_unary_plus: std::integral_constant<bool, _private::has_operator_unary_plus<T>(0)> {};
-	template <typename T>
-	struct has_operator_unary_minus: std::integral_constant<bool, _private::has_operator_unary_minus<T>(0)> {};
-	
-	
-	template <typename T>
-	struct has_operator_dereference: std::integral_constant<bool, _private::has_operator_dereference<T>(0)> {};
-	
-	template <typename T, typename... Args>
-	struct is_list_initializable: std::integral_constant<bool, _private::is_list_initializable<T, Args...>(0)> {};
-	
-	
+		
 	namespace _private {
 		template<typename T, bool = std::is_class_v<T>>
 		struct _is_any_invocable /* bool = true */ {
@@ -244,6 +37,7 @@ namespace utl {
 		public:
 			static constexpr bool value = decltype(test<Derived>(0))::value;
 		};
+    
 		template <typename T>
 		struct _is_any_invocable<T, false> {
 			static constexpr bool value = []{
@@ -268,7 +62,6 @@ namespace utl {
 		template <typename T>
 			struct is_iterator_impl {
 				static char test(...);
-
 				template <typename U,
 						  typename=typename std::iterator_traits<U>::difference_type,
 						  typename=typename std::iterator_traits<U>::pointer,
@@ -276,18 +69,14 @@ namespace utl {
 						  typename=typename std::iterator_traits<U>::value_type,
 						  typename=typename std::iterator_traits<U>::iterator_category
 				> static long test(U&&);
-			  
-
 				constexpr static bool value = std::is_same<decltype(test(std::declval<T>())),long>::value;
 		};
 	}
-	
 	template <typename T>
 	struct is_iterator: std::integral_constant<bool, _private::is_iterator_impl<T>::value>{};
 }
 
-namespace utl::_private
-{
+namespace utl::_private {
 	template <typename T>
 	constexpr auto has_member_begin(int) -> decltype(std::declval<T>().begin(), bool{}) { return true; }
 	template <typename T>
@@ -330,9 +119,7 @@ namespace utl::_private
 		}
 		return false;
 	}
-	
 }
-
 
 namespace utl {
 	
@@ -354,15 +141,12 @@ namespace utl {
 				return begin(std::declval<R>());
 			}
 		}
-		
-		
+				
 	public:
 		using iterator_type = decltype(_begin());
 		using reference_type = decltype(*_begin());
 	};
-	
-	
-	
+    
 }
 
 namespace utl::_private {
@@ -394,25 +178,11 @@ namespace utl::_private {
 
 namespace utl {
 	
-//	template <typename U, typename... T>
-//	struct contains: std::integral_constant<bool, _private::contains_impl<U, T...>()> {};
-//	
-//	template <typename... T>
-//	struct is_unique: std::integral_constant<bool, _private::is_unique_impl<T...>()> {};
-//	
-//	template <typename U, typename... T>
-//	struct first_index_of: std::integral_constant<std::size_t, _private::first_index_of_impl<0, U, T...>()> {};
-	
 	template <typename T>
 	inline constexpr bool template_true = true;
 	
 	template <typename T>
 	inline constexpr bool template_false = false;
-	
-}
-
-
-namespace utl {
 	
 	template <typename T>
 	struct is_arithmetic: std::is_arithmetic<T> {};
@@ -455,7 +225,6 @@ namespace utl {
 		}
 	}
 	
-	
 	template <typename T, typename... U>
 	struct promote;
 	
@@ -470,10 +239,6 @@ namespace utl {
 	struct promote<T, U, V...> {
 		using type = typename promote<typename promote<T, U>::type, V...>::type;
 	};
-	
-	
-	
-	
 	
 	template <typename T>
 	struct underlying_type { using type = T; };

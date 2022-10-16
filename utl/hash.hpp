@@ -1,18 +1,18 @@
 #pragma once
 
-#include "__base.hpp"
-_UTL_SYSTEM_HEADER_
-
-#include "common.hpp"
-#include "concepts.hpp"
 
 #include <utility>
 #include <string_view>
 
+#include "__base.hpp"
+#include "common.hpp"
+#include "concepts.hpp"
+
+_UTL_SYSTEM_HEADER_
 
 namespace utl {
 	
-	template <unsigned_integral T>
+	template <std::unsigned_integral T>
 	constexpr T __utl_hash_seed = static_cast<T>(0x9e3779b97f4a7c15);
 	
 	template <typename T>
