@@ -122,67 +122,55 @@ namespace utl {
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		
 		/// MARK: Constructors
-		
-        /// (1)
-		__utl_interface_export
-		constexpr vector() noexcept(noexcept(Allocator())) requires std::constructible_from<Allocator>:
-            vector(Allocator())
-        {}
-		/// (2)
-		__utl_interface_export
-		constexpr explicit vector(Allocator const& alloc) noexcept:
-            vector(__private_tag{}, alloc, {}, {}, 0, false)
-        {}
-		
         /// (X)
         __utl_interface_export
         constexpr vector(std::size_t count,
                          std::invocable<T*> auto&& f,
                          Allocator const& alloc = Allocator()):
-        vector(__private_tag{},
-               alloc,
-               this->__allocate(count),
-               count,
-               count,
-               false)
+            vector(__private_tag{},
+                   alloc,
+                   this->__allocate(count),
+                   count,
+                   count,
+                   false)
         {
             for (auto i = __begin(), end = __end(); i != end; ++i) {
                 f(i);
             }
         }
         
+        /// (Xa)
+        __utl_interface_export
+        constexpr vector(std::size_t count,
+                         utl::invocable_r<T> auto&& f,
+                         Allocator const& alloc = Allocator()):
+            vector(count, [this, &f](T* p) { __construct_at(p, f()); }, alloc)
+        {}
+                
+        /// (1)
+        __utl_interface_export
+        constexpr vector() noexcept(noexcept(Allocator())) requires std::constructible_from<Allocator>:
+            vector(Allocator())
+        {}
+        /// (2)
+        __utl_interface_export
+        constexpr explicit vector(Allocator const& alloc) noexcept:
+            vector(__private_tag{}, alloc, nullptr, 0, 0, false)
+        {}
 		/// (3)
 		__utl_interface_export
 		constexpr vector(std::size_t count,
 						 T const& value,
 						 Allocator const& alloc = Allocator()):
-			vector(__private_tag{},
-				   alloc,
-                   this->__allocate(count),
-				   count,
-				   count,
-				   false)
-		{
-			for (auto i = begin(); i != end(); ++i) {
-				__construct_at(i, value);
-			}
-		}
+            vector(count, [this, &value]() -> T const& { return value; }, alloc)
+		{}
 		
 		/// (4)
 		__utl_interface_export
 		constexpr explicit vector(std::size_t count,
 								  Allocator const& alloc = Allocator()):
-			vector(__private_tag{},
-				   alloc,
-                   this->__allocate(count),
-				   count,
-				   count,
-				   false)
-		{
-			for (auto i = begin(); i != end(); ++i) {
-				__construct_at(i);
-			}
-		}
+            vector(count, [this](T* p) { __construct_at(p); }, alloc)
+		{}
 		
 		/// (4a)
 		__utl_interface_export
@@ -190,12 +178,7 @@ namespace utl {
 								  utl::no_init_t,
 								  Allocator const& alloc = Allocator())
 			requires(std::is_trivial_v<T>):
-			vector(__private_tag{},
-				   alloc,
-                   this->__allocate(count),
-				   count,
-				   count,
-				   false)
+            vector(count, [](T*){}, alloc)
 		{}
 		
 		/// (5)
@@ -203,15 +186,8 @@ namespace utl {
 		__utl_interface_export __utl_always_inline
 		constexpr vector(InputIt first, InputIt last,
 						 Allocator const& alloc = Allocator()):
-			vector(__private_tag{},
-				   alloc,
-                   this->__allocate(std::distance(first, last)),
-				   std::distance(first, last),
-				   std::distance(first, last),
-				   false)
-		{
-            this->__copy_construct_range(first, last, this->begin());
-		}
+            vector(std::distance(first, last), [this, first]() mutable -> decltype(auto) { return *first++; }, alloc)
+		{}
 		
 		/// (6)
 		__utl_interface_export
@@ -222,16 +198,8 @@ namespace utl {
 		/// (7)
 		__utl_interface_export
 		constexpr vector(vector const& rhs, Allocator const& alloc):
-			vector(__private_tag{},
-                   alloc,
-				   nullptr,
-				   rhs.size(),
-				   rhs.size(),
-				   rhs.empty())
-		{
-			__set_begin(this->__allocate(rhs.size()));
-			__copy_construct_range(rhs.__begin(), rhs.__end(), this->__begin());
-		}
+            vector(rhs.size(), [this, i = rhs.begin()]() mutable -> T const& { return *i++; }, alloc)
+        {}
 		
 		/// (8)
 		__utl_interface_export
@@ -251,16 +219,9 @@ namespace utl {
 		__utl_interface_export
 		constexpr vector(std::initializer_list<T> ilist,
 						 Allocator const& alloc):
-			vector(__private_tag{},
-				   alloc,
-                   this->__allocate(ilist.size()),
-				   ilist.size(),
-				   ilist.size(),
-				   false)
-		{
-			__copy_construct_range(ilist.begin(), ilist.end(), this->__begin());
-		}
-		
+            vector(ilist.size(), [this, i = ilist.begin()]() mutable -> T const& { return *i++; }, alloc)
+        {}
+        
 		/// (10a)
 		__utl_interface_export
 		constexpr vector(std::initializer_list<T> ilist) requires (std::is_default_constructible_v<Allocator>):
@@ -288,7 +249,7 @@ namespace utl {
 				// assign all we have already constructed in this
 				std::copy(rhs.begin(), _rhs_mid_end, this->begin());
 				// copy construct the rest from rhs
-				__copy_construct_range(_rhs_mid_end, rhs.end(), this->end());
+				__construct_range(_rhs_mid_end, rhs.end(), this->end());
 				// destroy our rest
 				auto const _old_end = this->end();
 				this->__set_size(rhs.size());
@@ -303,7 +264,7 @@ namespace utl {
 				this->__set_size(rhs.size());
 				this->__set_cap(rhs.size());
 				this->__set_uses_inline_buffer(false);
-				__copy_construct_range(rhs.__begin(), rhs.__end(), this->__begin());
+				__construct_range(rhs.__begin(), rhs.__end(), this->__begin());
 			}
 			return *this;
 		}
@@ -312,19 +273,19 @@ namespace utl {
 		__utl_interface_export
 		constexpr vector& operator=(vector&& rhs)& {
 			if UTL_UNLIKELY (&rhs == this) { return *this; }
-            if (rhs.__uses_inline_buffer() || this->__alloc() != rhs.__alloc()) {
+            if (rhs.__uses_inline_buffer() || __alloc() != rhs.__alloc() || (__uses_inline_buffer() && rhs.__size() <= __cap())) {
                 // We cannot steal the buffer
                 if (rhs.size() <= capacity()) {
                     // no need to allocate
-                    auto const _rhs_mid_end = std::min(rhs.begin() + this->size(), rhs.end());
+                    auto const _rhs_mid_end = std::min(rhs.__begin() + __size(), rhs.__end());
                     // assign all we have already constructed in this
-                    std::move(rhs.begin(), _rhs_mid_end, this->begin());
+                    std::move(rhs.__begin(), _rhs_mid_end, __begin());
                     // copy construct the rest from rhs
-                    __move_construct_range(_rhs_mid_end, rhs.end(), this->end());
+                    __construct_range(std::move_iterator(_rhs_mid_end), rhs.__move_end(), __end());
                     // destroy our rest
-                    auto const _old_end = this->end();
-                    this->__set_size(rhs.size());
-                    __destroy_elems(end(), _old_end);
+                    auto const _old_end = __end();
+                    this->__set_size(rhs.__size());
+                    __destroy_elems(__end(), _old_end);
                 }
                 else {
                     // We need to allocate
@@ -333,15 +294,12 @@ namespace utl {
 					this->__set_size(rhs.size());
 					this->__set_cap(rhs.size());
 					this->__set_uses_inline_buffer(false);
-                    __move_construct_range(rhs.begin(), rhs.end(), this->begin());
+                    __construct_range(rhs.__move_begin(), rhs.__move_end(), __begin());
                 }
 			}
 			else {
                 // We can steal the buffer
-                __destroy_elems();
-				if (!this->__uses_inline_buffer()) {
-					this->deallocate(this->__begin(), this->__cap());
-				}
+                this->~vector();
 				this->__set_begin(rhs.__begin());
 				this->__set_size(rhs.__size());
 				this->__set_cap(rhs.__cap());
@@ -358,8 +316,8 @@ namespace utl {
 		constexpr vector& operator=(std::initializer_list<T> ilist)& {
 			if (ilist.size() <= this->capacity()) {
 				// no need to allocate
-				__copy_assign_range(ilist.begin(), ilist.begin() + this->__size(), this->__begin());
-				__copy_construct_range(ilist.begin() + std::min(ilist.size(), this->size()), ilist.end(), this->__end());
+				std::copy(ilist.begin(), ilist.begin() + this->__size(), this->__begin());
+				__construct_range(ilist.begin() + std::min(ilist.size(), this->size()), ilist.end(), this->__end());
 				auto const old_end = this->end();
 				this->__set_size(ilist.size());
 				__destroy_elems(end(), old_end);
@@ -370,20 +328,18 @@ namespace utl {
 				this->__set_size(ilist.size());
 				this->__set_cap(ilist.size());
 				this->__set_uses_inline_buffer(false);
-				__copy_construct_range(ilist.begin(), ilist.end(), this->begin());
+				__construct_range(ilist.begin(), ilist.end(), this->begin());
 			}
 			return *this;
 		}
 		
 		/// MARK: get_allocator
-		
         __utl_nodiscard __utl_interface_export __utl_always_inline
 		constexpr allocator_type get_allocator() const noexcept {
 			return *this;
 		}
 		
 		/// MARK: at
-		
         __utl_nodiscard __utl_interface_export __utl_always_inline
 		constexpr T& at(std::size_t pos) {
 			return as_mutable(utl::as_const(*this).at(pos));
@@ -396,9 +352,7 @@ namespace utl {
 			return __begin()[pos];
 		}
 		
-		
 		/// MARK: operator[]
-		
         __utl_nodiscard __utl_interface_export __utl_always_inline
 		constexpr T& operator[](std::size_t pos) {
 			return utl::as_mutable(utl::as_const(*this).operator[](pos));
@@ -410,7 +364,6 @@ namespace utl {
 		}
 		
 		/// MARK: front
-		
         __utl_nodiscard __utl_interface_export __utl_always_inline
 		constexpr T& front() noexcept { return as_mutable(utl::as_const(*this).front()); }
 		__utl_nodiscard __utl_interface_export __utl_always_inline
@@ -418,8 +371,8 @@ namespace utl {
 			__utl_expect(!empty(), "front() called on empty vector.");
 			return *__begin();
 		}
+        
 		/// MARK: back
-		
         __utl_nodiscard __utl_interface_export __utl_always_inline
 		constexpr T& back() noexcept { return as_mutable(utl::as_const(*this).back()); }
 		__utl_nodiscard __utl_interface_export __utl_always_inline
@@ -429,7 +382,6 @@ namespace utl {
 		}
 		
 		/// MARK: data
-		
         __utl_nodiscard __utl_interface_export __utl_always_inline
 		constexpr T* data() noexcept { return const_cast<T*>(utl::as_const(*this).data()); }
 		__utl_nodiscard __utl_interface_export __utl_always_inline
@@ -438,7 +390,6 @@ namespace utl {
 		}
 		
 		/// MARK: begin
-		
         __utl_nodiscard __utl_interface_export __utl_always_inline
 		constexpr iterator begin() noexcept { return __begin(); }
 		__utl_nodiscard __utl_interface_export __utl_always_inline
@@ -454,7 +405,6 @@ namespace utl {
 		constexpr const_reverse_iterator crbegin() const noexcept { return reverse_Iterator(__end()); }
 		
 		/// MARK: end
-		
         __utl_nodiscard __utl_interface_export __utl_always_inline
 		constexpr iterator end() noexcept { return __end(); }
 		__utl_nodiscard __utl_interface_export __utl_always_inline
@@ -470,29 +420,25 @@ namespace utl {
 		constexpr const_reverse_iterator crend() const noexcept { return reverse_Iterator(begin()); }
 		
 		/// MARK: empty
-		
         __utl_nodiscard __utl_interface_export __utl_always_inline
 		constexpr bool empty() const noexcept { return !size(); }
 		
 		/// MARK: size
-		
         __utl_nodiscard __utl_interface_export __utl_always_inline
 		constexpr std::size_t size() const noexcept { return __size(); }
 		
 		/// MARK: max_size
-		
         __utl_nodiscard __utl_interface_export __utl_always_inline
 		constexpr static std::size_t max_size() noexcept { return std::numeric_limits<size_type>::max(); }
 		
 		/// MARK: reserve
-		
         __utl_interface_export
 		constexpr void reserve(std::size_t new_cap) {
 			if (new_cap <= capacity()) {
 				return;
 			}
 			T* new_buffer = this->__allocate(new_cap);
-			__move_construct_range(this->__begin(), this->__end(), new_buffer);
+			__construct_range(this->__move_begin(), this->__move_end(), new_buffer);
 			__destroy_elems();
 			if (!__uses_inline_buffer()) {
 				this->__deallocate(this->__begin(), capacity());
@@ -505,19 +451,16 @@ namespace utl {
 		}
 		
 		/// MARK: capacity
-		
         __utl_nodiscard  __utl_interface_export __utl_always_inline
 		constexpr std::size_t capacity() const noexcept { return this->__cap(); }
 		
 		/// MARK: shrink_to_fit
-		
         __utl_interface_export
 		constexpr void shrink_to_fit() {
 			// no-op
 		}
 		
 		/// MARK: clear
-		
         __utl_interface_export
 		constexpr void clear() noexcept {
 			__destroy_elems();
@@ -525,45 +468,44 @@ namespace utl {
 		}
 		
 		/// MARK: insert
-		
         /// (1)
 		__utl_interface_export
 		constexpr iterator insert(const_iterator pos, T const& value) {
-			return __insert_impl(pos, value);
+            return __insert_impl(pos, 1, [&value]() -> T const& { return value; });
 		}
 		
 		/// (2)
 		__utl_interface_export
 		constexpr iterator insert(const_iterator pos, T&& value) {
-			return __insert_impl(pos, std::move(value));
+            return __insert_impl(pos, 1, [&value]() -> T&& { return value; });
 		}
 		
 		/// (3)
 		__utl_interface_export
-		constexpr iterator insert(const_iterator pos, size_type count,
-								   T const& value);
+		constexpr iterator insert(const_iterator pos, size_type count, T const& value) {
+            return __insert_impl(pos, count, [&value]() -> T const& { return value; });
+        }
 		
 		/// (4)
 		template <typename InputIt>
 		__utl_interface_export
-		constexpr iterator insert(const_iterator pos,
-								  InputIt first, InputIt last);
+        constexpr iterator insert(const_iterator pos, InputIt first, InputIt last) {
+            return __insert_impl(pos, std::distance(first, last), [first]() mutable -> decltype(auto) { return *first++; });
+        }
 			
 		/// (5)
 		__utl_interface_export __utl_always_inline
-		constexpr iterator insert(const_iterator pos,
-								  std::initializer_list<T> ilist);
-		
+        constexpr iterator insert(const_iterator pos, std::initializer_list<T> ilist) {
+            return __insert_impl(pos, ilist.size(), [i = ilist.begin()]() mutable -> decltype(auto) { return *i++; });
+        }
 		
 		/// MARK: push_back
-		
         __utl_interface_export
 		constexpr T& push_back(T const& t) { return emplace_back(t); }
 		__utl_interface_export
 		constexpr T& push_back(T&& t) { return emplace_back(std::move(t)); }
 		
 		/// MARK: emplace_back
-		
         template <typename... Args>
 		requires __constructible<Args...>
 		__utl_interface_export
@@ -577,7 +519,6 @@ namespace utl {
 		}
 	
 		/// MARK: pop_back
-		
         __utl_interface_export
 		constexpr void pop_back() noexcept {
 			__utl_expect(!empty(), "pop_back() called on empty vector");
@@ -586,7 +527,6 @@ namespace utl {
 		}
 		
 		/// MARK: erase
-		
         /// (1)
 		__utl_interface_export
 		constexpr iterator erase(const_iterator cpos) {
@@ -629,7 +569,6 @@ namespace utl {
 		}
 		
 		/// MARK: resize
-		
         /// (1)
 		__utl_interface_export
 		constexpr void resize(std::size_t count) {
@@ -647,7 +586,6 @@ namespace utl {
 		}
 		
 		/// MARK: swap
-		
         __utl_interface_export
         constexpr void swap(vector& rhs) noexcept {
             if (this->__uses_inline_buffer() || rhs.__uses_inline_buffer() || this->_alloc() != rhs._alloc()) {
@@ -682,7 +620,7 @@ namespace utl {
 				this->__set_size(rhs.size());
 				this->__set_cap(rhs.size());
 				this->__set_uses_inline_buffer(false);
-				__move_construct_range(rhs.__begin(), rhs.__end(), this->__begin());
+				__construct_range(rhs.__move_begin(), rhs.__move_end(), this->__begin());
 			}
             else {
                 // We may steal the buffer
@@ -696,26 +634,38 @@ namespace utl {
 			}
 		}
 		
-		template <typename U>
-		constexpr iterator __insert_impl(const_iterator cpos, U&& value) {
-			if (cpos == end()) {
-				push_back(std::forward<U>(value));
-				return end() - 1;
-			}
-			else {
-				__utl_bounds_check(cpos, begin(), end());
-				std::size_t const index = cpos - begin();
-				if (size() == capacity()) {
-					reserve(__recommend(size() + 1));
-				}
-				auto pos = begin() + index;
-				__construct_at(end(), std::move(back()));
-				__right_shift_range(pos, end(), 1);
-				__set_size(size() + 1);
-				*pos = std::forward<U>(value);
-				return pos;
-			}
-		}
+        constexpr iterator __insert_impl(const_iterator cpos, std::size_t count, auto&& f) {
+            __utl_bounds_check(cpos, __begin(), __end() + 1);
+            size_t const index = cpos - __begin();
+            bool const is_end = cpos == __end();
+            if (__size() + count > __cap()) {
+                reserve(__recommend(__size() + count));
+            }
+            if (is_end) {
+                for (auto i = __end(), end = i + count; i != end; ++i) {
+                    __construct_at(i, f());
+                }
+                __set_size(__size() + count);
+                return end() - 1;
+            }
+            else {
+                auto const end = __end();
+                auto pos = __begin() + index;
+                size_t const construct_count = std::min(count, __size() - index);
+                auto const construct_range_begin = end - construct_count;
+                __construct_range(std::move_iterator(construct_range_begin), std::move_iterator(end), construct_range_begin + count);
+                __right_shift_range(pos, construct_range_begin, count);
+                std::size_t const init_count = std::min<std::size_t>(count, end - pos);
+                for (auto const end = pos + init_count; pos != end; ++pos) {
+                    *pos = f();
+                }
+                for (auto const end = pos - init_count + count; pos != end; ++pos) {
+                    __construct_at(pos, f());
+                }
+                __set_size(__size() + count);
+                return pos;
+            }
+        }
 		
 		constexpr void __resize_impl(std::size_t count, auto&& constr) {
 			if (size() == count) {
@@ -730,7 +680,7 @@ namespace utl {
 				if (count > capacity()) {
 					auto const target_cap = __recommend(count);
 					auto const new_buffer = this->__allocate(target_cap);
-					__move_construct_range(begin(), end(), new_buffer);
+					__construct_range(__move_begin(), __move_end(), new_buffer);
 					__destroy_elems();
 					if (!__uses_inline_buffer()) {
 						this->deallocate(__begin(), capacity());
@@ -800,40 +750,20 @@ namespace utl {
 		}
 		
 		template <typename Iter>
-		constexpr void __copy_construct_range(Iter begin, Iter end, T* out) noexcept(std::is_nothrow_copy_constructible_v<T>) {
+		constexpr void __construct_range(Iter begin, Iter end, T* out) {
 			for (auto i = begin; i != end; ++i, ++out) {
 				__construct_at(out, *i);
 			}
 		}
-		template <typename Iter>
-		constexpr void __copy_assign_range(Iter begin, Iter end, T* out) noexcept(std::is_nothrow_copy_constructible_v<T>) {
-			for (auto i = begin; i != end; ++i, ++out) {
-				*out = *i;
-			}
-		}
 		
-		template <typename Iter>
-		constexpr void __move_construct_range(Iter begin, Iter end, T* out) noexcept(std::is_nothrow_move_constructible_v<T>) {
-			for (auto i = begin; i != end; ++i, ++out) {
-				__construct_at(out, std::move(*i));
-			}
-		}
-		
-		template <typename Iter>
-		constexpr void _move_assign_range(Iter begin, Iter end, T* out) noexcept(std::is_nothrow_move_assignable_v<T>) {
-			for (auto i = begin; i != end; ++i, ++out) {
-				*out = std::move(*i);
-			}
-		}
-		
-		constexpr static void __left_shift_range(T* begin, T* end, std::ptrdiff_t offset) noexcept(std::is_nothrow_move_assignable_v<T>) {
+		constexpr static void __left_shift_range(T* begin, T* end, std::ptrdiff_t offset) {
 			__utl_expect(offset < 0, "offset must be negative");
 			for (auto i = begin + offset, j = begin; j < end; ++i, ++j) {
 				*i = std::move(*j);
 			}
 		}
 		
-		constexpr static void __right_shift_range(T* begin, T* end, std::ptrdiff_t offset) noexcept(std::is_nothrow_move_assignable_v<T>) {
+		constexpr static void __right_shift_range(T* begin, T* end, std::ptrdiff_t offset) {
 			__utl_expect(offset > 0, "offset must be positive");
 			for (auto i = end + offset - 1, j = end - 1; j >= begin; --i, --j) {
 				*i = std::move(*j);
@@ -842,35 +772,38 @@ namespace utl {
 		
 		__utl_noinline
 		void __throw_out_of_bound_error(size_type pos) const {
-			throw std::out_of_range("utl::vector out of bounds");
+			throw std::out_of_range("utl::vector out of range");
 		}
 		
 		constexpr vector(__private_tag, T* begin, std::size_t size, std::size_t capacity, bool inplace) noexcept:
-			Allocator(), _begin_inline_(begin, inplace), _size_((size_type)size), _cap_(static_cast<size_type>(capacity)) {}
+			Allocator(), __begin_inline_(begin, inplace), __size_((size_type)size), __cap_(static_cast<size_type>(capacity)) {}
 		
 		constexpr vector(__private_tag, auto&& alloc, T* begin, std::size_t size, std::size_t capacity, bool inplace) noexcept:
-			Allocator(UTL_FORWARD(alloc)), _begin_inline_(begin, inplace), _size_((size_type)size), _cap_((size_type)capacity) {}
+			Allocator(UTL_FORWARD(alloc)), __begin_inline_(begin, inplace), __size_((size_type)size), __cap_((size_type)capacity) {}
 		
-		constexpr pointer __begin() const noexcept { return _begin_inline_.pointer(); }
-		constexpr void __set_begin(pointer p) noexcept { _begin_inline_.pointer(p); }
-		constexpr auto __size() const noexcept { return _size_; }
+		constexpr pointer __begin() const noexcept { return __begin_inline_.pointer(); }
+		constexpr void __set_begin(pointer p) noexcept { __begin_inline_.pointer(p); }
+		constexpr auto __size() const noexcept { return __size_; }
 		constexpr void __set_size(std::size_t size) noexcept {
-			_size_ = narrow_cast<size_type>(size);
+			__size_ = narrow_cast<size_type>(size);
 		}
-		constexpr auto __cap() const noexcept { return _cap_; }
+		constexpr auto __cap() const noexcept { return __cap_; }
 		constexpr void __set_cap(std::size_t cap) noexcept {
-			_cap_ = narrow_cast<size_type>(cap);
+			__cap_ = narrow_cast<size_type>(cap);
 		}
 		
 		constexpr bool __uses_inline_buffer() const noexcept {
-			return _begin_inline_.integer();
+			return __begin_inline_.integer();
 		}
 		
-		constexpr void __set_uses_inline_buffer(bool b) noexcept { _begin_inline_.integer(b); }
-		constexpr pointer __end() const noexcept { return __begin() + _size_; }
+		constexpr void __set_uses_inline_buffer(bool b) noexcept { __begin_inline_.integer(b); }
+		constexpr pointer __end() const noexcept { return __begin() + __size_; }
 		
-		pointer_int_pair<T*, bool, 1> _begin_inline_;
-		size_type _size_, _cap_;
+        constexpr auto __move_begin() const noexcept { return std::move_iterator(__begin()); }
+        constexpr auto __move_end() const noexcept { return std::move_iterator(__end()); }
+        
+		pointer_int_pair<T*, bool, 1> __begin_inline_;
+		size_type __size_, __cap_;
 		
 		pointer __storage_begin() noexcept { return nullptr; }
 		pointer __storage_end() noexcept { return nullptr; }
@@ -904,53 +837,6 @@ namespace utl {
 		return str << "]";
 	}
 	
-	
-	/// MARK: - Free Member Function Alternatives
-	template <typename T, typename A>
-	constexpr auto begin(vector<T, A>& v) { return v.begin(); }
-	template <typename T, typename A>
-	constexpr auto begin(vector<T, A> const& v) { return v.begin(); }
-	template <typename T, typename A>
-	constexpr auto begin(vector<T, A>&& v) { return std::move(v).begin(); }
-	template <typename T, typename A>
-	constexpr auto begin(vector<T, A> const&& v) { return std::move(v).begin(); }
-	
-	template <typename T, typename A>
-	constexpr auto end(vector<T, A>& v) { return v.end(); }
-	template <typename T, typename A>
-	constexpr auto end(vector<T, A> const& v) { return v.end(); }
-	template <typename T, typename A>
-	constexpr auto end(vector<T, A>&& v) { return std::move(v).end(); }
-	template <typename T, typename A>
-	constexpr auto end(vector<T, A> const&& v) { return std::move(v).end(); }
-	
-	template <typename T, typename A>
-	constexpr auto size(vector<T, A> const& v) { return v.size(); }
-	
-	template <typename T, typename A>
-	constexpr auto* data(vector<T, A>& v) { return v.data(); }
-	template <typename T, typename A>
-	constexpr auto const* data(vector<T, A> const& v) { return v.data(); }
-	
-	/// MARK: struct __vector_config
-	template <typename T, typename A>
-	struct __vector_config {
-		static constexpr std::size_t growth_factor = 2;
-		
-		static constexpr std::size_t minimum_allocation_count = 4; // default_inline_capacity<T, A>;
-		
-		static constexpr std::size_t small_vector_target_size = 64;
-		
-		using size_type = typename vector_size_type_selector<T>::type;
-	};
-
-	template <typename T, typename A>
-	constexpr std::size_t __small_vector_default_inline_capacity() {
-		auto constexpr base_vector_size = sizeof(utl::vector<T, A>);
-		std::size_t const target_count = (__vector_config<T, A>::small_vector_target_size - base_vector_size) / sizeof(T);
-		return std::max<std::size_t>(target_count, 0);
-	}
-
 	/// MARK: - class small_vector
 	template <typename T, std::size_t N, typename Allocator>
 	class small_vector: public vector<T, Allocator> {
@@ -1014,9 +900,8 @@ namespace utl {
 		/// (4a)
 		__utl_interface_export __utl_always_inline
 		constexpr explicit small_vector(std::size_t count,
-											utl::no_init_t,
-											Allocator const& alloc = Allocator())
-			requires(std::is_trivial_v<T>):
+                                        utl::no_init_t,
+                                        Allocator const& alloc = Allocator()) requires(std::is_trivial_v<T>):
 			__utl_base(__private_tag{}, alloc, no_init)
 		{
 			__count_constructor_prep(count);
@@ -1031,7 +916,7 @@ namespace utl {
 			__utl_base(__private_tag{}, alloc, no_init)
 		{
 			__count_constructor_prep(std::distance(first, last));
-			this->__copy_construct_range(first, last, this->begin());
+			this->__construct_range(first, last, this->begin());
 		}
 		
 		/// (6)
@@ -1087,7 +972,7 @@ namespace utl {
 		constexpr small_vector(small_vector&& rhs) noexcept:
             __utl_base(__private_tag{}, std::move(rhs.__alloc()), no_init)
 		{
-			__move_constructor_impl<0>(std::move(rhs));
+			__move_constructor_impl<N>(std::move(rhs));
 		}
 		/// (8a)
 		template <std::size_t M>
@@ -1135,7 +1020,7 @@ namespace utl {
             __utl_base(__private_tag{}, alloc, no_init)
 		{
 			__count_constructor_prep(ilist.size());
-			this->__copy_construct_range(ilist.begin(), ilist.end(), this->__begin());
+			this->__construct_range(ilist.begin(), ilist.end(), this->__begin());
 		}
 		
 		/// MARK: operator=
@@ -1198,28 +1083,25 @@ namespace utl {
 				this->__set_cap(rhs.size());
 				this->__set_uses_inline_buffer(false);
 			}
-			this->__copy_construct_range(rhs.begin(), rhs.end(), this->begin());
+			this->__construct_range(rhs.begin(), rhs.end(), this->begin());
 		}
 		
-		template <std::size_t rhsCap>
+		template <std::size_t RhsCap>
 		void __move_constructor_impl(auto&& rhs) {
 			if (rhs.size() <= N) /* contents of rhs fits into our local buffer */ {
 				this->__set_begin(this->__storage_begin());
 				this->__set_size(rhs.size());
 				this->__set_cap(N);
 				this->__set_uses_inline_buffer(true);
-				this->__move_construct_range(rhs.__begin(), rhs.__end(), this->__begin());
-				rhs.__destroy_elems();
-				rhs.__set_size(0);
+				this->__construct_range(rhs.__move_begin(), rhs.__move_end(), this->__begin());
 			}
 			else if (rhs.__uses_inline_buffer()) /* rhs uses local buffer, we need to allocate */ {
+                __utl_assert(!rhs.empty());
 				this->__set_begin(this->__allocate(rhs.size()));
 				this->__set_size(rhs.size());
 				this->__set_cap(rhs.size());
-				this->__set_uses_inline_buffer(rhs.empty());
-				this->__move_construct_range(rhs.__begin(), rhs.__end(), this->__begin());
-				rhs.__destroy_elems();
-				rhs.__set_size(0);
+				this->__set_uses_inline_buffer(false);
+				this->__construct_range(rhs.__move_begin(), rhs.__move_end(), this->__begin());
 			}
 			else /* we can swap buffers */ {
 				this->__set_begin(rhs.__begin());
@@ -1228,21 +1110,40 @@ namespace utl {
 				this->__set_uses_inline_buffer(rhs.__uses_inline_buffer());
 				rhs.__set_begin(rhs.__storage_begin());
 				rhs.__set_size(0);
-				rhs.__set_cap(rhsCap);
-				rhs.__set_uses_inline_buffer(true);
+				rhs.__set_cap(RhsCap);
+				rhs.__set_uses_inline_buffer(RhsCap > 0);
 			}
 		}
 		
-		pointer __storage_begin() noexcept { return reinterpret_cast<pointer>(_storage); }
-		pointer __storage_end() noexcept { return reinterpret_cast<pointer>(_storage) + N; }
+		pointer __storage_begin() noexcept { return reinterpret_cast<pointer>(__storage); }
+		pointer __storage_end() noexcept { return reinterpret_cast<pointer>(__storage) + N; }
 		
-		const_pointer __storage_begin() const noexcept { return reinterpret_cast<const_pointer>(_storage); }
-		const_pointer __storage_end() const noexcept { return reinterpret_cast<const_pointer>(_storage) + N; }
+		const_pointer __storage_begin() const noexcept { return reinterpret_cast<const_pointer>(__storage); }
+		const_pointer __storage_end() const noexcept { return reinterpret_cast<const_pointer>(__storage) + N; }
 		
 		__utl_base& __as_base() noexcept { return static_cast<__utl_base&>(*this); }
 		__utl_base const& __as_base() const noexcept { return static_cast<__utl_base const&>(*this); }
 		
-		alignas (N != 0 ? alignof(T) : 1) char _storage[sizeof(T) * N];
+		alignas (N != 0 ? alignof(T) : 1) char __storage[sizeof(T) * N];
 	};
 	
+    /// MARK: struct __vector_config
+    template <typename T, typename A>
+    struct __vector_config {
+        static constexpr std::size_t growth_factor = 2;
+        
+        static constexpr std::size_t minimum_allocation_count = 4; // default_inline_capacity<T, A>;
+        
+        static constexpr std::size_t small_vector_target_size = 64;
+        
+        using size_type = typename vector_size_type_selector<T>::type;
+    };
+
+    template <typename T, typename A>
+    constexpr std::size_t __small_vector_default_inline_capacity() {
+        auto constexpr base_vector_size = sizeof(utl::vector<T, A>);
+        std::size_t const target_count = (__vector_config<T, A>::small_vector_target_size - base_vector_size) / sizeof(T);
+        return std::max<std::size_t>(target_count, 0);
+    }
+
 }
