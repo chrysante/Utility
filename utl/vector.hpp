@@ -211,8 +211,9 @@ public:
 
     /// MARK: operator=
     /// (1)
-    __utl_interface_export constexpr vector& operator=(vector const& rhs) &
-        requires(std::assignable_from<T&, T const&> && std::constructible_from<T, T const&>) {
+    __utl_interface_export constexpr vector& operator=(vector const& rhs) & // clang-format off
+        requires(std::assignable_from<T&, T const&> && std::constructible_from<T, T const&>)  // clang-format on
+    {
         if UTL_UNLIKELY (&rhs == this) {
             return *this;
         }
@@ -290,8 +291,9 @@ public:
     __utl_interface_export constexpr vector& operator=(std::initializer_list<T> ilist) & {
         if (ilist.size() <= this->capacity()) {
             // no need to allocate
-            std::copy(ilist.begin(), ilist.begin() + this->__size(), this->__begin());
-            __construct_range(ilist.begin() + std::min(ilist.size(), this->size()), ilist.end(), this->__end());
+            std::size_t const assign_count = std::min<std::size_t>(ilist.size(), __size());
+            std::copy(ilist.begin(), ilist.begin() + assign_count, this->__begin());
+            __construct_range(ilist.begin() + assign_count, ilist.end(), this->__end());
             auto const old_end = this->end();
             this->__set_size(ilist.size());
             __destroy_elems(end(), old_end);
@@ -477,8 +479,8 @@ public:
     __utl_interface_export constexpr T& push_back(T&& t) { return emplace_back(std::move(t)); }
 
     /// MARK: emplace_back
-    template <typename... Args> requires __constructible<Args...>
-    __utl_interface_export constexpr T& emplace_back(Args&&... args) {
+    template <typename... Args>
+    requires __constructible<Args...> __utl_interface_export constexpr T& emplace_back(Args&&... args) {
         if UTL_UNLIKELY (size() == capacity()) {
             __grow();
         }
@@ -601,15 +603,16 @@ public:
             reserve(__recommend(__size() + count));
         }
         if (is_end) {
-            for (auto i = __end(), end = i + count; i != end; ++i) {
+            auto const pos = __end();
+            for (auto i = pos, end = pos + count; i != end; ++i) {
                 __construct_at(i, f());
             }
             __set_size(__size() + count);
-            return end() - 1;
+            return pos;
         }
         else {
             auto const end                   = __end();
-            auto pos                         = __begin() + index;
+            auto const pos                   = __begin() + index;
             size_t const construct_count     = std::min(count, __size() - index);
             auto const construct_range_begin = end - construct_count;
             __construct_range(std::move_iterator(construct_range_begin),
@@ -617,11 +620,12 @@ public:
                               construct_range_begin + count);
             __right_shift_range(pos, construct_range_begin, count);
             std::size_t const init_count = std::min<std::size_t>(count, end - pos);
-            for (auto const end = pos + init_count; pos != end; ++pos) {
-                *pos = f();
+            auto i                       = pos;
+            for (auto const end = pos + init_count; i != end; ++i) {
+                *i = f();
             }
-            for (auto const end = pos - init_count + count; pos != end; ++pos) {
-                __construct_at(pos, f());
+            for (auto const end = pos + count; i != end; ++i) {
+                __construct_at(i, f());
             }
             __set_size(__size() + count);
             return pos;
@@ -713,14 +717,14 @@ public:
     }
 
     constexpr static void __left_shift_range(T* begin, T* end, std::ptrdiff_t offset) {
-        __utl_expect(offset < 0, "offset must be negative");
+        __utl_expect(offset <= 0, "offset must non-positive");
         for (auto i = begin + offset, j = begin; j < end; ++i, ++j) {
             *i = std::move(*j);
         }
     }
 
     constexpr static void __right_shift_range(T* begin, T* end, std::ptrdiff_t offset) {
-        __utl_expect(offset > 0, "offset must be positive");
+        __utl_expect(offset >= 0, "offset must be non-negative");
         for (auto i = end + offset - 1, j = end - 1; j >= begin; --i, --j) {
             *i = std::move(*j);
         }
@@ -868,74 +872,37 @@ public:
     }
 
     /// (6)
-    __utl_interface_export constexpr small_vector(small_vector const& rhs):
-        __utl_base(__private_tag{}, rhs.__alloc(), no_init) {
-        __copy_constructor_impl(rhs);
-    }
-    /// (6a)
-    template <std::size_t M>
-    __utl_interface_export constexpr small_vector(small_vector<T, M, Allocator> const& rhs):
-        __utl_base(__private_tag{}, rhs.__alloc(), no_init) {
-        __copy_constructor_impl(rhs);
-    }
+    __utl_interface_export constexpr small_vector(vector<T, Allocator> const& rhs): small_vector(rhs, Allocator()) {}
 
-    /// (6b)
-    __utl_interface_export constexpr small_vector(vector<T, Allocator> const& rhs):
-        __utl_base(__private_tag{}, rhs.__alloc(), no_init) {
-        __copy_constructor_impl(rhs);
-    }
+    /// (6a)
+    __utl_interface_export constexpr small_vector(small_vector const& rhs): small_vector(rhs, Allocator()) {}
 
     /// (7)
-    __utl_interface_export constexpr small_vector(small_vector const& rhs, Allocator const& alloc):
-        __utl_base(__private_tag{}, alloc, no_init) {
-        __copy_constructor_impl(rhs);
-    }
-    /// (7a)
-    template <std::size_t M>
-    __utl_interface_export constexpr small_vector(small_vector<T, M, Allocator> const& rhs, Allocator const& alloc):
-        __utl_base(__private_tag{}, alloc, no_init) {
-        __copy_constructor_impl(rhs);
-    }
-
-    /// (7b)
     __utl_interface_export constexpr small_vector(vector<T, Allocator> const& rhs, Allocator const& alloc):
         __utl_base(__private_tag{}, alloc, no_init) {
         __copy_constructor_impl(rhs);
     }
 
+    /// (7a)
+    __utl_interface_export constexpr small_vector(small_vector const& rhs, Allocator const& alloc):
+        small_vector(static_cast<vector<T, Allocator> const&>(rhs), alloc) {}
+
     /// (8)
-    __utl_interface_export constexpr small_vector(small_vector&& rhs) noexcept:
-        __utl_base(__private_tag{}, std::move(rhs.__alloc()), no_init) {
-        __move_constructor_impl<N>(std::move(rhs));
-    }
-    /// (8a)
-    template <std::size_t M>
-    __utl_interface_export constexpr small_vector(small_vector<T, M, Allocator>&& rhs) noexcept:
-        __utl_base(__private_tag{}, std::move(rhs.__alloc()), no_init) {
-        __move_constructor_impl<M>(std::move(rhs));
-    }
-    /// (8b)
     __utl_interface_export constexpr small_vector(vector<T, Allocator>&& rhs) noexcept:
-        __utl_base(__private_tag{}, std::move(rhs.__alloc()), no_init) {
-        __move_constructor_impl<0>(std::move(rhs));
-    }
+        small_vector(std::move(rhs), Allocator()) {}
+    /// (8a)
+    __utl_interface_export constexpr small_vector(small_vector&& rhs) noexcept:
+        small_vector(std::move(rhs), Allocator()) {}
 
     /// (9)
-    __utl_interface_export constexpr small_vector(small_vector&& rhs, Allocator const& alloc) noexcept:
-        __utl_base(__private_tag{}, alloc, no_init) {
-        __move_constructor_impl<N>(std::move(rhs));
-    }
-    /// (9a)
-    template <std::size_t M>
-    __utl_interface_export constexpr small_vector(small_vector<T, M, Allocator>&& rhs, Allocator const& alloc) noexcept:
+    __utl_interface_export constexpr small_vector(vector<T, Allocator>&& rhs, Allocator const& alloc) noexcept:
         __utl_base(__private_tag{}, alloc, no_init) {
         __move_constructor_impl(std::move(rhs));
     }
-    /// (9b)
-    __utl_interface_export constexpr small_vector(vector<T, Allocator>&& rhs, Allocator const& alloc) noexcept:
-        __utl_base(__private_tag{}, alloc, no_init) {
-        __move_constructor_impl<0>(std::move(rhs));
-    }
+
+    /// (9a)
+    __utl_interface_export constexpr small_vector(small_vector&& rhs, Allocator const& alloc) noexcept:
+        small_vector(static_cast<vector<T, Allocator> const&>(rhs), alloc) {}
 
     /// (10)
     __utl_interface_export constexpr small_vector(std::initializer_list<T> ilist, Allocator const& alloc = Allocator()):
@@ -1003,7 +970,6 @@ public:
         this->__construct_range(rhs.begin(), rhs.end(), this->begin());
     }
 
-    template <std::size_t RhsCap>
     void __move_constructor_impl(auto&& rhs) {
         if (rhs.size() <= N) /* contents of rhs fits into our local buffer */ {
             this->__set_begin(this->__storage_begin());
@@ -1027,8 +993,8 @@ public:
             this->__set_uses_inline_buffer(rhs.__uses_inline_buffer());
             rhs.__set_begin(rhs.__storage_begin());
             rhs.__set_size(0);
-            rhs.__set_cap(RhsCap);
-            rhs.__set_uses_inline_buffer(RhsCap > 0);
+            rhs.__set_cap(rhs.__cap());
+            rhs.__set_uses_inline_buffer(rhs.__cap() > 0);
         }
     }
 
