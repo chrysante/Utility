@@ -28,7 +28,7 @@ namespace utl {
 				// conversion might narrow
 				__utl_expect(x <= (std::make_unsigned_t<To>)std::numeric_limits<To>::max());
 			}
-			return (To)x;
+			return static_cast<To>(x);
 		}
 		else {
 			// both are either signed or unsigned
@@ -36,7 +36,7 @@ namespace utl {
 				__utl_expect(x <= (From)std::numeric_limits<To>::max());
 				__utl_expect(x >= (From)std::numeric_limits<To>::min());
 			}
-			return (To)x;
+			return static_cast<To>(x);
 		}
 	}
 
