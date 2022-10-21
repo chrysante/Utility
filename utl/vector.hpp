@@ -13,8 +13,8 @@
 #include "__memory_resource_base.hpp"
 #include "common.hpp"
 #include "concepts.hpp"
-#include "utility.hpp"
 #include "iterator.hpp"
+#include "utility.hpp"
 
 _UTL_SYSTEM_HEADER_
 
@@ -92,7 +92,7 @@ using small_vector = utl::small_vector<T, N, polymorphic_allocator<T>>;
 
 // MARK: - vector
 template <typename T, typename Allocator>
-struct vector: private Allocator {
+struct vector {
     /// MARK: Member Types
     using value_type      = T;
     using allocator_type  = Allocator;
@@ -111,17 +111,20 @@ struct vector: private Allocator {
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
     using __alloc_traits = std::allocator_traits<allocator_type>;
+    
     // clang-format off
     template <typename... Args>
     static constexpr bool __constructible =
-    requires(Args&&... args) { value_type(std::forward<Args>(args)...); } ||
-    requires(allocator_type alloc, Args&&... args) { value_type(std::allocator_arg, alloc, std::forward<Args>(args)...); } ||
-    requires(allocator_type alloc, Args&&... args) { value_type(std::forward<Args>(args)..., alloc); };
+        requires(Args&&... args) { value_type(std::forward<Args>(args)...); } ||
+        requires(allocator_type alloc, Args&&... args) { value_type(std::allocator_arg, alloc, std::forward<Args>(args)...); } ||
+        requires(allocator_type alloc, Args&&... args) { value_type(std::forward<Args>(args)..., alloc); };
     // clang-format on
-    
+
+    static constexpr bool __value_type_uses_allocator_on_move = __alloc_constructible_1<value_type, allocator_type, value_type&&> || __alloc_constructible_2<value_type, allocator_type, value_type&&>;
+
     /// MARK: Compile time checks
     static_assert(std::is_same_v<value_type, typename __alloc_traits::value_type>);
-    
+
     /// MARK: Constructors
     /// (X)
     __utl_interface_export constexpr vector(std::size_t count,
@@ -139,7 +142,9 @@ struct vector: private Allocator {
                                             utl::invocable_r<value_type> auto&& f,
                                             allocator_type const& alloc = allocator_type()):
         vector(
-            count, [this, &f](value_type* p) { __construct_at(p, f()); }, alloc) {}
+            count,
+            [this, &f](value_type* p) { __construct_at(p, f()); },
+            alloc) {}
 
     /// (1)
     __utl_interface_export constexpr vector() noexcept(
@@ -148,65 +153,88 @@ struct vector: private Allocator {
     __utl_interface_export constexpr explicit vector(allocator_type const& alloc) noexcept:
         vector(__private_tag{}, alloc, nullptr, 0, 0, false) {}
     /// (3)
-    __utl_interface_export constexpr vector(std::size_t count, value_type const& value, allocator_type const& alloc = allocator_type()):
+    __utl_interface_export constexpr vector(std::size_t count,
+                                            value_type const& value,
+                                            allocator_type const& alloc = allocator_type()):
         vector(
-            count, [this, &value]() -> value_type const& { return value; }, alloc) {}
+            count,
+            [this, &value]() -> value_type const& { return value; },
+            alloc) {}
 
     /// (4)
     __utl_interface_export constexpr explicit vector(std::size_t count, allocator_type const& alloc = allocator_type()):
         vector(
-            count, [this](value_type* p) { __construct_at(p); }, alloc) {}
+            count,
+            [this](value_type* p) { __construct_at(p); },
+            alloc) {}
 
     /// (4a)
     __utl_interface_export constexpr explicit vector(
-        std::size_t count, utl::no_init_t, allocator_type const& alloc = allocator_type()) requires(std::is_trivial_v<value_type>):
+        std::size_t count,
+        utl::no_init_t,
+        allocator_type const& alloc = allocator_type()) requires(std::is_trivial_v<value_type>):
         vector(
-            count, [](value_type*) {}, alloc) {}
+            count,
+            [](value_type*) {},
+            alloc) {}
 
     /// (5)
     template <input_iterator_for<value_type> InputIt, sentinel_for<InputIt> Sentinel>
-    __utl_interface_export
-        __utl_always_inline constexpr vector(InputIt first, Sentinel last, allocator_type const& alloc = allocator_type()):
+    __utl_interface_export __utl_always_inline constexpr vector(InputIt first,
+                                                                Sentinel last,
+                                                                allocator_type const& alloc = allocator_type()):
         vector(
-            distance(first, last), [this, first]() mutable -> decltype(auto) { return *first++; }, alloc) {}
+            distance(first, last),
+            [this, first]() mutable -> decltype(auto) { return *first++; },
+            alloc) {}
 
     /// (6)
-    __utl_interface_export constexpr vector(vector const& rhs) requires std::constructible_from<allocator_type> && (std::is_copy_constructible_v<value_type>):
+    __utl_interface_export constexpr vector(vector const& rhs) requires std::constructible_from<allocator_type> &&
+        (std::is_copy_constructible_v<value_type>):
         vector(rhs, allocator_type()) {}
 
     /// (7)
-    __utl_interface_export constexpr vector(vector const& rhs, allocator_type const& alloc) requires (std::is_copy_constructible_v<value_type>):
+    __utl_interface_export constexpr vector(vector const& rhs, allocator_type const& alloc) requires(
+        std::is_copy_constructible_v<value_type>):
         vector(
-            rhs.size(), [this, i = rhs.begin()]() mutable -> value_type const& { return *i++; }, alloc) {}
+            rhs.size(),
+            [this, i = rhs.begin()]() mutable -> value_type const& { return *i++; },
+            alloc) {}
 
     /// (8)
     __utl_interface_export constexpr vector(vector&& rhs) noexcept(std::is_nothrow_move_constructible_v<value_type>):
         vector(std::move(rhs), allocator_type()) {}
-    
+
     /// (8a)
     template <std::size_t N>
-    __utl_interface_export constexpr vector(small_vector<value_type, N, allocator_type>&& rhs) noexcept(std::is_nothrow_move_constructible_v<value_type>):
+    __utl_interface_export constexpr vector(small_vector<value_type, N, allocator_type>&& rhs) noexcept(
+        std::is_nothrow_move_constructible_v<value_type>):
         vector(std::move(rhs), allocator_type()) {}
 
     /// (9)
-    __utl_interface_export constexpr vector(vector&& rhs,
-                                            allocator_type const& alloc) noexcept(std::is_nothrow_move_constructible_v<value_type>):
-        allocator_type(alloc) {
+    __utl_interface_export constexpr vector(vector&& rhs, allocator_type const& alloc) noexcept(
+        std::is_nothrow_move_constructible_v<value_type>):
+        __alloc_(alloc) {
         __move_constr_impl(std::move(rhs));
     }
-    
+
     /// (9a)
     template <std::size_t N>
-    __utl_interface_export constexpr vector(small_vector<value_type, N, allocator_type>&& rhs,
-                                            allocator_type const& alloc) noexcept(std::is_nothrow_move_constructible_v<value_type>):
-    allocator_type(alloc) {
+    __utl_interface_export constexpr vector(
+        small_vector<value_type, N, allocator_type>&& rhs,
+        allocator_type const& alloc) noexcept(std::is_nothrow_move_constructible_v<value_type>):
+        __alloc_(alloc) {
         __move_constr_impl(std::move(rhs));
     }
 
     /// (10)
-    __utl_interface_export constexpr vector(std::initializer_list<value_type> ilist, allocator_type const& alloc) requires (std::is_copy_constructible_v<value_type>):
+    __utl_interface_export constexpr vector(
+        std::initializer_list<value_type> ilist,
+        allocator_type const& alloc) requires(std::is_copy_constructible_v<value_type>):
         vector(
-            ilist.size(), [this, i = ilist.begin()]() mutable -> value_type const& { return *i++; }, alloc) {}
+            ilist.size(),
+            [this, i = ilist.begin()]() mutable -> value_type const& { return *i++; },
+            alloc) {}
 
     /// (10a)
     __utl_interface_export constexpr vector(std::initializer_list<value_type> ilist) requires(
@@ -214,43 +242,22 @@ struct vector: private Allocator {
         vector(ilist, allocator_type()) {}
 
     /// MARK: Destructor
-    __utl_interface_export constexpr ~vector() {
-        __destroy();
-    }
+    __utl_interface_export constexpr ~vector() { __destroy_and_deallocate(); }
 
     /// MARK: operator=
     /// (1)
     __utl_interface_export constexpr vector& operator=(vector const& rhs) & // clang-format off
-        requires(std::is_copy_assignable_v<value_type> && std::is_copy_constructible_v<value_type>)  // clang-format on
+        requires(std::is_copy_assignable_v<value_type> && std::is_copy_constructible_v<value_type>) // clang-format on
     {
-        if UTL_UNLIKELY (&rhs == this) {
-            return *this;
-        }
-        if (rhs.__size() <= __cap()) {
-            // No need to allocate
-            auto const rhs_assign_end = std::min(rhs.__begin() + __size(), rhs.__end());
-            // Assign all we have already constructed in this
-            std::copy(rhs.__begin(), rhs_assign_end, __begin());
-            // Copy construct the rest from rhs
-            __copy_uninit(rhs_assign_end, rhs.__end(), __end());
-            // Destroy our rest
-            auto const old_end = __end();
-            __set_size(rhs.__size());
-            __destroy_elems(__end(), old_end);
-        }
-        else {
-            __destroy();
-            __set_data(__allocate(rhs.__size()), rhs.__size(), rhs.__size(), false);
-            __copy_uninit(rhs.__begin(), rhs.__end(), __begin());
+        if UTL_UNLIKELY (&rhs != this) {
+            __assign_impl(rhs.__size(), [i = rhs.__begin()]() mutable -> T const& { return *i++; });
         }
         return *this;
     }
 
     /// (2)
-    __utl_interface_export constexpr vector& operator=(vector&& rhs) & {
-        return __move_assign_impl(rhs);
-    }
-    
+    __utl_interface_export constexpr vector& operator=(vector&& rhs) & { return __move_assign_impl(rhs); }
+
     /// (2a)
     template <std::size_t N>
     __utl_interface_export constexpr vector& operator=(small_vector<value_type, N, allocator_type>&& rhs) & {
@@ -259,23 +266,27 @@ struct vector: private Allocator {
 
     /// (3)
     __utl_interface_export constexpr vector& operator=(std::initializer_list<value_type> ilist) & {
-        if (ilist.size() <= __cap()) {
-            // no need to allocate
-            std::size_t const assign_count = std::min<std::size_t>(ilist.size(), __size());
-            std::copy(ilist.begin(), ilist.begin() + assign_count, __begin());
-            __copy_uninit(ilist.begin() + assign_count, ilist.end(), __end());
-            auto const old_end = __end();
-            __set_size(ilist.size());
-            __destroy_elems(end(), old_end);
-        }
-        else {
-            __destroy();
-            __set_data(__allocate(ilist.size()), ilist.size(), ilist.size(), false);
-            __copy_uninit(ilist.begin(), ilist.end(), __begin());
-        }
+        assign(ilist);
         return *this;
     }
 
+    /// MARK: assign
+    /// (1)
+    constexpr void assign(std::size_t count, T const& value) {
+        __assign_impl(count, [&count]() -> T const& { return count; });
+    }
+    
+    /// (2)
+    template <input_iterator_for<T> It, sentinel_for<It> S>
+    constexpr void assign(It first, S last) {
+        __assign_impl(distance(first, last), [i = first]() mutable -> T const& { return *i++; });
+    }
+    
+    /// (3)
+    __utl_interface_export constexpr void assign(std::initializer_list<T> ilist) {
+        __assign_impl(ilist.size(), [i = ilist.begin()]() mutable -> T const& { return *i++; });
+    }
+    
     /// MARK: get_allocator
     __utl_nodiscard __utl_interface_export __utl_always_inline constexpr allocator_type get_allocator() const noexcept {
         return __alloc();
@@ -287,7 +298,7 @@ struct vector: private Allocator {
     }
     __utl_nodiscard __utl_interface_export __utl_always_inline constexpr value_type const& at(std::size_t pos) const {
         if UTL_UNLIKELY (pos >= size()) {
-            __throw_out_of_bound_error(pos);
+            __throw_out_of_range_error(pos);
         }
         return (*this)[pos];
     }
@@ -296,7 +307,8 @@ struct vector: private Allocator {
     __utl_nodiscard __utl_interface_export __utl_always_inline constexpr value_type& operator[](std::size_t pos) {
         return utl::as_mutable(utl::as_const(*this).operator[](pos));
     }
-    __utl_nodiscard __utl_interface_export __utl_always_inline constexpr value_type const& operator[](std::size_t pos) const {
+    __utl_nodiscard __utl_interface_export __utl_always_inline constexpr value_type const&
+    operator[](std::size_t pos) const {
         __utl_bounds_check(pos, 0, size());
         return *(__begin() + pos);
     }
@@ -320,9 +332,7 @@ struct vector: private Allocator {
     }
 
     /// MARK: data
-    __utl_nodiscard __utl_interface_export __utl_always_inline constexpr pointer data() noexcept {
-        return __begin();
-    }
+    __utl_nodiscard __utl_interface_export __utl_always_inline constexpr pointer data() noexcept { return __begin(); }
     __utl_nodiscard __utl_interface_export __utl_always_inline constexpr const_pointer data() const noexcept {
         return __begin();
     }
@@ -368,7 +378,9 @@ struct vector: private Allocator {
     }
 
     /// MARK: empty
-    __utl_nodiscard __utl_interface_export __utl_always_inline constexpr bool empty() const noexcept { return __size() == 0; }
+    __utl_nodiscard __utl_interface_export __utl_always_inline constexpr bool empty() const noexcept {
+        return __size() == 0;
+    }
 
     /// MARK: size
     __utl_nodiscard __utl_interface_export __utl_always_inline constexpr std::size_t size() const noexcept {
@@ -385,10 +397,7 @@ struct vector: private Allocator {
         if (new_cap <= __cap()) {
             return;
         }
-        pointer new_buffer = __allocate(new_cap);
-        __relocate(__begin(), __end(), new_buffer);
-        if (!__uses_inline_buffer() && __begin() != nullptr) { __deallocate(__begin(), __cap()); }
-        __set_data(new_buffer, __size(), new_cap, false);
+        __reserve_bigger(new_cap);
     }
 
     /// MARK: capacity
@@ -412,7 +421,7 @@ struct vector: private Allocator {
     __utl_interface_export constexpr iterator insert(const_iterator pos, value_type const& value) {
         return __insert_impl(pos - __begin(), 1, [&value]() -> value_type const& { return value; });
     }
-    
+
     /// (1a)
     __utl_interface_export constexpr iterator insert(size_t index, value_type const& value) {
         return __insert_impl(index, 1, [&value]() -> value_type const& { return value; });
@@ -422,7 +431,7 @@ struct vector: private Allocator {
     __utl_interface_export constexpr iterator insert(const_iterator pos, value_type&& value) {
         return __insert_impl(pos - __begin(), 1, [&value]() -> value_type&& { return value; });
     }
-    
+
     /// (2a)
     __utl_interface_export constexpr iterator insert(std::size_t index, value_type&& value) {
         return __insert_impl(index, 1, [&value]() -> value_type&& { return value; });
@@ -432,7 +441,7 @@ struct vector: private Allocator {
     __utl_interface_export constexpr iterator insert(const_iterator pos, size_type count, value_type const& value) {
         return __insert_impl(pos - __begin(), count, [&value]() -> value_type const& { return value; });
     }
-    
+
     /// (3a)
     __utl_interface_export constexpr iterator insert(std::size_t index, size_type count, value_type const& value) {
         return __insert_impl(index, count, [&value]() -> value_type const& { return value; });
@@ -441,13 +450,15 @@ struct vector: private Allocator {
     /// (4)
     template <input_iterator_for<T> It, sentinel_for<It> S>
     __utl_interface_export constexpr iterator insert(const_iterator pos, It first, S last) {
-        return __insert_impl(pos - __begin(), distance(first, last), [first]() mutable -> decltype(auto) { return *first++; });
+        return __insert_impl(pos - __begin(), distance(first, last), [first]() mutable -> decltype(auto) {
+            return *first++;
+        });
     }
-    
+
     /// (4a)
     template <input_iterator_for<T> It, sentinel_for<It> S>
     __utl_interface_export constexpr iterator insert(std::size_t index, It first, S last) {
-        if constexpr (std::is_same_v<It,  iterator> || std::is_same_v<It, const_iterator>) {
+        if constexpr (std::is_same_v<It, iterator> || std::is_same_v<It, const_iterator>) {
             __utl_expect(first < __begin() || first >= __end(), "inserted range may not overlap *this");
             __utl_expect(last < __begin() || last >= __end(), "inserted range may not overlap *this");
         }
@@ -456,9 +467,11 @@ struct vector: private Allocator {
 
     /// (5)
     __utl_interface_export constexpr iterator insert(const_iterator pos, std::initializer_list<value_type> ilist) {
-        return __insert_impl(pos - __begin(), ilist.size(), [i = ilist.begin()]() mutable -> decltype(auto) { return *i++; });
+        return __insert_impl(pos - __begin(), ilist.size(), [i = ilist.begin()]() mutable -> decltype(auto) {
+            return *i++;
+        });
     }
-    
+
     /// (5a)
     __utl_interface_export constexpr iterator insert(std::size_t index, std::initializer_list<value_type> ilist) {
         return __insert_impl(index, ilist.size(), [i = ilist.begin()]() mutable -> decltype(auto) { return *i++; });
@@ -472,7 +485,7 @@ struct vector: private Allocator {
     template <typename... Args>
     requires __constructible<Args...> __utl_interface_export constexpr value_type& emplace_back(Args&&... args) {
         if UTL_UNLIKELY (__size() == __cap()) {
-            reserve(__recommend(__size() + 1));
+            __grow();
         }
         __construct_at(__end(), std::forward<Args>(args)...);
         __set_size(__size() + 1);
@@ -501,7 +514,7 @@ struct vector: private Allocator {
     }
     /// (1a)
     __utl_interface_export constexpr void erase(std::size_t index) { erase(begin() + index); }
-    
+
     /// (2)
     __utl_interface_export constexpr iterator erase(const_iterator cfirst, const_iterator clast) {
         if (empty()) {
@@ -510,8 +523,8 @@ struct vector: private Allocator {
         __utl_expect(cfirst <= clast);
         __utl_bounds_check(cfirst, begin(), end() + 1);
         __utl_bounds_check(clast, begin(), end() + 1);
-        iterator const first = const_cast<iterator>(cfirst);
-        iterator const last  = const_cast<iterator>(clast);
+        iterator const first       = const_cast<iterator>(cfirst);
+        iterator const last        = const_cast<iterator>(clast);
         auto const neg_erase_count = first - last;
         __left_shift(last, end(), neg_erase_count);
         __destroy_elems(end() + neg_erase_count, end());
@@ -524,12 +537,12 @@ struct vector: private Allocator {
     __utl_interface_export constexpr void resize(std::size_t count) {
         __resize_impl(count, [&](auto& i) { __construct_at(std::addressof(i)); });
     }
-    
+
     /// (2)
     __utl_interface_export constexpr void resize(std::size_t count, value_type const& value) {
         __resize_impl(count, [&](auto& i) { __construct_at(std::addressof(i), value); });
     }
-    
+
     /// (3)
     __utl_interface_export constexpr void resize(std::size_t count, no_init_t) {
         __resize_impl(count, [](auto&) {});
@@ -559,7 +572,7 @@ struct vector: private Allocator {
         if (rhs.__uses_inline_buffer() || !alloc_eq) {
             // Here we need to allocate and relocate
             __set_data(__allocate(rhs.__size()), rhs.__size(), rhs.__size(), false);
-            __relocate(rhs.__begin(), rhs.__end(), __begin(), alloc_eq);
+            __relocate_with_alloc(rhs.__begin(), rhs.__end(), __begin(), rhs.__alloc());
             rhs.__set_size(0);
         }
         else {
@@ -569,21 +582,39 @@ struct vector: private Allocator {
         }
     }
 
+    void __assign_impl(std::size_t count, auto&& f) {
+        if (count <= __cap()) {
+            // no need to allocate
+            std::size_t const assign_count = std::min<std::size_t>(count, __size());
+            auto i = __begin();
+            __fassign(__begin(), __begin() + assign_count, f);
+            __fconstruct(__begin() + assign_count, __begin() + count, f);
+            auto const old_end = __end();
+            __set_size(count);
+            __destroy_elems(end(), old_end);
+        }
+        else {
+            __destroy_and_deallocate();
+            __set_data(__allocate(count), count, count, false);
+            __fconstruct(__begin(), __end(), f);
+        }
+    }
+    
     constexpr vector& __move_assign_impl(auto&& rhs) {
         if UTL_UNLIKELY (&rhs.__as_base() == this) {
             return *this;
         }
         bool const alloc_eq = __alloc() == rhs.__alloc();
         if (rhs.__uses_inline_buffer() || (__uses_inline_buffer() && rhs.__size() <= __cap()) || !alloc_eq) {
-            // We cannot steal the buffer
-            if (rhs.size() <= capacity()) {
+            // We don't steal the buffer
+            if (rhs.size() <= __cap()) {
                 // No need to allocate
                 auto const rhs_assign_end = std::min(rhs.__begin() + __size(), rhs.__end());
                 // Assign all we have already constructed in this
                 std::move(rhs.__begin(), rhs_assign_end, __begin());
                 // relocate the rest from rhs
                 std::size_t const rhs_size = rhs.__size();
-                __relocate(rhs_assign_end, rhs.__end(), __end(), alloc_eq);
+                __relocate_with_alloc(rhs_assign_end, rhs.__end(), __end(), rhs.__alloc());
                 rhs.__set_size(rhs_assign_end - rhs.__begin());
                 // Destroy our rest
                 auto const old_end = __end();
@@ -592,9 +623,9 @@ struct vector: private Allocator {
             }
             else {
                 // We need to allocate
-                __destroy();
+                __destroy_and_deallocate();
                 __set_data(__allocate(rhs.__size()), rhs.size(), rhs.size(), false);
-                __relocate(rhs.__begin(), rhs.__end(), __begin(), alloc_eq);
+                __relocate_with_alloc(rhs.__begin(), rhs.__end(), __begin(), rhs.__alloc());
                 rhs.__set_size(0);
             }
         }
@@ -604,35 +635,43 @@ struct vector: private Allocator {
         }
         return *this;
     }
-    
+
+    __utl_always_inline void __reserve_bigger(std::size_t new_cap) {
+        __utl_assert_audit(new_cap > __cap());
+        pointer new_buffer = __allocate(new_cap);
+        __relocate(__begin(), __end(), new_buffer);
+        __deallocate_this();
+        __set_data(new_buffer, __size(), new_cap, false);
+    }
+
+    __utl_noinline void __grow() { __reserve_bigger(__recommend(__size() + 1)); }
+
     constexpr iterator __insert_impl(std::size_t index, std::size_t count, auto&& f) {
         __utl_bounds_check(index, 0, __size() + 1);
         if UTL_UNLIKELY (__size() + count > __cap()) {
             return __insert_slow_path(index, count, UTL_FORWARD(f));
         }
-        auto const end                 = __end();
-        auto const pos                 = __begin() + index;
+        auto const end = __end();
+        auto const pos = __begin() + index;
         __right_shift_partial_uninit(pos, end, end, count);
         std::size_t const init_count = std::min<std::size_t>(count, end - pos);
-        auto const last_init = pos + init_count;
-        std::for_each(pos, last_init, [&](auto& i) { i = f(); });
-        std::for_each(last_init, pos + count, [&](auto& i) { __construct_at(std::addressof(i), f()); });
+        auto const last_init         = pos + init_count;
+        __fassign(pos, last_init, f);
+        __fconstruct(last_init, pos + count, f);
         __set_size(__size() + count);
         return pos;
     }
-    
-    __utl_noinline
-    constexpr iterator __insert_slow_path(std::size_t index, std::size_t count, auto&& f) {
+
+    __utl_noinline constexpr iterator __insert_slow_path(std::size_t index, std::size_t count, auto&& f) {
         std::size_t const new_size = __size() + count;
-        std::size_t const new_cap = __recommend(new_size);
-        pointer new_buffer = __allocate(new_cap);
+        std::size_t const new_cap  = __recommend(new_size);
+        pointer new_buffer         = __allocate(new_cap);
         auto const nb_insert_begin = new_buffer + index;
-        auto const nb_insert_end = nb_insert_begin + count;
+        auto const nb_insert_end   = nb_insert_begin + count;
         __relocate(__begin(), __begin() + index, new_buffer);
         __relocate(__begin() + index, __end(), nb_insert_end);
-        for (auto i = nb_insert_begin; i != nb_insert_end; ++i) {
-            __construct_at(i, f());
-        }
+        __fconstruct(nb_insert_begin, nb_insert_end, f);
+        __deallocate_this();
         __set_data(new_buffer, new_size, new_cap, false);
         return new_buffer + index;
     }
@@ -649,7 +688,7 @@ struct vector: private Allocator {
             __set_size(count);
         }
     }
-    
+
     constexpr std::size_t __recommend(std::size_t new_size) noexcept {
         using conf               = __vector_config<value_type, allocator_type>;
         new_size                 = std::max(new_size, conf::minimum_allocation_count);
@@ -663,32 +702,34 @@ struct vector: private Allocator {
         return std::bit_ceil(std::max<std::size_t>(next_cap, new_size));
     }
 
-    explicit constexpr vector(__private_tag, allocator_type const& alloc, no_init_t): allocator_type(alloc) {}
+    explicit constexpr vector(__private_tag, allocator_type const& alloc, no_init_t): __alloc_(alloc) {}
 
-    constexpr allocator_type& __alloc() noexcept { return static_cast<allocator_type&>(*this); }
-    constexpr allocator_type const& __alloc() const noexcept { return static_cast<allocator_type const&>(*this); }
+    constexpr allocator_type& __alloc() noexcept { return __alloc_; }
+    constexpr allocator_type const& __alloc() const noexcept { return __alloc_; }
 
-    constexpr pointer __allocate(std::size_t n) { return n != 0 ? __alloc().allocate(n) : nullptr; }
+    constexpr pointer __allocate(std::size_t n) {
+        return n != 0 ? __alloc().allocate(n) : nullptr;
+    }
 
-    constexpr void __deallocate(pointer ptr, std::size_t n) {
-        __alloc().deallocate(ptr, n);
+    constexpr void __deallocate_this() {
+        if (!__uses_inline_buffer() && __begin() != nullptr) {
+            __alloc().deallocate(__begin(), __cap());
+        }
     }
 
     template <typename... Args>
     constexpr void __construct_at(value_type* address, Args&&... args) {
-        __alloc_traits::construct(*this, address, UTL_FORWARD(args)...);
+        __alloc_traits::construct(__alloc(), address, UTL_FORWARD(args)...);
     }
-    constexpr void __destroy_at(value_type* address) { __alloc_traits::destroy(*this, address); }
+    constexpr void __destroy_at(value_type* address) { __alloc_traits::destroy(__alloc(), address); }
 
-    constexpr void __destroy() {
+    constexpr void __destroy_and_deallocate() {
         __destroy_elems();
-        if (!__uses_inline_buffer() && __begin() != nullptr) {
-            __deallocate(__begin(), __cap());
-        }
+        __deallocate_this();
     }
-    
+
     constexpr void __destroy_elems() { __destroy_elems(begin(), end()); }
-    
+
     /// Note: \p begin does not have to precede \p end
     constexpr void __destroy_elems(value_type* begin, value_type const* end) {
         if constexpr (!std::is_trivially_destructible_v<value_type>) {
@@ -697,25 +738,50 @@ struct vector: private Allocator {
             }
         }
     }
-    
+
     constexpr void __copy_uninit(auto begin, auto end, value_type* out) {
         for (; begin != end; ++begin, ++out) {
             __construct_at(out, *begin);
         }
     }
-    
-    constexpr void __relocate(auto begin, auto end, value_type* out, bool may_memcpy = true) {
-        if (is_trivially_relocatable<value_type>::value && may_memcpy) {
-            std::memcpy(out, std::addressof(*begin), std::distance(begin, end) * sizeof(value_type));
-        }
-        else {
-            for (; begin != end; ++begin, ++out) {
-                __construct_at(out, std::move(*begin));
-                std::destroy_at(std::addressof(*begin));
-            }
+
+    constexpr void __fconstruct(auto begin, auto end, auto&& f) {
+        for (; begin != end; ++begin) {
+            __construct_at(begin, f());
         }
     }
     
+    constexpr void __fassign(auto begin, auto end, auto&& f) {
+        for (; begin != end; ++begin) {
+            *begin = f();
+        }
+    }
+    
+    constexpr void __relocate_with_alloc(auto begin, auto end, value_type* out, allocator_type const& other_alloc) {
+        if (__value_type_uses_allocator_on_move && __alloc() != other_alloc) {
+            __relocate_by_move(begin, end, out);
+        }
+        else {
+            __relocate(begin, end, out);
+        }
+    }
+    
+    constexpr void __relocate(auto begin, auto end, value_type* out) {
+        if (is_trivially_relocatable<value_type>::value) {
+            std::memcpy(out, std::addressof(*begin), std::distance(begin, end) * sizeof(value_type));
+        }
+        else {
+            __relocate_by_move(begin, end, out);
+        }
+    }
+    
+    constexpr void __relocate_by_move(auto begin, auto end, value_type* out) {
+        for (; begin != end; ++begin, ++out) {
+            __construct_at(out, std::move(*begin));
+            std::destroy_at(std::addressof(*begin));
+        }
+    }
+
     constexpr static void __left_shift(value_type* begin, value_type* end, std::ptrdiff_t offset) {
         __utl_expect(offset <= 0, "offset must non-positive");
         for (auto i = begin + offset, j = begin; j < end; ++i, ++j) {
@@ -723,13 +789,14 @@ struct vector: private Allocator {
         }
     }
 
-    constexpr void __right_shift_partial_uninit(value_type* begin, value_type* end, value_type* uninit_begin, std::ptrdiff_t offset) {
+    constexpr void
+    __right_shift_partial_uninit(value_type* begin, value_type* end, value_type* uninit_begin, std::ptrdiff_t offset) {
         __utl_expect(offset >= 0, "offset must be non-negative");
-        value_type* const out_begin = begin + offset;
-        value_type* const out_end = end + offset;
+        value_type* const out_begin      = begin + offset;
+        value_type* const out_end        = end + offset;
         value_type* const out_assign_end = std::max(std::min(out_end, uninit_begin), out_begin);
-        value_type* i = out_end - 1;
-        value_type* j = end - 1;
+        value_type* i                    = out_end - 1;
+        value_type* j                    = end - 1;
         __utl_assert_audit(out_assign_end >= out_begin, "");
         for (; i >= out_assign_end; --i, --j) {
             __construct_at(i, std::move(*j));
@@ -739,20 +806,20 @@ struct vector: private Allocator {
         }
     }
 
-    __utl_noinline void __throw_out_of_bound_error(size_type pos) const {
+    __utl_noinline void __throw_out_of_range_error(size_type pos) const {
         throw std::out_of_range("utl::vector out of range");
     }
 
     constexpr vector(__private_tag, pointer begin, std::size_t size, std::size_t cap, bool is_inline) noexcept:
-        allocator_type(),
-        __data_{ { begin, is_inline }, static_cast<size_type>(size), static_cast<size_type>(cap) }
-    {}
+        __alloc_(), __data_{ { begin, is_inline }, narrow_cast<size_type>(size), narrow_cast<size_type>(cap) } {}
 
-    constexpr vector(
-        __private_tag, allocator_type const& alloc, pointer begin, std::size_t size, std::size_t cap, bool is_inline) noexcept:
-        allocator_type(alloc),
-        __data_{ { begin, is_inline }, static_cast<size_type>(size), static_cast<size_type>(cap) }
-    {}
+    constexpr vector(__private_tag,
+                     allocator_type const& alloc,
+                     pointer begin,
+                     std::size_t size,
+                     std::size_t cap,
+                     bool is_inline) noexcept:
+        __alloc_(alloc), __data_{ { begin, is_inline }, static_cast<size_type>(size), static_cast<size_type>(cap) } {}
 
     constexpr pointer __begin() const noexcept { return __data_.begin_inline.pointer(); }
     constexpr pointer __end() const noexcept { return __begin() + __size(); }
@@ -764,39 +831,36 @@ struct vector: private Allocator {
 
     constexpr void __set_begin(pointer p) noexcept { __data_.begin_inline.pointer(p); }
     constexpr void __set_size(std::size_t size) noexcept { __data_.size = narrow_cast<size_type>(size); }
-    
+
     struct __data_t {
         static_assert(std::is_same_v<value_type*, pointer>);
         pointer_int_pair<value_type*, bool, 1> begin_inline;
         size_type size, cap;
     };
-    
-    constexpr __data_t __get_data() const {
-        return __data_;
-    }
-    
-    constexpr void __set_data(__data_t data) {
-        __data_ = data;
-    }
+
+    constexpr __data_t __get_data() const { return __data_; }
+
+    constexpr void __set_data(__data_t data) { __data_ = data; }
     constexpr void __set_data(pointer p, std::size_t size, std::size_t cap, bool is_inline) {
         __data_.begin_inline = { p, is_inline };
-        __data_.size = narrow_cast<size_type>(size);
-        __data_.cap = narrow_cast<size_type>(cap);
+        __data_.size         = narrow_cast<size_type>(size);
+        __data_.cap          = narrow_cast<size_type>(cap);
     }
-    
+
     constexpr __data_t __default_data() { return { { nullptr, false }, 0, 0 }; }
-    
+
     constexpr pointer __storage_begin() { return nullptr; }
     constexpr const_pointer __storage_begin() const { return nullptr; }
     constexpr pointer __storage_end() { return nullptr; }
     constexpr const_pointer __storage_end() const { return nullptr; }
-    
+
     constexpr std::size_t __inline_cap() const { return 0; }
     constexpr bool __has_inline_buffer() const { return false; }
-    
+
     auto& __as_base() noexcept { return *this; }
     auto const& __as_base() const noexcept { return *this; }
-    
+
+    [[no_unique_address]] allocator_type __alloc_;
     __data_t __data_;
 };
 
@@ -832,7 +896,7 @@ std::ostream& operator<<(std::ostream& _str, utl::vector<T, A> const& v) {
 template <typename T, std::size_t N, typename Allocator>
 struct small_vector: vector<T, Allocator> {
     using __utl_base = vector<T, Allocator>;
-    
+
     /// MARK: Member Types
     using typename __utl_base::allocator_type;
     using typename __utl_base::difference_type;
@@ -851,7 +915,7 @@ struct small_vector: vector<T, Allocator> {
     using typename __utl_base::reverse_iterator;
 
     using typename __utl_base::__alloc_traits;
-    
+
     /// MARK: Constructors
     /// (1)
     __utl_interface_export constexpr small_vector() noexcept(
@@ -868,13 +932,12 @@ struct small_vector: vector<T, Allocator> {
                                                   allocator_type const& alloc = allocator_type()):
         __utl_base(__private_tag{}, alloc, no_init) {
         __count_constructor_prep(count);
-        for (auto i = this->__begin(); i != this->__end(); ++i) {
-            this->__construct_at(i, value);
-        }
+        this->__fconstruct(this->__begin(), this->__end(), [&value]() -> T const& { return value; });
     }
 
     /// (4)
-    __utl_interface_export constexpr explicit small_vector(std::size_t count, allocator_type const& alloc = allocator_type()):
+    __utl_interface_export constexpr explicit small_vector(std::size_t count,
+                                                           allocator_type const& alloc = allocator_type()):
         __utl_base(__private_tag{}, alloc, no_init) {
         __count_constructor_prep(count);
         for (auto i = this->__begin(); i != this->__end(); ++i) {
@@ -884,7 +947,9 @@ struct small_vector: vector<T, Allocator> {
 
     /// (4a)
     __utl_interface_export constexpr explicit small_vector(
-        std::size_t count, utl::no_init_t, allocator_type const& alloc = allocator_type()) requires(std::is_trivial_v<value_type>):
+        std::size_t count,
+        utl::no_init_t,
+        allocator_type const& alloc = allocator_type()) requires(std::is_trivial_v<value_type>):
         __utl_base(__private_tag{}, alloc, no_init) {
         __count_constructor_prep(count);
     }
@@ -901,13 +966,15 @@ struct small_vector: vector<T, Allocator> {
     }
 
     /// (6)
-    __utl_interface_export constexpr small_vector(vector<value_type, allocator_type> const& rhs): small_vector(rhs, allocator_type()) {}
+    __utl_interface_export constexpr small_vector(vector<value_type, allocator_type> const& rhs):
+        small_vector(rhs, allocator_type()) {}
 
     /// (6a)
     __utl_interface_export constexpr small_vector(small_vector const& rhs): small_vector(rhs, allocator_type()) {}
 
     /// (7)
-    __utl_interface_export constexpr small_vector(vector<value_type, allocator_type> const& rhs, allocator_type const& alloc):
+    __utl_interface_export constexpr small_vector(vector<value_type, allocator_type> const& rhs,
+                                                  allocator_type const& alloc):
         __utl_base(__private_tag{}, alloc, no_init) {
         __copy_constructor_impl(rhs);
     }
@@ -919,18 +986,19 @@ struct small_vector: vector<T, Allocator> {
     /// (8)
     __utl_interface_export constexpr small_vector(vector<value_type, allocator_type>&& rhs) noexcept:
         small_vector(std::move(rhs), allocator_type()) {}
-    
+
     /// (8a)
     __utl_interface_export constexpr small_vector(small_vector&& rhs) noexcept:
         small_vector(std::move(rhs), allocator_type()) {}
-    
+
     /// (8b)
     template <std::size_t M>
     __utl_interface_export constexpr small_vector(small_vector<value_type, M, allocator_type>&& rhs) noexcept:
         small_vector(std::move(rhs), allocator_type()) {}
 
     /// (9)
-    __utl_interface_export constexpr small_vector(vector<value_type, allocator_type>&& rhs, allocator_type const& alloc) noexcept:
+    __utl_interface_export constexpr small_vector(vector<value_type, allocator_type>&& rhs,
+                                                  allocator_type const& alloc) noexcept:
         __utl_base(__private_tag{}, alloc, no_init) {
         __move_constructor_impl(std::move(rhs));
     }
@@ -940,16 +1008,18 @@ struct small_vector: vector<T, Allocator> {
         __utl_base(__private_tag{}, alloc, no_init) {
         __move_constructor_impl(std::move(rhs));
     }
-    
+
     /// (9b)
     template <std::size_t M>
-    __utl_interface_export constexpr small_vector(small_vector<value_type, M, allocator_type>&& rhs, allocator_type const& alloc) noexcept:
-    __utl_base(__private_tag{}, alloc, no_init) {
+    __utl_interface_export constexpr small_vector(small_vector<value_type, M, allocator_type>&& rhs,
+                                                  allocator_type const& alloc) noexcept:
+        __utl_base(__private_tag{}, alloc, no_init) {
         __move_constructor_impl(std::move(rhs));
     }
 
     /// (10)
-    __utl_interface_export constexpr small_vector(std::initializer_list<value_type> ilist, allocator_type const& alloc = allocator_type()):
+    __utl_interface_export constexpr small_vector(std::initializer_list<value_type> ilist,
+                                                  allocator_type const& alloc = allocator_type()):
         __utl_base(__private_tag{}, alloc, no_init) {
         __count_constructor_prep(ilist.size());
         this->__copy_uninit(ilist.begin(), ilist.end(), this->__begin());
@@ -957,16 +1027,16 @@ struct small_vector: vector<T, Allocator> {
 
     /// MARK: operator=
     using __utl_base::operator=;
-    
+
     /// (1)
     __utl_interface_export constexpr small_vector& operator=(small_vector const& rhs) & {
         __as_base() = rhs.__as_base();
         return *this;
     }
     /// (2)
-    __utl_interface_export constexpr small_vector& operator=(small_vector&& rhs) & noexcept(
-        __alloc_traits::propagate_on_container_move_assignment::value ||
-        __alloc_traits::is_always_equal::value) {
+    __utl_interface_export constexpr small_vector&
+    operator=(small_vector&& rhs) & noexcept(__alloc_traits::propagate_on_container_move_assignment::value ||
+                                             __alloc_traits::is_always_equal::value) {
         __as_base() = std::move(rhs.__as_base());
         return *this;
     }
@@ -994,18 +1064,22 @@ struct small_vector: vector<T, Allocator> {
     }
 
     void __move_constructor_impl(auto&& rhs) {
-        if (rhs.size() <= N) /* contents of rhs fits into our local buffer */ {
+        bool const alloc_eq = this->__alloc() == rhs.__alloc();
+        if (rhs.size() <= N) {
+            // Contents of rhs fits into our local buffer, so we don't steal buffer from rhs
             this->__set_data(__storage_begin(), rhs.__size(), N, true);
-            this->__relocate(rhs.__begin(), rhs.__end(), this->__begin(), this->__alloc() == rhs.__alloc());
+            this->__relocate_with_alloc(rhs.__begin(), rhs.__end(), this->__begin(), rhs.__alloc());
             rhs.__set_size(0);
         }
-        else if (rhs.__uses_inline_buffer() || this->__alloc() != rhs.__alloc()) /* rhs uses local buffer or allocators don't match, we need to allocate */ {
+        else if (rhs.__uses_inline_buffer() || !alloc_eq) {
+            // rhs uses local buffer or a different allocator, we need to allocate
             __utl_assert(!rhs.empty());
             this->__set_data(this->__allocate(rhs.__size()), rhs.__size(), rhs.__size(), false);
-            this->__relocate(rhs.__begin(), rhs.__end(), this->__begin(), this->__alloc() == rhs.__alloc());
+            this->__relocate_with_alloc(rhs.__begin(), rhs.__end(), this->__begin(), rhs.__alloc());
             rhs.__set_size(0);
         }
-        else /* we can swap buffers */ {
+        else {
+            // We can swap buffers
             this->__set_data(rhs.__get_data());
             rhs.__set_data(rhs.__default_data());
         }
@@ -1019,9 +1093,11 @@ struct small_vector: vector<T, Allocator> {
 
     constexpr std::size_t __inline_cap() const { return N; }
     constexpr bool __has_inline_buffer() const { return true; }
-    
-    constexpr typename vector<value_type, allocator_type>::__data_t __default_data() { return { { __storage_begin(), true }, 0, N }; }
-    
+
+    constexpr typename vector<value_type, allocator_type>::__data_t __default_data() {
+        return { { __storage_begin(), true }, 0, N };
+    }
+
     __utl_base& __as_base() noexcept { return static_cast<__utl_base&>(*this); }
     __utl_base const& __as_base() const noexcept { return static_cast<__utl_base const&>(*this); }
 

@@ -35,7 +35,9 @@ struct TagAllocator {
     TagAllocator() { tag = Tag{ 0 }; }
     TagAllocator(Tag t) { tag = t; }
     template <typename U>
-    TagAllocator(TagAllocator<U> const& rhs) { tag = rhs.tag; }
+    TagAllocator(TagAllocator<U> const& rhs) {
+        tag = rhs.tag;
+    }
 
     T* allocate(size_t n) { return (T*)::operator new(sizeof(T) * n); }
     void deallocate(T* ptr, size_t n) { ::operator delete(ptr); }
@@ -70,10 +72,10 @@ struct X: utl_test::LifetimeCounter {
 struct TRX: X {
     TRX(TagAllocator<TRX> alloc = {}): X(alloc) {}
     TRX(int value, TagAllocator<TRX> alloc = {}): X(value, alloc) {}
-    
+
     TRX(TRX const& rhs, TagAllocator<TRX> alloc = {}): X(rhs, alloc) {}
     TRX(TRX&& rhs, TagAllocator<TRX> alloc = {}): X(std::move(rhs), alloc) {}
-    
+
     TRX& operator=(TRX const& rhs) {
         this->X::operator=(rhs);
         return *this;
@@ -82,7 +84,7 @@ struct TRX: X {
         this->X::operator=(std::move(rhs));
         return *this;
     }
-    
+
     bool operator==(TRX const& rhs) const { return value == rhs.value; }
 };
 
@@ -135,6 +137,9 @@ using TaSmallVector = utl::small_vector<T, Size, TagAllocator<T>>;
         TAGS,                                                                                                          \
         ((typename VectorA, typename VectorB, bool SmallA, bool SmallB), VectorA, VectorB, SmallA, SmallB),            \
         __VA_ARGS__)
+
+static_assert(sizeof(utl::vector<int>) == 2 * 4 + sizeof(void*));
+static_assert(sizeof(utl::vector<char>) == 24);
 
 /// MARK: Constructors
 VECTOR_TEST_CASE(X, TRX, "vector-construct-1", "[vector]") {
