@@ -60,7 +60,7 @@ namespace utl::pmr {
 	inline bool operator!=(memory_resource const& lhs, memory_resource const& rhs) noexcept {
 		return !(lhs == rhs);
 	}
-
+    
 	/// MARK: - polymorphic_allocator
 	template <typename T>
 	class polymorphic_allocator {
@@ -86,22 +86,18 @@ namespace utl::pmr {
 			resource()->deallocate(p, n * sizeof(T), alignof(T));
 		}
 		
-		template <typename U, typename... Args>
+		template <typename U, typename... Args> requires __alloc_constructible<T, memory_resource*, Args...>
 		void construct(U* p, Args&&... args) {
-			if constexpr (std::uses_allocator_v<U, polymorphic_allocator<U>>) {
-				if constexpr (std::is_constructible_v<U, std::allocator_arg_t, polymorphic_allocator<U>, Args...>) {
-					new (p) U(std::allocator_arg, this->resource(), std::forward<Args>(args)...);
-				}
-				else if constexpr (std::is_constructible_v<U, Args..., polymorphic_allocator<U>>) {
-					new (p) U(std::forward<Args>(args)..., this->resource());
-				}
-				else {
-					static_assert(utl::template_false<U>, "cannot construct U");
-				}
-			}
-			else {
-				::new ((void*)p) U(std::forward<Args>(args)...);
-			}
+            if constexpr (__alloc_constructible_1<T, memory_resource*, Args...>) {
+                std::construct_at(p, std::allocator_arg, resource(), std::forward<Args>(args)...);
+            }
+            else if constexpr (__alloc_constructible_2<T, memory_resource*, Args...>) {
+                std::construct_at(p, std::forward<Args>(args)..., resource());
+            }
+            else {
+                static_assert(__alloc_constructible_3<T, memory_resource*, Args...>);
+                std::construct_at(p, std::forward<Args>(args)...);
+            }
 		}
 		
 		void* allocate_bytes(std::size_t size,
@@ -143,8 +139,10 @@ namespace utl::pmr {
 		static_assert(!std::is_function<T>::value,
 					  "polymorphic_deleter cannot be instantiated for function types");
 	
-		constexpr polymorphic_deleter() noexcept = default;
+        constexpr polymorphic_deleter() noexcept: _resource(get_default_resource()) {}
 	
+        constexpr polymorphic_deleter(memory_resource* resource): _resource(resource) {}
+        
 		template <typename U> requires std::convertible_to<U*, T*>
 		polymorphic_deleter(polymorphic_deleter<U> const& rhs) noexcept:
 			_resource(rhs._resource)
@@ -152,7 +150,7 @@ namespace utl::pmr {
 
 		void operator()(T* ptr) const noexcept {
 			static_assert(sizeof(T) > 0, "polymorphic_delete cannot deallocate incomplete type");
-			static_assert(!std::is_void_v<T>, "polymorphic_delete cannot deallocate incomplete type");
+            std::destroy_at(ptr);
 			_resource->deallocate(ptr, sizeof(T), alignof(T));
 	  }
 		
@@ -164,8 +162,7 @@ namespace utl::pmr {
 	template <typename T, typename... Args> requires(std::is_constructible_v<T, Args...>)
 	T* polymorphic_new(memory_resource* resource, Args&&... args) {
 		void* result = resource->allocate(sizeof(T), alignof(T));
-		result = ::new ((void*)result) T(UTL_FORWARD(args)...);
-		return static_cast<T*>(result);
+        return std::construct_at(static_cast<T*>(result), UTL_FORWARD(args)...);
 	}
 	
 	/// MARK: polymorphic_delete
@@ -174,6 +171,21 @@ namespace utl::pmr {
 		std::destroy_at(address);
 		resource->deallocate(address, sizeof(T), alignof(T));
 	}
+
+    /// MARK: make_unique
+    template <typename T, typename... Args> requires __alloc_constructible<T, memory_resource*, Args...>
+    std::unique_ptr<T, polymorphic_deleter<T>> make_unique(memory_resource* resource, Args&&... args) {
+        if constexpr (__alloc_constructible_1<T, memory_resource*, Args...>) {
+            return std::unique_ptr<T, polymorphic_deleter<T>>(polymorphic_new<T>(resource, std::allocator_arg, resource, std::forward<Args>(args)...), resource);
+        }
+        else if constexpr (__alloc_constructible_2<T, memory_resource*, Args...>) {
+            return std::unique_ptr<T, polymorphic_deleter<T>>(polymorphic_new<T>(resource, std::forward<Args>(args)..., resource), resource);
+        }
+        else {
+            static_assert(__alloc_constructible_3<T, memory_resource*, Args...>);
+            return std::unique_ptr<T, polymorphic_deleter<T>>(polymorphic_new<T>(resource, std::forward<Args>(args)...), resource);
+        }
+    }
 	
 	/// MARK: - new_delete_resource
 	class __utl_new_delete_resource: public memory_resource {

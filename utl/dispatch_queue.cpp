@@ -50,6 +50,7 @@ namespace utl {
 		std::unique_lock lock(m_mutex);
 		++m_open_items;
 		m_items.push_back(std::move(item));
+        lock.unlock();
 		m_loop_cv.notify_one();
 		UTL_THREAD_DEBUG_LOG("submitted one task, m_open_items = {}", m_open_items);
 	}
@@ -146,20 +147,18 @@ namespace utl {
 		}
 	}
 	
-	
 	// MARK: - concurrent_dispatch_queue
 	void concurrent_dispatch_queue::async(dispatch_group&& group) {
 		if (group.m_tasks.empty()) {
 			return;
 		}
-		bool has_failure_handler = false;
-		if (group.m_on_failure) {
-			has_failure_handler = true;
+		bool const has_failure_handler = group.m_on_failure != nullfunction;
+		if (has_failure_handler) {
 			this->thread_pool::add_failure_handler(m_dispatch_group_id, std::move(group.m_on_failure));
 		}
 		if (group.m_promise.has_value() || group.m_on_completion) {
 			struct Context {
-				explicit Context(std::size_t count, std::optional<std::promise<bool>>&& p):
+				Context(std::size_t count, std::optional<std::promise<bool>>&& p):
 					count(count),
 					promise(std::move(p))
 				{}

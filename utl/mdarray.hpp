@@ -1,17 +1,15 @@
 #pragma once
 
-#include "__base.hpp"
-_UTL_SYSTEM_HEADER_
-
-
-#include "common.hpp"
-
 #include <cstddef>
 #include <array>
 
+#include "__base.hpp"
 #include "__function_objects.hpp"
+#include "common.hpp"
 #include "../mtl/vector.hpp"
 #include "../mtl/ext.hpp"
+
+_UTL_SYSTEM_HEADER_
 
 namespace utl {
 

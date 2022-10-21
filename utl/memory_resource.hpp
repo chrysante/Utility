@@ -20,11 +20,10 @@ namespace utl::pmr {
 	/// MARK: - monotonic_buffer_resource
 	class monotonic_buffer_resource: public memory_resource {
 	public:
-		/// MARK: Constructors
-		/*
+		/** MARK: constructors
 		 1-2) Sets the current buffer to null and the next buffer size to an implementation-defined size.
-		 3-4) Sets the current buffer to null and the next buffer size to a size no smaller than initial_size.
-		 5-6) Sets the current buffer to buffer and the next buffer size to buffer_size (but not less than 1). Then increase the next buffer size by an implementation-defined growth factor (which does not have to be integral).
+		 3-4) Sets the current buffer to null and the next buffer size to a size no smaller than \p initial_size.
+		 5-6) Sets the current buffer to \p buffer and the next buffer size to \p buffer_size (but not less than 1). Then increase the next buffer size by an implementation-defined growth factor (which does not have to be integral).
 		 7) Copy constructor is deleted.
 		 */
 		// (1)
@@ -35,7 +34,7 @@ namespace utl::pmr {
 		}
 		// (2)
 		explicit monotonic_buffer_resource(memory_resource* upstream):
-			_upstream(upstream)
+			__upstream(upstream)
 		{
 			
 		}
@@ -48,9 +47,9 @@ namespace utl::pmr {
 		// (4)
 		monotonic_buffer_resource(std::size_t initial_size,
 								  memory_resource* upstream):
-			_upstream(upstream),
-			_local_buffer(nullptr, nullptr, initial_size / __growth_factor, nullptr),
-			_head_buffer(&_local_buffer)
+			__upstream(upstream),
+			__local_buffer(nullptr, nullptr, initial_size / __growth_factor, nullptr),
+			__head_buffer(&__local_buffer)
 		{
 			
 		}
@@ -63,96 +62,51 @@ namespace utl::pmr {
 		// (6)
 		monotonic_buffer_resource(void* buffer, std::size_t buffer_size,
 								  memory_resource* upstream):
-			_upstream(upstream),
-			_local_buffer(buffer, buffer, buffer_size, nullptr),
-			_head_buffer(&_local_buffer)
+			__upstream(upstream),
+			__local_buffer(buffer, buffer, buffer_size, nullptr),
+			__head_buffer(&__local_buffer)
 		{
 			
 		}
 		// (7)
 		monotonic_buffer_resource(monotonic_buffer_resource const&) = delete;
 
-		/// MARK: Destructor
+		/// MARK: destructor
 		~monotonic_buffer_resource() {
 			release();
 		}
 		
-		/// MARK: Release
-		/*
+		/** MARK: \p release
 		 Releases all allocated memory by calling the deallocate function on the upstream memory resource as necessary.
 		 Resets current buffer and next buffer size to their initial values at construction.
-
 		 Memory is released back to the upstream resource even if deallocate has not been called for some of the allocated blocks.
 		 */
 		void release() noexcept {
 			__release_impl();
-			_local_buffer = { nullptr };
-			_head_buffer = &_local_buffer;
+			__local_buffer = { nullptr };
+			__head_buffer = &__local_buffer;
 		}
 		void __release_impl() noexcept {
-			__BufferNodeHeader* head = _head_buffer;
+			__BufferNodeHeader* head = __head_buffer;
 			if (!head) {
 				return;
 			}
 			while (true) {
 				__BufferNodeHeader* const child = head->prev();
 				if (!child) {
-					/* not having a child indicates that this buffer is the local buffer and therefore we've hit the end of our list */
+					/// Not having a child indicates that this buffer is the local buffer and therefore we've hit the end of our list
 					return;
 				}
-				_upstream->deallocate(head->begin(), head->total_size(), __chunk_align);
+				__upstream->deallocate(head->begin(), head->total_size(), __chunk_align);
 				head = child;
 			}
 		}
 		
-		/// MARK: Upstream Resource
+		/// MARK: \p upstream_resource
 		memory_resource* upstream_resource() const {
-			return _upstream;
+			return __upstream;
 		}
-	private:
-		/// MARK: DoAllocate
-		/*
-		 Allocates storage.
-
-		 If the current buffer has sufficient unused space to fit a block with the specified size and alignment, allocates the return block from the current buffer.
-
-		 Otherwise, this function allocates a new buffer by calling upstream_resource()->allocate(n, m), where n is not less than the greater of bytes and the next buffer size and m is not less than alignment. It sets the new buffer as the current buffer, increases the next buffer size by an implementation-defined growth factor (which is not necessarily integral), and then allocates the return block from the newly allocated buffer.
-		 */
-		void* do_allocate(std::size_t size, std::size_t alignment) override {
-			__utl_assert_audit(_head_buffer != nullptr,
-							   "_head_buffer must always be valid. If"
-							   "we have not allocated yet it should point"
-							   "to _local_buffer which in turn is empty. ");
-			
-			if (std::byte* const result = _head_buffer->allocate(size, alignment)) {
-				return result;
-			}
-			/* allocate a new chunk if head buffer doesn't have enough space */
-			__allocate_new_chunk(size, alignment);
-			
-			std::byte* const result = _head_buffer->allocate(size, alignment);
-			__utl_assert(result != nullptr);
-			return result;
-		}
-
-		/// MARK: DoDeallocate
-		/*
-		 no-op
-		 */
-		void do_deallocate(void* p, std::size_t bytes, std::size_t alignment) override {
-
-		}
-		
-		/// MARK: DoIsEqual
-		/*
-		 Compare *this with other for identity - memory allocated using a monotonic_buffer_resource can only be deallocated using that same resource.
-		 */
-		bool do_is_equal(memory_resource const& rhs) const noexcept override {
-			this == &rhs;
-		}
-
-	public:
-		
+	
 		/// MARK: Internals
 		static constexpr std::size_t __min_chunk_size = 128;
 		static constexpr std::size_t __chunk_align = 32; /* something to satisfy most to all requirements */
@@ -162,25 +116,27 @@ namespace utl::pmr {
 			alignment_requirement = std::max(alignment_requirement, __chunk_align);
 			
 			__utl_log("available size: {}", _head_buffer->available_size());
-			std::size_t new_chunk_size = __calculate_next_buffer_size(_head_buffer->available_size(),
+			std::size_t new_chunk_size = __calculate_next_buffer_size(__head_buffer->available_size(),
 																	  size_requirement, alignment_requirement);
-			/* alignment_requirement >= __chunk_align == sizeof(__BufferNodeHeader) */
-			/* This asserts that we have enough space to placement new the Header   */
-			/* in the buffer and still allocate required size/alignment.            */
+			/**
+             \p alignment_requirement >= \p __chunk_align == \p sizeof(__BufferNodeHeader)
+			 This asserts that we have enough space to construct the Header in the buffer and still allocate required size/alignment.
+             */
 			new_chunk_size += alignment_requirement;
 			__utl_log("allocating new chunk of size {}", new_chunk_size);
 			
 			std::byte* const new_chunk = (std::byte*)upstream_resource()->allocate(new_chunk_size,
-																				   /* We still have to use __chunk_align here, because we don't    */
-																				   /* store the alignment so we also deallocate with __chunk_align */
-																				   /* and the alignment parameter has to match the allocation.     */
-																				   /* There is still enough space in the buffer to satisfy the     */
-																				   /* alignment requirement.                                       */
+																				   /** We still have to use \p __chunk_align here, because we don't
+																				    store the alignment so we also deallocate with \p __chunk_align
+																				    and the alignment parameter has to match the allocation.
+																				    There is still enough space in the buffer to satisfy the
+																				    alignment requirement.
+                                                                                    */
 																				   __chunk_align);
-			_head_buffer = ::new ((void*)new_chunk) __BufferNodeHeader(new_chunk,                              /* buffer begin */
-																		   new_chunk + sizeof(__BufferNodeHeader), /* buffer current */
-																		   new_chunk_size,                         /* total size */
-																		   _head_buffer);
+			__head_buffer = ::new ((void*)new_chunk) __BufferNodeHeader(new_chunk,                                 /// buffer begin
+																		   new_chunk + sizeof(__BufferNodeHeader), /// buffer current
+																		   new_chunk_size,                         /// total size
+																		   __head_buffer);
 		}
 		
 		static std::size_t __calculate_next_buffer_size(std::size_t last_buffer_size, std::size_t size_requirement, std::size_t alignment_requirement) {
@@ -223,10 +179,10 @@ namespace utl::pmr {
 				return end() - current();
 			}
 			
-			/*
-			 Advances _current so it is aligned to 'alignment'.
-			 If this buffer then has space for 'size' returns _current,
-			 else resets _current and returns nullptr
+			/**
+			 Advances \p _current so it is aligned to \p alignment
+			 If this buffer then has space for \p size bytes returns \p _current,
+			 else resets \p _current and returns \p nullptr
 			 */
 			std::byte* allocate(std::size_t size, std::size_t alignment) {
 				if (begin() == nullptr) {
@@ -257,11 +213,44 @@ namespace utl::pmr {
 			std::byte*          _current = nullptr;
 			std::byte const*    _end     = nullptr;
 		};
-		
-	private:
-		memory_resource*    _upstream     = nullptr;
-		__BufferNodeHeader  _local_buffer = nullptr;
-		__BufferNodeHeader* _head_buffer  = &_local_buffer;
+	
+    private:
+        /** MARK: \p do_allocate
+         Allocates storage.
+         If the current buffer has sufficient unused space to fit a block with the specified size and alignment, allocates the return block from the current buffer.
+         Otherwise, this function allocates a new buffer by calling \p upstream_resource()->allocate(n,m), where \p n is not less than the greater of bytes and the next buffer size and m is not less than alignment. It sets the new buffer as the current buffer, increases the next buffer size by an implementation-defined growth factor (which is not necessarily integral), and then allocates the return block from the newly allocated buffer.
+         */
+        void* do_allocate(std::size_t size, std::size_t alignment) override {
+            __utl_assert_audit(__head_buffer != nullptr,
+                               "_head_buffer must always be valid. If"
+                               "we have not allocated yet it should point"
+                               "to _local_buffer which in turn is empty. ");
+            
+            if (std::byte* const result = __head_buffer->allocate(size, alignment)) {
+                return result;
+            }
+            /// Allocate a new chunk if head buffer doesn't have enough space
+            __allocate_new_chunk(size, alignment);
+            std::byte* const result = __head_buffer->allocate(size, alignment);
+            __utl_assert(result != nullptr);
+            return result;
+        }
+        
+        /** MARK: \p do_deallocate
+         no-op
+         */
+        void do_deallocate(void* p, std::size_t bytes, std::size_t alignment) override {}
+        
+        /** MARK: \p do_is_equal
+         Compare \p *this with other for identity - memory allocated using a \p monotonic_buffer_resource can only be deallocated using that same resource.
+         */
+        bool do_is_equal(memory_resource const& rhs) const noexcept override {
+            this == &rhs;
+        }
+	
+		memory_resource*    __upstream     = nullptr;
+		__BufferNodeHeader  __local_buffer = nullptr;
+		__BufferNodeHeader* __head_buffer  = &__local_buffer;
 	};
 	
 	static_assert(sizeof(monotonic_buffer_resource::__BufferNodeHeader) == monotonic_buffer_resource::__chunk_align);
@@ -299,8 +288,6 @@ namespace utl::pmr {
 		~unsynchronized_pool_resource() {
 			
 		}
-		
-		
 		
 		/// MARK: UpstreamResource
 		memory_resource* upstream_resource() const {

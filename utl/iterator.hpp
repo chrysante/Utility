@@ -101,5 +101,24 @@ namespace utl {
 	{
 		return lhs.__itr == rhs;
 	}
-	
+
+    auto __distance(auto first, auto last, std::input_iterator_tag) {
+        typename std::iterator_traits<decltype(first)>::difference_type result = 0;
+        while (first != last) {
+            ++first;
+            ++result;
+        }
+        return result;
+    }
+
+    auto __distance(auto first, auto last, std::random_access_iterator_tag) {
+        return last - first;
+    }
+
+    template <typename Itr, typename S>
+    auto distance(Itr first, S last) {
+        return __distance(first, last,
+                          typename std::iterator_traits<Itr>::iterator_category());
+    }
+    
 }

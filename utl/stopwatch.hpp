@@ -1,9 +1,11 @@
 #pragma once
 
-#include "__base.hpp"
-_UTL_SYSTEM_HEADER_
 #include <chrono>
 #include <atomic>
+
+#include "__base.hpp"
+
+_UTL_SYSTEM_HEADER_
 
 namespace utl {
 	
@@ -60,7 +62,6 @@ namespace utl {
 		}
 		
 	private:
-		
 		typename Clock::duration _prev_duration{};
 		bool _paused = false;
 		typename Clock::time_point _start_point = Clock::now();

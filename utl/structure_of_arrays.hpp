@@ -792,42 +792,42 @@ namespace utl {
 			(__destroy_at(__end<I>()), ...);
 		}
 		
-		/// Insert
-		void __uninit_shift_right(auto begin, auto end, std::ptrdiff_t offset) {
-			__utl_assert(offset >= 0);
-			std::ptrdiff_t const __min_offset = std::min(offset, end - begin);
-			for (auto __it = end - __min_offset; __it != end; ++__it) {
-				__construct_at(__it + offset, std::move(*__it));
-			}
-			std::shift_right(begin, end, offset);
-		}
-		
-		template <typename It>
-		void __insert_impl(std::size_t index, It begin, It end) {
-			__utl_expect(index >= 0);
-			__utl_expect(index <= size());
-			// somewhat naive implementation, doing unnecesary copies and shifts when reallocating
-			auto const count = end - begin;
-			__utl_expect(count >= 1);
-			__grow_to_least(size() + count);
-			(__uninit_shift_right(__begin<I>() + index, __end<I>(), count), ...);
-			{
-				std::size_t i = index;
-				std::size_t const total_end = index + count;
-				std::size_t const intermed_end = std::min(total_end, size());
-				for (; i < intermed_end; ++i, ++begin) {
-					// here we assign
-					(*this)[i] = *begin;
-				}
-				for (; i < total_end; ++i, ++begin) {
-					// here we construct
-					(__construct_at(__begin<I>() + i, __soa_get_member<I>(*begin)), ...);
-				}
-			}
-			this->_size += count;
-		}
-		
-		void insert(std::size_t index, value_type const& value) requires (__is_container) {
+        void __uninit_shift_right(auto begin, auto end, std::ptrdiff_t offset) {
+            __utl_assert(offset >= 0);
+            std::ptrdiff_t const __min_offset = std::min(offset, end - begin);
+            for (auto __it = end - __min_offset; __it != end; ++__it) {
+                __construct_at(__it + offset, std::move(*__it));
+            }
+            std::shift_right(begin, end, offset);
+        }
+        
+        template <typename It>
+        void __insert_impl(std::size_t index, It begin, It end) {
+            __utl_expect(index >= 0);
+            __utl_expect(index <= size());
+            // somewhat naive implementation, doing unnecesary copies and shifts when reallocating
+            auto const count = end - begin;
+            __utl_expect(count >= 1);
+            __grow_to_least(size() + count);
+            (__uninit_shift_right(__begin<I>() + index, __end<I>(), count), ...);
+            {
+                std::size_t i = index;
+                std::size_t const total_end = index + count;
+                std::size_t const intermed_end = std::min(total_end, size());
+                for (; i < intermed_end; ++i, ++begin) {
+                    // here we assign
+                    (*this)[i] = *begin;
+                }
+                for (; i < total_end; ++i, ++begin) {
+                    // here we construct
+                    (__construct_at(__begin<I>() + i, __soa_get_member<I>(*begin)), ...);
+                }
+            }
+            this->_size += count;
+        }
+        
+        /// Insert
+        void insert(std::size_t index, value_type const& value) requires (__is_container) {
 			__insert_impl(index, &value, &value + 1);
 		}
 		

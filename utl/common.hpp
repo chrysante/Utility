@@ -282,11 +282,11 @@ namespace utl {
 		
 		using __container_type = typename ContainerAdapter::container_type;
 		
-		struct Hack: ContainerAdapter {
-			static __container_type& get(ContainerAdapter& a) { return a.*&Hack::c; }
-			static __container_type const& get(ContainerAdapter const& a) { return a.*&Hack::c; }
+		struct __hack: ContainerAdapter {
+			static __container_type& get(ContainerAdapter& a) { return a.*&__hack::c; }
+			static __container_type const& get(ContainerAdapter const& a) { return a.*&__hack::c; }
 		};
-		return Hack::get(a);
+		return __hack::get(a);
 	}
 	
 	template <class ContainerAdapter>
@@ -300,8 +300,8 @@ namespace utl {
 	}
 	
 	/// MARK: Iota
-	/// Unlike std::itoa, utl::iota can be used as range argument in a range-based for loop like this:
-	/// for (int i: utl::iota<int>(0, 10); Aquivalent to: for (int i = 0; i < 10; ++i)
+	/// Unlike \p std::itoa, \p utl::iota can be used as range argument in a range-based for loop like this:
+	//  for (int i: utl::iota<int>(0, 10); Aquivalent to: for (int i = 0; i < 10; ++i)
 	template <typename>
 	class iota;
 	
@@ -321,19 +321,48 @@ namespace utl {
 				_i(i) {}
 			
 		public:
+            using value_type = iota::value_type;
+            using difference_type = std::ptrdiff_t;
+            using pointer = void;
+            using reference = value_type;
+            using iterator_category = std::random_access_iterator_tag;
+            
 			__utl_interface_export
 			constexpr value_type operator*() const { return _i; }
 			
 			__utl_interface_export
-			constexpr iterator& operator++() {
+			constexpr iterator& operator++()& {
 				++_i;
 				return *this;
 			}
+            __utl_interface_export
+            constexpr iterator operator++(int)& {
+                auto const result = *this;
+                ++_i;
+                return result;
+            }
 			__utl_interface_export
-			constexpr bool operator!=(iterator const& rhs) const {
-				return _i != rhs._i;
+			constexpr bool operator==(iterator const& rhs) const {
+				return _i == rhs._i;
 			}
 			
+            __utl_interface_export
+            constexpr iterator operator+(difference_type diff) const {
+                auto result = *this;
+                result._i += diff;
+                return result;
+            }
+            
+            __utl_interface_export
+            constexpr iterator operator-(difference_type diff) const {
+                return *this + (-diff);
+            }
+            
+            __utl_interface_export
+            constexpr difference_type operator-(iterator rhs) const {
+                return _i - rhs._i;;
+            }
+            
 		private:
 			value_type _i;
 		};
@@ -367,57 +396,18 @@ namespace utl {
 	template <std::integral T, std::integral U>
 	iota(T, U) -> iota<std::common_type_t<T, U>>;
 
-	/// MARK: any_of, all_of
-//	template <typename, std::size_t, typename>
-//	struct __any_all_of_impl;
-//	
-//	template <typename T, std::size_t N, std::size_t... I>
-//	struct __any_all_of_impl<T, N, std::index_sequence<I...>> {
-//		template <std::size_t, typename U>
-//		using __pass_t = U;
-//		
-//		constexpr __any_all_of_impl(__pass_t<I, T> const&... t): __elems { t... } {}
-//		std::array<T, N> __elems;
-//	};
-//	
-//	template <typename T, std::size_t N>
-//	struct any_of: __any_all_of_impl<T, N, std::make_index_sequence<N>> {
-//		using __base = __any_all_of_impl<T, N, std::make_index_sequence<N>>;
-//		using __base::__base;
-//	};
-//	
-//	template <typename...T>
-//	any_of(T...) -> any_of<std::common_type_t<T...>, sizeof...(T)>;
-//
-//	template <typename T, typename U, std::size_t N>
-//	constexpr bool operator==(T const& a, any_of<U, N> const& b) {
-//		for (auto const& b_: b.__elems) {
-//			if (a == b_) {
-//				return true;
-//			}
-//		}
-//		return false;
-//	}
-//	
-//	template <typename T, std::size_t N>
-//	struct all_of: __any_all_of_impl<T, N, std::make_index_sequence<N>> {
-//		using __base = __any_all_of_impl<T, N, std::make_index_sequence<N>>;
-//		using __base::__base;
-//	};
-//	
-//	template <typename...T>
-//	all_of(T...) -> all_of<std::common_type_t<T...>, sizeof...(T)>;
-//	
-//	template <typename T, typename U, std::size_t N>
-//	constexpr bool operator==(T const& a, all_of<U, N> const& b) {
-//		for (auto const& b_: b.__elems) {
-//			if (a != b_) {
-//				return false;
-//			}
-//		}
-//		return true;
-//	}
-	
+    template <typename T, typename Allocator, typename... Args>
+    concept __alloc_constructible_1 = std::constructible_from<T, std::allocator_arg_t, Allocator, Args...>;
+
+    template <typename T, typename Allocator, typename... Args>
+    concept __alloc_constructible_2 = std::constructible_from<T, Args..., Allocator>;
+
+    template <typename T, typename Allocator, typename... Args>
+    concept __alloc_constructible_3 = std::constructible_from<T, Args...>;
+
+    template <typename T, typename Allocator, typename... Args>
+    concept __alloc_constructible = __alloc_constructible_1<T, Allocator, Args...> || __alloc_constructible_2<T, Allocator, Args...> || __alloc_constructible_3<T, Allocator, Args...>;
+
 }
 
 #endif // UTL_CPP

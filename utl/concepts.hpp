@@ -115,7 +115,7 @@ namespace utl {
 			{ n +  i } -> std::same_as<I>;
 			{ i -  n } -> std::same_as<I>;
 			{ i -  i } -> std::same_as<decltype(n)>;
-			{  i[n]  } -> std::convertible_to<std::iter_reference_t<I>>;
+			{ i[n]   } -> std::convertible_to<std::iter_reference_t<I>>;
 		};
 	
 	template <typename I, typename T>

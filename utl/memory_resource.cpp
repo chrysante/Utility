@@ -22,12 +22,12 @@ namespace utl::pmr {
 	
 	void* monitor_resource::do_allocate(std::size_t size, std::size_t align) {
 		void* const result = upstream()->allocate(size, align);
-		utl::print("allocate(size: {}, align: {}) -> {}\n", size, align, result);
+		utl::print("allocate: [upstream: {}, size: {}, align: {}] -> {}\n", upstream(), size, align, result);
 		return result;
 	}
 
 	void monitor_resource::do_deallocate(void* ptr, std::size_t size, std::size_t align) {
-		utl::print("deallocate(ptr: {}, size: {}, align: {})\n", ptr, size, align);
+		utl::print("deallocate: [upstream: {}, ptr: {}, size: {}, align: {}]\n", upstream(), ptr, size, align);
 		upstream()->deallocate(ptr, size, align);
 	}
 

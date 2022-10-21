@@ -12,7 +12,6 @@ namespace utl {
 		auto const name = p.filename();
 		return name != ".." && name != "."  && name.string()[0] == '.';
 	}
-
 	
 }
 
