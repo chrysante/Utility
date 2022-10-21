@@ -274,7 +274,7 @@ namespace utl {
 	#define UTL_STORE_STREAM_STATE(stream) \
 	::utl::__utl_ios_state_store UTL_ANONYMOUS_VARIABLE(__utl_stream_state_store)(stream)
 
-	/// MARK: get_container
+	/// MARK: \p get_container
 	/// Get (legal) access to the container of STL container adapters
 	template <typename ContainerAdapter>
 	decltype(auto) __utl_get_container_impl(auto&& a) {

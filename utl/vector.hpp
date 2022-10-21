@@ -111,7 +111,7 @@ struct vector {
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
     using __alloc_traits = std::allocator_traits<allocator_type>;
-    
+
     // clang-format off
     template <typename... Args>
     static constexpr bool __constructible =
@@ -120,7 +120,9 @@ struct vector {
         requires(allocator_type alloc, Args&&... args) { value_type(std::forward<Args>(args)..., alloc); };
     // clang-format on
 
-    static constexpr bool __value_type_uses_allocator_on_move = __alloc_constructible_1<value_type, allocator_type, value_type&&> || __alloc_constructible_2<value_type, allocator_type, value_type&&>;
+    static constexpr bool __value_type_uses_allocator_on_move =
+        __alloc_constructible_1<value_type, allocator_type, value_type&&> ||
+        __alloc_constructible_2<value_type, allocator_type, value_type&&>;
 
     /// MARK: Compile time checks
     static_assert(std::is_same_v<value_type, typename __alloc_traits::value_type>);
@@ -275,18 +277,18 @@ struct vector {
     constexpr void assign(std::size_t count, T const& value) {
         __assign_impl(count, [&count]() -> T const& { return count; });
     }
-    
+
     /// (2)
     template <input_iterator_for<T> It, sentinel_for<It> S>
     constexpr void assign(It first, S last) {
         __assign_impl(distance(first, last), [i = first]() mutable -> T const& { return *i++; });
     }
-    
+
     /// (3)
     __utl_interface_export constexpr void assign(std::initializer_list<T> ilist) {
         __assign_impl(ilist.size(), [i = ilist.begin()]() mutable -> T const& { return *i++; });
     }
-    
+
     /// MARK: get_allocator
     __utl_nodiscard __utl_interface_export __utl_always_inline constexpr allocator_type get_allocator() const noexcept {
         return __alloc();
@@ -586,7 +588,7 @@ struct vector {
         if (count <= __cap()) {
             // no need to allocate
             std::size_t const assign_count = std::min<std::size_t>(count, __size());
-            auto i = __begin();
+            auto i                         = __begin();
             __fassign(__begin(), __begin() + assign_count, f);
             __fconstruct(__begin() + assign_count, __begin() + count, f);
             auto const old_end = __end();
@@ -599,7 +601,7 @@ struct vector {
             __fconstruct(__begin(), __end(), f);
         }
     }
-    
+
     constexpr vector& __move_assign_impl(auto&& rhs) {
         if UTL_UNLIKELY (&rhs.__as_base() == this) {
             return *this;
@@ -707,9 +709,7 @@ struct vector {
     constexpr allocator_type& __alloc() noexcept { return __alloc_; }
     constexpr allocator_type const& __alloc() const noexcept { return __alloc_; }
 
-    constexpr pointer __allocate(std::size_t n) {
-        return n != 0 ? __alloc().allocate(n) : nullptr;
-    }
+    constexpr pointer __allocate(std::size_t n) { return n != 0 ? __alloc().allocate(n) : nullptr; }
 
     constexpr void __deallocate_this() {
         if (!__uses_inline_buffer() && __begin() != nullptr) {
@@ -750,13 +750,13 @@ struct vector {
             __construct_at(begin, f());
         }
     }
-    
+
     constexpr void __fassign(auto begin, auto end, auto&& f) {
         for (; begin != end; ++begin) {
             *begin = f();
         }
     }
-    
+
     constexpr void __relocate_with_alloc(auto begin, auto end, value_type* out, allocator_type const& other_alloc) {
         if (__value_type_uses_allocator_on_move && __alloc() != other_alloc) {
             __relocate_by_move(begin, end, out);
@@ -765,7 +765,7 @@ struct vector {
             __relocate(begin, end, out);
         }
     }
-    
+
     constexpr void __relocate(auto begin, auto end, value_type* out) {
         if (is_trivially_relocatable<value_type>::value) {
             std::memcpy(out, std::addressof(*begin), std::distance(begin, end) * sizeof(value_type));
@@ -774,7 +774,7 @@ struct vector {
             __relocate_by_move(begin, end, out);
         }
     }
-    
+
     constexpr void __relocate_by_move(auto begin, auto end, value_type* out) {
         for (; begin != end; ++begin, ++out) {
             __construct_at(out, std::move(*begin));
