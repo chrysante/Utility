@@ -1,12 +1,12 @@
 #include "Catch2.hpp"
 #include "StdoutReroute.hpp"
-#include <utl/UUID.hpp>
+#include <utl/uuid.hpp>
 
-TEST_CASE("UUID Serialize") {
+TEST_CASE("uuid Serialize") {
 	for (int i = 0; i < 50; ++i) {
-		utl::UUID const original = utl::UUID::generate();
+		utl::uuid const original = utl::uuid::generate();
 		std::string const text = original.to_string();
-		utl::UUID const read = utl::UUID::from_string(text);
+		utl::uuid const read = utl::uuid::from_string(text);
 		CHECK(read == original);
 	}
 }
