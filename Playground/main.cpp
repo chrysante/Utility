@@ -36,8 +36,7 @@ int main() {
     nodes[X_z].dependencies = { Z };
     nodes[f].dependencies = { X, Y, Z };
 
-    utl::iota indices(nodes.size());
-    utl::small_vector<std::uint16_t> nodeIndices(indices.begin(), indices.end());
+    utl::small_vector<std::uint16_t> nodeIndices(utl::iota(nodes.size()));
 
     for (int i = 0; i < 5; ++i) {
         std::shuffle(nodeIndices.begin(), nodeIndices.end(), std::mt19937(std::random_device()()));

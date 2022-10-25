@@ -59,7 +59,9 @@ namespace utl {
 		std::unique_lock lock(m_mutex);
 		utl::small_vector<utl::function<void()>, 8> failure_handlers_copy;
 		for (auto& i: m_items) {
-			i._set_promise(false);
+            if (i._promise) {
+                i._promise->set_value(false);
+            }
 			auto const itr = m_failureHandlers.find(i.id);
 			if (itr != m_failureHandlers.end()) {
 				failure_handlers_copy.push_back(std::move(itr->second));
