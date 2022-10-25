@@ -6,19 +6,19 @@ _UTL_SYSTEM_HEADER_
 #include "common.hpp"
 #include <string>
 
-#if defined(UTL_ASSERT_WITH_EXCEPTIONS)
-#include <exception>
-#endif
-
 #if defined(__GNUC__) || defined(__clang__)
-#define _UTL_NORETURN __attribute__((analyzer_noreturn))
+#define __utl_noreturn __attribute__((analyzer_noreturn))
 #else
-#define _UTL_NORETURN
+#define __utl_noreturn
 #endif
 
-#ifndef UTL_DEBUG_LEVEL
+#if !defined(UTL_DEBUG_LEVEL)
+#if defined(NDEBUG)
 #define UTL_DEBUG_LEVEL 0
-#endif
+#else // defined(NDEBUG)
+#define UTL_DEBUG_LEVEL 1
+#endif // defined(NDEBUG)
+#endif // !defined(UTL_DEBUG_LEVEL)
 
 // __utl_assert
 #if UTL_DEBUG_LEVEL > 0
@@ -51,26 +51,24 @@ _UTL_SYSTEM_HEADER_
 #endif // UTL_DEBUG_LEVEL > 0
 
 // __utl_debugbreak
-#if UTL_ASSERT_WITH_EXCEPTIONS
-#define __utl_debugbreak(...) (throw std::runtime_error("Assertion Failed"), (void)1)
-#else // defined(UTL_ASSERT_WITH_EXCEPTIONS)
-#if __GNUC__ || __clang__
+#if __clang__
 #define __utl_debugbreak(...) __builtin_debugtrap()
-#else // __GNUC__ || __clang__
+#elif __GNUC__
+#define __utl_debugfail(...) __builtin_trap()
+#elif _MSC_VER
 #define __utl_debugbreak(...) __debugbreak()
-#endif // __GNUC__ || __clang__
-#endif // defined(UTL_ASSERT_WITH_EXCEPTIONS)
+#else
+#error Unknown compiler
+#endif
 
 // __utl_debugfail
-#if defined(UTL_ASSERT_WITH_EXCEPTIONS)
-#define __utl_debugfail(...) (throw std::runtime_error("Assertion Failed"))
-#else // defined(UTL_ASSERT_WITH_EXCEPTIONS)
-#if __GNUC__ || __clang__
+#if __clang__ || __GNUC__
 #define __utl_debugfail(...) __builtin_trap()
-#else // __GNUC__ || __clang__
-#define __utl_debugfail(...) __debugbreak()
-#endif // __GNUC__ || __clang__
-#endif // defined(UTL_ASSERT_WITH_EXCEPTIONS)
+#elif _MSC_VER
+#define __utl_debugbreak(...) __debugbreak()
+#else
+#error Unknown compiler
+#endif
 
 // utl_static_assert
 #if UTL_CPP

@@ -15,26 +15,33 @@ _UTL_SYSTEM_HEADER_
 
 namespace utl {
 
-template <std::integral To, std::integral From>
+struct __nc_assert {
+    static constexpr void check_less_eq(auto a, auto b) { __utl_expect(a <= b); }
+    static constexpr void check_greater_eq(auto a, auto b) { __utl_expect(a >= b); }
+};
+
+///
+template <std::integral To, std::integral From, typename Traits = __nc_assert>
 constexpr To narrow_cast(From x) {
     if constexpr (std::is_signed_v<From> && std::is_unsigned_v<To>) {
-        // casting from signed to unsigned
-        __utl_expect(x >= (From)0);
+        // Casting from signed to unsigned.
+        Traits::check_greater_eq(x, static_cast<From>(0));
+        // Hand off to narrow_cast from unsigned to unsigned.
         return narrow_cast<To>((std::make_unsigned_t<From>)x);
     }
     else if constexpr (std::is_unsigned_v<From> && std::is_signed_v<To>) {
-        // casting from unsigned to signed
+        // Casting from unsigned to signed.
         if constexpr (sizeof(From) <= sizeof(To)) {
-            // conversion might narrow
-            __utl_expect(x <= (std::make_unsigned_t<To>)std::numeric_limits<To>::max());
+            // Conversion might narrow.
+            Traits::check_less_eq(x, static_cast<std::make_unsigned_t<To>>(std::numeric_limits<To>::max()));
         }
         return static_cast<To>(x);
     }
     else {
-        // both are either signed or unsigned
+        // Both are either signed or unsigned.
         if constexpr (sizeof(To) < sizeof(From)) {
-            __utl_expect(x <= (From)std::numeric_limits<To>::max());
-            __utl_expect(x >= (From)std::numeric_limits<To>::min());
+            Traits::check_less_eq(x, static_cast<From>(std::numeric_limits<To>::max()));
+            Traits::check_greater_eq(x, static_cast<From>(std::numeric_limits<To>::min()));
         }
         return static_cast<To>(x);
     }
@@ -82,8 +89,6 @@ void uninitialized_relocate(InputIter inBegin, InputIter inEnd, OutputIter outBe
     if constexpr (triv_reloc && input_contigous && output_contigous) {
         static_assert(std::is_pointer_v<InputIter>, "Other Cases are disabled to make ubsan happy");
         static_assert(std::is_pointer_v<OutputIter>, "Just disable these static_asserts and swap active lines below");
-        //			std::memcpy(std::addressof(*outBegin), std::addressof(*inBegin), std::distance(inBegin, inEnd) *
-        //sizeof(T));
         if (outBegin)
             std::memcpy(outBegin, inBegin, std::distance(inBegin, inEnd) * sizeof(T));
     }
@@ -228,42 +233,54 @@ auto enumerate(Range&& range) requires requires {
     return enumerate(begin(range), end(range));
 }
 
+/// MARK: Transform Iterator
+template <typename Itr, typename Transform>
+struct transform_iterator {
+    using size_type         = std::size_t;
+    using difference_type   = std::ptrdiff_t;
+    using value_type        = decltype(std::declval<Transform>()(std::declval<std::iter_reference_t<Itr>>()));
+    using pointer           = void;
+    using iterator_category = typename std::iterator_traits<Itr>::iterator_category;
+    
+    explicit transform_iterator(Itr itr, Transform const& transform): itr(itr), transform(transform) {}
+    explicit transform_iterator(Itr itr, Transform&& transform): itr(itr), transform(std::move(transform)) {}
+    
+    transform_iterator& operator++() & {
+        ++itr;
+        return *this;
+    }
+    
+    transform_iterator operator++(int) & {
+        auto result = *this;
+        ++itr;
+        return result;
+    }
+    
+    decltype(auto) operator*() { return std::invoke(transform, *itr); }
+    
+    bool operator==(transform_iterator const& rhs) const {
+        return itr == rhs.itr;
+    }
+    
+    template <typename Jtr> requires std::equality_comparable_with<Itr, Jtr>
+    bool operator==(transform_iterator<Jtr, Transform> const& rhs) const {
+        return itr == rhs.itr;
+    }
+    
+    bool operator==(Itr const& rhs) const {
+        return itr == rhs;
+    }
+    
+private:
+    Itr itr;
+    [[no_unique_address]] Transform transform;
+};
+
 /// MARK: Transform Range
 template <typename Itr, typename Sentinel, typename Transform>
 struct __transform_range {
-    template <typename I>
-    struct iterator {
-        using size_type       = std::size_t;
-        using difference_type = std::ptrdiff_t;
-        using value_type      = typename I::value_type;
-        iterator& operator++() & {
-            ++itr;
-            return *this;
-        }
-
-        iterator operator++(int) & {
-            auto result = *this;
-            ++itr;
-            return result;
-        }
-
-        decltype(auto) operator*() { return std::invoke(transform, *itr); }
-
-        template <typename J>
-        bool operator==(iterator<J> const& rhs) const {
-            return itr == rhs.itr;
-        }
-        template <typename J>
-        bool operator!=(iterator<J> const& rhs) const {
-            return !(*this == rhs);
-        }
-
-        I itr;
-        [[no_unique_address]] Transform transform;
-    };
-
-    iterator<Itr> begin() const { return { _begin, transform }; }
-    iterator<Sentinel> end() const { return { _end, transform }; }
+    auto begin() const { return transform_iterator(_begin, transform); }
+    auto end() const { return transform_iterator(_end, transform); }
 
     Itr _begin;
     [[no_unique_address]] Sentinel _end;

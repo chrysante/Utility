@@ -108,7 +108,7 @@ namespace utl {
 												   source_info,
 												   char const* expression,
 												   std::string expanded_expression,
-												   char const* message) _UTL_NORETURN;
+												   char const* message) __utl_noreturn;
 	
 	constexpr bool __utl_is_debug_active(int debug_level, bool audit) {
 		return debug_level > 0 && (!audit || debug_level > 1);

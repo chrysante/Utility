@@ -189,6 +189,12 @@ struct vector {
             distance(first, last),
             [this, first]() mutable -> decltype(auto) { return *first++; },
             alloc) {}
+    
+    /// (5a)
+    template <input_range_for<value_type> Range>
+    __utl_interface_export __utl_always_inline constexpr vector(Range&& range,
+                                                                allocator_type const& alloc = allocator_type()):
+        vector(std::begin(range), std::end(range), alloc) {}
 
     /// (6)
     __utl_interface_export constexpr vector(vector const& rhs) requires std::constructible_from<allocator_type> &&

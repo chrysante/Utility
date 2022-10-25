@@ -45,20 +45,13 @@ public:
 
     void execute() {
         _function();
-        _set_promise(true);
+        if (_promise) { _promise->set_value(true); }
     }
 
     dispatch_handle get_handle() {
         __utl_expect(!_promise.has_value(), "get_handle() must not be called more than once on any dispatch item");
         _promise = std::promise<bool>{};
         return dispatch_handle(_promise->get_future());
-    }
-
-private:
-    void _set_promise(bool value) {
-        if (_promise) {
-            _promise->set_value(value);
-        }
     }
 
 private:

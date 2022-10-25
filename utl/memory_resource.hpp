@@ -17,16 +17,16 @@ _UTL_SYSTEM_HEADER_
 
 namespace utl::pmr {
 
-/// MARK: - monotonic_buffer_resource
+/// \p monotonic_buffer_resource
 class monotonic_buffer_resource: public memory_resource {
 public:
-    /** MARK: constructors
-     1-2) Sets the current buffer to null and the next buffer size to an implementation-defined size.
-     3-4) Sets the current buffer to null and the next buffer size to a size no smaller than \p initial_size.
-     5-6) Sets the current buffer to \p buffer and the next buffer size to \p buffer_size (but not less than 1). Then
-     increase the next buffer size by an implementation-defined growth factor (which does not have to be integral). 7)
-     Copy constructor is deleted.
-     */
+    /// \fn \p monotonic_buffer_resource
+    /// 1-2) Sets the current buffer to null and the next buffer size to an implementation-defined size.
+    /// 3-4) Sets the current buffer to null and the next buffer size to a size no smaller than \p initial_size.
+    /// 5-6) Sets the current buffer to \p buffer and the next buffer size to \p buffer_size (but not less than 1). Then
+    /// increase the next buffer size by an implementation-defined growth factor (which does not have to be integral). 7)
+    /// Copy constructor is deleted.
+    ///
     // (1)
     monotonic_buffer_resource(): monotonic_buffer_resource(get_default_resource()) {}
     // (2)
@@ -48,15 +48,15 @@ public:
     // (7)
     monotonic_buffer_resource(monotonic_buffer_resource const&) = delete;
 
-    /// MARK: destructor
+    /// \fn \p ~monotonic_buffer_resource
     ~monotonic_buffer_resource() { release(); }
 
-    /** MARK: \p release
-     Releases all allocated memory by calling the deallocate function on the upstream memory resource as necessary.
-     Resets current buffer and next buffer size to their initial values at construction.
-     Memory is released back to the upstream resource even if deallocate has not been called for some of the allocated
-     blocks.
-     */
+    /// \fn \p release
+    /// \brief
+    ///  Releases all allocated memory by calling the deallocate function on the upstream memory resource as necessary.
+    ///  Resets current buffer and next buffer size to their initial values at construction.
+    ///  Memory is released back to the upstream resource even if deallocate has not been called for some of the allocated
+    ///  blocks.
     void release() noexcept {
         __release_impl();
         __local_buffer = { nullptr };
@@ -79,10 +79,10 @@ public:
         }
     }
 
-    /// MARK: \p upstream_resource
+    /// \fn \p upstream_resource
     memory_resource* upstream_resource() const { return __upstream; }
 
-    /// MARK: Internals
+    // Internals
     static constexpr std::size_t __min_chunk_size = 128;
     static constexpr std::size_t __chunk_align    = 32; /* something to satisfy most to all requirements */
     static constexpr std::size_t __growth_factor  = 2;
@@ -187,15 +187,15 @@ public:
     };
 
 private:
-    /** MARK: \p do_allocate
-     Allocates storage.
-     If the current buffer has sufficient unused space to fit a block with the specified size and alignment, allocates
-     the return block from the current buffer. Otherwise, this function allocates a new buffer by calling \p
-     upstream_resource()->allocate(n,m), where \p n is not less than the greater of bytes and the next buffer size and m
-     is not less than alignment. It sets the new buffer as the current buffer, increases the next buffer size by an
-     implementation-defined growth factor (which is not necessarily integral), and then allocates the return block from
-     the newly allocated buffer.
-     */
+    /// \fn \p do_allocate
+    /// Allocates storage.
+    /// If the current buffer has sufficient unused space to fit a block with the specified size and alignment, allocates
+    /// the return block from the current buffer. Otherwise, this function allocates a new buffer by calling
+    /// \p upstream_resource()->allocate(n,m) where \p n is not less than the greater of bytes and the next buffer size and m
+    /// is not less than alignment. It sets the new buffer as the current buffer, increases the next buffer size by an
+    /// implementation-defined growth factor (which is not necessarily integral), and then allocates the return block from
+    /// the newly allocated buffer.
+    ///
     void* do_allocate(std::size_t size, std::size_t alignment) override {
         __utl_assert_audit(__head_buffer != nullptr,
                            "_head_buffer must always be valid. If"
@@ -212,9 +212,9 @@ private:
         return result;
     }
 
-    /** MARK: \p do_deallocate
-     no-op
-     */
+    /// \fn \p do_deallocate
+    /// no-op
+    ///
     void do_deallocate(void* p, std::size_t bytes, std::size_t alignment) override {}
 
     /** MARK: \p do_is_equal
@@ -230,16 +230,16 @@ private:
 
 static_assert(sizeof(monotonic_buffer_resource::__BufferNodeHeader) == monotonic_buffer_resource::__chunk_align);
 
-/// MARK: - pool_options
+/// \p pool_options
 struct pool_options {
     std::size_t max_blocks_per_chunk;
     std::size_t largest_required_pool_block;
 };
 
-/// MARK: - unsynchronized_pool_resource
+/// \p unsynchronized_pool_resource
 class unsynchronized_pool_resource: public memory_resource {
 public:
-    /// MARK: Constructors
+    /// \fn \p unsynchronized_pool_resource
     unsynchronized_pool_resource(): unsynchronized_pool_resource(get_default_resource()) {}
 
     explicit unsynchronized_pool_resource(memory_resource* upstream):
@@ -253,13 +253,13 @@ public:
 
     unsynchronized_pool_resource(unsynchronized_pool_resource const&) = delete;
 
-    /// MARK: Destructor
+    /// \fn \p ~unsynchronized_pool_resource
     ~unsynchronized_pool_resource() {}
 
-    /// MARK: UpstreamResource
+    /// \fn \p upstream_resource
     memory_resource* upstream_resource() const { return _upstream; }
 
-    /// MARK: Options
+    /// \fn \p options
     pool_options options() const { return _options; }
 
     static pool_options __sanitize_options(pool_options const& options) { return options; }
@@ -269,7 +269,8 @@ private:
     pool_options _options;
 };
 
-/// MARK: - monitor_resource
+/// \p monitor_resource
+/// Logs all allocations and deallocations to \p std::cout
 class monitor_resource: public memory_resource {
 public:
     monitor_resource(): monitor_resource(get_default_resource()) {}

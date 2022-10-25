@@ -16,7 +16,7 @@ std::false_type __utl_report_assertion_failure(__utl_assertion_kind kind,
                                                source_info data,
                                                char const* expr,
                                                std::string expanded,
-                                               char const* message) _UTL_NORETURN {
+                                               char const* message) __utl_noreturn {
     bool const has_msg   = message && std::strlen(message) > 0;
     char const* kind_str = [&] {
         switch (kind) {

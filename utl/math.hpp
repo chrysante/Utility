@@ -23,9 +23,6 @@ inline float fast_inv_sqrt(float number) {
     return y;
 }
 
-template <std::integral To, std::integral From>
-constexpr To narrow_cast(From x); // fwd decl
-
 template <std::integral T>
 constexpr int log2(T x) {
     if constexpr (std::signed_integral<T>) {
@@ -91,15 +88,19 @@ constexpr auto __round_up_impl(auto x, auto multiple_of, auto&& modfn) noexcept 
 
 template <std::integral T, std::integral U>
 constexpr auto round_up(T x, U multiple_of) {
-    return __round_up_impl(narrow_cast<std::make_unsigned_t<T>>(x),
-                           narrow_cast<std::make_unsigned_t<U>>(multiple_of),
+    __utl_expect(x >= 0);
+    __utl_expect(multiple_of >= 0);
+    return __round_up_impl(static_cast<std::make_unsigned_t<T>>(x),
+                           static_cast<std::make_unsigned_t<U>>(multiple_of),
                            [](auto x, auto y) { return x % y; });
 }
 
 template <std::integral T, std::integral U>
 constexpr auto round_up_pow_two(T x, U multiple_of) {
-    return __round_up_impl(narrow_cast<std::make_unsigned_t<T>>(x),
-                           narrow_cast<std::make_unsigned_t<U>>(multiple_of),
+    __utl_expect(x >= 0);
+    __utl_expect(multiple_of >= 0);
+    return __round_up_impl(static_cast<std::make_unsigned_t<T>>(x),
+                           static_cast<std::make_unsigned_t<U>>(multiple_of),
                            [](auto x, auto y) { return fast_mod_pow_two(x, y); });
 }
 
@@ -110,15 +111,19 @@ constexpr auto __round_down_impl(auto x, auto multiple_of, auto&& modfn) noexcep
 
 template <std::integral T, std::integral U>
 constexpr auto round_down(T x, U multiple_of) {
-    return __round_down_impl(narrow_cast<std::make_unsigned_t<T>>(x),
-                             narrow_cast<std::make_unsigned_t<U>>(multiple_of),
+    __utl_expect(x >= 0);
+    __utl_expect(multiple_of >= 0);
+    return __round_down_impl(static_cast<std::make_unsigned_t<T>>(x),
+                             static_cast<std::make_unsigned_t<U>>(multiple_of),
                              [](auto x, auto y) { return x % y; });
 }
 
 template <std::integral T, std::integral U>
 constexpr auto round_down_pow_two(T x, U multiple_of) {
-    return __round_down_impl(narrow_cast<std::make_unsigned_t<T>>(x),
-                             narrow_cast<std::make_unsigned_t<U>>(multiple_of),
+    __utl_expect(x >= 0);
+    __utl_expect(multiple_of >= 0);
+    return __round_down_impl(static_cast<std::make_unsigned_t<T>>(x),
+                             static_cast<std::make_unsigned_t<U>>(multiple_of),
                              [](auto x, auto y) { return fast_mod_pow_two(x, y); });
 }
 
