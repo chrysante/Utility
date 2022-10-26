@@ -3,135 +3,12 @@
 
 #include "__base.hpp"
 #include "__debug.hpp"
+#include "__ranges_base.hpp"
 #include "concepts.hpp"
 
 _UTL_SYSTEM_HEADER_
 
 namespace utl {
-
-/// MARK: iterator_type_t etc.
-
-template <typename Range>
-using iterator_type_t = decltype(std::declval<Range>().begin());
-template <typename Range>
-using const_iterator_type_t = decltype(std::declval<std::add_const_t<Range>>().begin());
-template <typename Range>
-using sentinel_type_t = decltype(std::declval<Range>().end());
-template <typename Range>
-using const_sentinel_type_t = decltype(std::declval<std::add_const_t<Range>>().end());
-
-/// MARK: __wrap_iterator
-
-/// \brief CRTP wrapper for iterators
-template <typename Base, typename Itr>
-class __wrap_iterator {
-    using ItrTraits = std::iterator_traits<Itr>;
-    
-public:
-    using size_type         = std::size_t;
-    using difference_type   = typename ItrTraits::difference_type;
-    using value_type        = typename ItrTraits::value_type;
-    using pointer           = typename ItrTraits::pointer;
-    using reference         = typename ItrTraits::reference;
-    using iterator_category = typename ItrTraits::iterator_category;
-    
-    constexpr explicit __wrap_iterator(Itr itr): __itr(itr) {}
-    
-    friend constexpr Base operator+(std::same_as<Base> auto base, difference_type offset)
-    requires random_access_iterator<Itr>
-    {
-        base.__itr += offset;
-        return base;
-    }
-    
-    friend constexpr Base operator+(difference_type offset, std::same_as<Base> auto base)
-    requires random_access_iterator<Itr>
-    {
-        return base + offset;
-    }
-    
-    friend constexpr Base operator-(std::same_as<Base> auto base, difference_type offset)
-    requires random_access_iterator<Itr>
-    {
-        base.__itr -= offset;
-        return base;
-    }
-    
-    friend constexpr difference_type operator-(std::same_as<Base> auto const& lhs, std::same_as<Base> auto const& rhs)
-    requires random_access_iterator<Itr>
-    {
-        return lhs.__itr - rhs.__itr;
-    }
-    
-    
-    constexpr Base& operator+=(difference_type offset) requires random_access_iterator<Itr> {
-        return __as_base() = __as_base() + offset;
-    }
-    
-    constexpr Base& operator-=(difference_type offset) requires random_access_iterator<Itr> {
-        return __as_base() = __as_base() - offset;
-    }
-    
-    constexpr Base& operator++() {
-        ++__itr;
-        return __as_base();
-    }
-    
-    constexpr Base operator++(int) {
-        auto const result = __as_base();
-        ++__as_base();
-        return result;
-    }
-    
-    constexpr Base& operator--() requires bidirectional_iterator<Itr> {
-        --__itr;
-        return __as_base();
-    }
-    
-    constexpr Base operator--(int) requires bidirectional_iterator<Itr> {
-        auto const result = static_cast<Base&>(*this);
-        --__as_base();
-        return result;
-    }
-    
-    constexpr decltype(auto) operator[](difference_type index) const requires random_access_iterator<Itr> {
-        return *(__as_base() + index);
-    }
-    
-    constexpr decltype(auto) operator*() const { return *__itr; }
-    
-    friend constexpr bool operator==(Base const& lhs, Base const& rhs) requires std::equality_comparable<Itr> {
-        return lhs.__itr == rhs.__itr;
-    }
-    
-    friend constexpr auto operator<=>(Base const& lhs, Base const& rhs) requires std::totally_ordered<Itr> {
-        return lhs <=> rhs.__itr;
-    }
-    
-    friend constexpr bool operator==(Base const& lhs, Itr const& itr) requires std::equality_comparable<Itr> {
-        return lhs.__itr == itr;
-    }
-    
-    friend constexpr std::strong_ordering operator<=>(Base const& lhs, Itr const& itr) requires std::totally_ordered<Itr> {
-        if (lhs.__itr == itr) {
-            return std::strong_ordering::equal;
-        }
-        else if (lhs.__itr < itr) {
-            return std::strong_ordering::less;
-        }
-        else {
-            __utl_assert(lhs.__itr > itr);
-            return std::strong_ordering::greater;
-        }
-    }
-    
-    constexpr Itr underlying_iterator() const { return __itr; }
-    
-    Base& __as_base() { return static_cast<Base&>(*this); }
-    Base const& __as_base() const { return static_cast<Base const&>(*this); }
-    
-    Itr __itr;
-};
 
 /// MARK: __range_view
 
@@ -161,8 +38,8 @@ class __range_adapter {
 public:
     __range_adapter(auto&& range): __r(UTL_FORWARD(range)) {}
     
-    Range& __range() { return __r; }
-    Range const& __range() const { return __r; }
+    constexpr Range& __range() { return __r; }
+    constexpr Range const& __range() const { return __r; }
     Range __r;
 };
 
@@ -171,16 +48,16 @@ class __range_adapter<Range&> {
 public:
     constexpr explicit __range_adapter(Range& range): __r(range) {}
     
-    Range& __range() const { return __r; }
+    constexpr Range& __range() const { return __r; }
     Range& __r;
 };
 
 /// MARK: enumerate
 
 template <iterator Itr>
-class enumerating_iterator: public __wrap_iterator<enumerating_iterator<Itr>, Itr> {
+class enumerating_iterator: public __wrap_iterator<Itr, enumerating_iterator<Itr>> {
 public:
-    using __wrap = __wrap_iterator<enumerating_iterator, Itr>;
+    using __wrap = __wrap_iterator<Itr, enumerating_iterator>;
     
     using typename __wrap::difference_type;
     using value_type        = std::pair<std::size_t, typename __wrap::value_type>;
@@ -188,7 +65,7 @@ public:
     using reference         = std::pair<std::size_t, typename __wrap::reference>;
     using typename __wrap::iterator_category;
     
-    explicit enumerating_iterator(Itr itr, std::size_t index = 0):
+    constexpr explicit enumerating_iterator(Itr itr, std::size_t index = 0):
     __wrap(itr),
     __index(index)
     {}
@@ -244,12 +121,12 @@ public:
     using const_sentinel = enumerating_iterator<const_sentinel_type_t<Range>>;
     
     template <typename R>
-    explicit __enumerated_range(R&& range, std::size_t begin_index): __range_adapter<Range>(UTL_FORWARD(range)), __begin_index(begin_index) {}
+    constexpr explicit __enumerated_range(R&& range, std::size_t begin_index): __range_adapter<Range>(UTL_FORWARD(range)), __begin_index(begin_index) {}
     
-    iterator begin() { return iterator(__utl_begin(this->__range()), __begin_index); }
-    const_iterator begin() const { return const_iterator(__utl_begin(this->__range()), __begin_index); }
-    sentinel end() { return sentinel(__utl_end(this->__range()), __begin_index); }
-    const_sentinel end() const { return const_sentinel(__utl_end(this->__range()), __begin_index); }
+    constexpr iterator begin() { return iterator(__utl_begin(this->__range()), __begin_index); }
+    constexpr const_iterator begin() const { return const_iterator(__utl_begin(this->__range()), __begin_index); }
+    constexpr sentinel end() { return sentinel(__utl_end(this->__range()), __begin_index); }
+    constexpr const_sentinel end() const { return const_sentinel(__utl_end(this->__range()), __begin_index); }
     
     std::size_t __begin_index;
 };
@@ -273,11 +150,11 @@ template <range Range>
 
 /// \brief Wraps an iterator and applies a transform on the values when dereferencing.
 template <iterator Itr, typename Transform>
-class transform_iterator: public __wrap_iterator<transform_iterator<Itr, Transform>, Itr> {
+class transform_iterator: public __wrap_iterator<Itr, transform_iterator<Itr, Transform>> {
     static_assert(requires(Itr itr, Transform t) { std::invoke(t, *itr); });
     
 public:
-    using __wrap = __wrap_iterator<transform_iterator, Itr>;
+    using __wrap = __wrap_iterator<Itr, transform_iterator>;
     
     using typename __wrap::difference_type;
     using value_type        = decltype(std::declval<Transform>()(*std::declval<Itr>()));
@@ -302,12 +179,12 @@ public:
     using const_sentinel = transform_iterator<const_sentinel_type_t<Range>, Transform>;
     
     template <typename R, typename T>
-    explicit __transform_range(R&& range, T&& transform): __range_adapter<Range>(UTL_FORWARD(range)), __transform(UTL_FORWARD(transform)) {}
+    constexpr explicit __transform_range(R&& range, T&& transform): __range_adapter<Range>(UTL_FORWARD(range)), __transform(UTL_FORWARD(transform)) {}
     
-    iterator begin() { return iterator(__utl_begin(this->__range()), __transform); }
-    const_iterator begin() const { return const_iterator(__utl_begin(this->__range()), __transform); }
-    sentinel end() { return sentinel(__utl_end(this->__range()), __transform); }
-    const_sentinel end() const { return const_sentinel(__utl_end(this->__range()), __transform); }
+    constexpr iterator begin() { return iterator(__utl_begin(this->__range()), __transform); }
+    constexpr const_iterator begin() const { return const_iterator(__utl_begin(this->__range()), __transform); }
+    constexpr sentinel end() { return sentinel(__utl_end(this->__range()), __transform); }
+    constexpr const_sentinel end() const { return const_sentinel(__utl_end(this->__range()), __transform); }
     
     [[no_unique_address]] Transform __transform;
 };
@@ -330,9 +207,10 @@ template <range Range>
 
 /// \brief
 template <iterator Itr>
-class stride_iterator: public __wrap_iterator<stride_iterator<Itr>, Itr> {
+class stride_iterator: public __wrap_iterator<Itr, stride_iterator<Itr>> {
 public:
-    using __wrap = __wrap_iterator<stride_iterator, Itr>;
+    using __wrap = __wrap_iterator<Itr, stride_iterator>;
+    
     using typename __wrap::difference_type;
     using value_type        = typename __wrap::value_type;
     using pointer           = typename __wrap::pointer;
@@ -396,12 +274,12 @@ public:
     using sentinel = stride_iterator<sentinel_type_t<Range>>;
     using const_sentinel = stride_iterator<const_sentinel_type_t<Range>>;
     
-    explicit __stride_range(auto&& range, difference_type stride): __range_adapter<Range>(UTL_FORWARD(range)), __stride(stride) {}
+    constexpr explicit __stride_range(auto&& range, difference_type stride): __range_adapter<Range>(UTL_FORWARD(range)), __stride(stride) {}
     
-    iterator begin() { return iterator(__utl_begin(this->__range()), __stride); }
-    const_iterator begin() const { return const_iterator(__utl_begin(this->__range()), __stride); }
-    sentinel end() { return sentinel(__utl_end(this->__range()), __stride); }
-    const_sentinel end() const { return const_sentinel(__utl_end(this->__range()), __stride); }
+    constexpr iterator begin() { return iterator(__utl_begin(this->__range()), __stride); }
+    constexpr const_iterator begin() const { return const_iterator(__utl_begin(this->__range()), __stride); }
+    constexpr sentinel end() { return sentinel(__utl_end(this->__range()), __stride); }
+    constexpr const_sentinel end() const { return const_sentinel(__utl_end(this->__range()), __stride); }
     
     difference_type __stride;
 };
@@ -440,13 +318,13 @@ public:
 
 /// \brief Reverse view over the range \p (begin,end)
 template <iterator Itr, sentinel_for<Itr> S>
-constexpr __reverse_range<__range_view<Itr, S>> reverse(Itr begin, S end) {
+[[nodiscard]] constexpr __reverse_range<__range_view<Itr, S>> reverse(Itr begin, S end) {
     return __reverse_range<__range_view<Itr, S>>(__range_view(begin, end));
 }
 
 /// \brief Reverse view over \p range
 template <range Range>
-constexpr __reverse_range<Range> reverse(Range&& range) {
+[[nodiscard]] constexpr __reverse_range<Range> reverse(Range&& range) {
     return __reverse_range<Range>(UTL_FORWARD(range));
 }
 
@@ -638,7 +516,7 @@ struct __enum_iterator {
 /// \brief Enumerate all values between \p first and \p last in the enum \p E
 /// \warning All numeric values between \p first and \p last will be traversed when iterating over the returned range, even if they are not declared in the \p enum.
 template <typename E> requires(std::is_enum_v<E>)
-constexpr auto enumerate(std::underlying_type_t<E> first, std::underlying_type_t<E> last) {
+[[nodiscard]] constexpr auto enumerate(std::underlying_type_t<E> first, std::underlying_type_t<E> last) {
     class enum_range {
     public:
         using integer = std::underlying_type_t<E>;

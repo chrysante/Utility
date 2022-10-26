@@ -9,6 +9,7 @@
 
 #include "__base.hpp"
 #include "__debug.hpp"
+#include "__ranges_base.hpp"
 #include "concepts.hpp"
 #include "math.hpp"
 #include "type_traits.hpp"
@@ -120,29 +121,6 @@ exit_state timed_busy_wait(std::chrono::duration<R, P> timeout, std::predicate a
         }
         std::this_thread::yield();
     }
-}
-
-/// MARK: distance
-
-auto __utl_distance(auto first, auto last, std::input_iterator_tag) {
-    typename std::iterator_traits<decltype(first)>::difference_type result = 0;
-    while (first != last) {
-        ++first;
-        ++result;
-    }
-    return result;
-}
-
-auto __utl_distance(auto first, auto last, std::random_access_iterator_tag) {
-    return last - first;
-}
-
-/// \brief Distance between two iterators.
-/// \details Same as \p std::distance except that it allows \p first and \p last to have different types.
-template <iterator Itr, sentinel_for<Itr> S>
-typename std::iterator_traits<Itr>::difference_type distance(Itr first, S last) {
-    return __utl_distance(first, last,
-                          typename std::iterator_traits<Itr>::iterator_category());
 }
 
 /// MARK: Enum Map

@@ -7,6 +7,7 @@
 #include <utl/utility.hpp>
 #include <utl/structure_of_arrays.hpp>
 #include <utl/graph/topsort.hpp>
+#include <utl/ranges.hpp>
 
 namespace {
 UTL_SOA_TYPE(Node,

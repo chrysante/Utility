@@ -15,7 +15,7 @@ enum class E {
 
 TEST_CASE("enumerate enum - 1", "[utility][ranges]") {
     int index = 0;
-    for (auto value: utl::enumerate<E>(0, (int)E::_6 + 1)) {
+    for (E const value: utl::enumerate<E>(0, (int)E::_6 + 1)) {
         CHECK((int)value == index);
         ++index;
     }
@@ -30,7 +30,7 @@ enum class F {
 
 TEST_CASE("enumerate enum - 2", "[utility][ranges]") {
     int count = 0;
-    for (auto [index, value]: utl::enumerate(utl::enumerate<F>())) {
+    for (auto const [index, value]: utl::enumerate(utl::enumerate<F>())) {
         CHECK((int)value == index);
         ++count;
     }
@@ -39,14 +39,15 @@ TEST_CASE("enumerate enum - 2", "[utility][ranges]") {
 
 
 TEST_CASE("enumerating_iterator", "[utility][ranges]") {
-    utl::vector<std::unique_ptr<int>> v(utl::transform(utl::iota(10), [](int value) { return std::make_unique<int>(value); }));
-    int count = 0;
+    int const count = GENERATE(0, 10);
+    utl::vector<std::unique_ptr<int>> v(utl::transform(utl::iota(count), [](int value) { return std::make_unique<int>(value); }));
+    int i = 0;
     for (auto itr = utl::enumerating_iterator(v.begin()); itr != v.end(); ++itr) {
         auto&& [index, value] = *itr;
         CHECK(*value == *v[index]);
-        ++count;
+        ++i;
     }
-    CHECK(count == v.size());
+    CHECK(i == v.size());
 }
 
 
@@ -136,7 +137,7 @@ TEST_CASE("stride_range owning") {
 
 TEST_CASE("reverse_range") {
     int const count = GENERATE(0, 10);
-    utl::small_vector<int> const v((utl::iota<int>(count)));
+    utl::small_vector<int> const v((utl::iota(count)));
     int test = count;
     for (int const i: utl::reverse(v)) {
         --test;

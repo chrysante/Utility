@@ -11,6 +11,7 @@
 
 #include "__base.hpp"
 #include "__memory_resource_base.hpp"
+#include "__ranges_base.hpp"
 #include "common.hpp"
 #include "concepts.hpp"
 #include "utility.hpp"
@@ -103,8 +104,8 @@ struct vector {
     using pointer         = value_type*;
     using const_pointer   = value_type const*;
 
-    using iterator       = pointer;
-    using const_iterator = const_pointer;
+    using iterator       = __wrap_iterator<pointer>;
+    using const_iterator = __wrap_iterator<const_pointer>;
 
     using reverse_iterator       = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
@@ -345,12 +346,12 @@ struct vector {
     }
 
     /// MARK: begin
-    __utl_nodiscard __utl_interface_export __utl_always_inline constexpr iterator begin() noexcept { return __begin(); }
+    __utl_nodiscard __utl_interface_export __utl_always_inline constexpr iterator begin() noexcept { return iterator(__begin()); }
     __utl_nodiscard __utl_interface_export __utl_always_inline constexpr const_iterator begin() const noexcept {
-        return __begin();
+        return const_iterator(__begin());
     }
     __utl_nodiscard __utl_interface_export __utl_always_inline constexpr const_iterator cbegin() const noexcept {
-        return __begin();
+        return const_iterator(__begin());
     }
 
     __utl_nodiscard __utl_interface_export __utl_always_inline constexpr reverse_iterator rbegin() noexcept {
@@ -358,30 +359,30 @@ struct vector {
     }
     __utl_nodiscard __utl_interface_export __utl_always_inline constexpr const_reverse_iterator
     rbegin() const noexcept {
-        return reverse_Iterator(__end());
+        return const_reverse_iterator(__end());
     }
     __utl_nodiscard __utl_interface_export __utl_always_inline constexpr const_reverse_iterator
     crbegin() const noexcept {
-        return reverse_Iterator(__end());
+        return const_reverse_iterator(__end());
     }
 
     /// MARK: end
-    __utl_nodiscard __utl_interface_export __utl_always_inline constexpr iterator end() noexcept { return __end(); }
+    __utl_nodiscard __utl_interface_export __utl_always_inline constexpr iterator end() noexcept { return iterator(__end()); }
     __utl_nodiscard __utl_interface_export __utl_always_inline constexpr const_iterator end() const noexcept {
-        return __end();
+        return const_iterator(__end());
     }
     __utl_nodiscard __utl_interface_export __utl_always_inline constexpr const_iterator cend() const noexcept {
-        return __end();
+        return const_iterator(__end());
     }
 
     __utl_nodiscard __utl_interface_export __utl_always_inline constexpr reverse_iterator rend() noexcept {
         return reverse_iterator(__begin());
     }
     __utl_nodiscard __utl_interface_export __utl_always_inline constexpr const_reverse_iterator rend() const noexcept {
-        return reverse_Iterator(__begin());
+        return const_reverse_iterator(__begin());
     }
     __utl_nodiscard __utl_interface_export __utl_always_inline constexpr const_reverse_iterator crend() const noexcept {
-        return reverse_Iterator(__begin());
+        return const_reverse_Iterator(__begin());
     }
 
     /// MARK: empty
@@ -436,7 +437,7 @@ struct vector {
 
     /// (2)
     __utl_interface_export constexpr iterator insert(const_iterator pos, value_type&& value) {
-        return __insert_impl(pos - __begin(), 1, [&value]() -> value_type&& { return value; });
+        return __insert_impl(pos - begin(), 1, [&value]() -> value_type&& { return std::move(value); });
     }
 
     /// (2a)
@@ -446,7 +447,7 @@ struct vector {
 
     /// (3)
     __utl_interface_export constexpr iterator insert(const_iterator pos, size_type count, value_type const& value) {
-        return __insert_impl(pos - __begin(), count, [&value]() -> value_type const& { return value; });
+        return __insert_impl(pos - begin(), count, [&value]() -> value_type const& { return value; });
     }
 
     /// (3a)
@@ -457,7 +458,7 @@ struct vector {
     /// (4)
     template <input_iterator_for<T> It, sentinel_for<It> S>
     __utl_interface_export constexpr iterator insert(const_iterator pos, It first, S last) {
-        return __insert_impl(pos - __begin(), distance(first, last), [first]() mutable -> decltype(auto) {
+        return __insert_impl(pos - begin(), distance(first, last), [first]() mutable -> decltype(auto) {
             return *first++;
         });
     }
@@ -474,7 +475,7 @@ struct vector {
 
     /// (5)
     __utl_interface_export constexpr iterator insert(const_iterator pos, std::initializer_list<value_type> ilist) {
-        return __insert_impl(pos - __begin(), ilist.size(), [i = ilist.begin()]() mutable -> decltype(auto) {
+        return __insert_impl(pos - begin(), ilist.size(), [i = ilist.begin()]() mutable -> decltype(auto) {
             return *i++;
         });
     }
@@ -513,10 +514,10 @@ struct vector {
             return end();
         }
         __utl_bounds_check(cpos, begin(), end());
-        iterator const pos = const_cast<iterator>(cpos);
-        __left_shift(pos + 1, end(), -1);
-        __destroy_elems(end() - 1, end());
-        __set_size(size() - 1);
+        iterator const pos = const_cast<pointer>(cpos.underlying_iterator());
+        __left_shift((pos + 1).underlying_iterator(), __end(), -1);
+        __destroy_elems(__end() - 1, __end());
+        __set_size(__size() - 1);
         return pos;
     }
     /// (1a)
@@ -530,12 +531,12 @@ struct vector {
         __utl_expect(cfirst <= clast);
         __utl_bounds_check(cfirst, begin(), end() + 1);
         __utl_bounds_check(clast, begin(), end() + 1);
-        iterator const first       = const_cast<iterator>(cfirst);
-        iterator const last        = const_cast<iterator>(clast);
+        iterator const first       = const_cast<pointer>(cfirst.underlying_iterator());
+        iterator const last        = const_cast<pointer>(clast.underlying_iterator());
         auto const neg_erase_count = first - last;
-        __left_shift(last, end(), neg_erase_count);
-        __destroy_elems(end() + neg_erase_count, end());
-        __set_size(size() + neg_erase_count);
+        __left_shift(last.underlying_iterator(), __end(), neg_erase_count);
+        __destroy_elems(__end() + neg_erase_count, __end());
+        __set_size(__size() + neg_erase_count);
         return first;
     }
 
@@ -598,7 +599,7 @@ struct vector {
             __fconstruct(__begin() + assign_count, __begin() + count, f);
             auto const old_end = __end();
             __set_size(count);
-            __destroy_elems(end(), old_end);
+            __destroy_elems(__end(), old_end);
         }
         else {
             __destroy_and_deallocate();
@@ -733,7 +734,7 @@ struct vector {
         __deallocate_this();
     }
 
-    constexpr void __destroy_elems() { __destroy_elems(begin(), end()); }
+    constexpr void __destroy_elems() { __destroy_elems(__begin(), __end()); }
 
     /// Note: \p begin does not have to precede \p end
     constexpr void __destroy_elems(value_type* begin, value_type const* end) {
