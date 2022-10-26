@@ -182,22 +182,22 @@ public:
 
     pointer_int_pair() = default;
 
-    pointer_int_pair(T* p, Int i = 0) {
+    constexpr pointer_int_pair(T* p, Int i = 0) {
         __utl_expect(fits(i), "integer out of range");
         _p = p;
         _i = i;
     }
 
-    T* pointer() const { return reinterpret_cast<T*>(reinterpret_cast<std::uintptr_t>(_p) & pointer_mask); }
+    constexpr T* pointer() const { return reinterpret_cast<T*>(reinterpret_cast<std::uintptr_t>(_p) & pointer_mask); }
 
-    void pointer(T* p) {
+    constexpr void pointer(T* p) {
         __utl_expect((reinterpret_cast<std::uintptr_t>(p) & ~pointer_mask) == 0, "pointer alignment not satisfied");
         *this = pointer_int_pair{ p, _i };
     }
 
-    auto integer() const { return _i; }
+    constexpr auto integer() const { return _i; }
 
-    void integer(Int i) { _i = i; }
+    constexpr void integer(Int i) { _i = i; }
 
 private:
     static constexpr std::size_t    int_size        = IntWidth;
