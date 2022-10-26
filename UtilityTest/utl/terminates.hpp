@@ -1,11 +1,7 @@
 #pragma once
 
-#include "../__base.hpp"
-_UTL_SYSTEM_HEADER_
-
 #if UTL_POSIX
 
-#include "../utility.hpp"
 #include <atomic>
 #include <chrono>
 #include <concepts>
@@ -13,7 +9,20 @@ _UTL_SYSTEM_HEADER_
 #include <pthread.h>
 #include <thread>
 
-namespace utl {
+#include <utl/utility.hpp>
+
+namespace utl_test {
+
+enum struct exit_state { success, failure, timeout };
+
+template <typename = void>
+inline std::ostream& operator<<(std::ostream& str, exit_state s) {
+    char const* const names[] = { "success", "failure", "timeout" };
+    auto const index          = static_cast<int>(s);
+    __utl_bounds_check(index, 0, 3);
+    auto hti = [](auto&& x) -> decltype(auto) { return UTL_FORWARD(x); };
+    return hti(str) << names[index];
+}
 
 template <typename R, typename P>
 bool terminates(std::chrono::duration<R, P> timeout, std::invocable auto&& test_fn) {
@@ -66,4 +75,4 @@ bool terminates(std::chrono::duration<R, P> timeout, std::invocable auto&& test_
 
 } // namespace utl
 
-#endif
+#endif // UTL_POSIX

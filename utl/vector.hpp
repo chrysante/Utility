@@ -13,7 +13,6 @@
 #include "__memory_resource_base.hpp"
 #include "common.hpp"
 #include "concepts.hpp"
-#include "iterator.hpp"
 #include "utility.hpp"
 
 _UTL_SYSTEM_HEADER_
@@ -194,7 +193,7 @@ struct vector {
     template <input_range_for<value_type> Range>
     __utl_interface_export __utl_always_inline constexpr vector(Range&& range,
                                                                 allocator_type const& alloc = allocator_type()):
-        vector(std::begin(range), std::end(range), alloc) {}
+        vector(__utl_begin(range), __utl_end(range), alloc) {}
 
     /// (6)
     __utl_interface_export constexpr vector(vector const& rhs) requires std::constructible_from<allocator_type> &&

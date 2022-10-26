@@ -103,8 +103,11 @@ concept inout_iterator_for = inout_iterator<I> && __iter_for<I, T>;
 // clang-format off
 template <typename I>
 concept forward_iterator =
-    input_iterator<I> && std::constructible_from<I> && std::is_lvalue_reference_v<std::iter_reference_t<I>> &&
-    std::same_as < std::remove_cvref_t<std::iter_reference_t<I>>, typename std::indirectly_readable_traits<I>::value_type > &&
+    input_iterator<I> &&
+/// These are disabled to allow non referencing iterators. Don't really understand why these should be required in the first place.
+//    std::constructible_from<I> &&
+//    std::is_lvalue_reference_v<std::iter_reference_t<I>> &&
+//    std::same_as<std::remove_cvref_t<std::iter_reference_t<I>>, typename std::indirectly_readable_traits<I>::value_type> &&
     requires(I i) {
         { i++ } -> std::convertible_to<const I&>;
         { *i++ } -> std::same_as<std::iter_reference_t<I>>;

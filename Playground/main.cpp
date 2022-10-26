@@ -8,12 +8,13 @@
 #include <utl/structure_of_arrays.hpp>
 #include <utl/graph/topsort.hpp>
 
+namespace {
 UTL_SOA_TYPE(Node,
              (std::string, name),
-             (utl::small_vector<std::uint16_t>, dependencies)
-             );
+             (utl::small_vector<std::uint16_t>, dependencies));
+}
 
-int main() {
+[[gnu::weak]] int main() {
     
     utl::structure_of_arrays<Node> nodes = {
         Node{ "X" },

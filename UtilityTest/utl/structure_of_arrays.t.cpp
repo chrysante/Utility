@@ -4,6 +4,7 @@
 
 #include "utl/structure_of_arrays.hpp"
 #include "utl/utility.hpp"
+#include "utl/ranges.hpp"
 
 #include <algorithm>
 #include <iostream>

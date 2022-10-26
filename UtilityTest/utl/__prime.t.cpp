@@ -1,6 +1,6 @@
 #include "Catch2.hpp"
 #include <utl/__prime.hpp>
-#include <utl/dispatch_queue.hpp>
+#include <utl/dispatch/concurrent_dispatch_queue.hpp>
 
 #include <vector>
 #include <iostream>
@@ -11,15 +11,6 @@ static bool isPrimeNaive(std::size_t n) {
 		if (n % i == 0) { return false;}
 	}
 	return true;
-//	if (n == 2) { return true; }
-//	if (n % 2 == 0) { return false; }
-//	std::size_t const end = std::ceil(std::sqrt(n)) + 1;
-//	for (std::size_t i = 3; i < end; i += 2) {
-//		if (n % i == 0) {
-//			return false;
-//		}
-//	}
-//	return true;
 }
 
 constexpr bool isDebugBuild =
@@ -65,7 +56,6 @@ TEST_CASE("is_prime") {
 
 extern std::vector<std::size_t> const primes;
 
-
 TEST_CASE("next_prime") {
 	for (auto p: primes) {
 		CHECK(utl::__next_prime(p) == p);
@@ -73,9 +63,6 @@ TEST_CASE("next_prime") {
 		CHECK(utl::__next_prime(p - 1) == p);
 	}
 }
-
-
-
 
 extern std::vector<std::size_t> const primes = {
 		2,     3,     5,     7,    11,    13,    17,    19,    23,    29,    31,    37,    41,    43,

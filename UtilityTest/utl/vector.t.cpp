@@ -6,6 +6,7 @@
 #include <memory>
 
 #include <utl/vector.hpp>
+#include <utl/ranges.hpp>
 
 #include "LifetimeCounter.hpp"
 
