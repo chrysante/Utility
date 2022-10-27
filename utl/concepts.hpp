@@ -42,7 +42,7 @@ concept __iter_for = std::convertible_to<std::iter_value_t<I>, T>;
 // clang-format off
 template <typename T, typename U>
 concept __weakly_equality_comparable_with = requires(std::remove_reference_t<T> const& t,
-                                                   std::remove_reference_t<U> const& u) {
+                                                     std::remove_reference_t<U> const& u) {
     { t == u } -> __boolean_testable;
     { t != u } -> __boolean_testable;
     { u == t } -> __boolean_testable;
