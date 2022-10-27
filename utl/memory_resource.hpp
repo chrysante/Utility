@@ -90,24 +90,23 @@ public:
         alignment_requirement = std::max(alignment_requirement, __chunk_align);
 
         __utl_log("available size: {}", _head_buffer->available_size());
-        std::size_t new_chunk_size =
-            __calculate_next_buffer_size(__head_buffer->available_size(), size_requirement, alignment_requirement);
-        /**
-         \p alignment_requirement >= \p __chunk_align == \p sizeof(__BufferNodeHeader)
-         This asserts that we have enough space to construct the Header in the buffer and still allocate required
-         size/alignment.
-         */
+        std::size_t new_chunk_size = __calculate_next_buffer_size(__head_buffer->available_size(),
+                                                                  size_requirement,
+                                                                  alignment_requirement);
+        /// \code alignment_requirement >= __chunk_align == sizeof(__BufferNodeHeader) \endcode
+        /// This asserts that we have enough space to construct the Header in the buffer and still allocate required
+        /// size / alignment.
+        ///
         new_chunk_size += alignment_requirement;
         __utl_log("allocating new chunk of size {}", new_chunk_size);
 
         std::byte* const new_chunk =
             (std::byte*)upstream_resource()->allocate(new_chunk_size,
-                                                      /** We still have to use \p __chunk_align here, because we don't
-                                                       store the alignment so we also deallocate with \p __chunk_align
-                                                       and the alignment parameter has to match the allocation.
-                                                       There is still enough space in the buffer to satisfy the
-                                                       alignment requirement.
-                                                       */
+                                                      /// We still have to use \p __chunk_align here, because we don't
+                                                      /// store the alignment so we also deallocate with \p __chunk_align
+                                                      /// and the alignment parameter has to match the allocation.
+                                                      /// There is still enough space in the buffer to satisfy the
+                                                      /// alignment requirement.
                                                       __chunk_align);
         __head_buffer =
             ::new ((void*)new_chunk) __BufferNodeHeader(new_chunk,                              /// buffer begin
@@ -132,12 +131,26 @@ public:
             return ptr + (align - remainder);
         }
     }
+    
+    static std::uintptr_t __align_address(std::uintptr_t address, std::size_t align) {
+        std::size_t const remainder = address % align;
+        if (remainder == 0) {
+            return address;
+        }
+        else {
+            return address + (align - remainder);
+        }
+    }
 
     struct __BufferNodeHeader {
         __BufferNodeHeader(std::nullptr_t) {}
-        __BufferNodeHeader(void* begin_, void* current_, std::size_t size_, __BufferNodeHeader* prev_):
-            _prev(prev_), _begin((std::byte*)begin_), _current((std::byte*)current_), _end((std::byte*)begin_ + size_) {
-            __utl_expect(_current <= _end);
+        __BufferNodeHeader(void* begin, void* current, std::size_t size, __BufferNodeHeader* prev):
+            __prev(prev),
+            __begin((std::byte*)begin),
+            __current((std::byte*)current),
+            __end((std::byte*)((std::uintptr_t)__begin + size))
+        {
+            __utl_expect(__current <= __end);
         }
 
         std::size_t total_size() const {
@@ -149,40 +162,42 @@ public:
         std::size_t available_size() const { return total_size() - ((void*)this == (void*)begin()) * sizeof(*this); }
 
         std::ptrdiff_t free_space() const { return end() - current(); }
-
-        /**
-         Advances \p _current so it is aligned to \p alignment
-         If this buffer then has space for \p size bytes returns \p _current,
-         else resets \p _current and returns \p nullptr
-         */
+        
+        /// Advances \p __current so it is aligned to \p alignment
+        /// If this buffer then has space for \p size bytes returns \p __current,
+        /// else resets \p __current and returns \p nullptr
+        ///
         std::byte* allocate(std::size_t size, std::size_t alignment) {
             if (begin() == nullptr) {
                 return nullptr;
             }
-            std::byte* const old_current = _current;
-            _current                     = __align_ptr(_current, alignment);
+            std::byte* const old_current = __current;
+            /// We do this round trip cast to avoid doing pointer arithmetic on \p nullptr
+            auto const ucurrent = reinterpret_cast<std::uintptr_t>(__current);
+            __current = reinterpret_cast<std::byte*>(__align_address(ucurrent, alignment));
             if (free_space() < size) {
-                _current = old_current;
+                __current = old_current;
                 return nullptr;
             }
-            std::byte* const result = _current;
-            _current += size;
+            std::byte* const result = __current;
+            __utl_assert(__current != nullptr);
+            __current += size;
             return result;
         }
 
         __BufferNodeHeader* prev() { return const_cast<__BufferNodeHeader*>(as_const(*this).prev()); }
-        __BufferNodeHeader const* prev() const { return _prev; }
+        __BufferNodeHeader const* prev() const { return __prev; }
         std::byte* begin() { return const_cast<std::byte*>(as_const(*this).begin()); }
-        std::byte const* begin() const { return _begin; }
+        std::byte const* begin() const { return __begin; }
         std::byte* current() { return const_cast<std::byte*>(as_const(*this).current()); }
-        std::byte const* current() const { return _current; }
-        std::byte const* end() const { return _end; }
+        std::byte const* current() const { return __current; }
+        std::byte const* end() const { return __end; }
 
     private:
-        __BufferNodeHeader* _prev = nullptr;
-        std::byte* _begin         = nullptr;
-        std::byte* _current       = nullptr;
-        std::byte const* _end     = nullptr;
+        __BufferNodeHeader* __prev = nullptr;
+        std::byte* __begin         = nullptr;
+        std::byte* __current       = nullptr;
+        std::byte const* __end     = nullptr;
     };
 
 private:

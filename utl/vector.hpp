@@ -751,19 +751,19 @@ struct vector {
         }
     }
 
-    constexpr void __fconstruct(auto begin, auto end, auto&& f) {
+    constexpr void __fconstruct(value_type* begin, value_type const* end, auto&& f) {
         for (; begin != end; ++begin) {
             __construct_at(begin, f());
         }
     }
 
-    constexpr void __fassign(auto begin, auto end, auto&& f) {
+    constexpr void __fassign(value_type* begin, value_type const* end, auto&& f) {
         for (; begin != end; ++begin) {
             *begin = f();
         }
     }
 
-    constexpr void __relocate_with_alloc(auto begin, auto end, value_type* out, allocator_type const& other_alloc) {
+    constexpr void __relocate_with_alloc(value_type* begin, value_type const* end, value_type* out, allocator_type const& other_alloc) {
         if (__value_type_uses_allocator_on_move && __alloc() != other_alloc) {
             __relocate_by_move(begin, end, out);
         }
@@ -772,23 +772,27 @@ struct vector {
         }
     }
 
-    constexpr void __relocate(auto begin, auto end, value_type* out) {
+    constexpr void __relocate(value_type* begin, value_type const* end, value_type* out) {
         if (is_trivially_relocatable<value_type>::value) {
-            std::memcpy(out, std::addressof(*begin), std::distance(begin, end) * sizeof(value_type));
+            std::size_t const size = utl::distance(begin, end) * sizeof(value_type);
+            __utl_assert(begin != nullptr || size == 0);
+            /// We rely on undefined behaviour of \p memcpy here if \p begin==nullptr
+            /// It should however not be a problem since in that case size is zero.
+            std::memcpy(out, std::addressof(*begin), size);
         }
         else {
             __relocate_by_move(begin, end, out);
         }
     }
 
-    constexpr void __relocate_by_move(auto begin, auto end, value_type* out) {
+    constexpr void __relocate_by_move(value_type* begin, value_type const* end, value_type* out) {
         for (; begin != end; ++begin, ++out) {
             __construct_at(out, std::move(*begin));
             std::destroy_at(std::addressof(*begin));
         }
     }
 
-    constexpr static void __left_shift(value_type* begin, value_type* end, std::ptrdiff_t offset) {
+    constexpr static void __left_shift(value_type* begin, value_type const* end, std::ptrdiff_t offset) {
         __utl_expect(offset <= 0, "offset must non-positive");
         for (auto i = begin + offset, j = begin; j < end; ++i, ++j) {
             *i = std::move(*j);
