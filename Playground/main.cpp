@@ -6,7 +6,7 @@
 #include <utl/vector.hpp>
 #include <utl/utility.hpp>
 #include <utl/structure_of_arrays.hpp>
-#include <utl/graph/topsort.hpp>
+#include <utl/graph.hpp>
 #include <utl/ranges.hpp>
 
 namespace {

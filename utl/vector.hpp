@@ -617,7 +617,7 @@ struct vector {
             // We don't steal the buffer
             if (rhs.size() <= __cap()) {
                 // No need to allocate
-                auto const rhs_assign_end = std::min(rhs.__begin() + __size(), rhs.__end());
+                auto const rhs_assign_end = rhs.__begin() + std::min(__size(), rhs.__size());
                 // Assign all we have already constructed in this
                 std::move(rhs.__begin(), rhs_assign_end, __begin());
                 // relocate the rest from rhs
@@ -773,12 +773,12 @@ struct vector {
     }
 
     constexpr void __relocate(value_type* begin, value_type const* end, value_type* out) {
-        if (is_trivially_relocatable<value_type>::value) {
+        if constexpr (is_trivially_relocatable<value_type>::value) {
             std::size_t const size = utl::distance(begin, end) * sizeof(value_type);
             __utl_assert(begin != nullptr || size == 0);
             /// We rely on undefined behaviour of \p memcpy here if \p begin==nullptr
             /// It should however not be a problem since in that case size is zero.
-            std::memcpy(out, std::addressof(*begin), size);
+            std::memcpy(out, begin, size);
         }
         else {
             __relocate_by_move(begin, end, out);
