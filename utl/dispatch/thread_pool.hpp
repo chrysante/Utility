@@ -65,6 +65,7 @@ public:
     ~thread_pool();
     
     /// \brief Submits \p item to be executed asynchronously.
+    /// \details \p item itself may make calls to submit. However behaviour is undefined and will likely end up dead locking if it waits for the submitted work to finish executing.
     void submit(dispatch_item item);
     
     /// \brief Cancels the submitted tasks.

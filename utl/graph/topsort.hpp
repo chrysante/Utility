@@ -8,17 +8,17 @@ _UTL_SYSTEM_HEADER_
 
 namespace utl {
 
-/// @brief   Topologically sorts a directed acyclic graph.
+/// \brief   Topologically sorts a directed acyclic graph.
 ///
-/// @details Time complexity: \p O(n+m)
-/// @details Space complexity: \p O(n)
-/// @details where \p n is the number of vertices and \p m is the number of edges in the graph.
+/// \details Time complexity: \p O(n+m)
+/// \details Space complexity: \p O(n)
+/// \details where \p n is the number of vertices and \p m is the number of edges in the graph.
 ///
-/// @param   begin Iterator to the beginning of a range vertices.
-/// @param   end End of range.
-/// @param   edges Invocable retrieving a range of vertices from a vertex representing its edges.
+/// \param   begin Iterator to the beginning of a range vertices.
+/// \param   end End of range.
+/// \param   edges Invocable retrieving a range of vertices from a vertex representing its edges.
 ///
-/// @warning Behaviour is undefined if the graph has cycles.
+/// \warning Behaviour is undefined if the graph has cycles.
 template <utl::input_iterator Itr, utl::sentinel_for<Itr> S, typename E> requires output_iterator<Itr>
 void topsort(Itr begin, S end, E edges);
 

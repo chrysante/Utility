@@ -21,11 +21,6 @@ concept __boolean_testable = std::convertible_to<T, bool> && requires(T&& t) {
 template <typename T>
 concept arithmetic = std::is_arithmetic_v<T>;
 
-template <typename T>
-concept boolean_testable = requires(T&& t) {
-    static_cast<bool>(t);
-};
-
 template <typename T, typename U, typename... V>
 concept any_of = (std::same_as<T, U> || (std::same_as<T, V> || ...));
 
@@ -46,16 +41,14 @@ concept __iter_for = std::convertible_to<std::iter_value_t<I>, T>;
 
 // clang-format off
 template <typename T, typename U>
-concept weakly_equality_comparable_with = requires(std::remove_reference_t<T> const& t,
+concept __weakly_equality_comparable_with = requires(std::remove_reference_t<T> const& t,
                                                    std::remove_reference_t<U> const& u) {
-    { t == u } -> boolean_testable;
-    { t != u } -> boolean_testable;
-    { u == t } -> boolean_testable;
-    { u != t } -> boolean_testable;
+    { t == u } -> __boolean_testable;
+    { t != u } -> __boolean_testable;
+    { u == t } -> __boolean_testable;
+    { u != t } -> __boolean_testable;
 };
-// clang-format on
 
-// clang-format off
 template <typename I>
 concept iterator = requires(I i) {
     { *i } -> __utl_referenceable;
@@ -68,7 +61,7 @@ template <typename I, typename T>
 concept iterator_for = iterator<I> && __iter_for<I, T>;
 
 template <typename S, typename I>
-concept sentinel_for = iterator<I> && weakly_equality_comparable_with<I, S>;
+concept sentinel_for = iterator<I> && __weakly_equality_comparable_with<I, S>;
 
 template <typename I>
 concept input_iterator = iterator<I> && std::equality_comparable<I> && requires(I i) {

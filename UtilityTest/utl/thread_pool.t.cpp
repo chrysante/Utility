@@ -25,13 +25,11 @@ TEST_CASE("thread_pool cancel", "[thread_pool]") {
     for (int i = 0; i < num_threads; ++i) {
         p.submit([&]{
             utl::busy_wait([&]{ return !barrier.load(); });
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
             /// Do not alter \p result
         });
     }
     /// Submit more work which will alter \p result
     for (int i = 0; i < 10; ++i) {
-        /// Do not alter \p result
         p.submit([&]{
             result.store(1);
         });

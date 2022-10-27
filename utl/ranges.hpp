@@ -66,8 +66,8 @@ public:
     using typename __wrap::iterator_category;
     
     constexpr explicit enumerating_iterator(Itr itr, std::size_t index = 0):
-    __wrap(itr),
-    __index(index)
+        __wrap(itr),
+        __index(index)
     {}
     
     friend constexpr enumerating_iterator operator+(enumerating_iterator itr, difference_type offset) requires random_access_iterator<Itr> {

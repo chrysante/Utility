@@ -17,7 +17,6 @@ _UTL_SYSTEM_HEADER_
 
 namespace utl::pmr {
 
-/// \p monotonic_buffer_resource
 class monotonic_buffer_resource: public memory_resource {
 public:
     /// \fn \p monotonic_buffer_resource
@@ -187,11 +186,10 @@ public:
     };
 
 private:
-    /// \fn \p do_allocate
     /// Allocates storage.
     /// If the current buffer has sufficient unused space to fit a block with the specified size and alignment, allocates
     /// the return block from the current buffer. Otherwise, this function allocates a new buffer by calling
-    /// \p upstream_resource()->allocate(n,m) where \p n is not less than the greater of bytes and the next buffer size and m
+    /// \p upstream_resource()->allocate(n,m) where \p n is not less than the greater of bytes and the next buffer size and \p m
     /// is not less than alignment. It sets the new buffer as the current buffer, increases the next buffer size by an
     /// implementation-defined growth factor (which is not necessarily integral), and then allocates the return block from
     /// the newly allocated buffer.
