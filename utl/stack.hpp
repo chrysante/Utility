@@ -23,7 +23,7 @@ public:
     __utl_interface_export stack() = default;
     __utl_interface_export explicit stack(container_type const& cont): container_type(cont) {}
     __utl_interface_export explicit stack(container_type&& cont): container_type(std::move(cont)) {}
-    __utl_interface_export template <input_iterator_for<T> It, sentinel_for<It> S>
+    template <input_iterator_for<T> It, sentinel_for<It> S>
     __utl_interface_export explicit stack(It first, S last): container_type(first, last) {}
     __utl_interface_export stack(std::initializer_list<T> ilist): container_type(ilist) {}
 
@@ -31,8 +31,8 @@ public:
     using container_type::empty;
     explicit operator bool() const { return !empty(); }
     using container_type::size;
-    __utl_interface_export __utl_nodiscard container_type& container() { return *this; }
-    __utl_interface_export __utl_nodiscard container_type const& container() const { return *this; }
+    __utl_nodiscard __utl_interface_export container_type& container() { return *this; }
+    __utl_nodiscard __utl_interface_export container_type const& container() const { return *this; }
 
     /// MARK: Modifiers
     T const& push(T const& elem) { return this->push_back(elem); }
@@ -42,7 +42,7 @@ public:
         return this->emplace_back(UTL_FORWARD(args)...);
     }
 
-    __utl_interface_export __utl_nodiscard T pop() {
+    __utl_nodiscard __utl_interface_export T pop() {
         T result = top();
         this->pop_back();
         return result;
