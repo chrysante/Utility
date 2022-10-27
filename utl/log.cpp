@@ -39,11 +39,10 @@ void logger::do_log(log_message msg) {
     }() | format_codes::italic;
 }
 
-static std::string truncate(std::string str, int width) {
-    __utl_assert(width >= 0);
-    if (str.size() > size_t(width)) {
+static std::string truncate(std::string str, std::size_t width) {
+    if (str.size() > width) {
         auto result = str.substr(str.size() - width, width);
-        for (int i = 0; i < std::min(3, width); ++i) {
+        for (std::size_t i = 0; i < std::min<std::size_t>(3, width); ++i) {
             result[i] = '.';
         }
         return result;

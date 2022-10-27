@@ -36,7 +36,7 @@ uuid uuid::from_string(std::string&& str) {
 
     std::hex(sstr);
 
-    for (int i = 0; i < 4; ++i) {
+    for (std::size_t i = 0; i < 4; ++i) {
         sstr >> ints[i];
     }
     return utl::bit_cast<uuid>(ints);
