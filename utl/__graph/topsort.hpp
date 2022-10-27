@@ -1,8 +1,9 @@
 #ifndef UTL_TOPSORT_HPP
 #define UTL_TOPSORT_HPP
 
-#include "utl/__base.hpp"
-#include "utl/hashset.hpp"
+#include <utl/__base.hpp>
+#include <utl/hashset.hpp>
+#include <utl/vector.hpp>
 
 _UTL_SYSTEM_HEADER_
 
