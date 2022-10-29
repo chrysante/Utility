@@ -10,10 +10,3 @@
 #include <utl/ranges.hpp>
 #include <utl/typeinfo.hpp>
 #include <utl/vector.hpp>
-
-
-
-int main() {
-    
-}
-

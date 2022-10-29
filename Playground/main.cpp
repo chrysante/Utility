@@ -16,39 +16,56 @@ UTL_SOA_TYPE(Node,
 }
 
 [[gnu::weak]] int main() {
-    
     utl::structure_of_arrays<Node> nodes = {
-        Node{ "X" },
-        Node{ "f" },
-        Node{ "Y" },
-        Node{ "X.y" },
-        Node{ "Z" },
-        Node{ "X.z" },
+        Node{ "0" },
+        Node{ "1" },
+        Node{ "2" },
+        Node{ "3" },
+        Node{ "4" }
     };
     
-    std::size_t const X   = 0;
-    std::size_t const f   = 1;
-    std::size_t const Y   = 2;
-    std::size_t const X_y = 3;
-    std::size_t const Z   = 4;
-    std::size_t const X_z = 5;
-
-    nodes[X].dependencies = { X_y, X_z };
-    nodes[X_y].dependencies = { Y };
-    nodes[X_z].dependencies = { Z };
-    nodes[f].dependencies = { X, Y, Z };
-
-    utl::small_vector<std::uint16_t> nodeIndices(utl::iota(nodes.size()));
-
-    for (int i = 0; i < 5; ++i) {
-        std::shuffle(nodeIndices.begin(), nodeIndices.end(), std::mt19937(std::random_device()()));
-        utl::topsort(nodeIndices.begin(), nodeIndices.end(), [&](std::size_t index) { return nodes[index].dependencies; });
-        for (auto const index: nodeIndices) {
-            std::cout << nodes[index].name << ", ";
+    
+    nodes[0].dependencies = { 1 };
+    nodes[1].dependencies = { 2 };
+    nodes[2].dependencies = { 0, 3 };
+    nodes[3].dependencies = { 4 };
+    nodes[4].dependencies = { 2 };
+    
+    auto printCycle = [](auto const& nodes, auto const& cycle) {
+        for (auto i: cycle) {
+            std::cout << nodes[i].name << " -> ";
         }
-        std::cout << std::endl;
+        std::cout << nodes[cycle.front()].name << std::endl;
+    };
+    
+    auto printCycle2 = [](auto const& cycle) {
+        for (auto i: cycle) {
+            std::cout << i.name << " -> ";
+        }
+        std::cout << cycle.front().name << std::endl;
+    };
+    
+    {
+        utl::small_vector<uint16_t> indices(utl::iota(nodes.size()));
+        auto const cycle = utl::find_cycle(indices.begin(), indices.end(), [&](size_t index) -> auto& { return nodes[index].dependencies; });
+        if (!cycle.empty()) {
+            std::cout << "Have cycle!\n";
+            printCycle(nodes, cycle);
+        }
+    } {
+        auto const cycle = utl::find_cycle(nodes.begin(), nodes.end(), [&](auto node){ return utl::transform(node.dependencies, [&](size_t index) { return nodes[index]; }); });
+        if (!cycle.empty()) {
+            std::cout << "Have cycle!\n";
+            printCycle2(cycle);
+        }
     }
     
-    std::cout << nodes[0].dependencies.inline_capacity() << std::endl;
-    
+    utl::small_vector<std::uint16_t> nodeIndices(utl::iota(nodes.size()));
+
+    std::shuffle(nodeIndices.begin(),
+                 nodeIndices.end(),
+                 std::mt19937(std::random_device()()));
+    utl::topsort(nodeIndices.begin(),
+                 nodeIndices.end(),
+                 [&](std::size_t index) -> auto& { return nodes[index].dependencies; });
 }
