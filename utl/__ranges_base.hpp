@@ -58,6 +58,7 @@ public:
     using reference         = typename __itr_traits::reference;
     using iterator_category = typename __itr_traits::iterator_category;
     
+    __wrap_iterator() = default;
     constexpr __wrap_iterator(Itr itr): __itr(itr) {}
     
     template <std::convertible_to<Itr> Jtr>

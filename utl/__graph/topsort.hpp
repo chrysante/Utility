@@ -20,7 +20,7 @@ namespace utl {
 /// \param   edges Invocable retrieving a range of vertices from a vertex representing its edges.
 ///
 /// \warning Behaviour is undefined if the graph has cycles.
-template <utl::input_iterator Itr, utl::sentinel_for<Itr> S, typename E> requires output_iterator<Itr>
+template <input_iterator Itr, sentinel_for<Itr> S, typename E> requires output_iterator<Itr>
 void topsort(Itr begin, S end, E edges);
 
 // Implementation
@@ -54,7 +54,7 @@ std::size_t __fast_dist_or_zero(auto, auto) {
     return 0;
 }
 
-template <utl::input_iterator Itr, utl::sentinel_for<Itr> S, typename E> requires output_iterator<Itr>
+template <input_iterator Itr, sentinel_for<Itr> S, typename E> requires output_iterator<Itr>
 void topsort(Itr begin, S end, E edges) {
     using Vertex = std::iter_value_t<Itr>;
     utl::small_vector<Vertex> sorted;

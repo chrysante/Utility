@@ -166,4 +166,5 @@ VECTOR_TEST_CASE(X, TRX, "vector-iterate", "[vector]") {
         auto&& x = *itr;
         CHECK(x == X(i));
     }
+    CHECK(i == -1);
 }
