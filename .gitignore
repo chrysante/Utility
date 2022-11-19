@@ -15,3 +15,5 @@ Makefile
 **.vcxproj.user
 **.vcxproj.filters
 **.sln
+
+Utility.cmake
