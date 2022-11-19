@@ -215,6 +215,16 @@ struct [[deprecated("this sucks")]] visitor: F... {
     constexpr visitor(F... f): F(std::move(f))... {}
 };
 
+template <typename... F>
+struct overload: F... {
+    using F::operator()...;
+    template <typename... G>
+    constexpr overload(G&&... g): F(std::forward<G>(g))... {}
+};
+
+template <typename... F>
+overload(F...) -> overload<F...>;
+
 } // namespace utl
 
 #endif // UTL_UTILITY_HPP
