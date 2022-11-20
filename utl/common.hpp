@@ -226,10 +226,13 @@ namespace utl {
 		template <typename U>
 		static constexpr std::size_t occurence_count = (std::is_same_v<T, U> + ...);
 		template <typename U>
-		static constexpr bool contains = (bool)occurence_count<U>;
+        static constexpr bool contains = std::disjunction_v<std::is_same<T, U>...>;;
 		static constexpr bool unique = ((occurence_count<T> == 1) && ...);
 		template <typename U>
 		static constexpr std::size_t index_of = __utl_index_of_impl<U, T...>();
+        static constexpr std::size_t size = sizeof...(T);
+        template <std::size_t I>
+        using at = std::tuple_element_t<I, std::tuple<T...>>;
 	};
 	
 	template <typename T, std::size_t N, typename... R>
