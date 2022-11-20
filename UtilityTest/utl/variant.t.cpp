@@ -25,7 +25,14 @@ std::ostream& operator<<(std::ostream& str, std::tuple<T...> const& t) {
 
 } // namespace
 
-template <std::size_t> struct tag{};
+template <std::size_t> struct tag{
+    tag() {}
+    tag(tag const&) {}
+    tag(tag&&) noexcept {}
+    tag& operator=(tag const&) {}
+    tag& operator=(tag&&) noexcept {}
+    ~tag() {}
+};
 
 TEST_CASE("variant default construct", "[variant]") {
     utl::variant<int, float> v;
@@ -39,19 +46,38 @@ TEST_CASE("variant in_place construct", "[variant]") {
     CHECK(utl::get<1>(v) == 1.0f);
 }
 
-TEST_CASE("variant copy constructor", "[variant]") {
-    utl::variant<int, float> v(std::in_place_type<float>, 1.0f);
-    utl::variant<int, float> w;
+TEST_CASE("variant value initialize", "[variant]") {
+    utl::variant<tag<0>, int, float> v = 1.0f;
+    REQUIRE(v.index() == 2);
+    CHECK(utl::get<2>(v) == 1.0f);
+}
+
+TEST_CASE("variant copy construct", "[variant]") {
+    utl::variant<tag<0>, int, float> v = 1.0f;
+    utl::variant<tag<0>, int, float> w = v;
+    CHECK(w.index() == 2);
+    CHECK(get<2>(w) == 1.0f);
+}
+
+TEST_CASE("variant copy assign", "[variant]") {
+    utl::variant<tag<0>, int, float> v = 1.0f;
+    utl::variant<tag<0>, int, float> w;
     w = v;
-    CHECK(w.index() == 1);
-    CHECK(get<1>(w) == 1.0f);
+    CHECK(w.index() == 2);
+    CHECK(get<2>(w) == 1.0f);
+}
+
+TEST_CASE("variant value assign", "[variant]") {
+    utl::variant<tag<0>, int, float> v = 1.0f;
+    REQUIRE(v.index() == 2);
+    v = 2;
+    CHECK(v.index() == 1);
+    CHECK(utl::get<1>(v) == 2);
 }
 
 TEST_CASE("variant visit helper", "[variant]") {
-    auto v = [](auto, auto) {};
-    using VisitHelper = utl::__variant_visit<true,
-                                             void,
-                                             decltype(v),
+    auto v = [](auto...) {};
+    using VisitHelper = utl::__variant_visit<true, void, decltype(v),
                                              utl::type_sequence<utl::variant<float, int, int>,
                                                                 utl::variant<char, std::nullptr_t, char, std::nullptr_t>,
                                                                 utl::variant<char, std::nullptr_t>>>;
@@ -77,14 +103,21 @@ TEST_CASE("variant visit", "[variant]") {
     utl::variant<tag<0>, tag<1>, tag<2>, tag<3>> u(std::in_place_type<tag<2>>);
     utl::variant<int, char> v(std::in_place_type<int>, 1);
     utl::variant<float, std::nullptr_t> w(std::in_place_type<std::nullptr_t>, nullptr);
-    bool ran = false;
-    utl::visit(utl::overload{
-        [&]<typename U, typename V, typename W>(U, V, W) {
-            ran = true;
-            CHECK(std::same_as<U, tag<2>>);
-            CHECK(std::same_as<V, int>);
-            CHECK(std::same_as<W, std::nullptr_t>);
-        }
+    auto result = utl::visit(utl::overload{
+        [&](auto...) { return 0; },
+        [&](tag<2>, int, std::nullptr_t) { return 1; }
     }, u, v, w);
-    CHECK(ran);
+    CHECK(std::same_as<decltype(result), int>);
+    CHECK(result == 1);
+    // Test instantiation of visitation with visitor with different but similar return types
+    auto d = utl::visit(utl::overload{
+        [&](auto...) { return 0.0; },
+        [&](tag<2>, int, std::nullptr_t) { return 1; }
+    }, u, v, w);
+    CHECK(std::same_as<decltype(d), double>);
+    // Test instantiation of void visitation with non void visitor
+    utl::visit<void>(utl::overload{
+        [&](auto...) { return 0; },
+        [&](tag<2>, int, std::nullptr_t) { return 1; }
+    }, u, v, w);
 }
