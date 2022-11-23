@@ -18,393 +18,481 @@ _MTL_SYSTEM_HEADER_
 #include "__typedefs.hpp"
 
 namespace _VMTL {
-	
-	/// Just so it exists
-	inline namespace literals {}
-	
-	/// MARK: - struct constants
-	template <typename T = double>
-	requires std::is_floating_point_v<T>
-	struct constants {
-		static inline constexpr T pi    = 3.1415926535897932384626433832795028841971693993751058209749445923;
-		static inline constexpr T e     = 2.7182818284590452353602874713526624977572470936999595749669676277;
-		static inline constexpr T sqrt2 = 1.4142135623730950488016887242096980785696718753769480731766797379;
-	};
-	
-	/// MARK: - struct vector_options
-	struct vector_options {
-		constexpr bool packed() const { return __packed; }
-		constexpr vector_options packed(bool b) const {
-			auto result = *this;
-			result.__packed = b;
-			return result;
-		}
-		
-		bool __packed = MTL_DEFAULT_PACKED;
-		
-		friend constexpr vector_options combine(std::same_as<vector_options> auto const&... o) {
-			return { .__packed = (o.packed() && ...) };
-		}
-	};
-	
-	/// MARK: - Forward Declarations
-	template <typename>
-	struct complex;
-	
-	template <typename>
-	struct quaternion;
-	
-	template <typename, std::size_t, vector_options = vector_options{}>
-	struct vector;
-	
-	template <typename, std::size_t, std::size_t, vector_options = vector_options{}>
-	struct matrix;
-	
-	/// MARK: - Type Traits
-	template <typename T>
-	struct is_real_scalar: std::is_arithmetic<T>{};
-	
-	template <typename T>
-	struct is_complex: std::false_type{};
-	template <typename T>
-	struct is_complex<complex<T>>: std::true_type{};
-	template <typename T>
-	struct is_complex<complex<T> const>: std::true_type{};
-	template <typename T>
-	struct is_complex<complex<T> volatile>: std::true_type{};
-	template <typename T>
-	struct is_complex<complex<T> const volatile>: std::true_type{};
-	template <typename T>
-	struct is_quaternion: std::false_type{};
-	template <typename T>
-	struct is_quaternion<quaternion<T>>: std::true_type{};
-	template <typename T>
-	struct is_quaternion<quaternion<T> const>: std::true_type{};
-	template <typename T>
-	struct is_quaternion<quaternion<T> volatile>: std::true_type{};
-	template <typename T>
-	struct is_quaternion<quaternion<T> const volatile>: std::true_type{};
 
-	template <typename T>
-	struct is_vector: std::false_type{};
-	template <typename T, std::size_t N, vector_options O>
-	struct is_vector<vector<T, N, O>>: std::true_type{};
-	template <typename T, std::size_t N, vector_options O>
-	struct is_vector<vector<T, N, O> const>: std::true_type{};
-	template <typename T, std::size_t N, vector_options O>
-	struct is_vector<vector<T, N, O> volatile>: std::true_type{};
-	template <typename T, std::size_t N, vector_options O>
-	struct is_vector<vector<T, N, O> const volatile>: std::true_type{};
+/// Just so it exists
+inline namespace literals {}
 
-	template <typename T>
-	struct is_matrix : std::false_type {};
-	template <typename T, std::size_t R, std::size_t C, vector_options O>
-	struct is_matrix<matrix<T, R, C, O>> : std::true_type {};
-	template <typename T, std::size_t R, std::size_t C, vector_options O>
-	struct is_matrix<matrix<T, R, C, O> const> : std::true_type {};
-	template <typename T, std::size_t R, std::size_t C, vector_options O>
-	struct is_matrix<matrix<T, R, C, O> volatile> : std::true_type {};
-	template <typename T, std::size_t R, std::size_t C, vector_options O>
-	struct is_matrix<matrix<T, R, C, O> const volatile> : std::true_type {};
-	
-	template <typename T>
-	struct __is_foreign_type_impl: std::conjunction<
-		std::negation<is_complex<T>>,
-		std::negation<is_quaternion<T>>,
-		std::negation<is_vector<T>>,
-		std::negation<is_matrix<T>>
-	> {};
-	
-	template <typename T>
-	struct __is_foreign_type: __is_foreign_type_impl<std::decay_t<T>> {};
-	
-	template <typename T>
-	concept __foreign_type = __is_foreign_type<T>::value;
-	
-	template <typename Vector, typename ValueType, std::size_t N, typename = std::make_index_sequence<N>>
-	constexpr bool __is_vector_type_v = false;
-	
-	template <typename Vector, typename ValueType, std::size_t N, std::size_t... I>
-	constexpr bool __is_vector_type_v<Vector, ValueType, N, std::index_sequence<I...>> = requires(ValueType&& t) {
-		Vector{ (I, t)... };
-	};
-	
-	template <typename V, typename T, std::size_t N>
-	concept __foreign_vector_type = __foreign_type<V> && __is_vector_type_v<V, T, N>;
-	
-	template <typename T>
-	struct is_scalar: std::disjunction<is_real_scalar<T>, is_complex<T>, is_quaternion<T>> {};
-	
-	template <typename>
-	struct get_underlying_type;
-	
-	template <typename T>
-	struct get_underlying_type { using type = T; };
-	
-	template <typename T>
-	struct get_underlying_type<complex<T>> { using type = T; };
-	template <typename T>
-	struct get_underlying_type<complex<T> const> { using type = T const; };
-	template <typename T>
-	struct get_underlying_type<complex<T> volatile> { using type = T volatile; };
-	template <typename T>
-	struct get_underlying_type<complex<T> const volatile> { using type = T const volatile; };
+/// MARK: - struct constants
+template <typename T = double>
+requires std::is_floating_point_v<T>
+struct constants {
+    static inline constexpr T pi    = 3.1415926535897932384626433832795028841971693993751058209749445923;
+    static inline constexpr T e     = 2.7182818284590452353602874713526624977572470936999595749669676277;
+    static inline constexpr T sqrt2 = 1.4142135623730950488016887242096980785696718753769480731766797379;
+};
 
-	template <typename T>
-	struct get_underlying_type<quaternion<T>> { using type = T; };
-	template <typename T>
-	struct get_underlying_type<quaternion<T> const> { using type = T const; };
-	template <typename T>
-	struct get_underlying_type<quaternion<T> volatile> { using type = T volatile; };
-	template <typename T>
-	struct get_underlying_type<quaternion<T> const volatile> { using type = T const volatile; };
+/// MARK: - struct vector_options
+struct vector_options {
+    constexpr bool packed() const { return __packed; }
+    constexpr vector_options packed(bool b) const {
+        auto result = *this;
+        result.__packed = b;
+        return result;
+    }
+    
+    bool __packed = MTL_DEFAULT_PACKED;
+    
+    friend constexpr vector_options combine(std::same_as<vector_options> auto const&... o) {
+        return { .__packed = (o.packed() && ...) };
+    }
+};
 
-	template <typename T, std::size_t N, vector_options O>
-	struct get_underlying_type<vector<T, N, O>> { using type = T; };
-	template <typename T, std::size_t N, vector_options O>
-	struct get_underlying_type<vector<T, N, O> const> { using type = T const; };
-	template <typename T, std::size_t N, vector_options O>
-	struct get_underlying_type<vector<T, N, O> volatile> { using type = T volatile; };
-	template <typename T, std::size_t N, vector_options O>
-	struct get_underlying_type<vector<T, N, O> const volatile> { using type = T const volatile; };
-	
-	template <typename T, std::size_t R, std::size_t C, vector_options O>
-	struct get_underlying_type<matrix<T, R, C, O>> { using type = T; };
-	template <typename T, std::size_t R, std::size_t C, vector_options O>
-	struct get_underlying_type<matrix<T, R, C, O> const> { using type = T const; };
-	template <typename T, std::size_t R, std::size_t C, vector_options O>
-	struct get_underlying_type<matrix<T, R, C, O> volatile> { using type = T volatile; };
-	template <typename T, std::size_t R, std::size_t C, vector_options O>
-	struct get_underlying_type<matrix<T, R, C, O> const volatile> { using type = T const volatile; };
+/// MARK: - Forward Declarations
+template <typename>
+struct complex;
 
-	template <typename T, bool = is_complex<T>::value || is_quaternion<T>::value || is_vector<T>::value || is_matrix<T>::value>
-	struct get_underlying_type_r /* bool = true */ { using type = typename get_underlying_type<T>::type; };
-	template <typename T>
-	struct get_underlying_type_r<T, false> { using type = T; };
+template <typename>
+struct quaternion;
 
-	template <typename>
-	struct get_vector_size;
-	
-	template <typename T>
-	struct get_vector_size: std::integral_constant<std::size_t, 1> {};
-	
-	template <typename T, std::size_t N, vector_options O>
-	struct get_vector_size<vector<T, N, O>>: std::integral_constant<std::size_t, N> {};
-	template <typename T, std::size_t N, vector_options O>
-	struct get_vector_size<vector<T, N, O> const>: std::integral_constant<std::size_t, N> {};
-	template <typename T, std::size_t N, vector_options O>
-	struct get_vector_size<vector<T, N, O> volatile>: std::integral_constant<std::size_t, N> {};
-	template <typename T, std::size_t N, vector_options O>
-	struct get_vector_size<vector<T, N, O> const volatile>: std::integral_constant<std::size_t, N> {};
-	
-	template <typename>
-	struct get_vector_options;
-	
-	template <typename T>
-	struct get_vector_options { static constexpr vector_options value = {}; };
-	
-	template <typename T, std::size_t N, vector_options O>
-	struct get_vector_options<vector<T, N, O>> { static constexpr vector_options value = O; };
-	template <typename T, std::size_t N, vector_options O>
-	struct get_vector_options<vector<T, N, O> const> { static constexpr vector_options value = O; };
-	template <typename T, std::size_t N, vector_options O>
-	struct get_vector_options<vector<T, N, O> volatile> { static constexpr vector_options value = O; };
-	template <typename T, std::size_t N, vector_options O>
-	struct get_vector_options<vector<T, N, O> const volatile> { static constexpr vector_options value = O; };
-	
-	template <typename...>
-	struct __mtl_template_true_type: std::true_type {};
-	
-	template <typename...>
-	struct __mtl_template_false_type: std::false_type {};
-	
-	/// MARK: Tuple Size
-	template <typename T, std::size_t = sizeof(T)>
-	std::true_type __is_defined_impl(T *);
-	std::false_type __is_defined_impl(...);
-	
-	template <typename T>
-	using __is_defined = decltype(__is_defined_impl(std::declval<T*>()));
-	
-	template <typename T, std::size_t N>
-	concept __tuple_of_size = __is_defined<std::tuple_size<std::decay_t<T>>>::value && (std::tuple_size<std::decay_t<T>>::value == N);
-	
-	template <typename, typename, typename...>
-	struct __tuple_conversion_test;
-	
-	template <typename T, typename... Args, std::size_t... I>
-	struct __tuple_conversion_test<T, std::index_sequence<I...>, Args...> {
-		static constexpr bool value = (requires(T&& t) { { get<I>(t) } -> std::convertible_to<Args>; } && ...);
-	};
-	
-	template <typename T, typename... Args>
-	concept __tuple_of_types = __tuple_of_size<T, sizeof...(Args)> && __tuple_conversion_test<T, std::index_sequence_for<Args...>, Args...>::value;
-	
-	/// MARK: - Concepts
-	template <typename T>
-	concept real_scalar = is_real_scalar<T>::value;
-	template <typename T>
-	concept scalar      = is_scalar<T>::value;
-	
-	template <typename T, typename U, typename ... V>
-	concept __mtl_any_of = (std::same_as<T, U> || (std::same_as<T, V> || ...));
-	
-	template <class F, class R, class... Args>
-	concept invocable_r = /*invocable<F, Args...> && */ std::convertible_to<std::invoke_result_t<F, Args...>, R>;
-	
-	template <class R, class F, class... Args>
-	concept regular_invocable_r = invocable_r<R, F, Args...>;
-	
-	/// MARK: __mtl_floatify
+template <typename, std::size_t, vector_options = vector_options{}>
+struct vector;
+
+template <typename, std::size_t, std::size_t, vector_options = vector_options{}>
+struct matrix;
+
+/// MARK: - Type Traits
+template <typename T>
+struct is_real_scalar: std::is_arithmetic<T>{};
+
+template <typename T>
+struct is_complex: std::false_type{};
+template <typename T>
+struct is_complex<complex<T>>: std::true_type{};
+template <typename T>
+struct is_complex<complex<T> const>: std::true_type{};
+template <typename T>
+struct is_complex<complex<T> volatile>: std::true_type{};
+template <typename T>
+struct is_complex<complex<T> const volatile>: std::true_type{};
+template <typename T>
+struct is_quaternion: std::false_type{};
+template <typename T>
+struct is_quaternion<quaternion<T>>: std::true_type{};
+template <typename T>
+struct is_quaternion<quaternion<T> const>: std::true_type{};
+template <typename T>
+struct is_quaternion<quaternion<T> volatile>: std::true_type{};
+template <typename T>
+struct is_quaternion<quaternion<T> const volatile>: std::true_type{};
+
+template <typename T>
+struct is_vector: std::false_type{};
+template <typename T, std::size_t N, vector_options O>
+struct is_vector<vector<T, N, O>>: std::true_type{};
+template <typename T, std::size_t N, vector_options O>
+struct is_vector<vector<T, N, O> const>: std::true_type{};
+template <typename T, std::size_t N, vector_options O>
+struct is_vector<vector<T, N, O> volatile>: std::true_type{};
+template <typename T, std::size_t N, vector_options O>
+struct is_vector<vector<T, N, O> const volatile>: std::true_type{};
+
+template <typename T>
+struct is_matrix : std::false_type {};
+template <typename T, std::size_t R, std::size_t C, vector_options O>
+struct is_matrix<matrix<T, R, C, O>> : std::true_type {};
+template <typename T, std::size_t R, std::size_t C, vector_options O>
+struct is_matrix<matrix<T, R, C, O> const> : std::true_type {};
+template <typename T, std::size_t R, std::size_t C, vector_options O>
+struct is_matrix<matrix<T, R, C, O> volatile> : std::true_type {};
+template <typename T, std::size_t R, std::size_t C, vector_options O>
+struct is_matrix<matrix<T, R, C, O> const volatile> : std::true_type {};
+
+template <typename T>
+struct __is_foreign_type_impl: std::conjunction<
+std::negation<is_complex<T>>,
+std::negation<is_quaternion<T>>,
+std::negation<is_vector<T>>,
+std::negation<is_matrix<T>>
+> {};
+
+template <typename T>
+struct __is_foreign_type: __is_foreign_type_impl<std::decay_t<T>> {};
+
+template <typename T>
+concept __foreign_type = __is_foreign_type<T>::value;
+
+template <typename Vector, typename ValueType, std::size_t N, typename = std::make_index_sequence<N>>
+constexpr bool __is_vector_type_v = false;
+
+template <typename Vector, typename ValueType, std::size_t N, std::size_t... I>
+constexpr bool __is_vector_type_v<Vector, ValueType, N, std::index_sequence<I...>> = requires(ValueType&& t) {
+    Vector{ (I, t)... };
+};
+
+template <typename V, typename T, std::size_t N>
+concept __foreign_vector_type = __foreign_type<V> && __is_vector_type_v<V, T, N>;
+
+template <typename T>
+struct is_scalar: std::disjunction<is_real_scalar<T>, is_complex<T>, is_quaternion<T>> {};
+
+template <typename>
+struct get_underlying_type;
+
+template <typename T>
+struct get_underlying_type { using type = T; };
+
+template <typename T>
+struct get_underlying_type<complex<T>> { using type = T; };
+template <typename T>
+struct get_underlying_type<complex<T> const> { using type = T const; };
+template <typename T>
+struct get_underlying_type<complex<T> volatile> { using type = T volatile; };
+template <typename T>
+struct get_underlying_type<complex<T> const volatile> { using type = T const volatile; };
+
+template <typename T>
+struct get_underlying_type<quaternion<T>> { using type = T; };
+template <typename T>
+struct get_underlying_type<quaternion<T> const> { using type = T const; };
+template <typename T>
+struct get_underlying_type<quaternion<T> volatile> { using type = T volatile; };
+template <typename T>
+struct get_underlying_type<quaternion<T> const volatile> { using type = T const volatile; };
+
+template <typename T, std::size_t N, vector_options O>
+struct get_underlying_type<vector<T, N, O>> { using type = T; };
+template <typename T, std::size_t N, vector_options O>
+struct get_underlying_type<vector<T, N, O> const> { using type = T const; };
+template <typename T, std::size_t N, vector_options O>
+struct get_underlying_type<vector<T, N, O> volatile> { using type = T volatile; };
+template <typename T, std::size_t N, vector_options O>
+struct get_underlying_type<vector<T, N, O> const volatile> { using type = T const volatile; };
+
+template <typename T, std::size_t R, std::size_t C, vector_options O>
+struct get_underlying_type<matrix<T, R, C, O>> { using type = T; };
+template <typename T, std::size_t R, std::size_t C, vector_options O>
+struct get_underlying_type<matrix<T, R, C, O> const> { using type = T const; };
+template <typename T, std::size_t R, std::size_t C, vector_options O>
+struct get_underlying_type<matrix<T, R, C, O> volatile> { using type = T volatile; };
+template <typename T, std::size_t R, std::size_t C, vector_options O>
+struct get_underlying_type<matrix<T, R, C, O> const volatile> { using type = T const volatile; };
+
+template <typename T, bool = is_complex<T>::value || is_quaternion<T>::value || is_vector<T>::value || is_matrix<T>::value>
+struct get_underlying_type_r /* bool = true */ { using type = typename get_underlying_type<T>::type; };
+template <typename T>
+struct get_underlying_type_r<T, false> { using type = T; };
+
+template <typename>
+struct get_vector_size;
+
+template <typename T>
+struct get_vector_size: std::integral_constant<std::size_t, 1> {};
+
+template <typename T, std::size_t N, vector_options O>
+struct get_vector_size<vector<T, N, O>>: std::integral_constant<std::size_t, N> {};
+template <typename T, std::size_t N, vector_options O>
+struct get_vector_size<vector<T, N, O> const>: std::integral_constant<std::size_t, N> {};
+template <typename T, std::size_t N, vector_options O>
+struct get_vector_size<vector<T, N, O> volatile>: std::integral_constant<std::size_t, N> {};
+template <typename T, std::size_t N, vector_options O>
+struct get_vector_size<vector<T, N, O> const volatile>: std::integral_constant<std::size_t, N> {};
+
+template <typename>
+struct get_vector_options;
+
+template <typename T>
+struct get_vector_options { static constexpr vector_options value = {}; };
+
+template <typename T, std::size_t N, vector_options O>
+struct get_vector_options<vector<T, N, O>> { static constexpr vector_options value = O; };
+template <typename T, std::size_t N, vector_options O>
+struct get_vector_options<vector<T, N, O> const> { static constexpr vector_options value = O; };
+template <typename T, std::size_t N, vector_options O>
+struct get_vector_options<vector<T, N, O> volatile> { static constexpr vector_options value = O; };
+template <typename T, std::size_t N, vector_options O>
+struct get_vector_options<vector<T, N, O> const volatile> { static constexpr vector_options value = O; };
+
+template <typename...>
+struct __mtl_template_true_type: std::true_type {};
+
+template <typename...>
+struct __mtl_template_false_type: std::false_type {};
+
+/// MARK: Tuple Size
+template <typename T, std::size_t = sizeof(T)>
+std::true_type __is_defined_impl(T *);
+std::false_type __is_defined_impl(...);
+
+template <typename T>
+using __is_defined = decltype(__is_defined_impl(std::declval<T*>()));
+
+template <typename T, std::size_t N>
+concept __tuple_of_size = __is_defined<std::tuple_size<std::decay_t<T>>>::value && (std::tuple_size<std::decay_t<T>>::value == N);
+
+template <typename, typename, typename...>
+struct __tuple_conversion_test;
+
+template <typename T, typename... Args, std::size_t... I>
+struct __tuple_conversion_test<T, std::index_sequence<I...>, Args...> {
+    static constexpr bool value = (requires(T&& t) { { get<I>(t) } -> std::convertible_to<Args>; } && ...);
+};
+
+template <typename T, typename... Args>
+concept __tuple_of_types = __tuple_of_size<T, sizeof...(Args)> && __tuple_conversion_test<T, std::index_sequence_for<Args...>, Args...>::value;
+
+/// MARK: - Concepts
+template <typename T>
+concept real_scalar = is_real_scalar<T>::value;
+template <typename T>
+concept scalar      = is_scalar<T>::value;
+
+template <typename T, typename U, typename ... V>
+concept __mtl_any_of = (std::same_as<T, U> || (std::same_as<T, V> || ...));
+
+template <class F, class R, class... Args>
+concept invocable_r = /*invocable<F, Args...> && */ std::convertible_to<std::invoke_result_t<F, Args...>, R>;
+
+template <class R, class F, class... Args>
+concept regular_invocable_r = invocable_r<R, F, Args...>;
+
+/// MARK: __mtl_floatify
 #define __mtl_floatify(__type) __mtl_to_float_t<__type>
-	
-	template <typename>
-	struct __mtl_to_float;
-	
-	template <typename T>
-	using __mtl_to_float_t = typename __mtl_to_float<T>::type;
-	
-	template <typename T> requires std::is_arithmetic_v<T>
-	struct __mtl_to_float<T>             { using type = double; };
-	template <>
-	struct __mtl_to_float<float>         { using type = float; };
-	template <>
-	struct __mtl_to_float<long double>   { using type = long double; };
 
-	template <typename T>
-	struct __mtl_to_float<complex<T>>    { using type = complex<__mtl_to_float_t<T>>; };
-	
-	template <typename T>
-	struct __mtl_to_float<quaternion<T>> { using type = quaternion<__mtl_to_float_t<T>>; };
-	
-	template <typename>
-	struct __mtl_to_complex;
-	
-	template <typename T>
-	using __mtl_to_complex_t = typename __mtl_to_complex<T>::type;
-	
-	template <typename T> requires std::is_arithmetic_v<T>
-	struct __mtl_to_complex<T> { using type = complex<T>; };
-	
-	template <typename T>
-	struct __mtl_to_complex<complex<T>> { using type = complex<T>; };
-	
-	/// MARK: Stripped Decltype
-	#define __mtl_decltype_stripped(...) std::decay_t<decltype(__VA_ARGS__)>
-	
-	/// MARK: Promotion
-#define __mtl_promote(...) ::_VMTL::promote_t<__VA_ARGS__>
-	
-	template <typename... T>
-	struct promote;
-	
-	template <typename... T>
-	using promote_t = typename promote<T...>::type;
-	
-	template <typename T>
-	auto __mtl_do_promote() -> T;
-	template <typename T, typename U>
-	auto __mtl_do_promote() -> decltype(bool{} ? std::declval<T>() : std::declval<U>());
-	template <typename T, typename U, typename V, typename... Rest>
-	auto __mtl_do_promote() -> decltype(__mtl_do_promote<std::remove_reference_t<decltype(__mtl_do_promote<T, U>())>, V, Rest...>());
-	
-	template <typename T, typename U>
-	auto __mtl_can_promote(int) -> decltype(bool{} ? std::declval<T>() : std::declval<U>(), std::true_type{});
-	template <typename, typename>
-	auto __mtl_can_promote(...) -> std::false_type;
-	
-	template <typename T, typename U>
-	requires (decltype(__mtl_can_promote<T, U>(0))::value)
-	struct promote<T, U> {
-		using type = std::remove_reference_t<decltype(__mtl_do_promote<T, U>())>;
-	};
-	
-	/// If this template is undefined, then T, U, V have no common type
-	template <typename T, typename U, typename... V>
-	struct promote<T, U, V...>: promote<typename promote<T, U>::type, V...> {};
-	
-	/// Promote Complex Numbers
-	template <_VMTL::real_scalar T, _VMTL::real_scalar U>
-	struct promote<_VMTL::complex<T>, _VMTL::complex<U>> {
-		using type = _VMTL::complex<typename _VMTL::promote<T, U>::type>;
-	};
-	template <_VMTL::real_scalar T, _VMTL::real_scalar U>
-	struct promote<_VMTL::complex<T>, U> {
-		using type = _VMTL::complex<typename _VMTL::promote<T, U>::type>;
-	};
-	template <_VMTL::real_scalar T, _VMTL::real_scalar U>
-	struct promote<T, _VMTL::complex<U>> {
-		using type = _VMTL::complex<typename _VMTL::promote<T, U>::type>;
-	};
-	
-	/// Promote Quaternions
-	template <_VMTL::real_scalar T, _VMTL::real_scalar U>
-	struct promote<_VMTL::quaternion<T>, _VMTL::quaternion<U>> {
-		using type = _VMTL::quaternion<typename _VMTL::promote<T, U>::type>;
-	};
-	template <_VMTL::real_scalar T, _VMTL::real_scalar U>
-	struct promote<_VMTL::quaternion<T>, _VMTL::complex<U>> {
-		using type = _VMTL::quaternion<typename _VMTL::promote<T, U>::type>;
-	};
-	template <_VMTL::real_scalar T, _VMTL::real_scalar U>
-	struct promote<_VMTL::quaternion<T>, U> {
-		using type = _VMTL::quaternion<typename _VMTL::promote<T, U>::type>;
-	};
-	template <_VMTL::real_scalar T, _VMTL::real_scalar U>
-	struct promote<_VMTL::complex<T>, _VMTL::quaternion<U>> {
-		using type = _VMTL::quaternion<typename _VMTL::promote<T, U>::type>;
-	};
-	template <_VMTL::real_scalar T, _VMTL::real_scalar U>
-	struct promote<T, _VMTL::quaternion<U>> {
-		using type = _VMTL::quaternion<typename _VMTL::promote<T, U>::type>;
-	};
-	
-	/// Promote Vectors
-	template <typename T, typename U, std::size_t Size, vector_options O>
-	struct promote<vector<T, Size, O>, U> {
-		using type = vector<typename promote<T, U>::type, Size, O>;
-	};
-	template <typename T, typename U, std::size_t Size, vector_options O>
-	struct promote<T, vector<U, Size, O>> {
-		using type = vector<typename promote<T, U>::type, Size, O>;
-	};
-	template <typename T, typename U, std::size_t Size,
-			  vector_options O, vector_options P>
-	struct promote<vector<T, Size, O>, vector<U, Size, P>> {
-		using type = vector<typename promote<T, U>::type, Size, combine(O, P)>;
-	};
-	template <typename T, typename U, std::size_t S1, std::size_t S2,
-			  vector_options O, vector_options P>
-	struct promote<vector<T, S1, O>, vector<U, S2, P>>; /// Can't promote these
-	 
-	/// Promote Matrices
-	template <typename T, typename U, std::size_t Rows, std::size_t Columns, vector_options O>
-	struct promote<matrix<T, Rows, Columns, O>, U> {
-		using type = matrix<typename promote<T, U>::type, Rows, Columns, O>;
-	};
-	template <typename T, typename U, std::size_t Rows, std::size_t Columns, vector_options O>
-	struct promote<T, matrix<U, Rows, Columns, O>> {
-		using type = matrix<typename promote<T, U>::type, Rows, Columns, O>;
-	};
-	template <typename T, typename U, std::size_t Rows, std::size_t Columns,
-			  vector_options O, vector_options P>
-	struct promote<matrix<T, Rows, Columns, O>, matrix<U, Rows, Columns, P>> {
-		using type = matrix<typename promote<T, U>::type, Rows, Columns, combine(O, P)>;
-	};
-	template <typename T, typename U,
-			  std::size_t Rows1, // std::size_t Columns1,
-			  std::size_t Rows2, std::size_t Columns2,
-			  vector_options O, vector_options P>
-	struct promote<matrix<T, Rows1, Columns2, O>, matrix<U, Rows2, Columns2, P>>; /// Can't promote two matrices of different dimensions
-	template <typename T, typename U,
-			  std::size_t Size, std::size_t Rows, std::size_t Columns,
-			  vector_options O, vector_options P>
-	struct promote<matrix<T, Rows, Columns, O>, vector<U, Size, P>>;              /// Can't promote matrices with vectors
-	template <typename T, typename U,
-			  std::size_t Size, std::size_t Rows, std::size_t Columns,
-			  vector_options O, vector_options P>
-	struct promote<vector<T, Size, P>, matrix<U, Rows, Columns, O>>;              /// Can't promote vectors with matrices
-	
+template <typename>
+struct __mtl_to_float;
+
+template <typename T>
+using __mtl_to_float_t = typename __mtl_to_float<T>::type;
+
+template <typename T> requires std::is_arithmetic_v<T>
+struct __mtl_to_float<T>             { using type = double; };
+template <>
+struct __mtl_to_float<float>         { using type = float; };
+template <>
+struct __mtl_to_float<long double>   { using type = long double; };
+
+template <typename T>
+struct __mtl_to_float<complex<T>>    { using type = complex<__mtl_to_float_t<T>>; };
+
+template <typename T>
+struct __mtl_to_float<quaternion<T>> { using type = quaternion<__mtl_to_float_t<T>>; };
+
+template <typename>
+struct __mtl_to_complex;
+
+template <typename T>
+using __mtl_to_complex_t = typename __mtl_to_complex<T>::type;
+
+template <typename T> requires std::is_arithmetic_v<T>
+struct __mtl_to_complex<T> { using type = complex<T>; };
+
+template <typename T>
+struct __mtl_to_complex<complex<T>> { using type = complex<T>; };
+
+/// MARK: Stripped Decltype
+#define __mtl_decltype_stripped(...) std::decay_t<decltype(__VA_ARGS__)>
+
+/// MARK: Promotion
+//#define __mtl_promote(...) ::_VMTL::promote_t<__VA_ARGS__>
+#define __mtl_promote(...) ::std::common_type_t<__VA_ARGS__>
+
+//template <typename... T>
+//struct promote;
+//
+//template <typename... T>
+//using promote_t = typename promote<T...>::type;
+//
+//template <typename T>
+//auto __mtl_do_promote() -> T;
+//template <typename T, typename U>
+//auto __mtl_do_promote() -> decltype(bool{} ? std::declval<T>() : std::declval<U>());
+//template <typename T, typename U, typename V, typename... Rest>
+//auto __mtl_do_promote() -> decltype(__mtl_do_promote<std::remove_reference_t<decltype(__mtl_do_promote<T, U>())>, V, Rest...>());
+//
+//template <typename T, typename U>
+//auto __mtl_can_promote(int) -> decltype(bool{} ? std::declval<T>() : std::declval<U>(), std::true_type{});
+//template <typename, typename>
+//auto __mtl_can_promote(...) -> std::false_type;
+//
+//template <typename T, typename U>
+//requires (decltype(__mtl_can_promote<T, U>(0))::value)
+//struct promote<T, U> {
+//    using type = std::remove_reference_t<decltype(__mtl_do_promote<T, U>())>;
+//};
+//
+///// If this template is undefined, then T, U, V have no common type
+//template <typename T, typename U, typename... V>
+//struct promote<T, U, V...>: promote<typename promote<T, U>::type, V...> {};
+//
+///// Promote Complex Numbers
+//template <_VMTL::real_scalar T, _VMTL::real_scalar U>
+//struct promote<_VMTL::complex<T>, _VMTL::complex<U>> {
+//    using type = _VMTL::complex<typename _VMTL::promote<T, U>::type>;
+//};
+//template <_VMTL::real_scalar T, _VMTL::real_scalar U>
+//struct promote<_VMTL::complex<T>, U> {
+//    using type = _VMTL::complex<typename _VMTL::promote<T, U>::type>;
+//};
+//template <_VMTL::real_scalar T, _VMTL::real_scalar U>
+//struct promote<T, _VMTL::complex<U>> {
+//    using type = _VMTL::complex<typename _VMTL::promote<T, U>::type>;
+//};
+//
+///// Promote Quaternions
+//template <_VMTL::real_scalar T, _VMTL::real_scalar U>
+//struct promote<_VMTL::quaternion<T>, _VMTL::quaternion<U>> {
+//    using type = _VMTL::quaternion<typename _VMTL::promote<T, U>::type>;
+//};
+//template <_VMTL::real_scalar T, _VMTL::real_scalar U>
+//struct promote<_VMTL::quaternion<T>, _VMTL::complex<U>> {
+//    using type = _VMTL::quaternion<typename _VMTL::promote<T, U>::type>;
+//};
+//template <_VMTL::real_scalar T, _VMTL::real_scalar U>
+//struct promote<_VMTL::quaternion<T>, U> {
+//    using type = _VMTL::quaternion<typename _VMTL::promote<T, U>::type>;
+//};
+//template <_VMTL::real_scalar T, _VMTL::real_scalar U>
+//struct promote<_VMTL::complex<T>, _VMTL::quaternion<U>> {
+//    using type = _VMTL::quaternion<typename _VMTL::promote<T, U>::type>;
+//};
+//template <_VMTL::real_scalar T, _VMTL::real_scalar U>
+//struct promote<T, _VMTL::quaternion<U>> {
+//    using type = _VMTL::quaternion<typename _VMTL::promote<T, U>::type>;
+//};
+//
+///// Promote Vectors
+//template <typename T, typename U, std::size_t Size, vector_options O>
+//struct promote<vector<T, Size, O>, U> {
+//    using type = vector<typename promote<T, U>::type, Size, O>;
+//};
+//template <typename T, typename U, std::size_t Size, vector_options O>
+//struct promote<T, vector<U, Size, O>> {
+//    using type = vector<typename promote<T, U>::type, Size, O>;
+//};
+//template <typename T, typename U, std::size_t Size,
+//vector_options O, vector_options P>
+//struct promote<vector<T, Size, O>, vector<U, Size, P>> {
+//    using type = vector<typename promote<T, U>::type, Size, combine(O, P)>;
+//};
+//template <typename T, typename U, std::size_t S1, std::size_t S2,
+//vector_options O, vector_options P>
+//struct promote<vector<T, S1, O>, vector<U, S2, P>>; /// Can't promote these
+//
+///// Promote Matrices
+//template <typename T, typename U, std::size_t Rows, std::size_t Columns, vector_options O>
+//struct promote<matrix<T, Rows, Columns, O>, U> {
+//    using type = matrix<typename promote<T, U>::type, Rows, Columns, O>;
+//};
+//template <typename T, typename U, std::size_t Rows, std::size_t Columns, vector_options O>
+//struct promote<T, matrix<U, Rows, Columns, O>> {
+//    using type = matrix<typename promote<T, U>::type, Rows, Columns, O>;
+//};
+//template <typename T, typename U, std::size_t Rows, std::size_t Columns,
+//vector_options O, vector_options P>
+//struct promote<matrix<T, Rows, Columns, O>, matrix<U, Rows, Columns, P>> {
+//    using type = matrix<typename promote<T, U>::type, Rows, Columns, combine(O, P)>;
+//};
+//template <typename T, typename U,
+//std::size_t Rows1, // std::size_t Columns1,
+//std::size_t Rows2, std::size_t Columns2,
+//vector_options O, vector_options P>
+//struct promote<matrix<T, Rows1, Columns2, O>, matrix<U, Rows2, Columns2, P>>; /// Can't promote two matrices of different dimensions
+//template <typename T, typename U,
+//std::size_t Size, std::size_t Rows, std::size_t Columns,
+//vector_options O, vector_options P>
+//struct promote<matrix<T, Rows, Columns, O>, vector<U, Size, P>>;              /// Can't promote matrices with vectors
+//template <typename T, typename U,
+//std::size_t Size, std::size_t Rows, std::size_t Columns,
+//vector_options O, vector_options P>
+//struct promote<vector<T, Size, P>, matrix<U, Rows, Columns, O>>;              /// Can't promote vectors with matrices
+
+} // namespace mtl
+
+/// Promote Complex Numbers
+template <_VMTL::real_scalar T, _VMTL::real_scalar U>
+struct std::common_type<_VMTL::complex<T>, _VMTL::complex<U>> {
+    using type = _VMTL::complex<typename std::common_type<T, U>::type>;
+};
+template <_VMTL::real_scalar T, _VMTL::real_scalar U>
+struct std::common_type<_VMTL::complex<T>, U> {
+    using type = _VMTL::complex<typename std::common_type<T, U>::type>;
+};
+template <_VMTL::real_scalar T, _VMTL::real_scalar U>
+struct std::common_type<T, _VMTL::complex<U>> {
+    using type = _VMTL::complex<typename std::common_type<T, U>::type>;
+};
+
+/// Promote Quaternions
+template <_VMTL::real_scalar T, _VMTL::real_scalar U>
+struct std::common_type<_VMTL::quaternion<T>, _VMTL::quaternion<U>> {
+    using type = _VMTL::quaternion<typename std::common_type<T, U>::type>;
+};
+template <_VMTL::real_scalar T, _VMTL::real_scalar U>
+struct std::common_type<_VMTL::quaternion<T>, _VMTL::complex<U>> {
+    using type = _VMTL::quaternion<typename std::common_type<T, U>::type>;
+};
+template <_VMTL::real_scalar T, _VMTL::real_scalar U>
+struct std::common_type<_VMTL::quaternion<T>, U> {
+    using type = _VMTL::quaternion<typename std::common_type<T, U>::type>;
+};
+template <_VMTL::real_scalar T, _VMTL::real_scalar U>
+struct std::common_type<_VMTL::complex<T>, _VMTL::quaternion<U>> {
+    using type = _VMTL::quaternion<typename std::common_type<T, U>::type>;
+};
+template <_VMTL::real_scalar T, _VMTL::real_scalar U>
+struct std::common_type<T, _VMTL::quaternion<U>> {
+    using type = _VMTL::quaternion<typename std::common_type<T, U>::type>;
+};
+
+/// Promote Vectors
+template <typename T, typename U, std::size_t Size, _VMTL::vector_options O>
+struct std::common_type<_VMTL::vector<T, Size, O>, U> {
+    using type = _VMTL::vector<typename std::common_type<T, U>::type, Size, O>;
+};
+template <typename T, typename U, std::size_t Size, _VMTL::vector_options O>
+struct std::common_type<T, _VMTL::vector<U, Size, O>> {
+    using type = _VMTL::vector<typename std::common_type<T, U>::type, Size, O>;
+};
+template <typename T, typename U, std::size_t Size,
+          _VMTL::vector_options O, _VMTL::vector_options P>
+struct std::common_type<_VMTL::vector<T, Size, O>, _VMTL::vector<U, Size, P>> {
+    using type = _VMTL::vector<typename std::common_type<T, U>::type, Size, combine(O, P)>;
+};
+template <typename T, typename U, std::size_t S1, std::size_t S2,
+          _VMTL::vector_options O, _VMTL::vector_options P>
+struct std::common_type<_VMTL::vector<T, S1, O>, _VMTL::vector<U, S2, P>>; /// Can't promote these
+
+/// Promote Matrices
+template <typename T, typename U, std::size_t Rows, std::size_t Columns, _VMTL::vector_options O>
+struct std::common_type<_VMTL::matrix<T, Rows, Columns, O>, U> {
+    using type = _VMTL::matrix<typename std::common_type<T, U>::type, Rows, Columns, O>;
+};
+template <typename T, typename U, std::size_t Rows, std::size_t Columns, _VMTL::vector_options O>
+struct std::common_type<T, _VMTL::matrix<U, Rows, Columns, O>> {
+    using type = _VMTL::matrix<typename std::common_type<T, U>::type, Rows, Columns, O>;
+};
+template <typename T, typename U, std::size_t Rows, std::size_t Columns,
+          _VMTL::vector_options O, _VMTL::vector_options P>
+struct std::common_type<_VMTL::matrix<T, Rows, Columns, O>, _VMTL::matrix<U, Rows, Columns, P>> {
+    using type = _VMTL::matrix<typename std::common_type<T, U>::type, Rows, Columns, combine(O, P)>;
+};
+template <typename T, typename U,
+          std::size_t Rows1, // std::size_t Columns1,
+          std::size_t Rows2, std::size_t Columns2,
+          _VMTL::vector_options O, _VMTL::vector_options P>
+struct std::common_type<_VMTL::matrix<T, Rows1, Columns2, O>, _VMTL::matrix<U, Rows2, Columns2, P>> {}; /// Can't promote two matrices of different dimensions
+template <typename T, typename U,
+          std::size_t Size, std::size_t Rows, std::size_t Columns,
+          _VMTL::vector_options O, _VMTL::vector_options P>
+struct std::common_type<_VMTL::matrix<T, Rows, Columns, O>, _VMTL::vector<U, Size, P>> {};              /// Can't promote matrices with vectors
+template <typename T, typename U,
+          std::size_t Size, std::size_t Rows, std::size_t Columns,
+          _VMTL::vector_options O, _VMTL::vector_options P>
+struct std::common_type<_VMTL::vector<T, Size, P>, _VMTL::matrix<U, Rows, Columns, O>> {};              /// Can't promote vectors with matrices
+
+
+namespace mtl {
+
 	/// MARK: - enum struct handedness
 	enum struct handedness {
 		left_handed, right_handed

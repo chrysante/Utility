@@ -10,3 +10,19 @@
 #include <utl/ranges.hpp>
 #include <utl/typeinfo.hpp>
 #include <utl/vector.hpp>
+#include <utl/variant.hpp>
+//
+//struct Z {
+//    Z(utl::variant<int, Z> const& v) {}
+//};
+//
+//
+//int main() {
+//    
+//    utl::variant<int, Z> v;
+//    utl::variant<int, Z> w = (v);
+//    
+//    std::cout << decltype(utl::__index_selector<int, Z>::__call(v))::value << std::endl;
+//
+//    
+//}

@@ -16,6 +16,47 @@ _UTL_SYSTEM_HEADER_
 
 namespace utl {
 
+template <typename...>
+struct __union;
+
+template <typename T>
+struct __union<T> {
+    constexpr __union() requires (!std::is_trivially_default_constructible_v<T>) {}
+    __union() requires std::is_trivially_default_constructible_v<T> = default;
+    
+    constexpr ~__union() requires (!std::is_trivially_destructible_v<T>) {}
+    ~__union() requires std::is_trivially_destructible_v<T> = default;
+    
+    union {
+        T __first;
+    };
+};
+
+template <typename T, typename... U>
+struct __union<T, U...> {
+    constexpr __union() requires (!std::is_trivially_default_constructible_v<T>) || (!std::is_trivially_default_constructible_v<__union<U...>>) {}
+    __union() requires std::is_trivially_default_constructible_v<T> && std::is_trivially_default_constructible_v<__union<U...>> = default;
+    
+    constexpr ~__union() requires (!std::is_trivially_destructible_v<T>) || (!std::is_trivially_destructible_v<__union<U...>>) {}
+    ~__union() requires std::is_trivially_destructible_v<T> && std::is_trivially_destructible_v<__union<U...>> = default;
+    
+    union {
+        T __first;
+        __union<U...> __rest;
+    };
+};
+
+template <std::size_t I, typename V>
+constexpr decltype(auto) __union_get_impl(V&& v) {
+    if constexpr (I == 0) { return (copy_cvref_t<V&&, decltype(v.__first)>)std::forward<V>(v).__first; }
+    else { return __union_get_impl<I - 1>(std::forward<V>(v).__rest); }
+}
+
+template <typename F, typename... Args>
+constexpr decltype(auto) __invoke(F&& f, Args&&... args) {
+    return std::forward<F>(f)(std::forward<Args>(args)...);
+}
+
 template <typename... Types>
 class variant;
 
@@ -34,7 +75,7 @@ template <std::size_t I, typename Variant>
 struct variant_alternative;
 
 template <std::size_t I, typename... T>
-struct variant_alternative<I, variant<T...>> { using type = std::tuple_element_t<I, std::tuple<T...>>; };
+struct variant_alternative<I, variant<T...>> { using type = typename type_sequence<T...>:: template at<I>; };
 
 template <std::size_t I, typename Variant>
 using variant_alternative_t = typename variant_alternative<I, Variant>::type;
@@ -64,7 +105,7 @@ struct __variant_product_size<type_sequence<Vars...>>: __variant_product_size<st
 
 template <typename T, std::size_t I>
 struct __index_selector_overload {
-    static std::integral_constant<std::size_t, I> call(T);
+    static std::integral_constant<std::size_t, I> __call(T);
 };
 
 template <typename T, typename I>
@@ -72,7 +113,7 @@ struct __index_selector_impl;
 
 template <typename... T, std::size_t... I>
 struct __index_selector_impl<type_sequence<T...>, std::index_sequence<I...>>: __index_selector_overload<T, I>... {
-    using __index_selector_overload<T, I>::call...;
+    using __index_selector_overload<T, I>::__call...;
 };
 
 template <typename... T>
@@ -108,7 +149,7 @@ template <std::size_t I, typename V>
 constexpr decltype(auto) __variant_get_impl(V&& v) {
     __utl_expect(I == v.__index);
     using result_type = copy_cvref_t<V&&, variant_alternative_t<I, std::decay_t<V>>>;
-    return reinterpret_cast<result_type>(v.__storage);
+    return static_cast<result_type>(__union_get_impl<I>(v.__union));
 }
 
 template <std::size_t I, typename... T>
@@ -154,12 +195,12 @@ struct __variant_visit<DeduceReturnType, R, Visitor,
                        std::index_sequence<FlatI...>>
 {
     template <std::size_t J>
-    using __variant_at_index = std::tuple_element_t<J, std::tuple<Variants...>>;
+    using __variant_at_index = typename type_sequence<Variants...>::template at<J>;
     
     static constexpr std::size_t __variant_count = sizeof...(Variants);
     static constexpr std::array<std::size_t, __variant_count> __variant_sizes = { variant_size_v<std::remove_reference_t<Variants>>... };
     
-    static constexpr std::size_t __flatten_index(std::tuple<SizeT...> index) {
+    static constexpr std::size_t __flatten_index(std::array<std::size_t, __variant_count> index) {
         (__utl_assert(std::get<I>(index) < std::get<I>(__variant_sizes)), ...);
         std::size_t result = 0;
         ([&]{
@@ -171,29 +212,28 @@ struct __variant_visit<DeduceReturnType, R, Visitor,
         return result;
     }
     
-    static constexpr std::tuple<SizeT...> __expand_index(std::size_t flat_index) {
+    static constexpr std::array<std::size_t, __variant_count> __expand_index(std::size_t flat_index) {
         __utl_assert(flat_index < (1 * ... * std::get<I>(__variant_sizes)));
-        std::tuple<SizeT...> result{};
+        std::array<std::size_t, __variant_count> result;
         ([&]{
             std::size_t const m = [&]<std::size_t... J>(std::index_sequence<J...>){
                 std::size_t const I_ = I;
-                return (1 * ... * std::get<1 + I_ + J>(__variant_sizes));
+                return (1 * ... * __variant_sizes[1 + I_ + J]);
             }(std::make_index_sequence<__variant_count - 1 - I>{});
-            std::get<I>(result) = flat_index / m;
-            flat_index -= std::get<I>(result) * m;
+            result[I] = flat_index / m;
+            flat_index -= result[I] * m;
         }(), ...);
         return result;
     }
     
     template <std::size_t FlatIndex>
-    static decltype(auto) __deduced_return_type_helper(Visitor&& vis, Variants&&... vars) {
-        constexpr std::tuple index = __expand_index(FlatIndex);
-        return std::invoke(std::forward<Visitor>(vis), get<std::get<I>(index)>(std::forward<Variants>(vars))...);
-    }
+    using __deduced_return_type_at = std::invoke_result_t<Visitor, decltype(get<__expand_index(FlatIndex)[I]>(std::declval<Variants>()))...>;
     
-    using __deduced_return_type = std::common_type_t<
-        decltype(__deduced_return_type_helper<FlatI>(std::declval<Visitor>(), std::declval<Variants>()...))...
-    >;
+    using __common_return_type = std::common_type_t<__deduced_return_type_at<FlatI>...>;
+    
+    static constexpr bool __all_return_types_equal = type_sequence<__deduced_return_type_at<FlatI>...>::all_equal;
+    
+    using __deduced_return_type = std::conditional_t<__all_return_types_equal, __deduced_return_type_at<0>, __common_return_type>;
     
     using __return_type = std::conditional_t<DeduceReturnType, __deduced_return_type, R>;
 
@@ -260,6 +300,12 @@ public:
     static_assert(sizeof...(Types) > 0);
     static_assert(sizeof...(Types) < 256);
     
+    static_assert((!std::is_reference_v<Types> && ...),
+                  "variant can not have a reference type as an alternative.");
+    
+    static_assert((!std::is_void_v<Types> && ...),
+                  "variant can not have a void type as an alternative.");
+    
     static constexpr std::size_t __size = std::max({ sizeof(Types)... });
     static constexpr std::size_t __align = std::max({ alignof(Types)... });
     static constexpr std::size_t __count = sizeof...(Types);
@@ -276,12 +322,14 @@ public:
     static constexpr std::size_t __index_of = __type_list::template index_of<T>;
     
     template <std::size_t Index>
-    using __type_at_index = std::tuple_element_t<Index, std::tuple<Types...>>;
+    using __type_at_index = typename __type_list::template at<Index>;
     
     // MARK: Lifetime
     // Constructors
     
     // (1)
+    variant() = delete;
+    
     constexpr variant() noexcept(std::is_nothrow_default_constructible_v<__type_at_index<0>>)
     requires std::is_default_constructible_v<__type_at_index<0>>
     {
@@ -289,7 +337,10 @@ public:
     }
     
     // (2)
-    constexpr variant(variant const& rhs) = delete;
+    constexpr variant(variant const& rhs)
+    requires (__copy_constructible<Types> && ...) &&
+             (__trivially_copy_constructible<Types> && ...)
+    = default;
     
     constexpr variant(variant const& rhs) noexcept(std::conjunction_v<std::is_nothrow_copy_constructible<Types>...>)
     requires (__copy_constructible<Types> && ...)
@@ -297,10 +348,7 @@ public:
         __copy_or_move_construct(rhs);
     }
     
-    constexpr variant(variant const& rhs)
-    requires (__copy_constructible<Types> && ...) &&
-             (__trivially_copy_constructible<Types> && ...)
-    = default;
+    constexpr variant(variant const& rhs) = delete;
     
     // (3)
     constexpr variant(variant&& rhs) = delete;
@@ -318,7 +366,7 @@ public:
     
     // (4)
     template <typename T,
-              std::size_t Index = decltype(__index_selector<Types...>::call(std::declval<T>()))::value>
+              std::size_t Index = decltype(__index_selector<Types...>::__call(std::declval<T>()))::value>
     requires (!std::same_as<variant, std::decay_t<T>>)
     constexpr variant(T&& t) noexcept(true /* see below */) {
         __construct<Index>(std::forward<T>(t));
@@ -363,10 +411,13 @@ public:
     }
     
     // Destructor
-    
+
     constexpr ~variant() {
         __destroy();
     }
+    
+    ~variant() requires (std::is_trivially_destructible_v<Types> && ...) = default;
+    
     
     // operator=
     
@@ -407,7 +458,7 @@ public:
     
     // (3)
     template <typename T,
-              std::size_t Index = decltype(__index_selector<Types...>::call(std::declval<T>()))::value>
+              std::size_t Index = decltype(__index_selector<Types...>::__call(std::declval<T>()))::value>
     constexpr variant& operator=(T&& t) noexcept(true /* see below */)
     requires (!std::same_as<variant, std::decay_t<T>>)
     {
@@ -427,7 +478,25 @@ public:
         return __index;
     }
     
+    template <typename Base>
+    requires have_common_base<Base, Types...>::value && std::same_as<std::remove_cvref_t<Base>, Base>
+    constexpr Base const& as_base() const& { return __as_base<Base const&>(*this); }
+    
+    template <typename Base>
+    requires have_common_base<Base, Types...>::value && std::same_as<std::remove_cvref_t<Base>, Base>
+    constexpr Base& as_base()& { return __as_base<Base&>(*this); }
+    
+    template <typename Base>
+    requires have_common_base<Base, Types...>::value && std::same_as<std::remove_cvref_t<Base>, Base>
+    constexpr Base const&& as_base() const&& { return __as_base<Base const&&>(std::move(*this)); }
+    
+    template <typename Base>
+    requires have_common_base<Base, Types...>::value && std::same_as<std::remove_cvref_t<Base>, Base>
+    constexpr Base&& as_base()&& { return __as_base<Base&&>(std::move(*this)); }
+    
     // MARK: Modifiers
+    
+    // emplace
     
     // (1)
     template <typename T, typename... Args>
@@ -464,42 +533,53 @@ public:
         emplace<I, std::initializer_list<U>, Args...>(il, std::forward<Args>(args)...);
     }
     
+    // swap
+    
+    constexpr void swap(variant& rhs) noexcept(((std::is_nothrow_move_constructible_v<Types> &&
+                                                 std::is_nothrow_swappable_v<Types>) && ...))
+    {
+        if (__index == rhs.__index) {
+            __visit_with_index(__index, [&]<std::size_t I>(std::integral_constant<std::size_t, I>) {
+                std::swap(get<I>(*this), get<I>(rhs));
+            });
+        }
+        else {
+            visit([]<typename T, typename U>(T& lhs, U& rhs) {
+                auto tmp = std::move(lhs);
+                std::destroy_at(&lhs);
+                std::construct_at(reinterpret_cast<U*>(&lhs), std::move(rhs));
+                std::destroy_at(&rhs);
+                std::construct_at(reinterpret_cast<T*>(&rhs), std::move(tmp));
+            }, *this, rhs);
+            std::swap(__index, rhs.__index);
+        }
+    }
+    
     // MARK: Internals
     
     template <std::size_t I, typename... Args>
-    void __construct(Args&&... args) {
+    constexpr void __construct(Args&&... args) {
         using T = __type_at_index<I>;
         __index = I;
-        std::construct_at((T*)&__storage, std::forward<Args>(args)...);
+        std::construct_at(&__union_get_impl<I>(__union), std::forward<Args>(args)...);
     }
     
-    void __destroy() {
+    constexpr void __destroy() {
         visit([](auto& value) { std::destroy_at(&value); }, *this);
     }
     
     template <typename V>
     constexpr void __copy_or_move_construct(V&& rhs) {
-        __index = rhs.__index;
-        UTL_WITH_INDEX_SEQUENCE((I, __count), {
-            using construct_function = void(*)(variant&, V&&);
-            constexpr std::array<construct_function, __count> constructors = {
-                [](variant& self, V&& rhs) { self.__construct<I>(get<I>(std::forward<V>(rhs))); }...
-            };
-            constructors[__index](*this, std::forward<V>(rhs));
+        __visit_with_index(rhs.__index, [&]<std::size_t I>(std::integral_constant<std::size_t, I>) {
+            __construct<I>(get<I>(std::forward<V>(rhs)));
         });
     }
     
     template <typename V>
-    variant& __copy_or_move_assign(V&& rhs) {
+    constexpr variant& __copy_or_move_assign(V&& rhs) {
         if (__index == rhs.__index) {
-            UTL_WITH_INDEX_SEQUENCE((I, __count), {
-                using assign_function = void(*)(variant&, V&&);
-                static constexpr std::array<assign_function, __count> assign_functions = {
-                    [](variant& self, V&& rhs) {
-                        get<I>(self) = get<I>(std::forward<V>(rhs));
-                    }...
-                };
-                assign_functions[__index](*this, std::forward<V>(rhs));
+            __visit_with_index(__index, [&]<std::size_t I>(std::integral_constant<std::size_t, I>) {
+                get<I>(*this) = get<I>(std::forward<V>(rhs));
             });
         }
         else {
@@ -509,11 +589,62 @@ public:
             }, *this, std::forward<V>(rhs));
             __index = rhs.__index;
         }
-    return *this;
+        return *this;
+    }
+    
+    template <typename Base, typename Self>
+    static constexpr Base __virtual_as_base(Self&& self) {
+        using raw_base = std::remove_cvref_t<Base>;
+#if UTL_HAS_COMPILE_TIME_BASE_OFFSET
+        return UTL_WITH_INDEX_SEQUENCE((I, __count), {
+            constexpr std::array<std::size_t, __count> offsets = {
+                compile_time_base_offset<raw_base, __type_at_index<I>>...
+            };
+            return reinterpret_cast<Base>(*((char*)&self.__storage + offsets[self.__index]));
+        });
+#else
+        return visit([]<typename T>(T&& value) -> decltype(auto) {
+            return static_cast<Base>(value);
+        }, std::forward<Self>(self));
+#endif
+    }
+    
+    template <typename Base, typename Self>
+    static constexpr Base __as_base(Self&& self) {
+        using raw_base = std::remove_cvref_t<Base>;
+        static_assert(have_common_base<raw_base, Types...>::value);
+#if UTL_HAS_COMPILE_TIME_BASE_OFFSET
+        constexpr bool all_offsets_equal = UTL_WITH_INDEX_SEQUENCE((I, __count), {
+            return ((compile_time_base_offset<raw_base, __type_at_index<0>> == compile_time_base_offset<raw_base, __type_at_index<I>>) && ...);
+        });
+        if constexpr (all_offsets_equal) {
+            constexpr std::size_t offset = compile_time_base_offset<raw_base, __type_at_index<0>>;
+            return reinterpret_cast<Base>(*((char*)&self.__storage + offset));
+        }
+        else { return __virtual_as_base<Base>(UTL_FORWARD(self)); }
+    
+#else
+        return __virtual_as_base<Base>(UTL_FORWARD(self)); 
+#endif
+    }
+    
+    template <typename F>
+    static constexpr decltype(auto) __visit_with_index(std::size_t index, F&& f) {
+        return UTL_WITH_INDEX_SEQUENCE((I, __count), {
+            using return_type = std::common_type_t<std::invoke_result_t<F, std::integral_constant<std::size_t, I>>...>;
+            using function = return_type(*)(F&& f);
+            static constexpr std::array<function, __count> functions = {
+                [](F&& f) -> return_type {
+                    return std::invoke(std::forward<F>(f), std::integral_constant<std::size_t, I>{});
+                }...
+            };
+            return functions[index](std::forward<F>(f));
+        });
     }
     
     unsigned char __index;
-    std::aligned_storage_t<__size, __align> __storage;
+    __union<Types...> __union;
+//    std::aligned_storage_t<__size, __align> __storage;
 };
 
 } // namespace utl

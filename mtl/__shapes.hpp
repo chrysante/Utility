@@ -192,7 +192,7 @@ namespace _VMTL {
 	template <typename T, typename U, std::size_t Dim, vector_options O, vector_options P>
 	auto distance(line_segment<T, Dim, O> const& l, vector<U, Dim, P> const& p) {
 		// Return minimum distance between line segment l and point p
-		using V = typename promote<T, U>::type;
+        using V = __mtl_promote(T, U);
 		
 		auto const l2 = distance_squared(l.begin(), l.end());  // i.e. |w-v|^2 -  avoid a sqrt
 		if (l2 == V(0)) {

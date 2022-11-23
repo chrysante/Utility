@@ -16,6 +16,12 @@ constexpr bool is_constant_evaluated() noexcept {
 #endif
 }
 
+template <typename... Traits>
+using __all = std::conjunction<Traits...>;
+
+template <typename... Traits>
+using __any = std::disjunction<Traits...>;
+
 namespace _private {
 template <typename T, bool = std::is_class_v<T>>
 struct _is_any_invocable /* bool = true */ {
@@ -448,5 +454,28 @@ struct __func_traits_impl<R(Args...)> {
     template <std::size_t N>
     requires(N < argument_count) using argument = std::tuple_element_t<N, std::tuple<Args...>>;
 };
+
+template <typename Base, typename... T>
+struct have_common_base: std::bool_constant<(std::derived_from<T, Base> && ...)> {};
+
+#if defined(__clang__)
+
+#define UTL_HAS_COMPILE_TIME_BASE_OFFSET 1
+
+#define _UTL_OFFSET_EXPR(BASE, DERIVED) \
+reinterpret_cast<char*>(static_cast<BASE*>((DERIVED*)sizeof(DERIVED))) - reinterpret_cast<char const volatile*>((DERIVED*)sizeof(DERIVED))
+
+template <typename Base, typename Derived>
+inline constexpr std::size_t compile_time_base_offset = __builtin_constant_p(_UTL_OFFSET_EXPR(Base, Derived)) ?
+    (_UTL_OFFSET_EXPR(Base, Derived)) : (_UTL_OFFSET_EXPR(Base, Derived));
+
+#undef _UTL_OFFSET_EXPR
+
+#else
+
+#define UTL_HAS_COMPILE_TIME_BASE_OFFSET 0
+
+#endif
+
 
 } // namespace utl

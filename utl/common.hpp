@@ -82,7 +82,7 @@ _UTL_SYSTEM_HEADER_
 
 #define UTL_WITH_INDEX_SEQUENCE(params, ...) \
 	[&] _UTL_INDEX_SEQ_HELPER_TEMPLATE_PARAMS params \
-	_UTL_INDEX_SEQ_HELPER_FUNCTION_PARAMS params __VA_ARGS__ \
+	_UTL_INDEX_SEQ_HELPER_FUNCTION_PARAMS params -> decltype(auto) __VA_ARGS__ \
 	_UTL_INDEX_SEQ_HELPER_FUNCTION_INVOKE params
 
 /// MARK: Enum Operators
@@ -233,6 +233,7 @@ namespace utl {
         static constexpr std::size_t size = sizeof...(T);
         template <std::size_t I>
         using at = std::tuple_element_t<I, std::tuple<T...>>;
+        static constexpr bool all_equal = std::conjunction_v<std::is_same<at<0>, T>...>;
 	};
 	
 	template <typename T, std::size_t N, typename... R>
