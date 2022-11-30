@@ -10,47 +10,12 @@ _UTL_SYSTEM_HEADER_
 #include <type_traits>
 
 #include "__debug.hpp"
+#include "__union.hpp"
 #include "common.hpp"
 #include "type_traits.hpp"
 #include "utility.hpp"
 
 namespace utl {
-
-template <typename...>
-struct __union;
-
-template <typename T>
-struct __union<T> {
-    constexpr __union() requires (!std::is_trivially_default_constructible_v<T>) {}
-    __union() requires std::is_trivially_default_constructible_v<T> = default;
-    
-    constexpr ~__union() requires (!std::is_trivially_destructible_v<T>) {}
-    ~__union() requires std::is_trivially_destructible_v<T> = default;
-    
-    union {
-        T __first;
-    };
-};
-
-template <typename T, typename... U>
-struct __union<T, U...> {
-    constexpr __union() requires (!std::is_trivially_default_constructible_v<T>) || (!std::is_trivially_default_constructible_v<__union<U...>>) {}
-    __union() requires std::is_trivially_default_constructible_v<T> && std::is_trivially_default_constructible_v<__union<U...>> = default;
-    
-    constexpr ~__union() requires (!std::is_trivially_destructible_v<T>) || (!std::is_trivially_destructible_v<__union<U...>>) {}
-    ~__union() requires std::is_trivially_destructible_v<T> && std::is_trivially_destructible_v<__union<U...>> = default;
-    
-    union {
-        T __first;
-        __union<U...> __rest;
-    };
-};
-
-template <std::size_t I, typename V>
-constexpr decltype(auto) __union_get_impl(V&& v) {
-    if constexpr (I == 0) { return (copy_cvref_t<V&&, decltype(v.__first)>)std::forward<V>(v).__first; }
-    else { return __union_get_impl<I - 1>(std::forward<V>(v).__rest); }
-}
 
 template <typename F, typename... Args>
 constexpr decltype(auto) __invoke(F&& f, Args&&... args) {
@@ -119,29 +84,29 @@ struct __index_selector_impl<type_sequence<T...>, std::index_sequence<I...>>: __
 template <typename... T>
 struct __index_selector: __index_selector_impl<type_sequence<T...>, std::index_sequence_for<T...>> {};
 
-template <typename T>
-concept __copy_constructible = std::is_copy_constructible_v<T>;
-
-template <typename T>
-concept __copy_assignable = std::is_copy_assignable_v<T>;
-
-template <typename T>
-concept __trivially_copy_constructible = std::is_trivially_copy_constructible_v<T>;
-
-template <typename T>
-concept __trivially_copy_assignable = std::is_trivially_copy_assignable_v<T>;
-
-template <typename T>
-concept __move_constructible = std::is_move_constructible_v<T>;
-
-template <typename T>
-concept __move_assignable = std::is_move_assignable_v<T>;
-
-template <typename T>
-concept __trivially_move_constructible = std::is_trivially_move_constructible_v<T>;
-
-template <typename T>
-concept __trivially_move_assignable = std::is_trivially_move_assignable_v<T>;
+//template <typename T>
+//concept __copy_constructible = std::is_copy_constructible_v<T>;
+//
+//template <typename T>
+//concept __copy_assignable = std::is_copy_assignable_v<T>;
+//
+//template <typename T>
+//concept __trivially_copy_constructible = std::is_trivially_copy_constructible_v<T>;
+//
+//template <typename T>
+//concept __trivially_copy_assignable = std::is_trivially_copy_assignable_v<T>;
+//
+//template <typename T>
+//concept __move_constructible = std::is_move_constructible_v<T>;
+//
+//template <typename T>
+//concept __move_assignable = std::is_move_assignable_v<T>;
+//
+//template <typename T>
+//concept __trivially_move_constructible = std::is_trivially_move_constructible_v<T>;
+//
+//template <typename T>
+//concept __trivially_move_assignable = std::is_trivially_move_assignable_v<T>;
 
 // MARK: get
 
@@ -154,22 +119,22 @@ constexpr decltype(auto) __variant_get_impl(V&& v) {
 
 template <std::size_t I, typename... T>
 constexpr variant_alternative_t<I, variant<T...>>& get(variant<T...>& v) {
-    return __variant_get_impl<I>(v);
+    return get<I>(v.__data);
 }
 
 template <std::size_t I, typename... T>
 constexpr variant_alternative_t<I, variant<T...>> const& get(variant<T...> const& v) {
-    return __variant_get_impl<I>(v);
+    return get<I>(v.__data);
 }
 
 template <std::size_t I, typename... T>
 constexpr variant_alternative_t<I, variant<T...>>&& get(variant<T...>&& v) {
-    return std::move(__variant_get_impl<I>(v));
+    return get<I>(std::move(v.__data));
 }
 
 template <std::size_t I, typename... T>
 constexpr variant_alternative_t<I, variant<T...>> const&& get(variant<T...> const&& v) {
-    return std::move(__variant_get_impl<I>(v));
+    return get<I>(std::move(v.__data));
 }
 
 // MARK: visit
@@ -337,32 +302,34 @@ public:
     }
     
     // (2)
+    constexpr variant(variant const& rhs) = delete;
+
     constexpr variant(variant const& rhs)
-    requires (__copy_constructible<Types> && ...) &&
-             (__trivially_copy_constructible<Types> && ...)
+    requires __all<std::is_copy_constructible<Types>...> &&
+             __all<std::is_trivially_copy_constructible<Types>...>
     = default;
     
-    constexpr variant(variant const& rhs) noexcept(std::conjunction_v<std::is_nothrow_copy_constructible<Types>...>)
-    requires (__copy_constructible<Types> && ...)
+    constexpr variant(variant const& rhs) noexcept(__all<std::is_nothrow_copy_constructible<Types>...>)
+    requires __all<std::is_copy_constructible<Types>...>
     {
         __copy_or_move_construct(rhs);
     }
     
-    constexpr variant(variant const& rhs) = delete;
     
     // (3)
     constexpr variant(variant&& rhs) = delete;
     
-    constexpr variant(variant&& rhs) noexcept(std::conjunction_v<std::is_nothrow_move_constructible<Types>...>)
-    requires (__move_constructible<Types> && ...)
+    constexpr variant(variant&& rhs)
+    requires __all<std::is_move_constructible<Types>...> &&
+             __all<std::is_trivially_move_constructible<Types>...>
+    = default;
+    
+    constexpr variant(variant&& rhs) noexcept(__all<std::is_nothrow_move_constructible<Types>...>)
+    requires __all<std::is_move_constructible<Types>...>
     {
         __copy_or_move_construct(std::move(rhs));
     }
     
-    constexpr variant(variant&& rhs)
-    requires (__move_constructible<Types> && ...) &&
-             (__trivially_move_constructible<Types> && ...)
-    = default;
     
     // (4)
     template <typename T,
@@ -411,31 +378,30 @@ public:
     }
     
     // Destructor
-
+    ~variant() requires __all<std::is_trivially_destructible<Types>...> = default;
+    
     constexpr ~variant() {
         __destroy();
     }
     
-    ~variant() requires (std::is_trivially_destructible_v<Types> && ...) = default;
-    
-    
+
     // operator=
     
     // (1)
     constexpr variant& operator=(variant const& rhs) = delete;
     
     constexpr variant& operator=(variant const& rhs)
-    requires (__copy_constructible<Types> && ...) &&
-             (__copy_assignable<Types> && ...)
+    requires __all<std::is_copy_constructible<Types>...> &&
+             __all<std::is_copy_assignable<Types>...>
     {
         return __copy_or_move_assign(rhs);
     }
     
     constexpr variant& operator=(variant const& rhs)
-    requires (__copy_constructible<Types> && ...) &&
-             (__copy_assignable<Types> && ...) &&
-             (__trivially_copy_constructible<Types> && ...) &&
-             (__trivially_copy_assignable<Types> && ...)
+    requires __all<std::is_copy_constructible<Types>...> &&
+             __all<std::is_copy_assignable<Types>...> &&
+             __all<std::is_trivially_copy_constructible<Types>...> &&
+             __all<std::is_trivially_copy_assignable<Types>...>
     = default;
     
     // (2)
@@ -443,17 +409,17 @@ public:
     
     constexpr variant& operator=(variant&& rhs) noexcept(std::conjunction_v<std::is_nothrow_move_constructible<Types>...,
                                                                             std::is_nothrow_move_assignable<Types>...>)
-    requires (__move_constructible<Types> && ...) &&
-             (__move_assignable<Types> && ...)
+    requires __all<std::is_move_constructible<Types>...> &&
+             __all<std::is_move_assignable<Types>...>
     {
         return __copy_or_move_assign(std::move(rhs));
     }
     
     constexpr variant& operator=(variant&& rhs)
-    requires (__move_constructible<Types> && ...) &&
-             (__move_assignable<Types> && ...) &&
-             (__trivially_move_constructible<Types> && ...) &&
-             (__trivially_move_assignable<Types> && ...)
+    requires __all<std::is_move_constructible<Types>...> &&
+             __all<std::is_move_assignable<Types>...> &&
+             __all<std::is_trivially_move_constructible<Types>...> &&
+             __all<std::is_trivially_move_assignable<Types>...>
     = default;
     
     // (3)
@@ -561,7 +527,7 @@ public:
     constexpr void __construct(Args&&... args) {
         using T = __type_at_index<I>;
         __index = I;
-        std::construct_at(&__union_get_impl<I>(__union), std::forward<Args>(args)...);
+        std::construct_at(&get<I>(__data), std::forward<Args>(args)...);
     }
     
     constexpr void __destroy() {
@@ -643,7 +609,7 @@ public:
     }
     
     unsigned char __index;
-    __union<Types...> __union;
+    __union<Types...> __data;
 //    std::aligned_storage_t<__size, __align> __storage;
 };
 

@@ -17,10 +17,10 @@ constexpr bool is_constant_evaluated() noexcept {
 }
 
 template <typename... Traits>
-using __all = std::conjunction<Traits...>;
+inline constexpr bool __all = std::conjunction_v<Traits...>;
 
 template <typename... Traits>
-using __any = std::disjunction<Traits...>;
+inline constexpr bool __any = std::disjunction_v<Traits...>;
 
 namespace _private {
 template <typename T, bool = std::is_class_v<T>>
