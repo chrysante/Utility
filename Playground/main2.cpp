@@ -11,6 +11,9 @@
 #include <utl/typeinfo.hpp>
 #include <utl/vector.hpp>
 #include <utl/variant.hpp>
+
+void print(char const* text) { std::cout << text << std::endl; }
+
 //
 //struct Z {
 //    Z(utl::variant<int, Z> const& v) {}

@@ -1,284 +1,90 @@
+
+#include <utl/type_traits.hpp>
+#include <utl/__debug.hpp>
+
+namespace utl {
+
+template <typename Signature>
+class function_view;
+
+template <bool IsNoexcept, typename R, typename... Args>
+class __function_view_impl {
+    using __sig = std::conditional_t<IsNoexcept, R(Args...) noexcept, R(Args...)>;
+    
+public:
+    template <typename F>
+    requires std::is_invocable_r_v<R, F, Args...> &&
+             ((!IsNoexcept) || std::is_nothrow_invocable_r_v<R, F, Args...>) &&
+             (!std::is_same_v<function_view<__sig>, std::remove_cvref_t<F>>)
+    constexpr __function_view_impl(F&& f) noexcept:
+        __invoke_ptr(&__static_invoke<std::remove_reference_t<F>>),
+        __state_ptr(reinterpret_cast<void*>(&f))
+    {}
+    
+    constexpr R operator()(Args... args) const noexcept(IsNoexcept) {
+        __utl_expect(__invoke_ptr);
+        return __invoke_ptr(__state_ptr, args...);
+    }
+    
+private:
+    template <typename F>
+    constexpr static R __static_invoke(void const* state, Args&... args) {
+        F& f = *(F*)state;
+        if constexpr (std::is_same_v<R, std::invoke_result_t<F, Args...>>) {
+            return std::invoke(f, std::move(args)...);
+        }
+        else {
+            return static_cast<R>(std::invoke(f, std::move(args)...));
+        }
+    }
+    
+    decltype(&__static_invoke<void>) __invoke_ptr;
+    void const* __state_ptr;
+};
+
+template <typename R, typename... Args>
+class function_view<R(Args...)>: public __function_view_impl<false, R, Args...> {
+    using __base = __function_view_impl<false, R, Args...>;
+public:
+    using __base::__base;
+    using __base::operator();
+};
+
+template <typename R, typename... Args>
+class function_view<R(Args...) noexcept>: public __function_view_impl<true, R, Args...> {
+    using __base = __function_view_impl<true, R, Args...>;
+public:
+    using __base::__base;
+    using __base::operator();
+};
+
+} // namespace utl
+
 #include <iostream>
 #include <span>
-#include <string>
-#include <random>
-#include <variant>
+#include <vector>
+#include <optional>
 
-#include <mtl/mtl.hpp>
-#include <utl/variant.hpp>
-#include <utl/vector.hpp>
-#include <utl/utility.hpp>
-#include <utl/structure_of_arrays.hpp>
-#include <utl/graph.hpp>
-#include <utl/ranges.hpp>
-#include <utl/typeinfo.hpp>
-#include <utl/type_traits.hpp>
-
-namespace utl::experimental {
-
-template <typename...>
-union __union_impl;
-
-template <>
-union __union_impl<> {};
-
-template <typename T0>
-union __union_impl<T0> {
-    T0 __t0;
+struct Lifetime {
+    Lifetime()                              { std::cout << "Construct\n"; }
+    Lifetime(Lifetime const&)               { std::cout << "Copy construct\n"; }
+    Lifetime(Lifetime&&) noexcept           { std::cout << "Move construct\n"; }
+    Lifetime operator=(Lifetime const&)     { std::cout << "Copy assign\n"; return *this; }
+    Lifetime operator=(Lifetime&&) noexcept { std::cout << "Move assign\n"; return *this; }
+    ~Lifetime()                             { std::cout << "Destroy\n"; }
 };
 
-template <typename T0, typename T1>
-union __union_impl<T0, T1> {
-    T0 __t0;
-    T0 __t1;
+struct S {
+    void f(Lifetime) { std::cout << "f()\n"; }
 };
 
-template <typename T0, typename T1, typename T2>
-union __union_impl<T0, T1, T2> {
-    T0 __t0;
-    T1 __t1;
-    T2 __t2;
-};
-
-template <typename T0, typename T1, typename T2, typename T3>
-union __union_impl<T0, T1, T2, T3> {
-    T0 __t0;
-    T1 __t1;
-    T2 __t2;
-    T3 __t3;
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4>
-union __union_impl<T0, T1, T2, T3, T4> {
-    T0 __t0;
-    T1 __t1;
-    T2 __t2;
-    T3 __t3;
-    T4 __t4;
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5>
-union __union_impl<T0, T1, T2, T3, T4, T5> {
-    T0 __t0;
-    T1 __t1;
-    T2 __t2;
-    T3 __t3;
-    T4 __t4;
-    T5 __t5;
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
-union __union_impl<T0, T1, T2, T3, T4, T5, T6> {
-    T0 __t0;
-    T1 __t1;
-    T2 __t2;
-    T3 __t3;
-    T4 __t4;
-    T5 __t5;
-    T6 __t6;
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename... TR>
-union __union_impl<T0, T1, T2, T3, T4, T5, T6, T7, TR...> {
-    T0 __t0;
-    T1 __t1;
-    T2 __t2;
-    T3 __t3;
-    T4 __t4;
-    T5 __t5;
-    T6 __t6;
-    T7 __t7;
-    __union_impl<TR...> __tr;
-};
-
-template <std::size_t I, typename V>
-constexpr decltype(auto) __union_impl_get(V&& v) {
-         if constexpr (I == 0) { return static_cast<copy_cvref_t<V&&, decltype(v.__t0)>>(v.__t0); }
-    else if constexpr (I == 1) { return static_cast<copy_cvref_t<V&&, decltype(v.__t1)>>(v.__t1); }
-    else if constexpr (I == 2) { return static_cast<copy_cvref_t<V&&, decltype(v.__t2)>>(v.__t2); }
-    else if constexpr (I == 3) { return static_cast<copy_cvref_t<V&&, decltype(v.__t3)>>(v.__t3); }
-    else if constexpr (I == 4) { return static_cast<copy_cvref_t<V&&, decltype(v.__t4)>>(v.__t4); }
-    else if constexpr (I == 5) { return static_cast<copy_cvref_t<V&&, decltype(v.__t5)>>(v.__t5); }
-    else if constexpr (I == 6) { return static_cast<copy_cvref_t<V&&, decltype(v.__t6)>>(v.__t6); }
-    else if constexpr (I == 7) { return static_cast<copy_cvref_t<V&&, decltype(v.__t7)>>(v.__t7); }
-    else                       { return __union_impl_get<I - 8>(std::forward<V>(v).__tr); }
+void f(utl::function_view<void(S, Lifetime&&)> callback, Lifetime l) {
+    callback(S{}, std::move(l));
 }
 
-template <bool DefCtor, bool CopyCtor, bool MoveCtor, bool CopyAssign, bool MoveAssign, bool Dtor>
-struct __union_traits_impl;
-
-template <typename Traits, typename... T>
-struct __union_base;
-
-#define _UTL_UNION_BASE_DEF(DefCtor, CopyCtor, MoveCtor, CopyAssign, MoveAssign, Dtor, ...) \
-template <typename... T>                                                                    \
-struct __union_base<__VA_ARGS__, T...> {                                                    \
-    DefCtor                                                                                 \
-    CopyCtor                                                                                \
-    MoveCtor                                                                                \
-    CopyAssign                                                                              \
-    MoveAssign                                                                              \
-    Dtor                                                                                    \
-    union {                                                                                 \
-        __union_impl<T...> __impl;                                                          \
-    };                                                                                      \
-}
-
-#define _UTL_TRIV_CTOR    __union_base() = default;
-#define _UTL_CTOR         __union_base() {}
-#define _UTL_TRIV_COPYCT  __union_base(__union_base const&) = default;
-#define _UTL_COPYCT       __union_base(__union_base const&) {}
-#define _UTL_TRIV_MOVECT  __union_base(__union_base&&) = default;
-#define _UTL_MOVECT       __union_base(__union_base&&) {}
-#define _UTL_TRIV_COPYAS  __union_base& operator=(__union_base const&) = default;
-#define _UTL_COPYAS       __union_base& operator=(__union_base const&) { return *this; }
-#define _UTL_TRIV_MOVEAS  __union_base& operator=(__union_base&&) = default;
-#define _UTL_MOVEAS       __union_base& operator=(__union_base&&) { return *this; }
-#define _UTL_TRIV_DTOR   ~__union_base() = default;
-#define _UTL_DTOR        ~__union_base() {}
-
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR, _UTL_TRIV_COPYCT, _UTL_TRIV_MOVECT, _UTL_TRIV_COPYAS, _UTL_TRIV_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<1, 1, 1, 1, 1, 1>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR, _UTL_TRIV_COPYCT, _UTL_TRIV_MOVECT, _UTL_TRIV_COPYAS, _UTL_TRIV_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<0, 1, 1, 1, 1, 1>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR,      _UTL_COPYCT, _UTL_TRIV_MOVECT, _UTL_TRIV_COPYAS, _UTL_TRIV_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<1, 0, 1, 1, 1, 1>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR,      _UTL_COPYCT, _UTL_TRIV_MOVECT, _UTL_TRIV_COPYAS, _UTL_TRIV_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<0, 0, 1, 1, 1, 1>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR, _UTL_TRIV_COPYCT,      _UTL_MOVECT, _UTL_TRIV_COPYAS, _UTL_TRIV_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<1, 1, 0, 1, 1, 1>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR, _UTL_TRIV_COPYCT,      _UTL_MOVECT, _UTL_TRIV_COPYAS, _UTL_TRIV_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<0, 1, 0, 1, 1, 1>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR,      _UTL_COPYCT,      _UTL_MOVECT, _UTL_TRIV_COPYAS, _UTL_TRIV_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<1, 0, 0, 1, 1, 1>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR,      _UTL_COPYCT,      _UTL_MOVECT, _UTL_TRIV_COPYAS, _UTL_TRIV_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<0, 0, 0, 1, 1, 1>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR, _UTL_TRIV_COPYCT, _UTL_TRIV_MOVECT,      _UTL_COPYAS, _UTL_TRIV_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<1, 1, 1, 0, 1, 1>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR, _UTL_TRIV_COPYCT, _UTL_TRIV_MOVECT,      _UTL_COPYAS, _UTL_TRIV_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<0, 1, 1, 0, 1, 1>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR,      _UTL_COPYCT, _UTL_TRIV_MOVECT,      _UTL_COPYAS, _UTL_TRIV_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<1, 0, 1, 0, 1, 1>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR,      _UTL_COPYCT, _UTL_TRIV_MOVECT,      _UTL_COPYAS, _UTL_TRIV_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<0, 0, 1, 0, 1, 1>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR, _UTL_TRIV_COPYCT,      _UTL_MOVECT,      _UTL_COPYAS, _UTL_TRIV_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<1, 1, 0, 0, 1, 1>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR, _UTL_TRIV_COPYCT,      _UTL_MOVECT,      _UTL_COPYAS, _UTL_TRIV_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<0, 1, 0, 0, 1, 1>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR,      _UTL_COPYCT,      _UTL_MOVECT,      _UTL_COPYAS, _UTL_TRIV_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<1, 0, 0, 0, 1, 1>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR,      _UTL_COPYCT,      _UTL_MOVECT,      _UTL_COPYAS, _UTL_TRIV_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<0, 0, 0, 0, 1, 1>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR, _UTL_TRIV_COPYCT, _UTL_TRIV_MOVECT, _UTL_TRIV_COPYAS,      _UTL_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<1, 1, 1, 1, 0, 1>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR, _UTL_TRIV_COPYCT, _UTL_TRIV_MOVECT, _UTL_TRIV_COPYAS,      _UTL_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<0, 1, 1, 1, 0, 1>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR,      _UTL_COPYCT, _UTL_TRIV_MOVECT, _UTL_TRIV_COPYAS,      _UTL_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<1, 0, 1, 1, 0, 1>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR,      _UTL_COPYCT, _UTL_TRIV_MOVECT, _UTL_TRIV_COPYAS,      _UTL_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<0, 0, 1, 1, 0, 1>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR, _UTL_TRIV_COPYCT,      _UTL_MOVECT, _UTL_TRIV_COPYAS,      _UTL_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<1, 1, 0, 1, 0, 1>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR, _UTL_TRIV_COPYCT,      _UTL_MOVECT, _UTL_TRIV_COPYAS,      _UTL_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<0, 1, 0, 1, 0, 1>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR,      _UTL_COPYCT,      _UTL_MOVECT, _UTL_TRIV_COPYAS,      _UTL_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<1, 0, 0, 1, 0, 1>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR,      _UTL_COPYCT,      _UTL_MOVECT, _UTL_TRIV_COPYAS,      _UTL_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<0, 0, 0, 1, 0, 1>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR, _UTL_TRIV_COPYCT, _UTL_TRIV_MOVECT,      _UTL_COPYAS,      _UTL_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<1, 1, 1, 0, 0, 1>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR, _UTL_TRIV_COPYCT, _UTL_TRIV_MOVECT,      _UTL_COPYAS,      _UTL_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<0, 1, 1, 0, 0, 1>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR,      _UTL_COPYCT, _UTL_TRIV_MOVECT,      _UTL_COPYAS,      _UTL_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<1, 0, 1, 0, 0, 1>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR,      _UTL_COPYCT, _UTL_TRIV_MOVECT,      _UTL_COPYAS,      _UTL_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<0, 0, 1, 0, 0, 1>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR, _UTL_TRIV_COPYCT,      _UTL_MOVECT,      _UTL_COPYAS,      _UTL_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<1, 1, 0, 0, 0, 1>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR, _UTL_TRIV_COPYCT,      _UTL_MOVECT,      _UTL_COPYAS,      _UTL_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<0, 1, 0, 0, 0, 1>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR,      _UTL_COPYCT,      _UTL_MOVECT,      _UTL_COPYAS,      _UTL_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<1, 0, 0, 0, 0, 1>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR,      _UTL_COPYCT,      _UTL_MOVECT,      _UTL_COPYAS,      _UTL_MOVEAS, _UTL_TRIV_DTOR, __union_traits_impl<0, 0, 0, 0, 0, 1>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR, _UTL_TRIV_COPYCT, _UTL_TRIV_MOVECT, _UTL_TRIV_COPYAS, _UTL_TRIV_MOVEAS,      _UTL_DTOR, __union_traits_impl<1, 1, 1, 1, 1, 0>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR, _UTL_TRIV_COPYCT, _UTL_TRIV_MOVECT, _UTL_TRIV_COPYAS, _UTL_TRIV_MOVEAS,      _UTL_DTOR, __union_traits_impl<0, 1, 1, 1, 1, 0>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR,      _UTL_COPYCT, _UTL_TRIV_MOVECT, _UTL_TRIV_COPYAS, _UTL_TRIV_MOVEAS,      _UTL_DTOR, __union_traits_impl<1, 0, 1, 1, 1, 0>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR,      _UTL_COPYCT, _UTL_TRIV_MOVECT, _UTL_TRIV_COPYAS, _UTL_TRIV_MOVEAS,      _UTL_DTOR, __union_traits_impl<0, 0, 1, 1, 1, 0>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR, _UTL_TRIV_COPYCT,      _UTL_MOVECT, _UTL_TRIV_COPYAS, _UTL_TRIV_MOVEAS,      _UTL_DTOR, __union_traits_impl<1, 1, 0, 1, 1, 0>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR, _UTL_TRIV_COPYCT,      _UTL_MOVECT, _UTL_TRIV_COPYAS, _UTL_TRIV_MOVEAS,      _UTL_DTOR, __union_traits_impl<0, 1, 0, 1, 1, 0>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR,      _UTL_COPYCT,      _UTL_MOVECT, _UTL_TRIV_COPYAS, _UTL_TRIV_MOVEAS,      _UTL_DTOR, __union_traits_impl<1, 0, 0, 1, 1, 0>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR,      _UTL_COPYCT,      _UTL_MOVECT, _UTL_TRIV_COPYAS, _UTL_TRIV_MOVEAS,      _UTL_DTOR, __union_traits_impl<0, 0, 0, 1, 1, 0>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR, _UTL_TRIV_COPYCT, _UTL_TRIV_MOVECT,      _UTL_COPYAS, _UTL_TRIV_MOVEAS,      _UTL_DTOR, __union_traits_impl<1, 1, 1, 0, 1, 0>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR, _UTL_TRIV_COPYCT, _UTL_TRIV_MOVECT,      _UTL_COPYAS, _UTL_TRIV_MOVEAS,      _UTL_DTOR, __union_traits_impl<0, 1, 1, 0, 1, 0>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR,      _UTL_COPYCT, _UTL_TRIV_MOVECT,      _UTL_COPYAS, _UTL_TRIV_MOVEAS,      _UTL_DTOR, __union_traits_impl<1, 0, 1, 0, 1, 0>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR,      _UTL_COPYCT, _UTL_TRIV_MOVECT,      _UTL_COPYAS, _UTL_TRIV_MOVEAS,      _UTL_DTOR, __union_traits_impl<0, 0, 1, 0, 1, 0>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR, _UTL_TRIV_COPYCT,      _UTL_MOVECT,      _UTL_COPYAS, _UTL_TRIV_MOVEAS,      _UTL_DTOR, __union_traits_impl<1, 1, 0, 0, 1, 0>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR, _UTL_TRIV_COPYCT,      _UTL_MOVECT,      _UTL_COPYAS, _UTL_TRIV_MOVEAS,      _UTL_DTOR, __union_traits_impl<0, 1, 0, 0, 1, 0>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR,      _UTL_COPYCT,      _UTL_MOVECT,      _UTL_COPYAS, _UTL_TRIV_MOVEAS,      _UTL_DTOR, __union_traits_impl<1, 0, 0, 0, 1, 0>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR,      _UTL_COPYCT,      _UTL_MOVECT,      _UTL_COPYAS, _UTL_TRIV_MOVEAS,      _UTL_DTOR, __union_traits_impl<0, 0, 0, 0, 1, 0>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR, _UTL_TRIV_COPYCT, _UTL_TRIV_MOVECT, _UTL_TRIV_COPYAS,      _UTL_MOVEAS,      _UTL_DTOR, __union_traits_impl<1, 1, 1, 1, 0, 0>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR, _UTL_TRIV_COPYCT, _UTL_TRIV_MOVECT, _UTL_TRIV_COPYAS,      _UTL_MOVEAS,      _UTL_DTOR, __union_traits_impl<0, 1, 1, 1, 0, 0>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR,      _UTL_COPYCT, _UTL_TRIV_MOVECT, _UTL_TRIV_COPYAS,      _UTL_MOVEAS,      _UTL_DTOR, __union_traits_impl<1, 0, 1, 1, 0, 0>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR,      _UTL_COPYCT, _UTL_TRIV_MOVECT, _UTL_TRIV_COPYAS,      _UTL_MOVEAS,      _UTL_DTOR, __union_traits_impl<0, 0, 1, 1, 0, 0>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR, _UTL_TRIV_COPYCT,      _UTL_MOVECT, _UTL_TRIV_COPYAS,      _UTL_MOVEAS,      _UTL_DTOR, __union_traits_impl<1, 1, 0, 1, 0, 0>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR, _UTL_TRIV_COPYCT,      _UTL_MOVECT, _UTL_TRIV_COPYAS,      _UTL_MOVEAS,      _UTL_DTOR, __union_traits_impl<0, 1, 0, 1, 0, 0>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR,      _UTL_COPYCT,      _UTL_MOVECT, _UTL_TRIV_COPYAS,      _UTL_MOVEAS,      _UTL_DTOR, __union_traits_impl<1, 0, 0, 1, 0, 0>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR,      _UTL_COPYCT,      _UTL_MOVECT, _UTL_TRIV_COPYAS,      _UTL_MOVEAS,      _UTL_DTOR, __union_traits_impl<0, 0, 0, 1, 0, 0>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR, _UTL_TRIV_COPYCT, _UTL_TRIV_MOVECT,      _UTL_COPYAS,      _UTL_MOVEAS,      _UTL_DTOR, __union_traits_impl<1, 1, 1, 0, 0, 0>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR, _UTL_TRIV_COPYCT, _UTL_TRIV_MOVECT,      _UTL_COPYAS,      _UTL_MOVEAS,      _UTL_DTOR, __union_traits_impl<0, 1, 1, 0, 0, 0>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR,      _UTL_COPYCT, _UTL_TRIV_MOVECT,      _UTL_COPYAS,      _UTL_MOVEAS,      _UTL_DTOR, __union_traits_impl<1, 0, 1, 0, 0, 0>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR,      _UTL_COPYCT, _UTL_TRIV_MOVECT,      _UTL_COPYAS,      _UTL_MOVEAS,      _UTL_DTOR, __union_traits_impl<0, 0, 1, 0, 0, 0>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR, _UTL_TRIV_COPYCT,      _UTL_MOVECT,      _UTL_COPYAS,      _UTL_MOVEAS,      _UTL_DTOR, __union_traits_impl<1, 1, 0, 0, 0, 0>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR, _UTL_TRIV_COPYCT,      _UTL_MOVECT,      _UTL_COPYAS,      _UTL_MOVEAS,      _UTL_DTOR, __union_traits_impl<0, 1, 0, 0, 0, 0>);
-_UTL_UNION_BASE_DEF(_UTL_TRIV_CTOR,      _UTL_COPYCT,      _UTL_MOVECT,      _UTL_COPYAS,      _UTL_MOVEAS,      _UTL_DTOR, __union_traits_impl<1, 0, 0, 0, 0, 0>);
-_UTL_UNION_BASE_DEF(     _UTL_CTOR,      _UTL_COPYCT,      _UTL_MOVECT,      _UTL_COPYAS,      _UTL_MOVEAS,      _UTL_DTOR, __union_traits_impl<0, 0, 0, 0, 0, 0>);
-
-#undef _UTL_UNION_BASE_DEF
-#undef _UTL_TRIV_CTOR
-#undef _UTL_CTOR
-#undef _UTL_TRIV_COPYCT
-#undef _UTL_COPYCT
-#undef _UTL_TRIV_MOVECT
-#undef _UTL_MOVECT
-#undef _UTL_TRIV_COPYAS
-#undef _UTL_COPYAS
-#undef _UTL_TRIV_MOVEAS
-#undef _UTL_MOVEAS
-#undef _UTL_TRIV_DTOR
-#undef _UTL_DTOR
-
-template <typename... T>
-using __union_traits = __union_traits_impl<
-    std::conjunction_v<std::is_trivially_default_constructible<T>...>,
-    std::conjunction_v<std::is_trivially_copy_constructible<T>...>,
-    std::conjunction_v<std::is_trivially_move_constructible<T>...>,
-    std::conjunction_v<std::is_trivially_copy_assignable<T>...>,
-    std::conjunction_v<std::is_trivially_move_assignable<T>...>,
-    std::conjunction_v<std::is_trivially_destructible<T>...>
->;
-
-template <typename...T>
-struct __union: __union_base<__union_traits<T...>, T...> {};
-
-template <std::size_t I, typename U>
-constexpr decltype(auto) __union_get(U&& u) {
-    return __union_impl_get<I>(std::forward<U>(u).__impl);
-}
-
-}
-
-template <typename... T>
-struct Variant {
-    template <std::size_t I, typename... Args>
-    constexpr Variant(std::in_place_index_t<I>, Args&&... args) {
-        index = I;
-        std::construct_at(&__union_get_impl<I>(data), std::forward<Args>(args)...);
-    }
+int main() {
     
-    constexpr ~Variant() {
-        UTL_WITH_INDEX_SEQUENCE((I, sizeof...(T)), {
-            using destructor = void(*)(Variant&);
-            std::array<destructor, sizeof...(T)> destructors {
-                [](Variant& v) { std::destroy_at(&__union_get_impl<I>(v.data)); }...
-            };
-            destructors[index](*this);
-        });
-    }
+    f(&S::f, Lifetime{});
     
-    int index;
-    utl::__union<T...> data;
-};
-
-struct X {
-    X() = delete;
-    X(int) {}
-    ~X() {}
-};
-
-[[gnu::weak]] int main() {
-    using namespace utl::experimental;
-
-    __union<int, char, float> const u{};
-    __union<X, int, float> const v;
-    
-    std::cout << utl::nameof<decltype(__union_get<0>(v))> << std::endl;
-    std::cout << utl::nameof<decltype(__union_get<0>(std::move(v)))> << std::endl;
-    std::cout << utl::nameof<decltype(__union_get<1>(std::move(v)))> << std::endl;
-    std::cout << utl::nameof<decltype(__union_get<2>(v))> << std::endl;
-    
-    static_assert( std::is_trivially_default_constructible_v<__union<int, char>>);
-    static_assert(!std::is_trivially_default_constructible_v<__union<int, X>>);
-    
-    static_assert( std::is_trivially_destructible_v<__union<int, char>>);
-    static_assert(!std::is_trivially_destructible_v<__union<int, X>>);
 }
 
