@@ -31,8 +31,10 @@ public:
     using container_type::empty;
     explicit operator bool() const { return !empty(); }
     using container_type::size;
-    __utl_nodiscard __utl_interface_export container_type& container() { return *this; }
-    __utl_nodiscard __utl_interface_export container_type const& container() const { return *this; }
+    __utl_nodiscard __utl_interface_export container_type const& container() const& { return *this; }
+    __utl_nodiscard __utl_interface_export container_type& container()& { return *this; }
+    __utl_nodiscard __utl_interface_export container_type const&& container() const&& { return std::move(*this); }
+    __utl_nodiscard __utl_interface_export container_type&& container()&& { return std::move(*this); }
 
     /// MARK: Modifiers
     T const& push(T const& elem) { return this->push_back(elem); }
