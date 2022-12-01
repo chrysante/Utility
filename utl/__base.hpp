@@ -73,7 +73,7 @@ _UTL_SYSTEM_HEADER_
 #if UTL_DEBUG_LEVEL > 1
 #define __utl_always_inline
 #else // UTL_DEBUG_LEVEL > 1
-#define __utl_always_inline __attribute__((always_inline))
+#define __utl_always_inline // __attribute__((always_inline)) // We disable this because it only causes problems with debugging.
 #endif // UTL_DEBUG_LEVEL > 1
 
 #define __utl_noinline __attribute__((noinline))
