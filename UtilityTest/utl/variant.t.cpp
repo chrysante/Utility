@@ -3,6 +3,8 @@
 #include <tuple>
 #include <iostream>
 
+#if 0
+
 #include <utl/variant.hpp>
 #include <utl/typeinfo.hpp>
 #include <utl/utility.hpp>
@@ -164,3 +166,5 @@ TEST_CASE("variant trivial lifetime", "[variant]") {
     CHECK(std::is_trivially_move_assignable_v<W>);
     CHECK(std::is_trivially_destructible_v<W>);
 }
+
+#endif
