@@ -44,6 +44,9 @@ using const_sentinel_type_t = decltype(std::declval<std::add_const_t<Range>>().e
 
 /// MARK: __wrap_iterator
 
+template <typename T>
+concept __utl_is_pointer = std::is_pointer_v<T>;
+
 /// \brief CRTP wrapper for iterators
 template <typename Itr, typename Base = void>
 class __wrap_iterator {
@@ -136,6 +139,24 @@ public:
     }
     
     constexpr decltype(auto) operator*() const { return *__itr; }
+    
+    auto operator->() const requires __utl_is_pointer<Itr> || requires(Itr i) { { i.operator->() } -> __utl_is_pointer; } {
+        return __operator_arrow_impl(*this);
+    }
+
+    auto operator->() requires __utl_is_pointer<Itr> || requires(Itr i) { { i.operator->() } -> __utl_is_pointer; } {
+        return __operator_arrow_impl(*this);
+    }
+    
+    template <typename Self>
+    static constexpr auto __operator_arrow_impl(Self& self) {
+        if constexpr (__utl_is_pointer<Itr>) {
+            return self.__itr;
+        }
+        else {
+            return self.__itr.operator->();
+        }
+    }
     
     friend constexpr bool operator==(__base const& lhs, __base const& rhs) requires std::equality_comparable<Itr> {
         return lhs.__itr == rhs.__itr;
