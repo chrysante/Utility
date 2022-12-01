@@ -431,7 +431,7 @@ struct vector {
     }
 
     /// (1a)
-    __utl_interface_export constexpr iterator insert(size_t index, value_type const& value) {
+    __utl_interface_export constexpr iterator insert(std::size_t index, value_type const& value) {
         return __insert_impl(index, 1, [&value]() -> value_type const& { return value; });
     }
 
@@ -446,13 +446,23 @@ struct vector {
     }
 
     /// (3)
-    __utl_interface_export constexpr iterator insert(const_iterator pos, size_type count, value_type const& value) {
+    __utl_interface_export constexpr iterator insert(const_iterator pos, std::size_t count, value_type const& value) {
         return __insert_impl(pos - begin(), count, [&value]() -> value_type const& { return value; });
     }
 
     /// (3a)
-    __utl_interface_export constexpr iterator insert(std::size_t index, size_type count, value_type const& value) {
+    __utl_interface_export constexpr iterator insert(std::size_t index, std::size_t count, value_type const& value) {
         return __insert_impl(index, count, [&value]() -> value_type const& { return value; });
+    }
+    
+    /// (3b)
+    __utl_interface_export constexpr iterator insert(const_iterator pos, std::size_t count, utl::invocable_r<value_type> auto&& f) {
+        return __insert_impl(pos - begin(), count, UTL_FORWARD(f));
+    }
+    
+    /// (3c)
+    __utl_interface_export constexpr iterator insert(std::size_t index, std::size_t count, utl::invocable_r<value_type> auto&& f) {
+        return __insert_impl(index, count, UTL_FORWARD(f));
     }
 
     /// (4)
