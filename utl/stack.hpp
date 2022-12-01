@@ -42,7 +42,7 @@ public:
         return this->emplace_back(UTL_FORWARD(args)...);
     }
 
-    __utl_nodiscard __utl_interface_export T pop() {
+    __utl_interface_export T pop() {
         T result = top();
         this->pop_back();
         return result;
