@@ -188,7 +188,7 @@ public:
     __base& __as_base() { return static_cast<__base&>(*this); }
     __base const& __as_base() const { return static_cast<__base const&>(*this); }
     
-    Itr __itr;
+    [[no_unique_address]] Itr __itr;
 };
 
 }
