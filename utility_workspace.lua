@@ -27,7 +27,7 @@ location "."
 kind "ConsoleApp"
 language "C++"    
 
-sysincludedirs {
+externalincludedirs {
     ".", "UtilityTest"
 }
 
