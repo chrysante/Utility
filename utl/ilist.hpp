@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iterator>
+#include <iosfwd>
 
 #include "__base.hpp"
 #include "__memory_resource_base.hpp"
@@ -21,19 +22,21 @@ class ilist_node: public __ilist_node_base {
 public:
     using __derived_type = Derived;
     
-    ilist_node(ilist_node* prev = nullptr, ilist_node* next = nullptr): _prev(prev), _next(next) {}
+    ilist_node(ilist_node* prev = nullptr, ilist_node* next = nullptr):
+        __prev(static_cast<__derived_type*>(prev)), __next(static_cast<__derived_type*>(next))
+    {}
     
-    Derived*       prev()       { return static_cast<Derived*      >(_prev); }
-    Derived const* prev() const { return static_cast<Derived const*>(_prev); }
-    Derived*       next()       { return static_cast<Derived*      >(_next); }
-    Derived const* next() const { return static_cast<Derived const*>(_next); }
+    __derived_type*       prev()       { return __prev; }
+    __derived_type const* prev() const { return __prev; }
+    __derived_type*       next()       { return __next; }
+    __derived_type const* next() const { return __next; }
     
-    void set_prev(ilist_node* prev) { _prev = prev; }
-    void set_next(ilist_node* next) { _next = next; }
+    void set_prev(ilist_node* prev) { __prev = static_cast<__derived_type*>(prev); }
+    void set_next(ilist_node* next) { __next = static_cast<__derived_type*>(next); }
     
 private:
-    ilist_node* _prev;
-    ilist_node* _next;
+    __derived_type* __prev;
+    __derived_type* __next;
 };
 
 template <typename Derived, typename Parent>
@@ -174,19 +177,24 @@ public:
         ilist(__utl_begin(range), __utl_end(range), alloc) {}
     
     // (6)
-    ilist(ilist const& rhs) requires std::is_default_constructible_v<allocator_type>: ilist(rhs, allocator_type()) {}
+    ilist(ilist const& rhs) requires std::is_default_constructible_v<allocator_type>:
+        ilist(rhs, __alloc_traits::select_on_container_copy_construction(rhs.__allocator_)) {}
     
     // (7)
-    ilist(ilist const& rhs, allocator_type const& alloc): ilist(alloc)
+    ilist(ilist const& rhs, allocator_type const& alloc):
+        ilist(alloc)
     {
-        __utl_debugfail();
+        insert(begin(), rhs.begin(), rhs.end());
     }
     
     // (8)
-    ilist(ilist&& rhs) requires std::is_default_constructible_v<allocator_type>: ilist(std::move(rhs), allocator_type()) {}
+    ilist(ilist&& rhs) requires std::is_default_constructible_v<allocator_type>:
+        ilist(std::move(rhs), rhs.__allocator_) {}
     
     // (9)
-    ilist(ilist&& rhs, allocator_type const& alloc);
+    ilist(ilist&& rhs, allocator_type const& alloc): ilist(alloc) {
+        *this = std::move(rhs);
+    }
     
     // (10)
     ilist(std::initializer_list<T> init_list, allocator_type const& alloc = allocator_type()): ilist(alloc) {
@@ -203,17 +211,56 @@ public:
     
     // (1)
     ilist& operator=(ilist const& rhs) {
-        assign(rhs.begin(), rhs.end());
+        __assign_impl(rhs);
         return *this;
+    }
+    
+    template <bool v = true, std::enable_if_t<__alloc_traits::propagate_on_container_copy_assignment::value && v, int> = 0>
+    void __assign_impl(ilist const& rhs) {
+        if (__allocator_ == rhs.__allocator_) {
+            __allocator_ = rhs.__allocator_;
+            __assign_impl_fast_path(rhs.begin(), rhs.end());
+        }
+        else {
+            clear();
+            __allocator_ = rhs.__allocator_;
+            insert(begin(), rhs.begin(), rhs.end());
+        }
+    }
+    
+    template <bool v = true, std::enable_if_t<!__alloc_traits::propagate_on_container_copy_assignment::value && v, int> = 0>
+    void __assign_impl(ilist const& rhs) {
+        __assign_impl_fast_path(rhs.begin(), rhs.end());
+    }
+    
+    void __assign_impl_fast_path(std::invocable auto&& insert_while, auto&& get_elems) {
+        iterator itr = begin();
+        for (;; ++itr) {
+            if (itr == end()) {
+                goto this_smaller;
+            }
+            if (!insert_while()) {
+                goto rhs_smaller;
+            }
+            __sentinel_type itr_sent = *itr;
+            *itr = get_elems();
+            itr->__sentinel_type::operator=(itr_sent);
+        }
+    this_smaller:
+        __insert_impl(end(), insert_while, [&]{ return __construct(__allocate(), get_elems()); });
+        return;
+    rhs_smaller:
+        erase(itr, end());
+        return;
+    }
+    
+    void __assign_impl_fast_path(auto rhs_itr, auto rhs_end) {
+        __assign_impl_fast_path([&]{ return rhs_itr != rhs_end; }, [&]{ return *rhs_itr++; });
     }
     
     // (2)
     ilist& operator=(ilist&& rhs) noexcept {
-        this->clear();
-        this->__sentinel_ = rhs.__sentinel_;
-        this->begin()->set_prev(this->__sentinel());
-        std::prev(this->end())->set_next(this->__sentinel());
-        rhs.__reset();
+        swap(rhs);
         return *this;
     }
     
@@ -225,15 +272,13 @@ public:
     
     // (1)
     void assign(size_type count, value_type const& value) {
-        clear();
-        insert(begin(), count, value);
+        __assign_impl_fast_path([&, i = size_type(0)]() mutable { return i != count; }, [&]() { return value; });
     }
     
     // (2)
     template <input_iterator_for<value_type> InputIt, sentinel_for<InputIt> Sentinel>
     void assign(InputIt first, Sentinel last) {
-        clear();
-        insert(begin(), first, last);
+        __assign_impl_fast_path(first, last);
     }
     
     // (2)
@@ -396,16 +441,56 @@ public:
         erase(begin());
     }
     
+    /// Resize methods are not available as we don't maintain size.
+    
     // (1)
-//    void resize(size_type count);
+    void resize(size_type count) requires false;
     
     // (2)
-//    void resize(size_type count, value_type const& value);
+    void resize(size_type count, value_type const& value) requires false;
     
     void swap(ilist& rhs) noexcept {
-        ilist tmp = std::move(rhs);
-        rhs = std::move(*this);
-        *this = std::move(tmp);
+        if constexpr (__alloc_traits::propagate_on_container_swap::value) {
+            __fast_swap(rhs, true);
+        }
+        else if (__allocator_ == rhs.__allocator_) {
+            __fast_swap(rhs, false);
+        }
+        else {
+            __sentinel_type rhs_copy;
+            __move_assign_fast(rhs_copy, rhs.begin(), rhs.end());
+            rhs.__reset();
+            rhs.__assign_impl_fast_path(begin(), end());
+            __assign_impl_fast_path(iterator(rhs_copy.next()), iterator(static_cast<value_type*>(&rhs_copy)));
+        }
+    }
+    
+    void __fast_swap(ilist& rhs, bool swap_allocs) {
+        if (swap_allocs) {
+            std::swap(__allocator_, rhs.__allocator_);
+        }
+        __sentinel_type rhs_copy;
+        __move_assign_fast(rhs_copy, rhs.begin(), rhs.end());
+        __move_assign_fast(rhs.__sentinel_, this->begin(), this->end());
+        __move_assign_fast(this->__sentinel_, rhs_copy.next(), static_cast<value_type*>(&rhs_copy));
+    }
+    
+    static void __move_assign_fast(__sentinel_type& sent, iterator begin, iterator end) {
+        if (begin == end) {
+            __reset(sent);
+        }
+        else {
+            --end;
+            sent.set_next(begin);
+            sent.set_prev(end);
+            begin->set_prev(&sent);
+            end->set_next(&sent);
+        }
+        __assert_invariants(sent);
+    }
+    
+    void __move_assign_fast(iterator begin, iterator end) {
+        __move_assign_fast(__sentinel_, begin, end);
     }
     
     iterator __insert_impl(const_iterator cpos, size_type count, auto&& get_nodes) {
@@ -450,13 +535,44 @@ public:
     }
     
     /// Reset this list to an empty list. No elements are destroyed or deallocated.
+    static void __reset(__sentinel_type& sent) {
+        sent = __sentinel_type(&sent, &sent);
+    }
+    
     void __reset() {
-        __sentinel()->set_prev(__sentinel());
-        __sentinel()->set_next(__sentinel());
+        __reset(__sentinel_);
+    }
+    
+    static void __assert_invariants(ilist const& l) {
+        __assert_invariants(l.__sentinel_);
+    }
+    
+    static void __assert_invariants(__sentinel_type const& s) {
+        const_iterator i = s.next();
+        __utl_assert(i->prev() == &s);
+        for (std::size_t index = 0; i != (&s); ++index) {
+            const_iterator next = std::next(i);
+            __utl_assert(std::prev(next) == i);
+            i = next;
+        }
     }
     
     [[no_unique_address]] allocator_type __allocator_;
     __sentinel_type __sentinel_;
 };
+
+template <typename CharT, typename Traits, typename T, typename A>
+requires requires(std::basic_ostream<CharT, Traits>& ostream, T const& elem) {
+    { ostream << elem } -> std::convertible_to<std::basic_ostream<CharT, Traits>&>;
+}
+std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& ostream,
+                                              ilist<T, A> const& l)
+{
+    ostream << "[";
+    for (bool first = true; auto& elem: l) {
+        ostream << (first ? (void)(first = false), "" : ", ") << elem;
+    }
+    return ostream << "]";
+}
 
 } // namespace utl

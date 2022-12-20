@@ -7,26 +7,53 @@
 
 namespace {
 
-struct TestType: utl_test::LifetimeCounter, utl::ilist_node_with_parent<TestType, TestType> {
+struct TestType: utl::ilist_node_with_parent<TestType, TestType>, utl_test::LifetimeCounter {
     explicit TestType(): value(0) {}
     TestType(int value): value(value) {}
+    
+    friend std::ostream& operator<<(std::ostream& str, TestType const& t) {
+        return str << t.value;
+    }
     
     int value;
 };
 
+template <typename T>
+struct NeverEqualAllocator: std::allocator<T> {
+    using propagate_on_container_move_assignment = std::false_type;
+    using is_always_equal = std::false_type;
+    bool operator==(NeverEqualAllocator const&) const { return false; }
+};
+
 } // namespace
 
-TEST_CASE("ilist def ctor", "[ilist]") {
+template <typename Allocator>
+static void testEqual(utl::ilist<TestType, Allocator> const& l, std::initializer_list<TestType> init_list) {
+    auto ilItr = init_list.begin();
+    INFO("l = " << l);
+    for (auto& elem: l) {
+        REQUIRE(ilItr != init_list.end());
+        CHECK(elem == *ilItr);
+        ++ilItr;
+    }
+    CHECK(ilItr == init_list.end());
+}
+
+#define LIST_TEST_CASE(...) \
+TEMPLATE_TEST_CASE_SIG(__VA_ARGS__, ((typename Allocator, int __I), Allocator, __I), \
+                       (std::allocator<::TestType>, 0), (NeverEqualAllocator<TestType>, 0))
+
+LIST_TEST_CASE("ilist def ctor", "[ilist]") {
     TestType::reset();
-    utl::ilist<TestType> l;
+    utl::ilist<TestType, Allocator> l;
     CHECK(l.empty());
     CHECK(TestType::liveObjects() == 0);
 }
 
-TEST_CASE("ilist count value ctor", "[ilist]") {
+LIST_TEST_CASE("ilist count value ctor", "[ilist]") {
     TestType::reset();
     {
-        utl::ilist<TestType> l(10, -1);
+        utl::ilist<TestType, Allocator> l(10, -1);
         CHECK(TestType::liveObjects() == 10);
         CHECK(!l.empty());
         CHECK(std::count(l.begin(), l.end(), TestType(-1)) == 10);
@@ -37,10 +64,10 @@ TEST_CASE("ilist count value ctor", "[ilist]") {
     CHECK(TestType::liveObjects() == 0);
 }
     
-TEST_CASE("ilist count ctor", "[ilist]") {
+LIST_TEST_CASE("ilist count ctor", "[ilist]") {
     TestType::reset();
     {
-        utl::ilist<TestType> l(10);
+        utl::ilist<TestType, Allocator> l(10);
         CHECK(TestType::liveObjects() == 10);
         CHECK(!l.empty());
         for (auto value: l) {
@@ -50,12 +77,12 @@ TEST_CASE("ilist count ctor", "[ilist]") {
     CHECK(TestType::liveObjects() == 0);
 }
 
-TEST_CASE("ilist range ctor", "[ilist]") {
+LIST_TEST_CASE("ilist range ctor", "[ilist]") {
     std::vector<int> data(GENERATE(0, 5, 10));
     std::fill(data.begin(), data.end(), 1);
     TestType::reset();
     {
-        utl::ilist<TestType> l(data.begin(), data.end());
+        utl::ilist<TestType, Allocator> l(data.begin(), data.end());
         CHECK(TestType::liveObjects() == data.size());
         CHECK(l.empty() == data.empty());
         for (auto value: l) {
@@ -65,80 +92,82 @@ TEST_CASE("ilist range ctor", "[ilist]") {
     CHECK(TestType::liveObjects() == 0);
 }
 
-TEST_CASE("ilist copy ctor", "[ilist]") {
-    
-}
-
-TEST_CASE("ilist move ctor", "[ilist]") {
-    
-}
-
-TEST_CASE("ilist init_list ctor", "[ilist]") {
-    
-}
-
-static void testEqual(utl::ilist<TestType> const& l, std::initializer_list<TestType> init_list) {
-    auto ilItr = init_list.begin();
-    for (auto& elem: l) {
-        REQUIRE(ilItr != init_list.end());
-        CHECK(elem == *ilItr);
-        ++ilItr;
-    }
-    CHECK(ilItr == init_list.end());
-}
-
-TEST_CASE("ilist copy assignment operator", "[ilist]") {
+LIST_TEST_CASE("ilist copy ctor", "[ilist]") {
     TestType::reset();
-    utl::ilist<TestType> l = { 1, 2, 3 };
-    utl::ilist<TestType> m = { 4, 3, 2, 1 };
+    utl::ilist<TestType, Allocator> l = { 1, 2, 3, 4 };
+    utl::ilist<TestType, Allocator> m = l;
+    CHECK(TestType::liveObjects() == 8);
+    testEqual(m, { 1, 2, 3, 4 });
+}
+
+LIST_TEST_CASE("ilist move ctor", "[ilist]") {
+    TestType::reset();
+    utl::ilist<TestType, Allocator> l = { 1, 2, 3, 4 };
+    utl::ilist<TestType, Allocator> m = std::move(l);
+    CHECK(TestType::liveObjects() >= 4);
+    testEqual(m, { 1, 2, 3, 4 });
+}
+
+LIST_TEST_CASE("ilist init_list ctor", "[ilist]") {
+    TestType::reset();
+    utl::ilist<TestType, Allocator> l = { 1, 2, 3, 4 };
+    CHECK(TestType::liveObjects() == 4);
+    testEqual(l, { 1, 2, 3, 4 });
+}
+
+LIST_TEST_CASE("ilist copy assignment operator", "[ilist]") {
+    TestType::reset();
+    utl::ilist<TestType, Allocator> l = { 1, 2, 3 };
+    utl::ilist<TestType, Allocator> m = { 4, 3, 2, 1 };
     CHECK(TestType::liveObjects() == 7);
     l = m;
     CHECK(TestType::liveObjects() == 8);
     testEqual(l, { 4, 3, 2, 1 });
 }
 
-TEST_CASE("ilist move assignment operator", "[ilist]") {
+LIST_TEST_CASE("ilist move assignment operator", "[ilist]") {
     TestType::reset();
-    utl::ilist<TestType> l = { 1, 2, 3 };
-    utl::ilist<TestType> m = { 4, 3, 2, 1 };
+    utl::ilist<TestType, Allocator> l = { 1, 2, 3 };
+    utl::ilist<TestType, Allocator> m = { 4, 3, 2, 1 };
     CHECK(TestType::liveObjects() == 7);
     l = std::move(m);
-    CHECK(TestType::liveObjects() == 4);
+    CHECK(TestType::liveObjects() >= 4);
     testEqual(l, { 4, 3, 2, 1 });
 }
 
-TEST_CASE("ilist init_list assignment operator", "[ilist]") {
+LIST_TEST_CASE("ilist init_list assignment operator", "[ilist]") {
     TestType::reset();
-    utl::ilist<TestType> l = { 1, 2, 3 };
+    utl::ilist<TestType, Allocator> l = { 1, 2, 3 };
     CHECK(TestType::liveObjects() == 3);
     l = { 4, 3, 2, 1 };
     CHECK(TestType::liveObjects() == 4);
     testEqual(l, { 4, 3, 2, 1 });
 }
 
-TEST_CASE("ilist front/back", "[ilist]") {
-    utl::ilist<TestType> l = { 1, 2, 3 };
+LIST_TEST_CASE("ilist front/back", "[ilist]") {
+    utl::ilist<TestType, Allocator> l = { 1, 2, 3 };
     CHECK(l.front() == TestType(1));
     CHECK(l.back() == TestType(3));
 }
 
 // MARK: Modifiers
 
-TEST_CASE("ilist clear", "[ilist]") {
+LIST_TEST_CASE("ilist clear", "[ilist]") {
     TestType::reset();
-    utl::ilist<TestType> l(10);
+    utl::ilist<TestType, Allocator> l(10);
     l.clear();
     CHECK(l.empty());
     CHECK(TestType::liveObjects() == 0);
 }
 
-static int sum(utl::ilist<TestType> const& l) {
+template <typename Allocator>
+static int sum(utl::ilist<TestType, Allocator> const& l) {
     return std::accumulate(l.begin(), l.end(), 0, [](int acc, TestType const& rhs) { return acc + rhs.value; });
 }
 
-TEST_CASE("ilist insert single value", "[ilist]") {
+LIST_TEST_CASE("ilist insert single value", "[ilist]") {
     std::size_t const count = GENERATE(0, 10);
-    utl::ilist<TestType> l(count);
+    utl::ilist<TestType, Allocator> l(count);
     SECTION("begin") {
         l.insert(l.begin(), 1);
         CHECK(sum(l) == 1);
@@ -155,10 +184,10 @@ TEST_CASE("ilist insert single value", "[ilist]") {
     }
 }
 
-TEST_CASE("ilist insert count value", "[ilist]") {
+LIST_TEST_CASE("ilist insert count value", "[ilist]") {
     std::size_t const beginCount = GENERATE(0, 10);
     std::size_t const insertCount = GENERATE(0, 1, 5);
-    utl::ilist<TestType> l(beginCount);
+    utl::ilist<TestType, Allocator> l(beginCount);
     SECTION("begin") {
         l.insert(l.begin(), insertCount, 1);
         for (std::size_t index = 0; auto elem: l) {
@@ -192,9 +221,9 @@ TEST_CASE("ilist insert count value", "[ilist]") {
     }
 }
 
-TEST_CASE("ilist emplace", "[ilist]") {
+LIST_TEST_CASE("ilist emplace", "[ilist]") {
     std::size_t const count = GENERATE(0, 10);
-    utl::ilist<TestType> l(count);
+    utl::ilist<TestType, Allocator> l(count);
     std::size_t const insertIndex = std::min<std::size_t>(count, 3);
     l.emplace(std::next(l.begin(), insertIndex), 1);
     for (std::size_t index = 0; auto& elem: l) {
@@ -203,9 +232,9 @@ TEST_CASE("ilist emplace", "[ilist]") {
     }
 }
 
-TEST_CASE("ilist erase", "[ilist]") {
+LIST_TEST_CASE("ilist erase", "[ilist]") {
     TestType::reset();
-    utl::ilist<TestType> l = { 0, 1, 2, 3, 3, 4, 5 };
+    utl::ilist<TestType, Allocator> l = { 0, 1, 2, 3, 3, 4, 5 };
     CHECK(TestType::liveObjects() == 7);
     l.erase(std::next(l.begin(), 3));
     CHECK(TestType::liveObjects() == 6);
@@ -217,9 +246,9 @@ TEST_CASE("ilist erase", "[ilist]") {
     CHECK(index == 6);
 }
 
-TEST_CASE("ilist erase range", "[ilist]") {
+LIST_TEST_CASE("ilist erase range", "[ilist]") {
     TestType::reset();
-    utl::ilist<TestType> l = { 0, 1, 1, 1, 1, 1, 2, 3 };
+    utl::ilist<TestType, Allocator> l = { 0, 1, 1, 1, 1, 1, 2, 3 };
     CHECK(TestType::liveObjects() == 8);
     l.erase(std::next(l.begin(), 2), std::prev(l.end(), 2));
     CHECK(TestType::liveObjects() == 4);
@@ -232,9 +261,9 @@ TEST_CASE("ilist erase range", "[ilist]") {
 }
 
 
-TEST_CASE("ilist push_back", "[ilist]") {
+LIST_TEST_CASE("ilist push_back", "[ilist]") {
     std::size_t const count = GENERATE(0, 10);
-    utl::ilist<TestType> l(count);
+    utl::ilist<TestType, Allocator> l(count);
     if (!l.empty()) {
         CHECK(l.back() == TestType(0));
     }
@@ -242,9 +271,9 @@ TEST_CASE("ilist push_back", "[ilist]") {
     CHECK(l.back() == TestType(1));
 }
 
-TEST_CASE("ilist push_front", "[ilist]") {
+LIST_TEST_CASE("ilist push_front", "[ilist]") {
     std::size_t const count = GENERATE(0, 10);
-    utl::ilist<TestType> l(count);
+    utl::ilist<TestType, Allocator> l(count);
     if (!l.empty()) {
         CHECK(l.front() == TestType(0));
     }
@@ -252,31 +281,30 @@ TEST_CASE("ilist push_front", "[ilist]") {
     CHECK(l.front() == TestType(1));
 }
 
+LIST_TEST_CASE("ilist swap - empty", "[ilist][ilist-swap]") {
+    utl::ilist<TestType, Allocator> l, m;
+    l.swap(m);
+    CHECK(l.empty());
+    CHECK(m.empty());
+}
 
-// Other assign() method here
-    
-//    for (auto elem: l) {
-//        std::cout << elem.value << std::endl;
-//    }
-//
-//    for (int i = 0; i < 4; ++i) {
-//        l.push_back(new TestType(i));
-//    }
-//
-//    auto itr = l.begin();
-//
-//    std::advance(itr, 2);
-//
-//    l.insert(itr, new TestType(10));
-//
-////    l.erase(itr);
-//
-//    for (auto elem: l) {
-//        std::cout << elem.value << std::endl;
-//    }
-//
-//    l.clear();
-//
-//    CHECK(l.empty());
-//
-//}
+LIST_TEST_CASE("ilist swap - empty/non-empty", "[ilist][ilist-swap]") {
+    utl::ilist<TestType, Allocator> l, m = { 3, 4 };
+    l.swap(m);
+    testEqual(l, { 3, 4 });
+    testEqual(m, {});
+}
+
+LIST_TEST_CASE("ilist swap - non-empty/empty", "[ilist][ilist-swap]") {
+    utl::ilist<TestType, Allocator> l = { 1, 2 }, m;
+    l.swap(m);
+    testEqual(l, {});
+    testEqual(m, { 1, 2 });
+}
+
+LIST_TEST_CASE("ilist swap - non-empty", "[ilist][ilist-swap]") {
+    utl::ilist<TestType, Allocator> l = { 1, 2 }, m = { 3, 4 };
+    l.swap(m);
+    testEqual(l, { 3, 4 });
+    testEqual(m, { 1, 2 });
+}
