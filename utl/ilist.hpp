@@ -54,9 +54,12 @@ private:
 template <typename Derived, typename Parent = Derived>
 struct ilist_node_with_parent: ilist_node<Derived> {
 public:
+    ilist_node_with_parent(Parent* parent): _parent(parent) {}
+
     ilist_node_with_parent(ilist_node_with_parent* prev = nullptr,
                            ilist_node_with_parent* next = nullptr,
                            Parent* parent = nullptr): ilist_node<Derived>(prev, next), _parent(parent) {}
+    
     
     Parent*       parent()       { return _parent; }
     Parent const* parent() const { return _parent; }
