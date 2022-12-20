@@ -20,23 +20,29 @@ struct TestType: utl_test::LifetimeCounter, utl::ilist_node<TestType> {
 TEST_CASE("ilist ctor", "[ilist]") {
     
     utl::ilist<TestType> l;
-     
-    for (int i = 0; i < 10; ++i) {
+    
+    for (auto elem: l) {
+        std::cout << elem.value << std::endl;
+    }
+    
+    for (int i = 0; i < 4; ++i) {
         l.push_back(new TestType(i));
     }
 
     auto itr = l.begin();
     
-    std::advance(itr, 3);
+    std::advance(itr, 2);
  
-    l.insert_before(l.erase(std::next(itr)), itr);
+    l.insert(itr, new TestType(10));
     
 //    l.erase(itr);
     
-    for (auto elem: utl::reverse(l)) {
+    for (auto elem: l) {
         std::cout << elem.value << std::endl;
     }
     
+    l.clear();
     
+    CHECK(l.empty());
     
 }
