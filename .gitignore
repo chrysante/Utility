@@ -1,4 +1,4 @@
-Build/
+build/
 .vs/
 .vscode/
 
@@ -16,4 +16,4 @@ Makefile
 **.vcxproj.filters
 **.sln
 
-Utility.cmake
+utility.cmake

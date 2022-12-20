@@ -1,4 +1,4 @@
-function basicWorkspace (name)
+function basic_workspace (name)
     workspace(name)
     architecture "x86_64"
 
@@ -31,11 +31,26 @@ function basicWorkspace (name)
         buildoptions { "/Zc:__cplusplus", "/Zc:preprocessor", "/MP" }
         systemversion ("latest")
     filter "system:macosx"
-        systemversion ("12.2") -- until i update
+        --systemversion ("12.2") -- until i update
     filter {}
     
 
-    targetdir("Build/Bin/%{cfg.longname}")
-    objdir("Build/Obj/%{cfg.longname}")
+    targetdir("build/bin/%{cfg.longname}")
+    objdir("build/obj/%{cfg.longname}")
     
-    end
+end
+
+function test_project_setup()
+    location "."
+    kind "ConsoleApp"
+    language "C++"    
+
+    includedirs "test"
+
+    externalincludedirs {
+        "include", "external/catch/include"
+    }
+
+    links { "catch" }
+
+end
