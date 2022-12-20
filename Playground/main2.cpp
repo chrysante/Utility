@@ -60,6 +60,7 @@ void print(LifetimeCapabilities c) {
     std::cout << "Trivially destructible          : " << (c.triviallyDestructible         ? "true" : "false") << "\n";
 }
 
+[[gnu::weak]]
 int main() {
     
     using V = utl::variant<int, float>;
@@ -68,6 +69,6 @@ int main() {
 
     V v;
     
-    V w = v;
+//    V w = v;
     
 }
