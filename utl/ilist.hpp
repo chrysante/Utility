@@ -5,6 +5,7 @@
 #include "__base.hpp"
 #include "__memory_resource_base.hpp"
 #include "__ranges_base.hpp"
+#include "type_traits.hpp"
 
 _UTL_SYSTEM_HEADER_
 
@@ -13,9 +14,13 @@ namespace utl {
 template <typename T, typename Allocator = std::allocator<T>>
 class ilist;
 
+class __ilist_node_base {};
+
 template <typename Derived>
-class ilist_node {
+class ilist_node: public __ilist_node_base {
 public:
+    using __derived_type = Derived;
+    
     ilist_node(ilist_node* prev = nullptr, ilist_node* next = nullptr): _prev(prev), _next(next) {}
     
     Derived*       prev()       { return static_cast<Derived*      >(_prev); }
@@ -47,11 +52,19 @@ private:
     Parent* _parent;
 };
 
-template <typename T, typename Allocator>
-class ilist {
+template <typename T, typename = void>
+struct __is_ilist_node: std::false_type {};
+
+template <typename T>
+struct __is_ilist_node<T, std::void_t<std::is_convertible<T, typename T::__derived_type>>>:
+    __all_t<std::is_base_of<__ilist_node_base, T>,
+            std::is_convertible<T, __ilist_node_base>,
+            std::is_convertible<T, typename T::__derived_type>>
+{};
+
+template <typename T, typename Allocator> requires __is_ilist_node<T>::value
+class ilist<T, Allocator> {
 public:
-    static_assert(std::is_base_of_v<ilist_node<T>, T>);
-    
     template <typename N>
     struct __iterator_impl {
     private:
@@ -105,8 +118,6 @@ public:
         pointer __node;
     };
     
-    using __alloc_traits = std::allocator_traits<Allocator>;
-    
     using value_type = T;
     using allocator_type = Allocator;
     using size_type = std::size_t;
@@ -120,6 +131,9 @@ public:
     using reverse_iterator = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
     
+    using __alloc_traits = std::allocator_traits<allocator_type>;
+    using __sentinel_type = ilist_node<value_type>;
+    
     // MARK: Constructors
     
     // (1)
@@ -130,7 +144,7 @@ public:
     
     // (3)
     explicit ilist(size_type count,
-                  value_type const& value = value_type(),
+                  value_type const& value,
                   allocator_type const& alloc = allocator_type()): ilist(alloc)
     {
         insert(begin(), count, value);
@@ -151,7 +165,7 @@ public:
     ilist(InputIt first, Sentinel last, allocator_type const& alloc = allocator_type()):
         ilist(alloc)
     {
-        insert(first, last);
+        insert(begin(), first, last);
     }
     
     // (5a)
@@ -175,7 +189,9 @@ public:
     ilist(ilist&& rhs, allocator_type const& alloc);
     
     // (10)
-    ilist(std::initializer_list<T> init_list, allocator_type const& alloc = allocator_type());
+    ilist(std::initializer_list<T> init_list, allocator_type const& alloc = allocator_type()): ilist(alloc) {
+        insert(begin(), init_list);
+    }
     
     // MARK: Destructor
     
@@ -186,23 +202,50 @@ public:
     // MARK: Assignment
     
     // (1)
-    ilist& operator=(ilist const& rhs);
+    ilist& operator=(ilist const& rhs) {
+        assign(rhs.begin(), rhs.end());
+        return *this;
+    }
     
     // (2)
-    ilist& operator=(ilist&& rhs) noexcept;
+    ilist& operator=(ilist&& rhs) noexcept {
+        this->clear();
+        this->__sentinel_ = rhs.__sentinel_;
+        this->begin()->set_prev(this->__sentinel());
+        std::prev(this->end())->set_next(this->__sentinel());
+        rhs.__reset();
+        return *this;
+    }
     
     // (3)
-    ilist& operator=(std::initializer_list<T> init_list);
+    ilist& operator=(std::initializer_list<T> init_list) {
+        assign(init_list);
+        return *this;
+    }
     
     // (1)
-    void assign(size_type count, value_type const& value);
+    void assign(size_type count, value_type const& value) {
+        clear();
+        insert(begin(), count, value);
+    }
     
     // (2)
-    template <typename InputIt>
-    void assign(InputIt first, InputIt last);
+    template <input_iterator_for<value_type> InputIt, sentinel_for<InputIt> Sentinel>
+    void assign(InputIt first, Sentinel last) {
+        clear();
+        insert(begin(), first, last);
+    }
+    
+    // (2)
+    template <input_range_for<value_type> Range>
+    void assign(Range&& range) {
+        assign(__utl_begin(range), __utl_end(range));
+    }
 
     // (3)
-    void assign(std::initializer_list<T> init_list);
+    void assign(std::initializer_list<T> init_list) {
+        assign(init_list.begin(), init_list.end());
+    }
     
     // MARK: Observers
     
@@ -228,14 +271,7 @@ public:
     // MARK: Modifiers
     
     void clear() noexcept {
-        iterator i = begin();
-        while (i != end()) {
-            iterator current = i++;
-            __destroy(current);
-            __deallocate(current);
-        }
-        __sentinel()->set_prev(__sentinel());
-        __sentinel()->set_next(__sentinel());
+        erase(begin(), end());
     }
     
     // (1)
@@ -260,8 +296,12 @@ public:
     }
     
     // (4)
-    template <typename InputIt>
-    iterator insert(const_iterator pos, InputIt first, InputIt last);
+    template <input_iterator_for<value_type> InputIt, sentinel_for<InputIt> Sentinel>
+    iterator insert(const_iterator pos, InputIt first, Sentinel last) {
+        return __insert_impl(pos, [&]{ return first != last; }, [&]{
+            return __construct(__allocate(), *first++);
+        });
+    }
         
     // (5)
     iterator insert(const_iterator pos, std::initializer_list<T> init_list) {
@@ -280,17 +320,31 @@ public:
     
     template <typename... Args>
     iterator emplace(const_iterator pos, Args&&... args) {
-        return __insert_impl(pos, [&]{
+        return __insert_impl(pos, 1, [&]{
             return __construct(__allocate(), std::forward<Args>(args)...);
         });
     }
     
-    
     // (1)
-    iterator erase(const_iterator pos);
+    iterator erase(const_iterator cpos) {
+        iterator pos(cpos);
+        std::prev(pos)->set_next(std::next(pos));
+        std::next(pos)->set_prev(std::prev(pos));
+        __destroy_and_deallocate(pos);
+    }
     
     // (2)
-    iterator erase(const_iterator first, const_iterator last);
+    iterator erase(const_iterator cfirst, const_iterator clast) {
+        iterator first(cfirst);
+        iterator last(clast);
+        iterator prev = std::prev(first);
+        for (iterator begin = first; begin != last; ) {
+            iterator current = begin++;
+            __destroy_and_deallocate(current);
+        }
+        prev->set_next(last);
+        last->set_prev(prev);
+    }
     
     // (1)
     void push_back(value_type const& value) {
@@ -343,34 +397,34 @@ public:
     }
     
     // (1)
-    void resize( size_type count);
+//    void resize(size_type count);
     
     // (2)
-    void resize(size_type count, value_type const& value);
+//    void resize(size_type count, value_type const& value);
     
-    void swap(ilist& rhs) noexcept;
+    void swap(ilist& rhs) noexcept {
+        ilist tmp = std::move(rhs);
+        rhs = std::move(*this);
+        *this = std::move(tmp);
+    }
     
     iterator __insert_impl(const_iterator cpos, size_type count, auto&& get_nodes) {
+        return __insert_impl(cpos, [&, i = size_type(0)]() mutable { return i++ < count; }, UTL_FORWARD(get_nodes));
+    }
+    
+    iterator __insert_impl(const_iterator cpos, std::invocable auto&& insert_while, auto&& get_nodes) {
         iterator pos = iterator(cpos);
         iterator prev = std::prev(pos);
-        for (size_type i = 0; i < count; ++i) {
+        while (insert_while()) {
             value_type* new_node = get_nodes();
             prev->set_next(new_node);
             new_node->set_prev(prev);
             ++prev;
         }
         prev->set_next(pos);
-        iterator result = count == 0 ? pos : std::prev(pos);
+        iterator result = std::prev(pos) == prev ? pos : std::prev(pos);
         pos->set_prev(prev);
         return result;
-    }
-    
-    pointer erase(pointer value) {
-        value->prev()->set_next(value->next());
-        value->next()->set_prev(value->prev());
-        value->set_prev(nullptr);
-        value->set_next(nullptr);
-        return value;
     }
 
     pointer __sentinel() { return const_cast<pointer>(static_cast<ilist const*>(this)->__sentinel()); }
@@ -390,8 +444,19 @@ public:
         __alloc_traits::destroy(__allocator_, p);
     }
     
+    void __destroy_and_deallocate(pointer p) {
+        __destroy(p);
+        __deallocate(p);
+    }
+    
+    /// Reset this list to an empty list. No elements are destroyed or deallocated.
+    void __reset() {
+        __sentinel()->set_prev(__sentinel());
+        __sentinel()->set_next(__sentinel());
+    }
+    
     [[no_unique_address]] allocator_type __allocator_;
-    ilist_node<value_type> __sentinel_;
+    __sentinel_type __sentinel_;
 };
 
 } // namespace utl
