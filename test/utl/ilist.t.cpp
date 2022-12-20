@@ -328,21 +328,32 @@ LIST_TEST_CASE("ilist swap - non-empty", "[ilist][ilist-swap]") {
 
 namespace {
 
-class Incomplete;
-
-template <typename T>
-struct NonDestroyingAllocator: std::allocator<T> {
-    void destroy(T*) {}
-    void deallocate(T*, std::size_t) {}
-};
+struct Incomplete;
 
 template <typename T>
 using BufferFor = std::aligned_storage_t<sizeof(T), alignof(T)>;
 
+struct UsesIncompleteList {
+    UsesIncompleteList() = default;
+    UsesIncompleteList(UsesIncompleteList const&) = delete;
+    ~UsesIncompleteList();
+    utl::ilist<Incomplete> list;
+};
+
+struct Incomplete: utl::ilist_node<Incomplete>{};
+
+UsesIncompleteList::~UsesIncompleteList() = default;
+
+} // namespace
+
+namespace {
+
+struct Incomplete2;
+
 } // namespace
 
 TEST_CASE("ilist incomplete type", "[ilist]") {
-    using L = utl::ilist<Incomplete, NonDestroyingAllocator<Incomplete>>;
+    using L = utl::ilist<Incomplete2>;
     BufferFor<L> buffer;
     auto* lPtr = reinterpret_cast<L*>(&buffer);
     lPtr = std::construct_at(lPtr);
