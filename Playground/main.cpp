@@ -82,6 +82,7 @@ void f(utl::function_view<void(S, Lifetime&&)> callback, Lifetime l) {
     callback(S{}, std::move(l));
 }
 
+[[gnu::weak]]
 int main() {
     
     f(&S::f, Lifetime{});
