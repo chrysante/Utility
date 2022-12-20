@@ -23,9 +23,20 @@ public:
     using __derived_type = Derived;
     
     ilist_node(ilist_node* prev = nullptr, ilist_node* next = nullptr):
-        __prev(static_cast<__derived_type*>(prev)), __next(static_cast<__derived_type*>(next))
-    {}
+        __prev(static_cast<__derived_type*>(prev)), __next(static_cast<__derived_type*>(next)) {}
     
+    /// Copy operatrions are no-ops, as we don't want to propagate sibling relationship with copying.
+    
+    ilist_node(ilist_node const&): ilist_node() {}
+    ilist_node& operator=(ilist_node const&) { return *this; }
+    
+    /// Instead we provide a special function to be used by ilist to copy relationship information.
+    
+    void __assign(ilist_node const& rhs) {
+        __prev = rhs.__prev;
+        __next = rhs.__next;
+    }
+
     __derived_type*       prev()       { return __prev; }
     __derived_type const* prev() const { return __prev; }
     __derived_type*       next()       { return __next; }
@@ -136,6 +147,7 @@ public:
     
     using __alloc_traits = std::allocator_traits<allocator_type>;
     using __sentinel_type = ilist_node<value_type>;
+    static constexpr bool __alloc_always_eq = __alloc_traits::is_always_equal::value;
     
     // MARK: Constructors
     
@@ -211,56 +223,41 @@ public:
     
     // (1)
     ilist& operator=(ilist const& rhs) {
-        __assign_impl(rhs);
-        return *this;
-    }
-    
-    template <bool v = true, std::enable_if_t<__alloc_traits::propagate_on_container_copy_assignment::value && v, int> = 0>
-    void __assign_impl(ilist const& rhs) {
-        if (__allocator_ == rhs.__allocator_) {
-            __allocator_ = rhs.__allocator_;
-            __assign_impl_fast_path(rhs.begin(), rhs.end());
+        if constexpr (__alloc_traits::propagate_on_container_copy_assignment::value) {
+            if (__allocator_ == rhs.__allocator_) {
+                __allocator_ = rhs.__allocator_;
+                __assign_element_wise(rhs.begin(), rhs.end());
+            }
+            else {
+                clear();
+                __allocator_ = rhs.__allocator_;
+                insert(begin(), rhs.begin(), rhs.end());
+            }
         }
         else {
-            clear();
-            __allocator_ = rhs.__allocator_;
-            insert(begin(), rhs.begin(), rhs.end());
+            __assign_element_wise(rhs.begin(), rhs.end());
         }
-    }
-    
-    template <bool v = true, std::enable_if_t<!__alloc_traits::propagate_on_container_copy_assignment::value && v, int> = 0>
-    void __assign_impl(ilist const& rhs) {
-        __assign_impl_fast_path(rhs.begin(), rhs.end());
-    }
-    
-    void __assign_impl_fast_path(std::invocable auto&& insert_while, auto&& get_elems) {
-        iterator itr = begin();
-        for (;; ++itr) {
-            if (itr == end()) {
-                goto this_smaller;
-            }
-            if (!insert_while()) {
-                goto rhs_smaller;
-            }
-            __sentinel_type itr_sent = *itr;
-            *itr = get_elems();
-            itr->__sentinel_type::operator=(itr_sent);
-        }
-    this_smaller:
-        __insert_impl(end(), insert_while, [&]{ return __construct(__allocate(), get_elems()); });
-        return;
-    rhs_smaller:
-        erase(itr, end());
-        return;
-    }
-    
-    void __assign_impl_fast_path(auto rhs_itr, auto rhs_end) {
-        __assign_impl_fast_path([&]{ return rhs_itr != rhs_end; }, [&]{ return *rhs_itr++; });
+        return *this;
     }
     
     // (2)
     ilist& operator=(ilist&& rhs) noexcept {
-        swap(rhs);
+        constexpr bool alloc_propagate = __alloc_traits::propagate_on_container_move_assignment::value;
+        if (this == &rhs) { return *this; }
+        if (__alloc_always_eq || __allocator_ == rhs.__allocator_) {
+            if constexpr (alloc_propagate) {
+                __allocator_ = rhs.__allocator_;
+            }
+            __swap_impl(rhs, false);
+        }
+        else {
+            clear();
+            if constexpr (alloc_propagate) {
+                __allocator_ = rhs.__allocator_;
+            }
+            // Assign element-wise, as we must reallocate because unequal allocators.
+            __assign_element_wise(std::move_iterator(rhs.begin()), std::move_iterator(rhs.end()));
+        }
         return *this;
     }
     
@@ -272,13 +269,13 @@ public:
     
     // (1)
     void assign(size_type count, value_type const& value) {
-        __assign_impl_fast_path([&, i = size_type(0)]() mutable { return i != count; }, [&]() { return value; });
+        __assign_element_wise([&, i = size_type(0)]() mutable { return i != count; }, [&]() { return value; });
     }
     
     // (2)
     template <input_iterator_for<value_type> InputIt, sentinel_for<InputIt> Sentinel>
     void assign(InputIt first, Sentinel last) {
-        __assign_impl_fast_path(first, last);
+        __assign_element_wise(first, last);
     }
     
     // (2)
@@ -304,12 +301,16 @@ public:
 
     iterator begin() { return iterator(__sentinel()->next()); }
     const_iterator begin() const { return const_iterator(__sentinel()->next()); }
+    const_iterator cbegin() const { return begin(); }
     iterator end() { return iterator(__sentinel()); }
     const_iterator end() const { return const_iterator(__sentinel()); }
+    const_iterator cend() const { return end(); }
     reverse_iterator rbegin() { return std::reverse_iterator(end()); }
     const_reverse_iterator rbegin() const { return std::reverse_iterator(end()); }
+    const_reverse_iterator crbegin() const { return rbegin(); }
     reverse_iterator rend() { return std::reverse_iterator(begin()); }
     const_reverse_iterator rend() const { return std::reverse_iterator(begin()); }
+    const_reverse_iterator crend() const { return rend(); }
     
     [[nodiscard]] bool empty() const { return begin() == end(); }
     
@@ -359,9 +360,6 @@ public:
     iterator insert(const_iterator pos, value_type* node) {
         return __insert_impl(pos, 1, [&]{ return node; });
     }
-    
-    // (b)
-    iterator insert(const_iterator pos, ilist&& list);
     
     template <typename... Args>
     iterator emplace(const_iterator pos, Args&&... args) {
@@ -450,18 +448,43 @@ public:
     void resize(size_type count, value_type const& value) requires false;
     
     void swap(ilist& rhs) noexcept {
-        if constexpr (__alloc_traits::propagate_on_container_swap::value) {
-            __fast_swap(rhs, true);
+        __swap_impl(rhs, __alloc_traits::propagate_on_container_swap::value);
+    }
+    
+    void __assign_element_wise(std::invocable auto&& insert_while, auto&& get_elems) {
+        iterator itr = begin();
+        for (;; ++itr) {
+            if (itr == end()) {
+                goto this_smaller;
+            }
+            if (!insert_while()) {
+                goto rhs_smaller;
+            }
+            /// We can safely assign because sibling pointers don't propagate on assignment.
+            *itr = get_elems();
         }
-        else if (__allocator_ == rhs.__allocator_) {
-            __fast_swap(rhs, false);
+    this_smaller:
+        __insert_impl(end(), insert_while, [&]{ return __construct(__allocate(), get_elems()); });
+        return;
+    rhs_smaller:
+        erase(itr, end());
+        return;
+    }
+    
+    void __assign_element_wise(auto rhs_itr, auto rhs_end) {
+        __assign_element_wise([&]{ return rhs_itr != rhs_end; }, [&]{ return *rhs_itr++; });
+    }
+    
+    void __swap_impl(ilist& rhs, bool swap_allocs) noexcept {
+        if (swap_allocs || __alloc_always_eq || __allocator_ == rhs.__allocator_) {
+            __fast_swap(rhs, swap_allocs);
         }
         else {
             __sentinel_type rhs_copy;
-            __move_assign_fast(rhs_copy, rhs.begin(), rhs.end());
+            __move_assign_pointer_swap(rhs_copy, rhs.begin(), rhs.end());
             rhs.__reset();
-            rhs.__assign_impl_fast_path(begin(), end());
-            __assign_impl_fast_path(iterator(rhs_copy.next()), iterator(static_cast<value_type*>(&rhs_copy)));
+            rhs.__assign_element_wise(begin(), end());
+            __assign_element_wise(iterator(rhs_copy.next()), iterator(static_cast<value_type*>(&rhs_copy)));
         }
     }
     
@@ -470,12 +493,12 @@ public:
             std::swap(__allocator_, rhs.__allocator_);
         }
         __sentinel_type rhs_copy;
-        __move_assign_fast(rhs_copy, rhs.begin(), rhs.end());
-        __move_assign_fast(rhs.__sentinel_, this->begin(), this->end());
-        __move_assign_fast(this->__sentinel_, rhs_copy.next(), static_cast<value_type*>(&rhs_copy));
+        __move_assign_pointer_swap(rhs_copy, rhs.begin(), rhs.end());
+        __move_assign_pointer_swap(rhs.__sentinel_, this->begin(), this->end());
+        __move_assign_pointer_swap(this->__sentinel_, rhs_copy.next(), static_cast<value_type*>(&rhs_copy));
     }
     
-    static void __move_assign_fast(__sentinel_type& sent, iterator begin, iterator end) {
+    static void __move_assign_pointer_swap(__sentinel_type& sent, iterator begin, iterator end) {
         if (begin == end) {
             __reset(sent);
         }
@@ -489,8 +512,8 @@ public:
         __assert_invariants(sent);
     }
     
-    void __move_assign_fast(iterator begin, iterator end) {
-        __move_assign_fast(__sentinel_, begin, end);
+    void __move_assign_pointer_swap(iterator begin, iterator end) {
+        __move_assign_pointer_swap(__sentinel_, begin, end);
     }
     
     iterator __insert_impl(const_iterator cpos, size_type count, auto&& get_nodes) {
@@ -536,7 +559,7 @@ public:
     
     /// Reset this list to an empty list. No elements are destroyed or deallocated.
     static void __reset(__sentinel_type& sent) {
-        sent = __sentinel_type(&sent, &sent);
+        sent.__sentinel_type::__assign(__sentinel_type(&sent, &sent));
     }
     
     void __reset() {

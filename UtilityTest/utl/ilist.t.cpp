@@ -19,10 +19,24 @@ struct TestType: utl::ilist_node_with_parent<TestType, TestType>, utl_test::Life
 };
 
 template <typename T>
-struct NeverEqualAllocator: std::allocator<T> {
+struct NotPropagatingNeverEqualAllocator: std::allocator<T> {
     using propagate_on_container_move_assignment = std::false_type;
     using is_always_equal = std::false_type;
-    bool operator==(NeverEqualAllocator const&) const { return false; }
+    bool operator==(NotPropagatingNeverEqualAllocator const&) const { return false; }
+};
+
+template <typename T>
+struct NotPropagatingAlwaysEqualAllocator: std::allocator<T> {
+    using propagate_on_container_move_assignment = std::false_type;
+    using is_always_equal = std::true_type;
+    bool operator==(NotPropagatingAlwaysEqualAllocator const&) const { return true; }
+};
+
+template <typename T>
+struct PropagatingNeverEqualAllocator: std::allocator<T> {
+    using propagate_on_container_move_assignment = std::true_type;
+    using is_always_equal = std::false_type;
+    bool operator==(PropagatingNeverEqualAllocator const&) const { return false; }
 };
 
 } // namespace
@@ -39,9 +53,12 @@ static void testEqual(utl::ilist<TestType, Allocator> const& l, std::initializer
     CHECK(ilItr == init_list.end());
 }
 
-#define LIST_TEST_CASE(...) \
+#define LIST_TEST_CASE(...)                                                          \
 TEMPLATE_TEST_CASE_SIG(__VA_ARGS__, ((typename Allocator, int __I), Allocator, __I), \
-                       (std::allocator<::TestType>, 0), (NeverEqualAllocator<TestType>, 0))
+                       (std::allocator<::TestType>, 0),                              \
+                       (NotPropagatingNeverEqualAllocator<TestType>, 0),             \
+                       (NotPropagatingAlwaysEqualAllocator<TestType>, 0),            \
+                       (PropagatingNeverEqualAllocator<::TestType>, 0))              \
 
 LIST_TEST_CASE("ilist def ctor", "[ilist]") {
     TestType::reset();
