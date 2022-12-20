@@ -20,37 +20,38 @@ class __ilist_node_base {};
 template <typename Derived>
 class ilist_node: public __ilist_node_base {
 public:
-    using __derived_type = Derived;
+    Derived*       prev()       { return __prev; }
+    Derived const* prev() const { return __prev; }
+    Derived*       next()       { return __next; }
+    Derived const* next() const { return __next; }
     
+protected:
     ilist_node(ilist_node* prev = nullptr, ilist_node* next = nullptr):
-        __prev(static_cast<__derived_type*>(prev)), __next(static_cast<__derived_type*>(next)) {}
+        __prev(static_cast<Derived*>(prev)), __next(static_cast<Derived*>(next)) {}
     
     /// Copy operatrions are no-ops, as we don't want to propagate sibling relationship with copying.
-    
     ilist_node(ilist_node const&): ilist_node() {}
+    
     ilist_node& operator=(ilist_node const&) { return *this; }
     
-    /// Instead we provide a special function to be used by ilist to copy relationship information.
+private:
+    template <typename, typename>
+    friend class ilist;
     
+    /// Instead of copy construction and assignment we provide a special function to be used by ilist to copy relationship information.
     void __assign(ilist_node const& rhs) {
         __prev = rhs.__prev;
         __next = rhs.__next;
     }
 
-    __derived_type*       prev()       { return __prev; }
-    __derived_type const* prev() const { return __prev; }
-    __derived_type*       next()       { return __next; }
-    __derived_type const* next() const { return __next; }
+    void __set_prev(ilist_node* prev) { __prev = static_cast<Derived*>(prev); }
+    void __set_next(ilist_node* next) { __next = static_cast<Derived*>(next); }
     
-    void set_prev(ilist_node* prev) { __prev = static_cast<__derived_type*>(prev); }
-    void set_next(ilist_node* next) { __next = static_cast<__derived_type*>(next); }
-    
-private:
-    __derived_type* __prev;
-    __derived_type* __next;
+    Derived* __prev;
+    Derived* __next;
 };
 
-template <typename Derived, typename Parent>
+template <typename Derived, typename Parent = Derived>
 struct ilist_node_with_parent: ilist_node<Derived> {
 public:
     ilist_node_with_parent(ilist_node_with_parent* prev = nullptr,
@@ -66,14 +67,11 @@ private:
     Parent* _parent;
 };
 
-template <typename T, typename = void>
-struct __is_ilist_node: std::false_type {};
-
+// This basically models the std::derived_from concept.
 template <typename T>
-struct __is_ilist_node<T, std::void_t<std::is_convertible<T, typename T::__derived_type>>>:
+struct __is_ilist_node:
     __all_t<std::is_base_of<__ilist_node_base, T>,
-            std::is_convertible<T, __ilist_node_base>,
-            std::is_convertible<T, typename T::__derived_type>>
+            std::is_convertible<T, __ilist_node_base>>
 {};
 
 template <typename T, typename Allocator> requires __is_ilist_node<T>::value
@@ -371,8 +369,8 @@ public:
     // (1)
     iterator erase(const_iterator cpos) {
         iterator pos(cpos);
-        std::prev(pos)->set_next(std::next(pos));
-        std::next(pos)->set_prev(std::prev(pos));
+        std::prev(pos)->__set_next(std::next(pos));
+        std::next(pos)->__set_prev(std::prev(pos));
         __destroy_and_deallocate(pos);
     }
     
@@ -385,8 +383,8 @@ public:
             iterator current = begin++;
             __destroy_and_deallocate(current);
         }
-        prev->set_next(last);
-        last->set_prev(prev);
+        prev->__set_next(last);
+        last->__set_prev(prev);
     }
     
     // (1)
@@ -504,10 +502,10 @@ public:
         }
         else {
             --end;
-            sent.set_next(begin);
-            sent.set_prev(end);
-            begin->set_prev(&sent);
-            end->set_next(&sent);
+            sent.__set_next(begin);
+            sent.__set_prev(end);
+            begin->__set_prev(&sent);
+            end->__set_next(&sent);
         }
         __assert_invariants(sent);
     }
@@ -525,13 +523,13 @@ public:
         iterator prev = std::prev(pos);
         while (insert_while()) {
             value_type* new_node = get_nodes();
-            prev->set_next(new_node);
-            new_node->set_prev(prev);
+            prev->__set_next(new_node);
+            new_node->__set_prev(prev);
             ++prev;
         }
-        prev->set_next(pos);
+        prev->__set_next(pos);
         iterator result = std::prev(pos) == prev ? pos : std::prev(pos);
-        pos->set_prev(prev);
+        pos->__set_prev(prev);
         return result;
     }
 
