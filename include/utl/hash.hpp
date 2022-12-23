@@ -40,7 +40,12 @@ std::size_t hash_combine_range(I begin, S end) {
 
 template <typename T>
 struct hash: std::hash<T> {
+    using is_transparent = void;
     using std::hash<T>::operator();
+    template <typename U>
+    decltype(std::declval<std::common_type_t<T, U>>(), std::size_t{}) operator()(U const& u) const {
+        return std::hash<U>{}(u);
+    }
 };
 
 template <typename T, typename U>
