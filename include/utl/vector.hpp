@@ -984,6 +984,12 @@ struct small_vector: vector<T, Allocator> {
         __count_constructor_prep(distance(first, last));
         this->__copy_uninit(first, last, this->__begin());
     }
+    
+    /// (5a)
+    template <input_range_for<value_type> Range>
+    __utl_interface_export __utl_always_inline constexpr small_vector(Range&& range,
+                                                                      allocator_type const& alloc = allocator_type()):
+        small_vector(__utl_begin(range), __utl_end(range), alloc) {}
 
     /// (6)
     __utl_interface_export constexpr small_vector(vector<value_type, allocator_type> const& rhs):
