@@ -104,11 +104,11 @@ public:
         using reference = N&;
         using iterator_category = std::bidirectional_iterator_tag;
         
-        __iterator_impl(pointer node): __node(node) {}
+        explicit __iterator_impl(pointer node): __node(node) {}
         __iterator_impl(__iterator_impl<std::remove_const_t<N>> rhs) requires(std::is_const_v<N>):
             __node(rhs.__node) {}
         
-        operator pointer() const { return operator->(); }
+        explicit operator pointer() const { return operator->(); }
         
         pointer operator->() const { return __node; }
         
@@ -214,7 +214,20 @@ public:
     
     // (9)
     ilist(ilist&& rhs, allocator_type const& alloc): ilist(alloc) {
-        *this = std::move(rhs);
+        auto fast_path = [&] {
+            __move_assign_pointer_swap(rhs.begin(), rhs.end());
+            rhs.__reset();
+        };
+        /// Use if constexpr here to prevent the path using \p __insert_impl from compiling when not needed.
+        if constexpr (__alloc_always_eq) {
+            fast_path();
+        }
+        else if (__allocator_ == rhs.__allocator_) {
+            fast_path();
+        }
+        else {
+            __insert_impl_itr(begin(), rhs.begin(), rhs.end());
+        }
     }
     
     // (10)
@@ -356,9 +369,7 @@ public:
     // (4)
     template <input_iterator_for<value_type> InputIt, sentinel_for<InputIt> Sentinel>
     iterator insert(const_iterator pos, InputIt first, Sentinel last) {
-        return __insert_impl(pos, [&]{ return first != last; }, [&]{
-            return __construct(__allocate(), *first++);
-        });
+        return __insert_impl_itr(pos, first, last);
     }
         
     // (5)
@@ -383,9 +394,9 @@ public:
     // (1)
     iterator erase(const_iterator cpos) {
         iterator pos(cpos);
-        std::prev(pos)->__set_next(std::next(pos));
-        std::next(pos)->__set_prev(std::prev(pos));
-        __destroy_and_deallocate(pos);
+        std::prev(pos)->__set_next(std::next(pos).operator->());
+        std::next(pos)->__set_prev(std::prev(pos).operator->());
+        __destroy_and_deallocate(pos.operator->());
     }
     
     // (2)
@@ -395,10 +406,10 @@ public:
         iterator prev = std::prev(first);
         for (iterator begin = first; begin != last; ) {
             iterator current = begin++;
-            __destroy_and_deallocate(current);
+            __destroy_and_deallocate(current.operator->());
         }
-        prev->__set_next(last);
-        last->__set_prev(prev);
+        prev->__set_next(last.operator->());
+        last->__set_prev(prev.operator->());
     }
     
     // (1)
@@ -507,7 +518,7 @@ public:
         __sentinel_type rhs_copy;
         __move_assign_pointer_swap(rhs_copy, rhs.begin(), rhs.end());
         __move_assign_pointer_swap(rhs.__sentinel_, this->begin(), this->end());
-        __move_assign_pointer_swap(this->__sentinel_, rhs_copy.next(), static_cast<value_type*>(&rhs_copy));
+        __move_assign_pointer_swap(this->__sentinel_, iterator(rhs_copy.next()), iterator(static_cast<value_type*>(&rhs_copy)));
     }
     
     static void __move_assign_pointer_swap(__sentinel_type& sent, iterator begin, iterator end) {
@@ -516,8 +527,8 @@ public:
         }
         else {
             --end;
-            sent.__set_next(begin);
-            sent.__set_prev(end);
+            sent.__set_next(begin.operator->());
+            sent.__set_prev(end.operator->());
             begin->__set_prev(&sent);
             end->__set_next(&sent);
         }
@@ -528,22 +539,28 @@ public:
         __move_assign_pointer_swap(__sentinel_, begin, end);
     }
     
-    iterator __insert_impl(const_iterator cpos, size_type count, auto&& get_nodes) {
+    iterator __insert_impl(const_iterator cpos, size_type count, std::invocable auto&& get_nodes) {
         return __insert_impl(cpos, [&, i = size_type(0)]() mutable { return i++ < count; }, UTL_FORWARD(get_nodes));
     }
     
-    iterator __insert_impl(const_iterator cpos, std::invocable auto&& insert_while, auto&& get_nodes) {
+    iterator __insert_impl_itr(const_iterator cpos, auto first, auto last) {
+        return __insert_impl(cpos, [&]{ return first != last; }, [&]{
+            return __construct(__allocate(), *first++);
+        });
+    }
+    
+    iterator __insert_impl(const_iterator cpos, std::invocable auto&& insert_while, std::invocable auto&& get_nodes) {
         iterator pos = iterator(cpos);
         iterator prev = std::prev(pos);
         while (insert_while()) {
             value_type* new_node = get_nodes();
             prev->__set_next(new_node);
-            new_node->__set_prev(prev);
+            new_node->__set_prev(prev.operator->());
             ++prev;
         }
-        prev->__set_next(pos);
+        prev->__set_next(pos.operator->());
         iterator result = std::prev(pos) == prev ? pos : std::prev(pos);
-        pos->__set_prev(prev);
+        pos->__set_prev(prev.operator->());
         return result;
     }
 
@@ -583,9 +600,9 @@ public:
     }
     
     static void __assert_invariants(__sentinel_type const& s) {
-        const_iterator i = s.next();
+        const_iterator i = const_iterator(s.next());
         __utl_assert(i->prev() == &s);
-        for (std::size_t index = 0; i != (&s); ++index) {
+        for (std::size_t index = 0; i != const_iterator(&s); ++index) {
             const_iterator next = std::next(i);
             __utl_assert(std::prev(next) == i);
             i = next;
