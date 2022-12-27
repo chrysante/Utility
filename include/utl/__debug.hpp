@@ -65,7 +65,16 @@ _UTL_SYSTEM_HEADER_
 #if __clang__ || __GNUC__
 #define __utl_debugfail(...) __builtin_trap()
 #elif _MSC_VER
-#define __utl_debugbreak(...) __debugbreak()
+#define __utl_debugfail(...) __debugbreak()
+#else
+#error Unknown compiler
+#endif
+
+// __utl_unreachable
+#if __clang__ || __GNUC__
+#define __utl_unreachable(...) (__debugbreak(), __builtin_unreachable())
+#elif _MSC_VER
+#define __utl_unreachable(...) __debugbreak()
 #else
 #error Unknown compiler
 #endif
