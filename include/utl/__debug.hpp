@@ -72,7 +72,7 @@ _UTL_SYSTEM_HEADER_
 
 // __utl_unreachable
 #if __clang__ || __GNUC__
-#define __utl_unreachable(...) (__debugbreak(), __builtin_unreachable())
+#define __utl_unreachable(...) (__utl_debugbreak(), __builtin_unreachable())
 #elif _MSC_VER
 #define __utl_unreachable(...) __debugbreak()
 #else
