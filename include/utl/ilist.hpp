@@ -291,7 +291,7 @@ public:
     
     // (1)
     void assign(size_type count, value_type const& value) {
-        __assign_element_wise([&, i = size_type(0)]() mutable { return i != count; }, [&]() { return value; });
+        __assign_element_wise([&, i = size_type(0)]() mutable { return i != count; }, [&]() -> decltype(auto) { return value; });
     }
     
     // (2)
@@ -495,7 +495,7 @@ public:
     }
     
     void __assign_element_wise(auto rhs_itr, auto rhs_end) {
-        __assign_element_wise([&]{ return rhs_itr != rhs_end; }, [&]{ return *rhs_itr++; });
+        __assign_element_wise([&]{ return rhs_itr != rhs_end; }, [&]() -> decltype(auto) { return *rhs_itr++; });
     }
     
     void __swap_impl(ilist& rhs, bool swap_allocs) noexcept {
