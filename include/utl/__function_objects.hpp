@@ -101,11 +101,15 @@ __utl_nodiscard constexpr auto signed_pow(utl::arithmetic auto x, utl::arithmeti
     }
 }
 
-__utl_nodiscard constexpr auto ceil_divide(std::unsigned_integral auto a, std::unsigned_integral auto b) {
+__utl_nodiscard constexpr auto ceil_divide(std::integral auto a, std::integral auto b) {
+    __utl_expect(a >= 0);
+    __utl_expect(b >= 0);
     return (a / b) + !!(a % b);
 }
 
-__utl_nodiscard constexpr auto ceil_divide_pow_two(std::unsigned_integral auto a, std::unsigned_integral auto b) {
+__utl_nodiscard constexpr auto ceil_divide_pow_two(std::integral auto a, std::integral auto b) {
+    __utl_expect(a >= 0);
+    __utl_expect(b >= 0);
     return fast_div_pow_two(a, b) + !!fast_mod_pow_two(a, b);
 }
 
