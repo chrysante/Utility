@@ -1,4 +1,5 @@
 #include <catch/catch2.hpp>
+
 #include <utl/__prime.hpp>
 #include <utl/dispatch/concurrent_dispatch_queue.hpp>
 
