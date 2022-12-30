@@ -135,6 +135,8 @@ public:
         }
         
         bool operator==(__iterator_impl const& rhs) const = default;
+        bool operator==(__iterator_impl<std::add_const_t<N>> const& rhs) const requires (!std::is_const_v<N>) { return __node == rhs.__node; }
+        bool operator==(__iterator_impl<std::remove_const_t<N>> const& rhs) const requires std::is_const_v<N> { return __node == rhs.__node; }
         
         reference operator*() const { return *__node; }
         
