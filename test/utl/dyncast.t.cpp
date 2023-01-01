@@ -1,7 +1,8 @@
 #include <catch/catch2.hpp>
-
 #include <utl/dyncast.hpp>
 #include <utl/utility.hpp>
+
+#include "TypeCompare.h"
 
 namespace {
 
@@ -59,10 +60,35 @@ static bool canDyncast(From&& from) {
     return requires { dyncast<To>(from); };
 }
 
+using namespace utl_test;
+
 TEST_CASE("Dyncast visit", "[common][dyncast]") {
     LDerivedA a;
     Base& base = a;
     CHECK(utl::visit(base, [](Base& base) { return base.type(); }) == Type::LDerivedA);
+}
+
+TEST_CASE("Dyncast visit returning reference", "[common][dyncast]") {
+    LDerivedA a;
+    Base& base = a;
+    auto f = [&, i = 0](Base&) -> auto& { return i; };
+    decltype(auto) result = utl::visit(base, f);
+    CHECK(T<decltype(result)> == T<int const&>);
+}
+
+TEST_CASE("Dyncast visit returning reference to hierarchy", "[common][dyncast]") {
+    struct A {};
+    struct B: A {};
+    LDerivedA a;
+    Base& base = a;
+    auto f = [b = B{}]<typename T>(T&) -> auto& {
+        if constexpr (std::is_same_v<T, Base>) {
+            return static_cast<A const&>(b);
+        }
+        else { return b; }
+    };
+    decltype(auto) result = utl::visit(base, f);
+    CHECK(T<decltype(result)> == T<A const&>);
 }
 
 TEST_CASE("Dyncast visit subtree", "[common][dyncast]") {
@@ -94,6 +120,27 @@ TEST_CASE("Dyncast visit subtree - 2", "[common][dyncast]") {
     CHECK(dispatcher(b) == 1);
     CHECK(dispatcher(c) == 1);
 }
+
+TEST_CASE("Dyncast MD visit", "[common][dyncast]") {
+    auto dispatcher = [](Base& b, LDerivedA& x) {
+        return utl::visit(b, x, utl::overload {
+            [](Base&,      LDerivedA& a) { return 0; },
+            [](Base&,      LDerivedB& b) { return 1; },
+            [](LDerivedB&, LDerivedA& a) { return 2; },
+            [](LDerivedB&, LDerivedB& b) { return 3; },
+        });
+    };
+    LDerivedA a;
+    LDerivedB b;
+    LDerivedC c;
+    CHECK(dispatcher(a, a) == 0);
+    CHECK(dispatcher(a, b) == 1);
+    CHECK(dispatcher(a, c) == 1);
+    CHECK(dispatcher(b, a) == 2);
+    CHECK(dispatcher(b, b) == 3);
+    CHECK(dispatcher(b, c) == 3);
+}
+
 
 TEST_CASE("isa and dyncast", "[common][dyncast]") {
     LDerivedA la;
