@@ -192,6 +192,7 @@ struct vector {
     
     /// (5a)
     template <input_range_for<value_type> Range>
+    requires (!std::derived_from<std::remove_cvref_t<Range>, vector>)
     __utl_interface_export __utl_always_inline constexpr vector(Range&& range,
                                                                 allocator_type const& alloc = allocator_type()):
         vector(__utl_begin(range), __utl_end(range), alloc) {}
