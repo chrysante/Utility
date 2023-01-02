@@ -109,37 +109,61 @@ struct __index_selector: __index_selector_impl<type_sequence<T...>, std::index_s
 //template <typename T>
 //concept __trivially_move_assignable = std::is_trivially_move_assignable_v<T>;
 
-// MARK: get
-
-template <std::size_t I, typename... T>
-constexpr variant_alternative_t<I, variant<T...>>& get(variant<T...>& v) {
-    return get<I>(v.__data);
-}
-
-template <std::size_t I, typename... T>
-constexpr variant_alternative_t<I, variant<T...>> const& get(variant<T...> const& v) {
-    return get<I>(v.__data);
-}
-
-template <std::size_t I, typename... T>
-constexpr variant_alternative_t<I, variant<T...>>&& get(variant<T...>&& v) {
-    return get<I>(std::move(v.__data));
-}
-
-template <std::size_t I, typename... T>
-constexpr variant_alternative_t<I, variant<T...>> const&& get(variant<T...> const&& v) {
-    return get<I>(std::move(v.__data));
-}
+// MARK: holds_alternative
 
 template <typename T, typename Var>
 concept __has_get_by_type =
     Var::template __contains<T> &&
     (Var::template __occurence_count<T> == 1);
 
+template <std::size_t I, typename... T>
+requires (I < sizeof...(T))
+constexpr bool holds_alternative(variant<T...> const& v) {
+    return v.index() == I;
+}
+
+template <typename Type, typename... T>
+requires __has_get_by_type<Type, variant<T...>>
+constexpr bool holds_alternative(variant<T...> const& v) {
+    constexpr std::size_t I = variant<T...>::template __index_of<Type>;
+    return holds_alternative<I>(v);
+}
+
+// MARK: get
+
+template <std::size_t I, typename... T>
+requires (I < sizeof...(T))
+constexpr variant_alternative_t<I, variant<T...>>& get(variant<T...>& v) {
+    __utl_expect(holds_alternative<I>(v));
+    return get<I>(v.__data);
+}
+
+template <std::size_t I, typename... T>
+requires (I < sizeof...(T))
+constexpr variant_alternative_t<I, variant<T...>> const& get(variant<T...> const& v) {
+    __utl_expect(holds_alternative<I>(v));
+    return get<I>(v.__data);
+}
+
+template <std::size_t I, typename... T>
+requires (I < sizeof...(T))
+constexpr variant_alternative_t<I, variant<T...>>&& get(variant<T...>&& v) {
+    __utl_expect(holds_alternative<I>(v));
+    return get<I>(std::move(v.__data));
+}
+
+template <std::size_t I, typename... T>
+requires (I < sizeof...(T))
+constexpr variant_alternative_t<I, variant<T...>> const&& get(variant<T...> const&& v) {
+    __utl_expect(holds_alternative<I>(v));
+    return get<I>(std::move(v.__data));
+}
+
 template <typename Type, typename... T>
 requires __has_get_by_type<Type, variant<T...>>
 constexpr Type& get(variant<T...>& v) {
     constexpr std::size_t I = variant<T...>::template __index_of<Type>;
+    __utl_expect(holds_alternative<I>(v));
     return get<I>(v);
 }
 
@@ -147,6 +171,7 @@ template <typename Type, typename... T>
 requires __has_get_by_type<Type, variant<T...>>
 constexpr Type const& get(variant<T...> const& v) {
     constexpr std::size_t I = variant<T...>::template __index_of<Type>;
+    __utl_expect(holds_alternative<I>(v));
     return get<I>(v);
 }
 
@@ -154,6 +179,7 @@ template <typename Type, typename... T>
 requires __has_get_by_type<Type, variant<T...>>
 constexpr Type&& get(variant<T...>&& v) {
     constexpr std::size_t I = variant<T...>::template __index_of<Type>;
+    __utl_expect(holds_alternative<I>(v));
     return get<I>(std::move(v));
 }
 
@@ -161,6 +187,7 @@ template <typename Type, typename... T>
 requires __has_get_by_type<Type, variant<T...>>
 constexpr Type const&& get(variant<T...> const&& v) {
     constexpr std::size_t I = variant<T...>::template __index_of<Type>;
+    __utl_expect(holds_alternative<I>(v));
     return get<I>(std::move(v));
 }
 
@@ -307,7 +334,7 @@ public:
     // Constructors
     
     // (1)
-    variant() = delete;
+//    variant() = delete;
     
     constexpr variant() noexcept(std::is_nothrow_default_constructible_v<__type_at_index<0>>)
     requires std::is_default_constructible_v<__type_at_index<0>>
@@ -316,12 +343,12 @@ public:
     }
     
     // (2)
-    constexpr variant(variant const& rhs) = delete;
-
-    constexpr variant(variant const& rhs)
-    requires __all<std::is_copy_constructible<Types>...> &&
-             __all<std::is_trivially_copy_constructible<Types>...>
-    = default;
+//    constexpr variant(variant const& rhs) = delete;
+//
+//    constexpr variant(variant const& rhs)
+//    requires __all<std::is_copy_constructible<Types>...> &&
+//             __all<std::is_trivially_copy_constructible<Types>...>
+//    = default;
     
     constexpr variant(variant const& rhs) noexcept(__all<std::is_nothrow_copy_constructible<Types>...>)
     requires __all<std::is_copy_constructible<Types>...>
@@ -330,12 +357,12 @@ public:
     }
     
     // (3)
-    constexpr variant(variant&& rhs) = delete;
-    
-    constexpr variant(variant&& rhs)
-    requires __all<std::is_move_constructible<Types>...> &&
-             __all<std::is_trivially_move_constructible<Types>...>
-    = default;
+//    constexpr variant(variant&& rhs) = delete;
+    //
+//    constexpr variant(variant&& rhs)
+//    requires __all<std::is_move_constructible<Types>...> &&
+//             __all<std::is_trivially_move_constructible<Types>...>
+//    = default;
     
     constexpr variant(variant&& rhs) noexcept(__all<std::is_nothrow_move_constructible<Types>...>)
     requires __all<std::is_move_constructible<Types>...>
@@ -399,7 +426,14 @@ public:
     // operator=
     
     // (1)
-    constexpr variant& operator=(variant const& rhs) = delete;
+//    constexpr variant& operator=(variant const& rhs) = delete;
+//
+//    constexpr variant& operator=(variant const& rhs)
+//    requires __all<std::is_copy_constructible<Types>...> &&
+//             __all<std::is_copy_assignable<Types>...> &&
+//             __all<std::is_trivially_copy_constructible<Types>...> &&
+//             __all<std::is_trivially_copy_assignable<Types>...>
+//    = default;
     
     constexpr variant& operator=(variant const& rhs)
     requires __all<std::is_copy_constructible<Types>...> &&
@@ -408,15 +442,15 @@ public:
         return __copy_or_move_assign(rhs);
     }
     
-    constexpr variant& operator=(variant const& rhs)
-    requires __all<std::is_copy_constructible<Types>...> &&
-             __all<std::is_copy_assignable<Types>...> &&
-             __all<std::is_trivially_copy_constructible<Types>...> &&
-             __all<std::is_trivially_copy_assignable<Types>...>
-    = default;
-    
     // (2)
-    constexpr variant& operator=(variant&& rhs) = delete;
+//    constexpr variant& operator=(variant&& rhs) = delete;
+//
+//    constexpr variant& operator=(variant&& rhs)
+//    requires __all<std::is_move_constructible<Types>...> &&
+//             __all<std::is_move_assignable<Types>...> &&
+//             __all<std::is_trivially_move_constructible<Types>...> &&
+//             __all<std::is_trivially_move_assignable<Types>...>
+//    = default;
     
     constexpr variant& operator=(variant&& rhs) noexcept(std::conjunction_v<std::is_nothrow_move_constructible<Types>...,
                                                                             std::is_nothrow_move_assignable<Types>...>)
@@ -425,13 +459,6 @@ public:
     {
         return __copy_or_move_assign(std::move(rhs));
     }
-    
-    constexpr variant& operator=(variant&& rhs)
-    requires __all<std::is_move_constructible<Types>...> &&
-             __all<std::is_move_assignable<Types>...> &&
-             __all<std::is_trivially_move_constructible<Types>...> &&
-             __all<std::is_trivially_move_assignable<Types>...>
-    = default;
     
     // (3)
     template <typename T,
@@ -454,6 +481,14 @@ public:
     constexpr std::size_t index() const noexcept {
         return __index;
     }
+    
+    template <std::size_t I>
+    requires (I < __count)
+    constexpr bool is() const { return holds_alternative<I>(*this); }
+    
+    template <typename T>
+    requires __contains<T> && (__occurence_count<T> == 1)
+    constexpr bool is() const { return is<__index_of<T>>(); }
     
     // MARK: Modifiers
     
