@@ -669,10 +669,10 @@ class cbvariant: public variant<Types...> {
 public:
     using __base = variant<Types...>;
     using __base::__base;
-    Base* operator->() { return const_cast<Base*>(static_cast<cbvariant const*>(this)->operator->()); }
-    Base const* operator->() const { return &this->template as_base<Base>(); }
-    operator Base&()& { return *operator->(); }
-    operator Base const&() const& { return *operator->(); }
+    constexpr Base* operator->() { return const_cast<Base*>(static_cast<cbvariant const*>(this)->operator->()); }
+    constexpr Base const* operator->() const { return &this->template as_base<Base>(); }
+    constexpr operator Base&()& { return *operator->(); }
+    constexpr operator Base const&() const& { return *operator->(); }
 };
 
 } // namespace utl
