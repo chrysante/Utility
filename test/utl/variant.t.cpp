@@ -3,31 +3,15 @@
 #include <tuple>
 #include <iostream>
 
-#if 0
-
 #include <utl/variant.hpp>
 #include <utl/typeinfo.hpp>
 #include <utl/utility.hpp>
 
+#include "TypeCompare.h"
 
-namespace {
+using utl_test::T;
 
-template <typename... T>
-std::ostream& operator<<(std::ostream& str, std::tuple<T...> const& t) {
-    str << "(";
-    [&]<std::size_t... I>(std::index_sequence<I...>) {
-        ([&]{
-            if constexpr (I > 0) { str << ", "; }
-            str << std::get<I>(t);
-        }(), ...);
-    }(std::index_sequence_for<T...>{});
-    return str << ")";
-}
-
-
-} // namespace
-
-template <std::size_t> struct tag{
+template <std::size_t> struct tag {
     tag() {}
     tag(tag const&) {}
     tag(tag&&) noexcept {}
@@ -36,35 +20,50 @@ template <std::size_t> struct tag{
     ~tag() {}
 };
 
-TEST_CASE("variant default construct", "[variant]") {
+TEST_CASE("ctor 1 - variant default construct", "[variant]") {
     utl::variant<int, float> v;
     REQUIRE(v.index() == 0);
     CHECK(utl::get<0>(v) == 0);
 }
 
-TEST_CASE("variant in_place construct", "[variant]") {
-    utl::variant<int, float> v(std::in_place_type<float>, 1.0f);
-    REQUIRE(v.index() == 1);
-    CHECK(utl::get<1>(v) == 1.0f);
-}
-
-TEST_CASE("variant value initialize", "[variant]") {
-    utl::variant<tag<0>, int, float> v = 1.0f;
-    REQUIRE(v.index() == 2);
-    CHECK(utl::get<2>(v) == 1.0f);
-}
-
-TEST_CASE("variant copy construct", "[variant]") {
+TEST_CASE("ctor 2 - variant copy construct", "[variant]") {
     utl::variant<tag<0>, int, float> v = 1.0f;
     utl::variant<tag<0>, int, float> w = v;
     CHECK(w.index() == 2);
     CHECK(get<2>(w) == 1.0f);
 }
 
+TEST_CASE("ctor 3 - variant move construct", "[variant]") {
+    utl::variant<tag<0>, int, float> v = 1.0f;
+    utl::variant<tag<0>, int, float> w = std::move(v);
+    CHECK(w.index() == 2);
+    CHECK(get<2>(w) == 1.0f);
+}
+
+TEST_CASE("ctor 4 - variant value initialize", "[variant]") {
+    utl::variant<tag<0>, int, float> v = 1.0f;
+    REQUIRE(v.index() == 2);
+    CHECK(utl::get<2>(v) == 1.0f);
+}
+
+TEST_CASE("ctor 5 - variant in_place construct", "[variant]") {
+    utl::variant<int, float> v(std::in_place_type<float>, 1.0f);
+    REQUIRE(v.index() == 1);
+    CHECK(utl::get<1>(v) == 1.0f);
+}
+
 TEST_CASE("variant copy assign", "[variant]") {
     utl::variant<tag<0>, int, float> v = 1.0f;
     utl::variant<tag<0>, int, float> w;
     w = v;
+    CHECK(w.index() == 2);
+    CHECK(get<2>(w) == 1.0f);
+}
+
+TEST_CASE("variant move assign", "[variant]") {
+    utl::variant<tag<0>, int, float> v = 1.0f;
+    utl::variant<tag<0>, int, float> w;
+    w = std::move(v);
     CHECK(w.index() == 2);
     CHECK(get<2>(w) == 1.0f);
 }
@@ -89,15 +88,19 @@ TEST_CASE("variant swap", "[variant]") {
 }
 
 TEST_CASE("variant visit helper", "[variant]") {
-    auto v = [](auto...) {};
+    auto v = [i = 0](auto...) -> int const& { return i; };
     using VisitHelper = utl::__variant_visit<true, void, decltype(v),
                                              utl::type_sequence<utl::variant<float, int, int>,
                                                                 utl::variant<char, std::nullptr_t, char, std::nullptr_t>,
                                                                 utl::variant<char, std::nullptr_t>>>;
-    CHECK(std::same_as<VisitHelper::__variant_at_index<0>, utl::variant<float, int, int>>);
-    CHECK(std::same_as<VisitHelper::__variant_at_index<1>, utl::variant<char, std::nullptr_t, char, std::nullptr_t>>);
-    CHECK(std::same_as<VisitHelper::__variant_at_index<2>, utl::variant<char, std::nullptr_t>>);
+    CHECK(T<VisitHelper::__variant_at_index<0>> == T<utl::variant<float, int, int>>);
+    CHECK(T<VisitHelper::__variant_at_index<1>> == T<utl::variant<char, std::nullptr_t, char, std::nullptr_t>>);
+    CHECK(T<VisitHelper::__variant_at_index<2>> == T<utl::variant<char, std::nullptr_t>>);
     CHECK(VisitHelper::__variant_count == 3);
+    UTL_WITH_INDEX_SEQUENCE((I, 24), { ([&]{
+        CHECK(T<VisitHelper::__deduced_return_type_at<I>> == T<int const&>);
+    }(), ...); });
+    CHECK(T<VisitHelper::__common_return_type> == T<int const&>);
     auto const size = VisitHelper::__variant_sizes;
     CHECK(size[0] == 3);
     CHECK(size[1] == 4);
@@ -138,6 +141,58 @@ TEST_CASE("variant visit", "[variant]") {
     }, u, v, w);
 }
 
+TEST_CASE("variant visit returning references", "[variant]") {
+    utl::variant<tag<0>, tag<1>, tag<2>, tag<3>> u(std::in_place_type<tag<2>>);
+    utl::variant<int, char> v(std::in_place_type<int>, 1);
+    auto vis = utl::overload{
+        [&, i = 0](tag<2>&, int&) mutable -> int const& { return i; },
+        [&, i = 0](auto&, auto&) mutable -> int& { return i; },
+    };
+    auto&& result = utl::visit(vis, u, v);
+    CHECK(T<decltype(result)> == T<int const&>);
+}
+
+namespace {
+
+struct Base {
+    int i;
+};
+
+int& f(Base& b) { return b.i; }
+
+struct A: Base {
+    A(int i, float a): Base{ i }, a(a) {}
+    float a;
+};
+
+struct B: Base {
+    B(int i, long a): Base{ i }, a(a) {}
+    long a;
+};
+
+struct X { int _; };
+
+struct C: X, B {
+    using B::B;
+};
+
+} // namespace
+
+static void testCBVariant(auto& v) {
+    CHECK(v->i == 1);
+    v->i = 2;
+    v.visit([](auto& x) { CHECK(x.i == 2); });
+    CHECK(f(v) == 2);
+    v.visit([](auto& x) { x.a = 1; });
+}
+
+TEST_CASE("cbvariant", "[variant]") {
+    utl::cbvariant<Base, A, B> v(std::in_place_type<A>, 1, 2);
+    testCBVariant(v);
+    utl::cbvariant<Base, A, B, C> w(std::in_place_type<C>, 1, 2);
+    testCBVariant(w);
+}
+
 namespace {
 
 struct NonTrivial {
@@ -149,10 +204,13 @@ struct NonTrivial {
     ~NonTrivial() {}
 };
 
-
-}
+} // namespace
 
 TEST_CASE("variant trivial lifetime", "[variant]") {
+    if (__clang_major__ < 15) {
+        std::cout << "Clang " __clang_version__ << " insufficient for correct lifetime triviality." << std::endl;
+        return;
+    }
     using V = utl::variant<int, NonTrivial>;
     CHECK(!std::is_trivially_copy_constructible_v<V>);
     CHECK(!std::is_trivially_move_constructible_v<V>);
@@ -166,5 +224,3 @@ TEST_CASE("variant trivial lifetime", "[variant]") {
     CHECK(std::is_trivially_move_assignable_v<W>);
     CHECK(std::is_trivially_destructible_v<W>);
 }
-
-#endif

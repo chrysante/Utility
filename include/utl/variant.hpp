@@ -11,6 +11,7 @@ _UTL_SYSTEM_HEADER_
 
 #include "__debug.hpp"
 #include "__union.hpp"
+#include "__farray.hpp"
 #include "common.hpp"
 #include "type_traits.hpp"
 #include "utility.hpp"
@@ -110,13 +111,6 @@ struct __index_selector: __index_selector_impl<type_sequence<T...>, std::index_s
 
 // MARK: get
 
-template <std::size_t I, typename V>
-constexpr decltype(auto) __variant_get_impl(V&& v) {
-    __utl_expect(I == v.__index);
-    using result_type = copy_cvref_t<V&&, variant_alternative_t<I, std::decay_t<V>>>;
-    return static_cast<result_type>(__union_get_impl<I>(v.__union));
-}
-
 template <std::size_t I, typename... T>
 constexpr variant_alternative_t<I, variant<T...>>& get(variant<T...>& v) {
     return get<I>(v.__data);
@@ -137,6 +131,39 @@ constexpr variant_alternative_t<I, variant<T...>> const&& get(variant<T...> cons
     return get<I>(std::move(v.__data));
 }
 
+template <typename T, typename Var>
+concept __has_get_by_type =
+    Var::template __contains<T> &&
+    (Var::template __occurence_count<T> == 1);
+
+template <typename Type, typename... T>
+requires __has_get_by_type<Type, variant<T...>>
+constexpr Type& get(variant<T...>& v) {
+    constexpr std::size_t I = variant<T...>::template __index_of<Type>;
+    return get<I>(v);
+}
+
+template <typename Type, typename... T>
+requires __has_get_by_type<Type, variant<T...>>
+constexpr Type const& get(variant<T...> const& v) {
+    constexpr std::size_t I = variant<T...>::template __index_of<Type>;
+    return get<I>(v);
+}
+
+template <typename Type, typename... T>
+requires __has_get_by_type<Type, variant<T...>>
+constexpr Type&& get(variant<T...>&& v) {
+    constexpr std::size_t I = variant<T...>::template __index_of<Type>;
+    return get<I>(std::move(v));
+}
+
+template <typename Type, typename... T>
+requires __has_get_by_type<Type, variant<T...>>
+constexpr Type const&& get(variant<T...> const&& v) {
+    constexpr std::size_t I = variant<T...>::template __index_of<Type>;
+    return get<I>(std::move(v));
+}
+
 // MARK: visit
 
 template <bool DeduceReturnType,
@@ -149,7 +176,7 @@ template <bool DeduceReturnType,
 struct __variant_visit;
 
 template <bool DeduceReturnType, typename R, typename Visitor,
-          typename... Variants,
+          typename... Variants, // cvref qualified as in the call to visit();
           typename... SizeT,
           std::size_t... I, // Indices 0..<N into the list of variants
           std::size_t... FlatI>  // Indices 0..<N into the flattened list of all combinations types in the variants
@@ -157,44 +184,31 @@ struct __variant_visit<DeduceReturnType, R, Visitor,
                        type_sequence<Variants...>,
                        type_sequence<SizeT...>,
                        std::index_sequence<I...>,
-                       std::index_sequence<FlatI...>>
+                       std::index_sequence<FlatI...>>: __farray_base<variant_size_v<std::remove_reference_t<Variants>>...>
 {
+    using __base = __farray_base<variant_size_v<std::remove_reference_t<Variants>>...>;
+    using __base::__flatten_index;
+    using __base::__expand_index;
+    
     template <std::size_t J>
     using __variant_at_index = typename type_sequence<Variants...>::template at<J>;
     
     static constexpr std::size_t __variant_count = sizeof...(Variants);
     static constexpr std::array<std::size_t, __variant_count> __variant_sizes = { variant_size_v<std::remove_reference_t<Variants>>... };
     
-    static constexpr std::size_t __flatten_index(std::array<std::size_t, __variant_count> index) {
-        (__utl_assert(std::get<I>(index) < std::get<I>(__variant_sizes)), ...);
-        std::size_t result = 0;
-        ([&]{
-            result += std::get<I>(index);
-            if constexpr (I < sizeof...(SizeT) - 1) {
-                result *= std::get<I + 1>(__variant_sizes);
-            }
-        }(), ...);
-        return result;
-    }
-    
-    static constexpr std::array<std::size_t, __variant_count> __expand_index(std::size_t flat_index) {
-        __utl_assert(flat_index < (1 * ... * std::get<I>(__variant_sizes)));
-        std::array<std::size_t, __variant_count> result;
-        ([&]{
-            std::size_t const m = [&]<std::size_t... J>(std::index_sequence<J...>){
-                std::size_t const I_ = I;
-                return (1 * ... * __variant_sizes[1 + I_ + J]);
-            }(std::make_index_sequence<__variant_count - 1 - I>{});
-            result[I] = flat_index / m;
-            flat_index -= result[I] * m;
-        }(), ...);
-        return result;
-    }
-    
     template <std::size_t FlatIndex>
-    using __deduced_return_type_at = std::invoke_result_t<Visitor, decltype(get<__expand_index(FlatIndex)[I]>(std::declval<Variants>()))...>;
+    using __deduced_return_type_at = std::invoke_result_t<Visitor, decltype(get<__expand_index(FlatIndex)[I]>(std::declval<Variants&&>()))...>;
     
-    using __common_return_type = std::common_type_t<__deduced_return_type_at<FlatI>...>;
+    static constexpr bool __all_are_references = __all<std::is_reference<__deduced_return_type_at<FlatI>>...>;
+    static constexpr bool __none_is_reference = !__any<std::is_reference<__deduced_return_type_at<FlatI>>...>;
+ 
+    static_assert(__all_are_references || __none_is_reference,
+                  "Either all cases or none must return references. This prevents accidental unintended copies or dangling references to local stack memory.");
+    
+    using __common_return_type = typename std::conditional_t<
+        __none_is_reference,
+        std::common_type<__deduced_return_type_at<FlatI>...>,
+        std::common_reference<__deduced_return_type_at<FlatI>...>>::type;
     
     static constexpr bool __all_return_types_equal = type_sequence<__deduced_return_type_at<FlatI>...>::all_equal;
     
@@ -209,10 +223,10 @@ struct __variant_visit<DeduceReturnType, R, Visitor,
             [](Visitor&& vis, Variants&&... vars) -> __return_type {
                 constexpr auto index = __expand_index(FlatI);
                 if constexpr (std::same_as<__return_type, void>) {
-                    std::invoke(std::forward<Visitor>(vis), get<std::get<I>(index)>(std::forward<Variants>(vars))...);
+                    std::invoke(std::forward<Visitor>(vis), get<index[I]>(std::forward<Variants>(vars))...);
                 }
                 else {
-                    return std::invoke(std::forward<Visitor>(vis), get<std::get<I>(index)>(std::forward<Variants>(vars))...);
+                    return std::invoke(std::forward<Visitor>(vis), get<index[I]>(std::forward<Variants>(vars))...);
                 }
             }...
         };
@@ -225,14 +239,14 @@ template <typename Visitor, typename... Variants>
 requires (__is_variant<Variants> && ...)
 constexpr decltype(auto) visit(Visitor&& vis, Variants&&... vars) {
     return __variant_visit<true, void /* ignored */, Visitor,
-                           type_sequence<Variants...>>::visit(std::forward<Visitor>(vis), std::forward<Variants>(vars)...);
+                           type_sequence<Variants&&...>>::visit(std::forward<Visitor>(vis), std::forward<Variants>(vars)...);
 }
 
 template <typename R, typename Visitor, typename... Variants>
 requires (__is_variant<Variants> && ...)
 constexpr R visit(Visitor&& vis, Variants&&... vars) {
     return __variant_visit<false, R, Visitor,
-                           type_sequence<Variants...>>::visit(std::forward<Visitor>(vis), std::forward<Variants>(vars)...);
+                           type_sequence<Variants&&...>>::visit(std::forward<Visitor>(vis), std::forward<Variants>(vars)...);
 }
 
 template <typename... T>
@@ -315,7 +329,6 @@ public:
         __copy_or_move_construct(rhs);
     }
     
-    
     // (3)
     constexpr variant(variant&& rhs) = delete;
     
@@ -329,7 +342,6 @@ public:
     {
         __copy_or_move_construct(std::move(rhs));
     }
-    
     
     // (4)
     template <typename T,
@@ -378,13 +390,12 @@ public:
     }
     
     // Destructor
-    ~variant() requires __all<std::is_trivially_destructible<Types>...> = default;
+//    ~variant() requires __all<std::is_trivially_destructible<Types>...> = default;
     
     constexpr ~variant() {
         __destroy();
     }
     
-
     // operator=
     
     // (1)
@@ -429,7 +440,7 @@ public:
     requires (!std::same_as<variant, std::decay_t<T>>)
     {
         if (__index == Index) {
-            get<Index>(*this) = std::forward<T>(t);
+            utl::get<Index>(*this) = std::forward<T>(t);
         }
         else {
             __destroy();
@@ -443,22 +454,6 @@ public:
     constexpr std::size_t index() const noexcept {
         return __index;
     }
-    
-    template <typename Base>
-    requires have_common_base<Base, Types...>::value && std::same_as<std::remove_cvref_t<Base>, Base>
-    constexpr Base const& as_base() const& { return __as_base<Base const&>(*this); }
-    
-    template <typename Base>
-    requires have_common_base<Base, Types...>::value && std::same_as<std::remove_cvref_t<Base>, Base>
-    constexpr Base& as_base()& { return __as_base<Base&>(*this); }
-    
-    template <typename Base>
-    requires have_common_base<Base, Types...>::value && std::same_as<std::remove_cvref_t<Base>, Base>
-    constexpr Base const&& as_base() const&& { return __as_base<Base const&&>(std::move(*this)); }
-    
-    template <typename Base>
-    requires have_common_base<Base, Types...>::value && std::same_as<std::remove_cvref_t<Base>, Base>
-    constexpr Base&& as_base()&& { return __as_base<Base&&>(std::move(*this)); }
     
     // MARK: Modifiers
     
@@ -506,11 +501,11 @@ public:
     {
         if (__index == rhs.__index) {
             __visit_with_index(__index, [&]<std::size_t I>(std::integral_constant<std::size_t, I>) {
-                std::swap(get<I>(*this), get<I>(rhs));
+                std::swap(utl::get<I>(*this), utl::get<I>(rhs));
             });
         }
         else {
-            visit([]<typename T, typename U>(T& lhs, U& rhs) {
+            utl::visit([]<typename T, typename U>(T& lhs, U& rhs) {
                 auto tmp = std::move(lhs);
                 std::destroy_at(&lhs);
                 std::construct_at(reinterpret_cast<U*>(&lhs), std::move(rhs));
@@ -521,23 +516,79 @@ public:
         }
     }
     
+    decltype(auto) visit(auto&& vis) const& {
+        return utl::visit(UTL_FORWARD(vis), *this);
+    }
+    
+    decltype(auto) visit(auto&& vis)& {
+        return utl::visit(UTL_FORWARD(vis), *this);
+    }
+    
+    decltype(auto) visit(auto&& vis) const&& {
+        return utl::visit(UTL_FORWARD(vis), std::move(*this));
+    }
+    
+    decltype(auto) visit(auto&& vis)&& {
+        return utl::visit(UTL_FORWARD(vis), std::move(*this));
+    }
+    
+    template <std::size_t I> requires (I < __count)
+    variant_alternative<I, variant> const& get() const& { return utl::get<I>(*this); }
+    
+    template <std::size_t I> requires (I < __count)
+    variant_alternative<I, variant>& get()& { return utl::get<I>(*this); }
+    
+    template <std::size_t I> requires (I < __count)
+    variant_alternative<I, variant> const&& get() const&& { return utl::get<I>(std::move(*this)); }
+    
+    template <std::size_t I> requires (I < __count)
+    variant_alternative<I, variant>&& get()&& { return utl::get<I>(std::move(*this)); }
+    
+    template <typename T> requires __has_get_by_type<T, variant>
+    T const& get() const& { return utl::get<T>(*this); }
+    
+    template <typename T> requires __has_get_by_type<T, variant>
+    T& get()& { return utl::get<T>(*this); }
+    
+    template <typename T> requires __has_get_by_type<T, variant>
+    T const&& get() const&& { return utl::get<T>(std::move(*this)); }
+    
+    template <typename T> requires __has_get_by_type<T, variant>
+    T&& get()&& { return utl::get<T>(std::move(*this)); }
+    
+    template <typename Base>
+    requires have_common_base<Base, Types...>::value && std::same_as<std::remove_cvref_t<Base>, Base>
+    constexpr Base const& as_base() const& { return __as_base<Base const&>(*this); }
+    
+    template <typename Base>
+    requires have_common_base<Base, Types...>::value && std::same_as<std::remove_cvref_t<Base>, Base>
+    constexpr Base& as_base()& { return __as_base<Base&>(*this); }
+    
+    template <typename Base>
+    requires have_common_base<Base, Types...>::value && std::same_as<std::remove_cvref_t<Base>, Base>
+    constexpr Base const&& as_base() const&& { return __as_base<Base const&&>(std::move(*this)); }
+    
+    template <typename Base>
+    requires have_common_base<Base, Types...>::value && std::same_as<std::remove_cvref_t<Base>, Base>
+    constexpr Base&& as_base()&& { return __as_base<Base&&>(std::move(*this)); }
+    
     // MARK: Internals
     
     template <std::size_t I, typename... Args>
     constexpr void __construct(Args&&... args) {
         using T = __type_at_index<I>;
         __index = I;
-        std::construct_at(&get<I>(__data), std::forward<Args>(args)...);
+        std::construct_at(&utl::get<I>(__data), std::forward<Args>(args)...);
     }
     
     constexpr void __destroy() {
-        visit([](auto& value) { std::destroy_at(&value); }, *this);
+        visit([](auto& value) { std::destroy_at(&value); });
     }
     
     template <typename V>
     constexpr void __copy_or_move_construct(V&& rhs) {
         __visit_with_index(rhs.__index, [&]<std::size_t I>(std::integral_constant<std::size_t, I>) {
-            __construct<I>(get<I>(std::forward<V>(rhs)));
+            __construct<I>(utl::get<I>(std::forward<V>(rhs)));
         });
     }
     
@@ -545,11 +596,11 @@ public:
     constexpr variant& __copy_or_move_assign(V&& rhs) {
         if (__index == rhs.__index) {
             __visit_with_index(__index, [&]<std::size_t I>(std::integral_constant<std::size_t, I>) {
-                get<I>(*this) = get<I>(std::forward<V>(rhs));
+                utl::get<I>(*this) = utl::get<I>(std::forward<V>(rhs));
             });
         }
         else {
-            visit([&]<typename Rhs>(auto& value, Rhs&& r) {
+            utl::visit([&]<typename Rhs>(auto& value, Rhs&& r) {
                 std::destroy_at(&value);
                 std::construct_at(reinterpret_cast<std::decay_t<Rhs>*>(&value), std::forward<Rhs>(r));
             }, *this, std::forward<V>(rhs));
@@ -566,13 +617,13 @@ public:
             constexpr std::array<std::size_t, __count> offsets = {
                 compile_time_base_offset<raw_base, __type_at_index<I>>...
             };
-            return reinterpret_cast<Base>(*((char*)&self.__storage + offsets[self.__index]));
+            return reinterpret_cast<Base>(*(reinterpret_cast<copy_cv_t<std::remove_reference_t<Base>, char>*>(&self.__data) + offsets[self.__index]));
         });
-#else
-        return visit([]<typename T>(T&& value) -> decltype(auto) {
+#else // UTL_HAS_COMPILE_TIME_BASE_OFFSET
+        return utl::visit([]<typename T>(T&& value) -> decltype(auto) {
             return static_cast<Base>(value);
         }, std::forward<Self>(self));
-#endif
+#endif // UTL_HAS_COMPILE_TIME_BASE_OFFSET
     }
     
     template <typename Base, typename Self>
@@ -585,15 +636,15 @@ public:
         });
         if constexpr (all_offsets_equal) {
             constexpr std::size_t offset = compile_time_base_offset<raw_base, __type_at_index<0>>;
-            return reinterpret_cast<Base>(*((char*)&self.__storage + offset));
+            return reinterpret_cast<Base>(*(reinterpret_cast<copy_cv_t<std::remove_reference_t<Base>, char>*>(&self.__data) + offset));
         }
         else { return __virtual_as_base<Base>(UTL_FORWARD(self)); }
     
-#else
+#else // UTL_HAS_COMPILE_TIME_BASE_OFFSET
         return __virtual_as_base<Base>(UTL_FORWARD(self)); 
-#endif
+#endif // UTL_HAS_COMPILE_TIME_BASE_OFFSET
     }
-    
+  
     template <typename F>
     static constexpr decltype(auto) __visit_with_index(std::size_t index, F&& f) {
         return UTL_WITH_INDEX_SEQUENCE((I, __count), {
@@ -610,7 +661,18 @@ public:
     
     unsigned char __index;
     __union<Types...> __data;
-//    std::aligned_storage_t<__size, __align> __storage;
+};
+
+template <typename Base, typename... Types>
+requires have_common_base<Base, Types...>::value
+class cbvariant: public variant<Types...> {
+public:
+    using __base = variant<Types...>;
+    using __base::__base;
+    Base* operator->() { return const_cast<Base*>(static_cast<cbvariant const*>(this)->operator->()); }
+    Base const* operator->() const { return &this->template as_base<Base>(); }
+    operator Base&()& { return *operator->(); }
+    operator Base const&() const& { return *operator->(); }
 };
 
 } // namespace utl
