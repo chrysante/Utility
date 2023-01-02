@@ -52,6 +52,19 @@ constexpr To narrow_cast(From value) {
     }
 }
 
+/// \brief Performs a checked floating point \p static_cast
+template <std::floating_point To, typename Traits = __nc_assert, std::floating_point From>
+constexpr To narrow_cast(From value) {
+    if constexpr (sizeof(From) <= sizeof(To)) {
+        return value;
+    }
+    else {
+        To const result = static_cast<To>(value);
+        Traits::check(value == static_cast<From>(result));
+        return result;
+    }
+}
+
 /// \brief Performs a checked downward pointer cast in an inheritance hierarchy.
 /// \details Asserts when cast is invalid.
 template <typename To, typename From>
