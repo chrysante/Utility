@@ -278,7 +278,8 @@ struct __dc_common_type_wrapper: __dc_common_type_wrapper_impl<__all<__is_ref_wr
                   !__any<__is_ref_wrapper<T, false>...>,
                   "Either all or no cases must return references. "
                   "This rule is in place to prevent unindented copies or dangling references "
-                  "when one case does not return a reference.");
+                  "when one case does not return a reference while another does, as we have "
+                  "to agree on one common return type.");
 };
 
 template <typename Enums>
@@ -333,7 +334,10 @@ constexpr R __visit(F&& f, T&&... t) {
             return static_cast<target_type>(t);
         }
     };
-    constexpr __farray<R, F, type_sequence<T...>, std::integer_sequence<std::size_t, __dc_traits<T>::numElements...>> vis(getter);
+    constexpr __farray<R,
+                       F,
+                       type_sequence<T...>,
+                       std::integer_sequence<std::size_t, __dc_traits<T>::numElements...>> vis(getter);
     return vis[{ static_cast<std::size_t>(dyncast_get_type(t))... }](std::forward<F>(f), std::forward<T>(t)...);
 }
 
