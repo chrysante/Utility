@@ -237,11 +237,11 @@ _UTL_FUNCTION_OBJECT_DEF(
 
 _UTL_FUNCTION_OBJECT_DEF(
     identity,
-    (auto&& x) const { return UTL_FORWARD(x); });
+    (auto&& x) const -> decltype(auto) { return UTL_FORWARD(x); });
 
 _UTL_FUNCTION_OBJECT_DEF(
     deref,
-    (auto&& x) const->decltype(auto) { return *x; });
+    (auto&& x) const -> decltype(auto) { return *x; });
 
 _UTL_FUNCTION_OBJECT_DEF(noop,
                          (auto&&...) const {
