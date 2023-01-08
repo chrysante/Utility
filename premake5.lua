@@ -65,7 +65,16 @@ test_project_setup()
 files { 
     "test/utl/variant.t.cpp"
 }
---links { "utility" }
+
+-----------------------------------------------------------------------------------------
+-- Project utl-test-function
+-----------------------------------------------------------------------------------------
+project "utl-test-function"
+test_project_setup()
+files { 
+    "test/utl/function.t.cpp",
+    "test/utl/function_view.t.cpp"
+}
 
 -----------------------------------------------------------------------------------------
 -- Project code-gen

@@ -27,18 +27,18 @@ public:
     
     constexpr R operator()(Args... args) const noexcept(IsNoexcept) {
         __utl_expect(__invoke_ptr);
-        return __invoke_ptr(__state_ptr, args...);
+        return __invoke_ptr(__state_ptr, std::forward<Args>(args)...);
     }
     
 private:
     template <typename F>
-    constexpr static R __static_invoke(void const* state, Args&... args) {
+    constexpr static R __static_invoke(void const* state, Args... args) {
         F& f = *(F*)state;
         if constexpr (std::is_same_v<R, std::invoke_result_t<F, Args...>>) {
-            return std::invoke(f, std::move(args)...);
+            return std::invoke(f, std::forward<Args>(args)...);
         }
         else {
-            return static_cast<R>(std::invoke(f, std::move(args)...));
+            return static_cast<R>(std::invoke(f, std::forward<Args>(args)...));
         }
     }
     
