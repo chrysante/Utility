@@ -2,31 +2,31 @@
 
 #include <utl/ilist.hpp>
 
-#include <utl/typeinfo.hpp>
-
-namespace utl {
-
-template <typename Derived>
-Derived __get_derived_type(ilist_node<Derived>&);
-
-void __get_derived_type(...);
-
-template <typename T>
-using node_derived_type = decltype(__get_derived_type(std::declval<T&>()));
-
-}
-
-namespace {
-
-struct X: utl::ilist_node<X> {
-    
+struct Node: utl::ilist_node<Node> {
+    Node(int value): value(value) {}
+    int value;
 };
 
+std::ostream& operator<<(std::ostream& str, Node const& node) {
+    return str << "{ " << node.value << " }";
 }
+
 
 int main() {
     
-    std::cout << utl::nameof<utl::node_derived_type<X>> << std::endl;
+    utl::ilist<Node> list = { -2, 1, -1, 2, 3, 4, 5, -7, 6, -8 };
     
+    for (auto itr = list.begin(); itr != list.end(); ) {
+        if (itr->value < 0) {
+            itr = list.erase(itr);
+        }
+        else {
+            ++itr;
+        }
+    }
+    
+    for (auto& node: list) {
+        std::cout << node << std::endl;
+    }
     
 }

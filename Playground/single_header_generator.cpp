@@ -73,21 +73,21 @@ static std::string make_single_header_impl(std::filesystem::path const& path, st
 
 } // namespace utl
 
-int _ = [] {
-    std::filesystem::path const path("/Users/chrysante/dev/imsui/external/utility/mtl/mtl.hpp");
-
-    auto const single_header_path =
-        (std::filesystem::path(path).remove_filename() / "../mtl_single_header/mtl.hpp").lexically_normal();
-
-    std::filesystem::create_directory(std::filesystem::path(single_header_path).remove_filename());
-
-    std::fstream file(single_header_path, std::ios::out | std::ios::trunc);
-
-    if (!file) {
-        throw std::runtime_error("Failed to open file: " + single_header_path.string());
-    }
-
-    file << utl::make_single_header(path);
-
-    return 0;
-}();
+//int _ = [] {
+//    std::filesystem::path const path("/Users/chrysante/dev/imsui/external/utility/mtl/mtl.hpp");
+//
+//    auto const single_header_path =
+//        (std::filesystem::path(path).remove_filename() / "../mtl_single_header/mtl.hpp").lexically_normal();
+//
+//    std::filesystem::create_directory(std::filesystem::path(single_header_path).remove_filename());
+//
+//    std::fstream file(single_header_path, std::ios::out | std::ios::trunc);
+//
+//    if (!file) {
+//        throw std::runtime_error("Failed to open file: " + single_header_path.string());
+//    }
+//
+//    file << utl::make_single_header(path);
+//
+//    return 0;
+//}();
