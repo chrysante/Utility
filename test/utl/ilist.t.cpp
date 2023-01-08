@@ -251,9 +251,11 @@ LIST_TEST_CASE("ilist emplace", "[ilist]") {
 
 LIST_TEST_CASE("ilist erase", "[ilist]") {
     TestType::reset();
-    utl::ilist<TestType, Allocator> l = { 0, 1, 2, 3, 3, 4, 5 };
+    utl::ilist<TestType, Allocator> l = { 0, 1, 2, 3, /* >> */ 3, /* << */ 4, 5 };
     CHECK(TestType::liveObjects() == 7);
-    l.erase(std::next(l.begin(), 3));
+    auto itr = l.erase(std::next(l.begin(), 3));
+    CHECK(itr == std::next(l.begin(), 3));
+    CHECK(*itr == TestType(3));
     CHECK(TestType::liveObjects() == 6);
     std::size_t index = 0;
     for (auto& elem: l) {
@@ -263,11 +265,36 @@ LIST_TEST_CASE("ilist erase", "[ilist]") {
     CHECK(index == 6);
 }
 
+LIST_TEST_CASE("ilist erase - 2", "[ilist]") {
+    TestType::reset();
+    utl::ilist<TestType, Allocator> l = { 0, 1, 2, 3, 4, 5 };
+    CHECK(TestType::liveObjects() == 6);
+    auto pos = GENERATE(0, 1, 2, 5);
+    auto itr = l.erase(std::next(l.begin(), pos));
+    CHECK(itr == std::next(l.begin(), pos));
+    if (itr != l.end()) {
+        CHECK(*itr == TestType(pos));
+    }
+    CHECK(TestType::liveObjects() == 5);
+    std::size_t index = 0;
+    INFO("pos = " << pos);
+    for (auto& elem: l) {
+        if (index == pos) {
+            ++index;
+        }
+        CHECK(elem.value == index);
+        ++index;
+    }
+    CHECK(index == (pos == 5 ? 5 : 6));
+}
+
 LIST_TEST_CASE("ilist erase range", "[ilist]") {
     TestType::reset();
-    utl::ilist<TestType, Allocator> l = { 0, 1, 1, 1, 1, 1, 2, 3 };
+    utl::ilist<TestType, Allocator> l = { 0, 1, /* >> */ 1, 1, 1, 1, /* << */ 2, 3 };
     CHECK(TestType::liveObjects() == 8);
-    l.erase(std::next(l.begin(), 2), std::prev(l.end(), 2));
+    auto itr = l.erase(std::next(l.begin(), 2), std::prev(l.end(), 2));
+    CHECK(itr == std::prev(l.end(), 2));
+    CHECK(*itr == TestType(2));
     CHECK(TestType::liveObjects() == 4);
     std::size_t index = 0;
     for (auto& elem: l) {
@@ -277,6 +304,14 @@ LIST_TEST_CASE("ilist erase range", "[ilist]") {
     CHECK(index == 4);
 }
 
+LIST_TEST_CASE("ilist erase all", "[ilist]") {
+    TestType::reset();
+    utl::ilist<TestType, Allocator> l = { 0, 1, 1, 1, 1, 1, 2, 3 };
+    CHECK(TestType::liveObjects() == 8);
+    auto itr = l.erase(l.begin(), l.end());
+    CHECK(itr == l.end());
+    CHECK(l.empty());
+}
 
 LIST_TEST_CASE("ilist push_back", "[ilist]") {
     std::size_t const count = GENERATE(0, 10);
