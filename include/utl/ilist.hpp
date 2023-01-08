@@ -108,9 +108,12 @@ public:
         __iterator_impl(__iterator_impl<std::remove_const_t<N>> rhs) requires(std::is_const_v<N>):
             __node(rhs.__node) {}
         
-        explicit operator pointer() const { return operator->(); }
+        /// Get the address of the object this iterator points to.
+        pointer to_address() const { return __node; }
         
-        pointer operator->() const { return __node; }
+        explicit operator pointer() const { return to_address(); }
+        
+        pointer operator->() const { return to_address(); }
         
         __iterator_impl& operator++() {
             __node = __node->next();
@@ -396,9 +399,11 @@ public:
     // (1)
     iterator erase(const_iterator cpos) {
         iterator pos(cpos);
-        std::prev(pos)->__set_next(std::next(pos).operator->());
-        std::next(pos)->__set_prev(std::prev(pos).operator->());
-        __destroy_and_deallocate(pos.operator->());
+        std::prev(pos)->__set_next(std::next(pos).to_address());
+        auto next = std::next(pos);
+        next->__set_prev(std::prev(pos).to_address());
+        __destroy_and_deallocate(pos.to_address());
+        return next;
     }
     
     // (2)
@@ -412,6 +417,7 @@ public:
         }
         prev->__set_next(last.operator->());
         last->__set_prev(prev.operator->());
+        return last;
     }
     
     // (1)
