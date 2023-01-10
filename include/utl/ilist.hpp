@@ -104,6 +104,8 @@ public:
         using reference = N&;
         using iterator_category = std::bidirectional_iterator_tag;
         
+        __iterator_impl(): __node(nullptr) {}
+        
         explicit __iterator_impl(pointer node): __node(node) {}
         __iterator_impl(__iterator_impl<std::remove_const_t<N>> rhs) requires(std::is_const_v<N>):
             __node(rhs.__node) {}
