@@ -856,7 +856,8 @@ struct vector {
     struct __data_t {
         static_assert(std::is_same_v<value_type*, pointer>);
         pointer_int_pair<value_type*, bool, 1> begin_inline;
-        size_type size, cap;
+        std::uint32_t size; /// These should actually be of type \p size_type however lldb debugger then can't read them. 
+        std::uint32_t cap;
     };
 
     constexpr __data_t __get_data() const { return __data_; }

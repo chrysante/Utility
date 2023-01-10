@@ -1,32 +1,18 @@
 #include <iostream>
 
+#include <utl/vector.hpp>
 #include <utl/ilist.hpp>
 
-struct Node: utl::ilist_node<Node> {
-    Node(int value): value(value) {}
-    int value;
+struct X: utl::ilist_node<X> {
+    X(int i): i(i) {}
+    int i;
 };
-
-std::ostream& operator<<(std::ostream& str, Node const& node) {
-    return str << "{ " << node.value << " }";
-}
-
 
 int main() {
     
-    utl::ilist<Node> list = { -2, 1, -1, 2, 3, 4, 5, -7, 6, -8 };
+    utl::ilist<X> l = { 1, 2, 3, 4, 5 };
     
-    for (auto itr = list.begin(); itr != list.end(); ) {
-        if (itr->value < 0) {
-            itr = list.erase(itr);
-        }
-        else {
-            ++itr;
-        }
-    }
+    l.push_back(7);
     
-    for (auto& node: list) {
-        std::cout << node << std::endl;
-    }
     
 }
