@@ -340,6 +340,15 @@ template <range Range>
     return __reverse_range<Range>(UTL_FORWARD(range));
 }
 
+/// \brief Reverse view over \p range which exposes \p rbegin() and \p rend()
+template <range Range> requires requires(Range&& r) {
+    { r.rbegin() } -> iterator;
+    { r.rend() } -> sentinel_for<std::remove_cvref_t<decltype(r.rbegin())>>;
+}
+[[nodiscard]] constexpr auto reverse(Range&& range) {
+    return range_view(range.rbegin(), range.rend());
+}
+
 /// MARK: Iota
 
 /// \brief Ad hoc constructed range of integers
