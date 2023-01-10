@@ -5,25 +5,37 @@
 #include "__debug.hpp"
 #include "__ranges_base.hpp"
 #include "concepts.hpp"
+#include "utility.hpp"
 
 _UTL_SYSTEM_HEADER_
 
 namespace utl {
 
-/// MARK: __range_view
+/// MARK: range_view
 
 template <typename Itr, typename S = Itr>
-class __range_view {
+class range_view {
 public:
     using iterator = Itr;
-    using const_iterator = iterator;
+    using sentinel = S;
+    struct __incomplete;
+    using reverse_iterator = std::conditional_t<std::is_same_v<iterator, sentinel>, std::reverse_iterator<iterator>, __incomplete>;
     
-    constexpr explicit __range_view(Itr first, S last):
-    __first(first),
-    __last(last)
+    constexpr explicit range_view(Itr first, S last):
+        __first(first),
+        __last(last)
     {}
-    constexpr Itr begin() const { return __first; }
+    
+    constexpr iterator begin() const { return __first; }
+    constexpr reverse_iterator rbegin() const { return reverse_iterator(end()); }
     constexpr S end() const { return __last; }
+    constexpr reverse_iterator rend() const { return reverse_iterator(begin()); }
+    
+    bool empty() const { return begin() == end(); }
+    
+    size_t size() const
+    requires requires(Itr itr, S s) { narrow_cast<size_t>(s - itr); }
+    { return narrow_cast<size_t>(__last - __first); }
     
     Itr __first;
     S __last;
@@ -135,8 +147,8 @@ public:
 /// \brief Enumerate values between \p first and \p last
 /// \returns A range of pairs of indices and the values in the range \p (first,last)
 template <iterator Itr, sentinel_for<Itr> Sentinel>
-[[nodiscard]] constexpr __enumerated_range<__range_view<Itr, Sentinel>> enumerate(Itr begin, Sentinel end, std::size_t begin_index = 0) {
-    return __enumerated_range<__range_view<Itr, Sentinel>>(__range_view(begin, end), begin_index);
+[[nodiscard]] constexpr __enumerated_range<range_view<Itr, Sentinel>> enumerate(Itr begin, Sentinel end, std::size_t begin_index = 0) {
+    return __enumerated_range<range_view<Itr, Sentinel>>(range_view(begin, end), begin_index);
 }
 
 /// \brief Enumerate all values in \p range
@@ -193,7 +205,7 @@ public:
 /// \details Transform is applied lazily on traversal.
 template <iterator Itr, sentinel_for<Itr> Sentinel>
 [[nodiscard]] constexpr auto transform(Itr begin, Sentinel end, std::invocable<decltype(*begin)> auto&& transform_fn) {
-    return __transform_range<__range_view<Itr, Sentinel>, std::decay_t<decltype(transform_fn)>>(__range_view(begin, end), UTL_FORWARD(transform_fn));
+    return __transform_range<range_view<Itr, Sentinel>, std::decay_t<decltype(transform_fn)>>(range_view(begin, end), UTL_FORWARD(transform_fn));
 }
 
 /// \brief View over a transformed range.
@@ -287,8 +299,8 @@ public:
 /// \brief Iterate a range with a custom stride.
 /// \warning \p stride must be divisible by the distance between \p begin and \p end
 template <iterator Itr, sentinel_for<Itr> Sentinel>
-[[nodiscard]] constexpr __stride_range<__range_view<Itr, Sentinel>> stride(Itr begin, Sentinel end, std::ptrdiff_t stride) {
-    return __stride_range<__range_view<Itr, Sentinel>>(__range_view(begin, end), stride);
+[[nodiscard]] constexpr __stride_range<range_view<Itr, Sentinel>> stride(Itr begin, Sentinel end, std::ptrdiff_t stride) {
+    return __stride_range<range_view<Itr, Sentinel>>(range_view(begin, end), stride);
 }
 
 /// \brief Iterate a range with a custom stride.
@@ -318,8 +330,8 @@ public:
 
 /// \brief Reverse view over the range \p (begin,end)
 template <iterator Itr, sentinel_for<Itr> S>
-[[nodiscard]] constexpr __reverse_range<__range_view<Itr, S>> reverse(Itr begin, S end) {
-    return __reverse_range<__range_view<Itr, S>>(__range_view(begin, end));
+[[nodiscard]] constexpr __reverse_range<range_view<Itr, S>> reverse(Itr begin, S end) {
+    return __reverse_range<range_view<Itr, S>>(range_view(begin, end));
 }
 
 /// \brief Reverse view over \p range
