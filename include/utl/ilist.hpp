@@ -408,6 +408,11 @@ public:
         return next;
     }
     
+    // (1a)
+    iterator erase(value_type const* element) {
+        return erase(const_iterator(element));
+    }
+    
     // (2)
     iterator erase(const_iterator cfirst, const_iterator clast) {
         iterator first(cfirst);
