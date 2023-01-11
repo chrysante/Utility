@@ -11,6 +11,26 @@ _UTL_SYSTEM_HEADER_
 
 namespace utl {
 
+template <typename Derived, typename Range>
+class __range_adapt_base {
+    static constexpr bool __has_size = requires(Range r) { r.size(); };
+    static constexpr bool __can_compute_size = requires(Range r) { { __utl_end(r) - __utl_begin(r) } -> std::convertible_to<std::intptr_t>; };
+    
+    constexpr Derived const& __as_derived() const { return static_cast<Derived const&>(*this); }
+    
+public:
+    constexpr std::size_t size() const requires __has_size {
+        return narrow_cast<std::size_t>(__as_derived().__r.size());
+    }
+    constexpr std::size_t size() const requires (!__has_size) && __can_compute_size {
+        return narrow_cast<std::size_t>(__utl_end(__as_derived().__r) - __utl_begin(__as_derived().__r));
+    }
+    
+    constexpr bool empty() const {
+        return __utl_begin(__as_derived().__r) == __utl_end(__as_derived().__r);
+    }
+};
+
 /// MARK: range_view
 
 template <typename Itr, typename S = Itr>
@@ -44,7 +64,7 @@ public:
 /// MARK: __range_adapter
 
 template <typename Range>
-class __range_adapter {
+class __range_adapter: public __range_adapt_base<__range_adapter<Range>, Range> {
     static_assert(!std::is_reference_v<Range>);
     
 public:
@@ -52,11 +72,12 @@ public:
     
     constexpr Range& __range() { return __r; }
     constexpr Range const& __range() const { return __r; }
+    
     Range __r;
 };
 
 template <typename Range>
-class __range_adapter<Range&> {
+class __range_adapter<Range&>: public __range_adapt_base<__range_adapter<Range&>, Range&> {
 public:
     constexpr explicit __range_adapter(Range& range): __r(range) {}
     
