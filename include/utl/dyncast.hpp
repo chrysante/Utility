@@ -324,11 +324,13 @@ constexpr R __visit(F&& f, T&&... t) {
         if constexpr (!staticallyCastable) {
             /// If we can't even \p static_cast there is no way this can be invoked.
             __utl_unreachable();
+            return;
         }
         else if constexpr (std::is_convertible_v<U&&, target_type> && !std::is_same_v<U&&, target_type>) {
             /// If we can cast implicitly but destination type is not the same, this means we go up the hierarchy.
             /// Since we are dispatching on the most derived type, this path should be unreachable.
             __utl_unreachable();
+            return;
         }
         else {
             return static_cast<target_type>(t);
