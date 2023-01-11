@@ -70,14 +70,14 @@ public:
     template <std::convertible_to<Itr> Jtr>
     constexpr __wrap_iterator(__wrap_iterator<Jtr> rhs): __itr(rhs.__itr) {}
     
-    friend constexpr __base operator+(std::same_as<__base> auto base, difference_type offset)
+    friend constexpr __base operator+(std::same_as<__base> auto base, std::integral auto offset)
     requires random_access_iterator<Itr>
     {
         base.__itr += offset;
         return base;
     }
     
-    friend constexpr __base operator+(difference_type offset, std::same_as<__base> auto base)
+    friend constexpr __base operator+(std::integral auto offset, std::same_as<__base> auto base)
     requires random_access_iterator<Itr>
     {
         return base + offset;
