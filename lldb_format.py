@@ -3,9 +3,9 @@ import lldb
 
 def __lldb_init_module(debugger, dict):
     #utl::vector
-    debugger.HandleCommand('type summary add -x utl::vector< --summary-string "${var.__data_.size}" -w utl')
+    debugger.HandleCommand('type summary add -x utl::vector< --summary-string "Size: ${var.__data_.size}" -w utl')
     debugger.HandleCommand('type synthetic add -x "utl::vector<" --python-class lldb_format.VectorElementsProvider -w utl')
-    debugger.HandleCommand('type summary add -x utl::small_vector< --summary-string "${var.__data_.size}" -w utl')
+    debugger.HandleCommand('type summary add -x utl::small_vector< --summary-string "Size: ${var.__data_.size}" -w utl')
     debugger.HandleCommand('type synthetic add -x "utl::small_vector<" --python-class lldb_format.VectorElementsProvider -w utl')
     
     #utl::ilist
@@ -17,7 +17,7 @@ class VectorElementsProvider:
         self.size = self.valueObject.GetChildMemberWithName('__data_').GetChildMemberWithName('size').GetValueAsUnsigned()
         
     def num_children(self):
-        return self.size
+        return min(self.size, 999)
 
     def get_child_index(self, name):
         return int(name.lstrip('[').rstrip(']'))
@@ -26,7 +26,7 @@ class VectorElementsProvider:
         if index == 0 and self.inline:
             return self.data_ptr.CreateValueFromExpression('[??]', '.')
         offset = index * self.data_size - self.inline
-        return self.data_ptr.CreateChildAtOffset('[' + str(index) + ']', offset, self.data_type)
+        return self.data_ptr.CreateChildAtOffset("[{:>3}]".format(index), offset, self.data_type)
      
     def update(self):
         self.data_ptr  = self.valueObject.GetChildMemberWithName('__data_').GetChildMemberWithName('begin_inline').GetChildMemberWithName('_p')
