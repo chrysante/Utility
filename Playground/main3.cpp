@@ -9,10 +9,16 @@ struct X: utl::ilist_node<X> {
 };
 
 int main() {
+    utl::ilist<X> l;
+    l.push_back(X{-1});
     
-    utl::ilist<X> l = { 1, 2, 3, 4, 5 };
+    int const n = 11;
     
-    l.push_back(7);
+    for (int i = 1; i < n; ++i) {
+        l.push_front(X{ i });
+    }
     
-    
+    for (auto& x: l) {
+        std::cout << x.i << std::endl;
+    }
 }

@@ -331,6 +331,10 @@ LIST_TEST_CASE("ilist push_front", "[ilist]") {
     }
     l.push_front(1);
     CHECK(l.front() == TestType(1));
+    CHECK(l.front().prev() == l.end().to_address());
+    size_t size = 0;
+    for ([[maybe_unused]] auto& _: l) { ++size; }
+    CHECK(size == count + 1);
 }
 
 LIST_TEST_CASE("ilist swap - empty", "[ilist][ilist-swap]") {
