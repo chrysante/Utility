@@ -248,7 +248,7 @@ struct __dc_common_type_wrapper_impl;
 
 template <bool IsRef, typename A, typename B, typename... Rest>
 struct __dc_common_type_wrapper_impl<IsRef, A, B, Rest...> {
-    using trait_result = std::conditional_t<IsRef, std::common_reference_t<A, B>, std::common_type_t<A, B>>;
+    using trait_result = typename std::conditional_t<IsRef, std::common_reference<A, B>, std::common_type<A, B>>::type;
     using type = typename __dc_common_type_wrapper_impl<IsRef, trait_result, Rest...>::type;
 };
 
