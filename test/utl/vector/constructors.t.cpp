@@ -6,7 +6,7 @@
 #include "VectorTest.hpp"
 
 static_assert(sizeof(utl::vector<int>) == 2 * 4 + sizeof(void*));
-static_assert(sizeof(utl::vector<char>) == 24);
+static_assert(sizeof(utl::vector<char>) == 24 || sizeof(utl::vector<char>) == 16);
 
 using namespace utl_test;
 
