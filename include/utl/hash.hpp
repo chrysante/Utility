@@ -4,7 +4,7 @@
 #include <utility>
 
 #include "__base.hpp"
-#include "__robin_hood.h"
+#include "__third_party/ankerl/unordered_dense.h"
 #include "common.hpp"
 #include "concepts.hpp"
 
@@ -40,12 +40,12 @@ std::size_t hash_combine_range(I begin, S end) {
 }
 
 template <typename T>
-struct hash: robin_hood::hash<T> {
+struct hash: ankerl::unordered_dense::hash<T> {
     using is_transparent = void;
-    using robin_hood::hash<T>::operator();
+    using ankerl::unordered_dense::hash<T>::operator();
     template <typename U>
     decltype(std::declval<std::common_type_t<T, U>>(), std::size_t{}) operator()(U const& u) const {
-        return robin_hood::hash<U>{}(u);
+        return ankerl::unordered_dense::hash<U>{}(u);
     }
 };
 
