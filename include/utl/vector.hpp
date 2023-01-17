@@ -828,14 +828,14 @@ struct vector {
         value_type* const out_begin      = begin + offset;
         value_type* const out_end        = end + offset;
         value_type* const out_assign_end = std::max(std::min(out_end, uninit_begin), out_begin);
-        value_type* i                    = out_end - 1;
-        value_type* j                    = end - 1;
+        value_type* i                    = out_end;
+        value_type* j                    = end;
         __utl_assert_audit(out_assign_end >= out_begin, "");
-        for (; i >= out_assign_end; --i, --j) {
-            __construct_at(i, std::move(*j));
+        for (; i > out_assign_end; --i, --j) {
+            __construct_at(i - 1, std::move(*(j - 1)));
         }
-        for (; i >= out_begin; --i, --j) {
-            *i = std::move(*j);
+        for (; i > out_begin; --i, --j) {
+            *(i - 1) = std::move(*(j - 1));
         }
     }
 

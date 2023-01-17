@@ -1,6 +1,7 @@
 #include <catch/catch2.hpp>
 
 #include <list>
+#include <span>
 
 #include <utl/ranges.hpp>
 #include <utl/vector.hpp>
@@ -274,6 +275,13 @@ VECTOR_TEST_CASE(X, TRX, "vector-allocator-insert-5", "[vector]") {
         CHECK(v == TaVector<T>{ 0, 1, 2, 3 });
         CHECK(X::liveObjects() == 4);
     }
+}
+
+VECTOR_TEST_CASE(X, TRX, "vector insert empty range into empty vector", "[vector]") {
+    X::reset();
+    Vector v(Tag(1));
+    v.insert(v.begin(), std::span<int>{});
+    CHECK(v.empty());
 }
 
 VECTOR_TEST_CASE(X, TRX, "vector-erase", "[vector]") {
