@@ -698,6 +698,22 @@ public:
     __union<Types...> __data;
 };
 
+template <typename... T>
+requires (... && std::equality_comparable<T>)
+constexpr bool operator==(variant<T...> const& lhs, variant<T...> const& rhs) {
+    if (lhs.index() != rhs.index()) {
+        return false;
+    }
+    return visit([](auto const& l, auto const& r) -> bool {
+        if constexpr (std::is_same_v<decltype(l), decltype(r)>) {
+            return l == r;
+        }
+        else {
+            __utl_unreachable();
+        }
+    }, lhs, rhs);
+}
+
 template <typename Base, typename... Types>
 requires have_common_base<Base, Types...>::value
 class cbvariant: public variant<Types...> {
