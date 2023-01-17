@@ -473,7 +473,7 @@ struct vector {
             return *first++;
         });
     }
-
+    
     /// (4a)
     template <input_iterator_for<T> It, sentinel_for<It> S>
     __utl_interface_export constexpr iterator insert(std::size_t index, It first, S last) {
@@ -483,7 +483,19 @@ struct vector {
         }
         return __insert_impl(index, distance(first, last), [first]() mutable -> decltype(auto) { return *first++; });
     }
-
+    
+    /// (4b)
+    template <input_range_for<T> Range>
+    __utl_interface_export constexpr iterator insert(const_iterator pos, Range&& range) {
+        return insert(pos, __utl_begin(range), __utl_end(range));
+    }
+    
+    /// (4c)
+    template <input_range_for<T> Range>
+    __utl_interface_export constexpr iterator insert(std::size_t index, Range&& range) {
+        return insert(index, __utl_begin(range), __utl_end(range));
+    }
+    
     /// (5)
     __utl_interface_export constexpr iterator insert(const_iterator pos, std::initializer_list<value_type> ilist) {
         return __insert_impl(pos - begin(), ilist.size(), [i = ilist.begin()]() mutable -> decltype(auto) {
