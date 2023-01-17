@@ -41,7 +41,7 @@ public:
     struct __incomplete;
     using reverse_iterator = std::conditional_t<std::is_same_v<iterator, sentinel>, std::reverse_iterator<iterator>, __incomplete>;
     
-    constexpr explicit range_view(Itr first, S last):
+    constexpr range_view(Itr first, S last):
         __first(first),
         __last(last)
     {}
