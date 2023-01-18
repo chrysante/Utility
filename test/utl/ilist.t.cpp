@@ -365,6 +365,35 @@ LIST_TEST_CASE("ilist swap - non-empty", "[ilist][ilist-swap]") {
     testEqual(m, { 1, 2 });
 }
 
+LIST_TEST_CASE("ilist splice", "[ilist][ilist-swap]") {
+    utl::ilist<TestType, Allocator> l = { 1, 2 }, m = { 3, 4 };
+    l.splice(l.end(), m);
+    testEqual(l, { 1, 2, 3, 4 });
+    CHECK(m.empty());
+}
+
+LIST_TEST_CASE("ilist splice - 2", "[ilist][ilist-swap]") {
+    utl::ilist<TestType, Allocator> l = { 1, 2 }, m = { 3, 4 };
+    l.splice(std::prev(l.end()), m);
+    testEqual(l, { 1, 3, 4, 2 });
+    CHECK(m.empty());
+}
+
+LIST_TEST_CASE("ilist splice - 3", "[ilist][ilist-swap]") {
+    utl::ilist<TestType, Allocator> l = { 1, 2 }, m = { 3, 4 };
+    l.splice(l.begin(), m);
+    testEqual(l, { 3, 4, 1, 2 });
+    CHECK(m.empty());
+}
+
+LIST_TEST_CASE("ilist splice - 4", "[ilist][ilist-swap]") {
+    utl::ilist<TestType, Allocator> l = {}, m = { 3, 4 };
+    l.splice(l.begin(), m);
+    testEqual(l, { 3, 4 });
+    CHECK(m.empty());
+}
+
+
 namespace {
 
 struct Incomplete;

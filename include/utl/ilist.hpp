@@ -507,6 +507,30 @@ public:
         __swap_impl(rhs, __alloc_traits::propagate_on_container_swap::value);
     }
     
+    void splice(const_iterator cpos, ilist& rhs) {
+        __utl_assert(this != &rhs);
+        if (rhs.empty()) {
+            return;
+        }
+        value_type* const last = const_cast<value_type*>(cpos.to_address());
+        value_type* const first = last->prev();
+        value_type* const rhs_front = &rhs.front();
+        value_type* const rhs_back = &rhs.back();
+        first->__set_next(rhs_front);
+        rhs_front->__set_prev(first);
+        last->__set_prev(rhs_back);
+        rhs_back->__set_next(last);
+        value_type* const rhs_end = rhs.end().to_address();
+        rhs_end->__set_next(rhs_end);
+        rhs_end->__set_prev(rhs_end);
+    }
+    
+    void splice(const_iterator cpos, ilist&& rhs) {
+        splice(cpos, static_cast<ilist&>(rhs));
+    }
+    
+    // MARK: Internals
+    
     void __assign_element_wise(std::invocable auto&& insert_while, auto&& get_elems) {
         iterator itr = begin();
         for (;; ++itr) {
