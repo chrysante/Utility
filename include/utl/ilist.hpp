@@ -407,7 +407,7 @@ public:
     }
     
     /// Remove an element from the list and take ownership of it.
-    value_type* extract(const_iterator cpos) {
+    __utl_nodiscard value_type* extract(const_iterator cpos) {
         value_type* const result = __extract_impl(cpos).second;
         result->__set_prev(nullptr);
         result->__set_next(nullptr);
@@ -415,7 +415,7 @@ public:
     }
     
     /// \overload
-    value_type* extract(value_type const* element) {
+    __utl_nodiscard value_type* extract(value_type const* element) {
         return extract(const_iterator(element));
     }
     
