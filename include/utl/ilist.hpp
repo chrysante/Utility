@@ -398,13 +398,31 @@ public:
         });
     }
     
-    // (1)
-    iterator erase(const_iterator cpos) {
+    std::pair<iterator, value_type*> __extract_impl(const_iterator cpos) {
         iterator pos(cpos);
         std::prev(pos)->__set_next(std::next(pos).to_address());
         auto next = std::next(pos);
         next->__set_prev(std::prev(pos).to_address());
-        __destroy_and_deallocate(pos.to_address());
+        return { next, pos.to_address() };
+    }
+    
+    /// Remove an element from the list and take ownership of it.
+    value_type* extract(const_iterator cpos) {
+        value_type* const result = __extract_impl(cpos).second;
+        result->__set_prev(nullptr);
+        result->__set_next(nullptr);
+        return result;
+    }
+    
+    /// \overload
+    value_type* extract(value_type const* element) {
+        return extract(const_iterator(element));
+    }
+    
+    // (1)
+    iterator erase(const_iterator cpos) {
+        auto const [next, addr] = __extract_impl(cpos);
+        __destroy_and_deallocate(addr);
         return next;
     }
     
