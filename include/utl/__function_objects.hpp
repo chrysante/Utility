@@ -223,6 +223,22 @@ _UTL_FUNCTION_OBJECT_DEF(
     });
 
 _UTL_FUNCTION_OBJECT_DEF(
+    arithmetic_leftshift,
+    (auto const& x, auto const& y) const {
+        return x << y;
+    });
+
+_UTL_FUNCTION_OBJECT_DEF(
+    arithmetic_rightshift,
+    (auto const& x, auto const& y) const {
+        using S = std::make_signed_t<std::remove_cvref_t<decltype(x)>>;
+        if (S(x) < 0 && y > 0)
+            return S(x) >> y | ~(~S(0) >> y);
+        else
+            return S(x) >> y;
+    });
+
+_UTL_FUNCTION_OBJECT_DEF(
     is_positive,
     (auto const& x) const { return x > 0; });
 _UTL_FUNCTION_OBJECT_DEF(
