@@ -21,6 +21,9 @@ template <auto EnumValue>
 struct __dyncast_enum_to_type_impl;
 
 template <typename T>
+struct __dyncast_is_abstract: std::false_type {};
+
+template <typename T>
 using __decay_all = std::remove_const_t<std::remove_pointer_t<std::decay_t<T>>>;
 
 template <typename T>
@@ -47,14 +50,26 @@ using __dc_enum_type = decltype(__dyncast_type_to_enum_impl<std::remove_cvref_t<
 //---=== Public interface =====================================================
 //---==========================================================================
 
-/// Mandatory customization point for the \p dyncast facilities. Every object in the inheritance hierarchy must be
+/// Mandatory customization point for the \p dyncast facilities. Every type in the inheritance hierarchy must be
 /// uniquely mapped to an enum or integral value. Using an enum is recommended. Use this macro at file scope to
 /// identify types in the hierarchy with a unique integral value.
 #define UTL_DYNCAST_MAP(type, enum_value)                                                                                      \
     template <>                                                                                                                \
     struct ::utl::__dyncast_type_to_enum_impl<type>: std::integral_constant<decltype(enum_value), enum_value> {}; \
     template <>                                                                                                                \
-    struct ::utl::__dyncast_enum_to_type_impl<enum_value>: std::type_identity<type> {}
+    struct ::utl::__dyncast_enum_to_type_impl<enum_value>: std::type_identity<type> {};
+
+/// Optional customization point for the \p dyncast facilities. Mark types as abstract. The \p visit() function will
+/// not require its function argument to be invocable with abstract types, however it is the responsibility of the user
+/// that no objects of abstract runtime type will exist.
+#define UTL_DYNCAST_ABSTRACT(type)                                                                                             \
+    template <>                                                                                                                \
+    struct ::utl::__dyncast_is_abstract<type>: std::true_type {};
+
+/// Opposite of abstract. This is just for symmetry with abstract, types are concrete by default.
+#define UTL_DYNCAST_CONCRETE(type)                                                                                             \
+    template <>                                                                                                                \
+    struct ::utl::__dyncast_is_abstract<type>: std::false_type {};
 
 namespace utl {
 
@@ -224,7 +239,13 @@ private:
 // clang-format on
 
 /// This machinery is needed to make visiting subtrees of the entire inheritance hierarchy possible. Without it,
-/// \p std::invoke_result would fail on code paths that are never executed.
+/// \p std::invoke_result would fail to compile on code paths that are never executed.
+
+template <typename Derived, typename Base>
+inline constexpr bool __dc_is_properly_derived_from_impl = requires (Base* base) { static_cast<Derived*>(base); } && !std::is_convertible_v<Base*, Derived*>;
+
+template <typename Derived, typename Base>
+inline constexpr bool __dc_is_properly_derived_from = __dc_is_properly_derived_from_impl<std::remove_cvref_t<Derived>, std::remove_cvref_t<Base>>;
 
 /// Tag type to indicate that a function is not invocable for given parameters.
 enum class __not_invocable;
@@ -238,13 +259,24 @@ struct __is_ref_wrapper<__not_invocable, DefCase>: std::bool_constant<DefCase> {
 
 /// Wrapper that evaluates to \p __not_invocable if \p F is not invocable with \p Args...
 template <typename F, typename... Args>
-using __dc_invoke_result = typename std::conditional_t<std::is_invocable_v<F, Args...>,
-                                                       std::invoke_result<F, Args...>,
-                                                       std::type_identity<__not_invocable>>::type;
+struct __dc_invoke_result {
+    template <typename G, typename... T>
+    static auto impl(int) -> decltype(std::invoke(std::declval<G>(), std::declval<T>()...));
+    template <typename G, typename... T>
+    static __not_invocable impl(...);
+    
+    using type = decltype(impl<F, Args...>(0));
+};
+
+template <typename F, typename... Args>
+using __dc_invoke_result_t = typename __dc_invoke_result<F, Args...>::type;
 
 /// Wrapper for \p std::common_type or \p std::common_reference to ignore \p __not_invocable.
 template <bool IsRef, typename...>
 struct __dc_common_type_wrapper_impl;
+
+template <bool IsRef>
+struct __dc_common_type_wrapper_impl<IsRef> {};
 
 template <bool IsRef, typename A, typename B, typename... Rest>
 struct __dc_common_type_wrapper_impl<IsRef, A, B, Rest...> {
@@ -304,8 +336,21 @@ struct __dispatch_return_type;
 template <typename... Enums, typename... GivenTypes, typename F, typename FArrayBase, std::size_t... DimI, size_t... FlatI>
 struct __dispatch_return_type<type_sequence<Enums...>, type_sequence<GivenTypes...>, F, FArrayBase, std::index_sequence<DimI...>, std::index_sequence<FlatI...>> {
     static constexpr std::size_t __dim = sizeof...(Enums);
-    template <std::size_t Idx>
-    using invoke_result = __dc_invoke_result<F, utl::copy_cvref_t<GivenTypes, __dyncast_enum_to_type<Enums{ FArrayBase::__expand_index(Idx)[DimI] }>>...>;
+    
+    template <std::size_t FlatIndex, std::size_t DimIndex>
+    using type_at = __dyncast_enum_to_type<typename type_sequence<Enums...>::template at<DimIndex>{ FArrayBase::__expand_index(FlatIndex)[DimIndex] }>;
+
+    template <std::size_t FlatIndex>
+    static constexpr bool we_care = (... && __dc_is_properly_derived_from<type_at<FlatIndex, DimI>,
+                                                                          typename type_sequence<GivenTypes...>::template at<DimI>>);
+    
+    template <std::size_t FlatIndex>
+    using invoke_result_wrapped = __dc_invoke_result<F, utl::copy_cvref_t<GivenTypes, __dyncast_enum_to_type<Enums{ FArrayBase::__expand_index(FlatIndex)[DimI] }>>...>;
+    
+    template <std::size_t FlatIndex>
+    using invoke_result = typename std::conditional_t<we_care<FlatIndex>,
+                                                      invoke_result_wrapped<FlatIndex>,
+                                                      std::type_identity<__not_invocable>>::type;
     
     using type = typename __dc_common_type_wrapper<invoke_result<FlatI>...>::type;
 };
@@ -324,13 +369,14 @@ constexpr R __visit(F&& f, T&&... t) {
         if constexpr (!staticallyCastable) {
             /// If we can't even \p static_cast there is no way this can be invoked.
             __utl_unreachable();
-            return;
         }
         else if constexpr (std::is_convertible_v<U&&, target_type> && !std::is_same_v<U&&, target_type>) {
             /// If we can cast implicitly but destination type is not the same, this means we go up the hierarchy.
             /// Since we are dispatching on the most derived type, this path should be unreachable.
             __utl_unreachable();
-            return;
+        }
+        else if constexpr (__dyncast_is_abstract<__decay_all<target_type>>::value) {
+            __utl_unreachable();
         }
         else {
             return static_cast<target_type>(t);
