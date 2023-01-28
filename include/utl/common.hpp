@@ -6,22 +6,22 @@
 _UTL_SYSTEM_HEADER_
 
 /// MARK: UTL_CONCAT
+
 #define _UTL_CONCAT_IMPL(A, B) A##B
 #define UTL_CONCAT(A, B) _UTL_CONCAT_IMPL(A, B)
 
-
 /// MARK: UTL_UNIQUE_NAME
+
 #define UTL_UNIQUE_NAME(name) UTL_CONCAT(name, __LINE__)
 #define UTL_ANONYMOUS_VARIABLE(name) UTL_UNIQUE_NAME(name)
 
-
-
 /// MARK: - UTL_TO_STRING
+
 #define _UTL_TO_STRING_IMPL(x) #x
 #define UTL_TO_STRING(x) _UTL_TO_STRING_IMPL(x)
 
-
 /// MARK: UTL_VFUNC
+
 #define _UTL_NARG(...)  _UTL_NARG_I(__VA_ARGS__, _UTL_RSEQ_N())
 #define _UTL_NARG_I(...) _UTL_ARG_N(__VA_ARGS__)
 #define _UTL_ARG_N( \
@@ -43,16 +43,21 @@ _UTL_SYSTEM_HEADER_
 #define _UTL_VFUNC_IMPL(name, n) UTL_CONCAT(name, n)
 #define UTL_VFUNC(func, ...) _UTL_VFUNC_IMPL(func, _UTL_NARG(__VA_ARGS__)) (__VA_ARGS__)
 
-
 /// MARK: UTL_FIRST, UTL_NTH
+
 #define UTL_FIRST(f, ...) f
 
-
 // MARK: UTL_FORWARD
+
 #define UTL_FORWARD(...) ::std::forward<decltype(__VA_ARGS__)>(__VA_ARGS__)
 
+// MARK: UTL_MACRO_INVOKE
+
+/// std::invoke equivalent for macros. Can be used to force evaluation of arguments before passing to another macro.
+#define UTL_INVOKE_MACRO(macro, ...) macro(__VA_ARGS__)
 
 /// MARK: UTL_WITH_INDEX_SEQUENCE
+
 #define _UTL_INDEX_SEQ_HELPER_TEMPLATE_PARAMS(...) \
 	UTL_VFUNC(_UTL_INDEX_SEQ_HELPER_TEMPLATE_PARAMS, __VA_ARGS__)
 #define _UTL_INDEX_SEQ_HELPER_TEMPLATE_PARAMS2(name1, size1) \
@@ -86,6 +91,7 @@ _UTL_SYSTEM_HEADER_
 	_UTL_INDEX_SEQ_HELPER_FUNCTION_INVOKE params
 
 /// MARK: Enum Operators
+
 #if UTL_CPP
 #	define _UTL_NSSTD std
 #elif UTL_METAL
