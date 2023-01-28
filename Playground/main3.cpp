@@ -8,6 +8,7 @@ struct X: utl::ilist_node<X> {
     int i;
 };
 
+[[gnu::weak]]
 int main() {
     utl::ilist<X> l;
     l.push_back(X{-1});
