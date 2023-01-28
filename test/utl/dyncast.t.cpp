@@ -6,6 +6,12 @@
 
 namespace {
 
+// Base
+// ├─ LDerivedA
+// │  └─ LDerivedB
+// │     └─ LDerivedC
+// └─ RDerived
+
 enum class Type {
     Base, LDerivedA, LDerivedB, LDerivedC, RDerived, _count
 };
@@ -55,6 +61,8 @@ UTL_DYNCAST_MAP(LDerivedB, Type::LDerivedB);
 UTL_DYNCAST_MAP(LDerivedC, Type::LDerivedC);
 UTL_DYNCAST_MAP(RDerived, Type::RDerived);
 
+UTL_DYNCAST_ABSTRACT(Base);
+
 template <typename To, typename From>
 static bool canDyncast(From&& from) {
     return requires { dyncast<To>(from); };
@@ -66,6 +74,22 @@ TEST_CASE("Dyncast visit", "[common][dyncast]") {
     LDerivedA a;
     Base& base = a;
     CHECK(utl::visit(base, [](Base& base) { return base.type(); }) == Type::LDerivedA);
+}
+
+TEST_CASE("Dyncast visit abstract", "[common][dyncast]") {
+    LDerivedA a;
+    Base& base = a;
+    int i = 0;
+    /// Primarily testing successful compilation here.
+    /// We wrap \p utl::overload in a lambda taking \p auto& to test that the function doesn't get called with
+    /// non-sensible arguments even if semantically possible.
+    utl::visit(base, [&](auto& b) {
+        return utl::overload{
+            [&](LDerivedA&) { i = 1; },
+            [&](RDerived&) { i = 2; }
+        }(b);
+    });
+    CHECK(i == 1);
 }
 
 TEST_CASE("Dyncast visit returning reference", "[common][dyncast]") {
@@ -81,14 +105,24 @@ TEST_CASE("Dyncast visit returning reference to hierarchy", "[common][dyncast]")
     struct B: A {};
     LDerivedA a;
     Base& base = a;
-    auto f = [b = B{}]<typename T>(T&) -> auto& {
-        if constexpr (std::is_same_v<T, Base>) {
-            return static_cast<A const&>(b);
-        }
-        else { return b; }
-    };
-    decltype(auto) result = utl::visit(base, f);
-    CHECK(T<decltype(result)> == T<A const&>);
+    SECTION("Reference") {
+        decltype(auto) result = utl::visit(base, [b = B{}]<typename T>(T&) -> auto& {
+            if constexpr (std::is_same_v<T, LDerivedB>) {
+                return static_cast<A const&>(b);
+            }
+            else { return b; }
+        });
+        CHECK(T<decltype(result)> == T<A const&>);
+    }
+    SECTION("Pointer") {
+        auto* result = utl::visit(base, [b = B{}]<typename T>(T&) -> auto* {
+            if constexpr (std::is_same_v<T, LDerivedB>) {
+                return static_cast<A const*>(&b);
+            }
+            else { return &b; }
+        });
+        CHECK(T<decltype(result)> == T<A const*>);
+    }
 }
 
 TEST_CASE("Dyncast visit subtree", "[common][dyncast]") {
@@ -140,7 +174,6 @@ TEST_CASE("Dyncast MD visit", "[common][dyncast]") {
     CHECK(dispatcher(b, b) == 3);
     CHECK(dispatcher(b, c) == 3);
 }
-
 
 TEST_CASE("isa and dyncast", "[common][dyncast]") {
     LDerivedA la;
