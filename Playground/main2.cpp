@@ -69,6 +69,4 @@ int main() {
 
     V v;
     
-//    V w = v;
-    
 }
