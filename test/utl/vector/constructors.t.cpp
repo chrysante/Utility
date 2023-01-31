@@ -5,10 +5,12 @@
 
 #include "VectorTest.hpp"
 
-static_assert(sizeof(utl::vector<int>) == 2 * 4 + sizeof(void*));
-static_assert(sizeof(utl::vector<char>) == 24 || sizeof(utl::vector<char>) == 16);
-
 using namespace utl_test;
+
+TEST_CASE("vector object size", "[vector]") {
+    CHECK(sizeof(utl::vector<int>) == 2 * 4 + sizeof(void*));
+    CHECK((sizeof(utl::vector<char>) == 24 || sizeof(utl::vector<char>) == 16));
+}
 
 VECTOR_TEST_CASE(X, TRX, "vector-construct-1", "[vector]") {
     X::reset();
