@@ -208,10 +208,12 @@ struct NonTrivial {
 
 TEST_CASE("variant trivial lifetime", "[variant]") {
     return;
+#if defined(__clang__) 
     if (__clang_major__ < 15) {
         std::cout << "Clang " __clang_version__ << " insufficient for correct lifetime triviality." << std::endl;
         return;
     }
+#endif
     using V = utl::variant<int, NonTrivial>;
     CHECK(!std::is_trivially_copy_constructible_v<V>);
     CHECK(!std::is_trivially_move_constructible_v<V>);

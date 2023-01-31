@@ -17,7 +17,7 @@ std::ostream& operator<<(std::ostream& str, TagType<T>) {
     return str << utl::nameof<T>;
 }
 
-template <typename T>
-inline constexpr TagType<T> T;
+template <typename U>
+inline constexpr TagType<U> T;
 
 } // namespace utl_test

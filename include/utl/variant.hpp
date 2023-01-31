@@ -229,7 +229,7 @@ struct __variant_visit<DeduceReturnType, R, Visitor,
     static constexpr bool __all_are_references = __all<std::is_reference<__deduced_return_type_at<FlatI>>...>;
     static constexpr bool __none_is_reference = !__any<std::is_reference<__deduced_return_type_at<FlatI>>...>;
  
-    static_assert(__all_are_references || __none_is_reference,
+    static_assert(__all_are_references || __none_is_reference,
                   "Either all cases or none must return references. This prevents accidental unintended copies or dangling references to local stack memory.");
     
     using __common_return_type = typename std::conditional_t<
@@ -648,12 +648,12 @@ public:
     static constexpr Base __virtual_as_base(Self&& self) {
         using raw_base = std::remove_cvref_t<Base>;
 #if UTL_HAS_COMPILE_TIME_BASE_OFFSET
-        return UTL_WITH_INDEX_SEQUENCE((I, __count), {
+        return [&]<std::size_t... I>(std::index_sequence<I...>) {
             constexpr std::array<std::size_t, __count> offsets = {
                 compile_time_base_offset<raw_base, __type_at_index<I>>...
             };
             return reinterpret_cast<Base>(*(reinterpret_cast<copy_cv_t<std::remove_reference_t<Base>, char>*>(&self.__data) + offsets[self.__index]));
-        });
+        }(std::make_index_sequence<__count>{});
 #else // UTL_HAS_COMPILE_TIME_BASE_OFFSET
         return utl::visit([]<typename T>(T&& value) -> decltype(auto) {
             return static_cast<Base>(value);
@@ -674,24 +674,26 @@ public:
             return reinterpret_cast<Base>(*(reinterpret_cast<copy_cv_t<std::remove_reference_t<Base>, char>*>(&self.__data) + offset));
         }
         else { return __virtual_as_base<Base>(UTL_FORWARD(self)); }
-    
 #else // UTL_HAS_COMPILE_TIME_BASE_OFFSET
         return __virtual_as_base<Base>(UTL_FORWARD(self)); 
 #endif // UTL_HAS_COMPILE_TIME_BASE_OFFSET
     }
   
+    template <typename F, typename R, std::size_t I>
+    static constexpr R __visit_one_with_index(F&& f) {
+        return std::invoke(std::forward<F>(f), std::integral_constant<std::size_t, I>{});
+    }
+
     template <typename F>
     static constexpr decltype(auto) __visit_with_index(std::size_t index, F&& f) {
-        return UTL_WITH_INDEX_SEQUENCE((I, __count), {
+        return[&]<std::size_t... I>(std::index_sequence<I...>) {
             using return_type = std::common_type_t<std::invoke_result_t<F, std::integral_constant<std::size_t, I>>...>;
-            using function = return_type(*)(F&& f);
-            static constexpr std::array<function, __count> functions = {
-                [](F&& f) -> return_type {
-                    return std::invoke(std::forward<F>(f), std::integral_constant<std::size_t, I>{});
-                }...
+            using function    = return_type (*)(F && f);
+            static constexpr std::array<function, __count> functions = { 
+                __visit_one_with_index<F, return_type, I>...
             };
             return functions[index](std::forward<F>(f));
-        });
+        }(std::make_index_sequence<__count>{});
     }
     
     unsigned char __index;
