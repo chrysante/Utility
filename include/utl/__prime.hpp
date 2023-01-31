@@ -8,7 +8,7 @@ _UTL_SYSTEM_HEADER_
 namespace utl {
 
 /// Checks if \p number is prime
-inline bool __is_prime(std::size_t number) {
+inline constexpr bool __is_prime(std::size_t number) {
     if (number < 2) {
         return false;
     }
@@ -33,7 +33,7 @@ inline bool __is_prime(std::size_t number) {
 
 /// Returns the smallest prime not less than \p number
 /// If \p number is prime \p number is returned
-inline std::size_t __next_prime(std::size_t number) {
+inline constexpr std::size_t __next_prime(std::size_t number) {
     if (number == 2) {
         return 2;
     }
