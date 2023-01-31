@@ -2,8 +2,6 @@
 
 #include <utl/utility.hpp>
 
-#include "StdoutReroute.hpp"
-
 namespace {
 
 struct ThrowTraits {
@@ -19,11 +17,9 @@ To testNarrowCast(From value) {
     return utl::narrow_cast<To, ThrowTraits>(value);
 }
 
-}
+} // namespace
 
 TEST_CASE("narrow_cast unsigned to unsigned", "[utility][narrow_cast]") {
-	utl_test::StdoutReroute _;
-	
 	CHECK_THROWS (testNarrowCast<utl::uint8_t>((utl::uint128_t)std::numeric_limits<std::uint64_t>::max() + 1));
 	CHECK_THROWS (testNarrowCast<std::uint8_t>(5'000'000'000ul));
 	CHECK_THROWS (testNarrowCast<std::uint8_t>(66'000u));
@@ -49,9 +45,7 @@ TEST_CASE("narrow_cast unsigned to unsigned", "[utility][narrow_cast]") {
 	CHECK_NOTHROW(testNarrowCast<std::uint64_t>((utl::uint128_t)255ull));
 }
 
-TEST_CASE("narrow_cast signed to signed", "[utility][narrow_cast]") {
-	utl_test::StdoutReroute _;
-	
+TEST_CASE("narrow_cast signed to signed", "[utility][narrow_cast]") {	
 	/// Positive
 	CHECK_THROWS (testNarrowCast<utl::int8_t>((utl::int128_t)std::numeric_limits<std::int64_t>::max() + 1));
 	CHECK_THROWS (testNarrowCast<std::int8_t>(5'000'000'000l));

@@ -1,5 +1,4 @@
 #include <catch/catch2.hpp>
-#include "StdoutReroute.hpp"
 #include <utl/uuid.hpp>
 
 TEST_CASE("uuid Serialize") {
