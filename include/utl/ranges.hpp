@@ -61,6 +61,29 @@ public:
     S __last;
 };
 
+template <typename R, typename Begin, typename End>
+class __owned_range: Begin, End {
+public:
+    constexpr __owned_range(R&& r, Begin begin, End end):
+        Begin(begin),
+        End(end),
+        __r(std::move(r))
+    {}
+    
+    constexpr auto begin() { return this->Begin::operator()(__r); }
+    constexpr auto begin() const { return this->Begin::operator()(__r); }
+    constexpr auto end() { return this->End::operator()(__r); }
+    constexpr auto end() const { return this->End::operator()(__r); }
+    
+    bool empty() const { return begin() == end(); }
+    
+    size_t size() const
+    requires requires(R r) { narrow_cast<size_t>(std::size(r)); }
+    { return narrow_cast<size_t>(std::size(__r)); }
+    
+    R __r;
+};
+
 /// MARK: __range_adapter
 
 template <typename Range>
@@ -368,7 +391,12 @@ template <range Range> requires requires(Range&& r) {
     { r.rend() } -> sentinel_for<std::remove_cvref_t<decltype(r.rbegin())>>;
 }
 [[nodiscard]] constexpr auto reverse(Range&& range) {
-    return range_view(range.rbegin(), range.rend());
+    if constexpr (std::is_lvalue_reference_v<Range&&>) {
+        return range_view(range.rbegin(), range.rend());
+    }
+    else {
+        return __owned_range(std::move(range), [](auto&& r) { return r.rbegin(); }, [](auto&& r) { return r.rend(); });
+    }
 }
 
 /// MARK: Iota

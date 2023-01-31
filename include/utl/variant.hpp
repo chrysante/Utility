@@ -648,7 +648,7 @@ public:
     static constexpr Base __virtual_as_base(Self&& self) {
         using raw_base = std::remove_cvref_t<Base>;
 #if UTL_HAS_COMPILE_TIME_BASE_OFFSET
-        return [&]<std::size_t... I>(std::index_sequence<I...>) {
+        return [&]<std::size_t... I>(std::index_sequence<I...>) -> decltype(auto) {
             constexpr std::array<std::size_t, __count> offsets = {
                 compile_time_base_offset<raw_base, __type_at_index<I>>...
             };
@@ -686,9 +686,9 @@ public:
 
     template <typename F>
     static constexpr decltype(auto) __visit_with_index(std::size_t index, F&& f) {
-        return[&]<std::size_t... I>(std::index_sequence<I...>) {
+        return [&]<std::size_t... I>(std::index_sequence<I...>) -> decltype(auto) {
             using return_type = std::common_type_t<std::invoke_result_t<F, std::integral_constant<std::size_t, I>>...>;
-            using function    = return_type (*)(F && f);
+            using function    = return_type(*)(F&& f);
             static constexpr std::array<function, __count> functions = { 
                 __visit_one_with_index<F, return_type, I>...
             };

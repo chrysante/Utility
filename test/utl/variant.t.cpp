@@ -180,9 +180,9 @@ struct C: X, B {
 
 static void testCBVariant(auto& v) {
     CHECK(v->i == 1);
-    v->i = 2;
-    v.visit([](auto& x) { CHECK(x.i == 2); });
-    CHECK(f(v) == 2);
+    v->i = 3;
+    v.visit([](auto& x) { CHECK(x.i == 3); });
+    CHECK(f(v) == 3);
     v.visit([](auto& x) { x.a = 1; });
 }
 
@@ -190,6 +190,7 @@ TEST_CASE("cbvariant", "[variant]") {
     utl::cbvariant<Base, A, B> v(std::in_place_type<A>, 1, 2);
     testCBVariant(v);
     utl::cbvariant<Base, A, B, C> w(std::in_place_type<C>, 1, 2);
+    CHECK(&w->i == &w.get<C>().i);
     testCBVariant(w);
 }
 
