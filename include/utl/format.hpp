@@ -3,10 +3,15 @@
 #include <string>
 
 #include "__base.hpp"
+_UTL_SYSTEM_HEADER_
+
+#if UTL_MSCV
+#include <format>
+#else // UTL_MSCV
 #include "__fmt/format.h"
 #include "__fmt/ostream.h"
+#endif // UTL_MSCV
 
-_UTL_SYSTEM_HEADER_
 
 namespace utl {
 	
@@ -17,6 +22,10 @@ namespace utl {
 	
 	template <typename... Args>
 	__utl_nodiscard std::string format(std::string_view format_string, Args&&... args) {
-		return fmt::format(fmt::runtime(format_string), __utl_pointer_to_void(std::forward<Args>(args))...);
+#if UTL_MSVC
+        return std::vformat(format_string, std::make_format_args(__utl_pointer_to_void(std::forward<Args>(args))...));
+#else // UTL_MSVC
+        return fmt::format(fmt::runtime(format_string), __utl_pointer_to_void(std::forward<Args>(args))...);
+#endif // UTL_MSVC
 	}
 }

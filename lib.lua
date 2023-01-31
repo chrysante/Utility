@@ -11,3 +11,7 @@ files {
     "src/**.cpp",
     "src/**.cc",
 }
+
+filter "system:windows" -- MSVC implemented std::format
+    removefiles { "include/utl/__fmt/**", "src/fmt/**" }
+filter {}
