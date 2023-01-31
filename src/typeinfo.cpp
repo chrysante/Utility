@@ -51,5 +51,6 @@ std::string utl::qualified_function_name(std::string_view pretty) {
     }
     catch (...) {
         __utl_debugfail();
+        std::abort();
     }
 }

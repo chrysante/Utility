@@ -238,7 +238,7 @@ namespace utl {
 		template <typename M>
 		static constexpr auto __add_ref_helper() {
 			// handle pointer case first
-			if (Kind == __soa_type_kind::pointer || Kind == __soa_type_kind::const_pointer) {
+			if (Kind == __soa_type_kind::pointer || Kind == __soa_type_kind::const_pointer) {
 				if (std::is_const_v<M>) {
 					return __soa_type_kind::const_pointer;
 				}
@@ -348,9 +348,10 @@ namespace utl {
 		using type = _T const*;
 	};
 	
-}
+} // namespace utl
 
 /// MARK: - Structured Binding Partial Types
+
 template <typename Meta, typename Tuple, utl::__soa_type_kind Kind>
 struct std::tuple_size<utl::__soa_partial_element<Meta, Tuple, Kind>>:
 	std::integral_constant<std::size_t, std::tuple_size<Tuple>::value>
@@ -378,9 +379,8 @@ struct std::tuple_element<N, utl::__soa_partial_element<Meta, std::tuple<Members
 	using type = _T const&;
 };
 
-
 namespace utl {
-	
+
 	/// MARK: - Choosing Implementation
 	template <typename Meta, typename MemberIndices, typename T, typename I, typename Allocator, __utl_soa_options>
 	struct __soa_impl;
@@ -388,25 +388,24 @@ namespace utl {
 	/// SOA
 	template <typename ST, typename Allocator, typename I = std::make_index_sequence<ST::__utl_soa_meta::member_count>>
 	struct __soa_base;
-	
+
 	template <typename ST, typename Allocator, std::size_t... I>
 	struct __soa_base<ST, Allocator, std::index_sequence<I...>> {
-		using type = __soa_impl<
-			typename ST::__utl_soa_meta, /* Meta */
-			std::tuple<typename ST::__utl_soa_meta::members::template type<I>...>, /* here we want all members mutable in default order */
-			typename ST::__utl_soa_meta::tuple,
-			std::make_index_sequence<ST::__utl_soa_meta::member_count>,
-			Allocator,
-			__utl_soa_options{}
-		>;
+		static constexpr __utl_soa_options options{};
+		using type = __soa_impl<typename ST::__utl_soa_meta,
+                                std::tuple<typename ST::__utl_soa_meta::members::template type<I>...>,
+								typename ST::__utl_soa_meta::tuple,
+                                std::make_index_sequence<ST::__utl_soa_meta::member_count>,
+								Allocator,
+                                options>;
 	};
-	
+
 	template <__soa_type ST, typename Allocator>
 	class structure_of_arrays: public __soa_base<ST, Allocator>::type {
 		using __base = typename __soa_base<ST, Allocator>::type;
 		using __base::__base;
 	};
-	
+
 	/// SOA View
 	template <typename Meta, typename Member>
 	struct __soa_get_member_type {
@@ -464,7 +463,7 @@ namespace utl {
 		}
 		
 		/// Partial Conversion to Const
-		template <typename ...U, bool RHSIsConst>
+        template <bool RHSIsConst, typename... U>
 		requires (std::is_convertible_v<T*, U*> && ...)
 		operator __soa_iterator<SOAImpl,
 								std::tuple<U...>,
@@ -607,7 +606,7 @@ namespace utl {
 	{
 		/// MARK: Internals
 		template <typename, typename, typename, typename, typename, __utl_soa_options>
-		friend class __soa_impl;
+		friend struct __soa_impl;
 		
 		using __soa_type = typename Meta::value_type;
 		
@@ -698,7 +697,7 @@ namespace utl {
 		}
 		
 		/// Move Constructor
-		__soa_impl(__soa_impl&& rhs, __allocator const& alloc = {}): __allocator(alloc) {
+		__soa_impl(__soa_impl&& rhs, __allocator const& alloc = {}) noexcept: __allocator(alloc) {
 			if constexpr (__is_container) {
 				if (__get_allocator() == rhs.__get_allocator()) {
 					// we can swap
@@ -724,7 +723,7 @@ namespace utl {
 		explicit __soa_impl(__private_tag, std::tuple<T*...> ptr, std::size_t size) requires(__is_view): __data_base{ ptr, size } {}
 		
 		/// MARK: Assignment
-		__soa_impl& operator=(__soa_impl const& rhs)& {
+		__soa_impl& operator=(__soa_impl const& rhs) {
 			if constexpr (__is_container) {
 				clear();
 				reserve(rhs.size());
@@ -736,7 +735,7 @@ namespace utl {
 			return *this;
 		}
 		
-		__soa_impl& operator=(__soa_impl&& rhs)& {
+		__soa_impl& operator=(__soa_impl&& rhs) noexcept {
 			if constexpr (__is_container) {
 				if (__get_allocator() == rhs.__get_allocator()) {
 					// we can swap pointers
@@ -1335,8 +1334,7 @@ namespace utl {
 	void swap(structure_of_arrays<ST, Allocator>& a, structure_of_arrays<ST, Allocator>& b) {
 		a.swap(b);
 	}
-
 	
-}
+} // namespace utl
 
 #endif __UTL_STRUCTURE_OF_ARRAYS_INCLUDED__

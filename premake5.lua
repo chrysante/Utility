@@ -105,6 +105,18 @@ files {
 }
 
 -----------------------------------------------------------------------------------------
+-- Project utl-test-structure-of-arrays
+-----------------------------------------------------------------------------------------
+project "utl-test-structure-of-arrays"
+test_project_setup()
+files { 
+    "test/utl/LifetimeCounter.hpp",
+    "test/utl/LifetimeCounter.cpp",
+    "test/utl/structure_of_arrays.t.cpp" 
+}
+links "utility"
+
+-----------------------------------------------------------------------------------------
 -- Project code-gen
 -----------------------------------------------------------------------------------------
 project "code-gen"

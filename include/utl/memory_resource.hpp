@@ -175,7 +175,7 @@ public:
             /// We do this round trip cast to avoid doing pointer arithmetic on \p nullptr
             auto const ucurrent = reinterpret_cast<std::uintptr_t>(__current);
             __current = reinterpret_cast<std::byte*>(__align_address(ucurrent, alignment));
-            if (free_space() < size) {
+            if (free_space() < static_cast<std::ptrdiff_t>(size)) {
                 __current = old_current;
                 return nullptr;
             }
@@ -234,7 +234,7 @@ private:
      Compare \p *this with other for identity - memory allocated using a \p monotonic_buffer_resource can only be
      deallocated using that same resource.
      */
-    bool do_is_equal(memory_resource const& rhs) const noexcept override { this == &rhs; }
+    bool do_is_equal(memory_resource const& rhs) const noexcept override { return this == &rhs; }
 
     memory_resource* __upstream       = nullptr;
     __BufferNodeHeader __local_buffer = nullptr;
