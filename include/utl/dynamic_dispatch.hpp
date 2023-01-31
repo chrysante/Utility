@@ -123,12 +123,12 @@ void __dispatch_impl(std::integral_constant<std::size_t, Size - 1>,
     std::size_t constexpr Index = Size - 1;
     __dispatch_one_impl(
         [&](auto toUnpack, auto... x) {
-        constexpr bool viable = !__is_dispatch_arg_tuple<std::decay_t<decltype(toUnpack)>>::value &&
-                                ((!__is_dispatch_arg_tuple<std::decay_t<decltype(x)>>::value) && ...);
+            constexpr bool viable = !__is_dispatch_arg_tuple<std::decay_t<decltype(toUnpack)>>::value &&
+                                    ((!__is_dispatch_arg_tuple<std::decay_t<decltype(x)>>::value) && ...);
 
-        if constexpr (sizeof...(x) + 1 == Size && viable) {
-            selector(x..., toUnpack);
-        }
+            if constexpr (sizeof...(x) + 1 == Size && viable) {
+                selector(x..., toUnpack);
+            }
         },
         get<Index>(argTuple).x,
         get<Index>(argTuple).index,
@@ -144,7 +144,7 @@ void __dispatch_impl(std::integral_constant<std::size_t, Index>,
     static_assert(Index < Size - 1);
     __dispatch_one_impl(
         [&](auto toUnpack, auto... x) {
-        __dispatch_impl<Size>(std::integral_constant<std::size_t, Index + 1>{}, selector, argTuple, x..., toUnpack);
+            __dispatch_impl<Size>(std::integral_constant<std::size_t, Index + 1>{}, selector, argTuple, x..., toUnpack);
         },
         get<Index>(argTuple).x,
         get<Index>(argTuple).index,
