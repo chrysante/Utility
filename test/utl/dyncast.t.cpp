@@ -307,7 +307,3 @@ TEST_CASE("isa and dyncast", "[common][dyncast]") {
     CHECK_THROWS (utl::dyncast<LDerivedB const&>(*base));
     CHECK_NOTHROW(utl::dyncast<RDerived const&>(*base));
 }
-
-
-#if 0
-#endif // 0

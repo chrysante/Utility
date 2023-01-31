@@ -225,14 +225,15 @@ public:
 /// \brief View over a transformed range.
 /// \details Transform is applied lazily on traversal.
 template <iterator Itr, sentinel_for<Itr> Sentinel>
-[[nodiscard]] constexpr auto transform(Itr begin, Sentinel end, std::invocable<decltype(*begin)> auto&& transform_fn) {
+[[nodiscard]] constexpr auto transform(Itr begin, Sentinel end, std::invocable<std::iter_value_t<Itr>> auto&& transform_fn) {
     return __transform_range<range_view<Itr, Sentinel>, std::decay_t<decltype(transform_fn)>>(range_view(begin, end), UTL_FORWARD(transform_fn));
 }
 
 /// \brief View over a transformed range.
 /// \details Transform is applied lazily on traversal.
 template <range Range>
-[[nodiscard]] constexpr auto transform(Range&& range, std::invocable<decltype(*__utl_begin(range))> auto&& transform_fn) {
+[[nodiscard]] constexpr auto transform(Range&& range,
+                                       std::invocable<decltype(*__utl_begin(std::declval<Range&>()))> auto&& transform_fn) {
     return __transform_range<Range, std::decay_t<decltype(transform_fn)>>(UTL_FORWARD(range), UTL_FORWARD(transform_fn));
 }
 

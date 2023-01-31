@@ -37,7 +37,6 @@ TEST_CASE("enumerate enum - 2", "[utility][ranges]") {
     CHECK(count == (int)F::_count);
 }
 
-
 TEST_CASE("enumerating_iterator", "[utility][ranges]") {
     int const count = GENERATE(0, 10);
     utl::vector<std::unique_ptr<int>> v(utl::transform(utl::iota(count), [](int value) { return std::make_unique<int>(value); }));
@@ -49,7 +48,6 @@ TEST_CASE("enumerating_iterator", "[utility][ranges]") {
     }
     CHECK(i == v.size());
 }
-
 
 TEST_CASE("enumerate_range", "[utility][ranges]") {
     int const count = GENERATE(0, 10);
@@ -105,6 +103,7 @@ TEST_CASE("transform_range owning", "[utility][ranges]") {
     }
     CHECK(i == 30);
 }
+
 
 TEST_CASE("stride_iterator") {
     utl::small_vector<int> const v(utl::iota(10));
