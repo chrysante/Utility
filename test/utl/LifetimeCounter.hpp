@@ -21,7 +21,7 @@ namespace utl_test {
 			 _inc();
 		 }
 		 
-		 LifetimeCounter(LifetimeCounter&&) {
+		 LifetimeCounter(LifetimeCounter&&) noexcept {
 			 _inc();
 		 }
 		 
@@ -29,11 +29,11 @@ namespace utl_test {
 			 _dec();
 		 }
 		 
-		 LifetimeCounter& operator=(LifetimeCounter const&)& {
+		 LifetimeCounter& operator=(LifetimeCounter const&) {
 			 return *this;
 		 }
 		 
-		 LifetimeCounter& operator=(LifetimeCounter&&)& {
+		 LifetimeCounter& operator=(LifetimeCounter&&) noexcept {
 			 return *this;
 		 }
 		 

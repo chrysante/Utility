@@ -1,5 +1,7 @@
 #include <catch/catch2.hpp>
 
+#include <numeric>
+
 #include <utl/ilist.hpp>
 #include <utl/ranges.hpp>
 
@@ -422,7 +424,7 @@ struct Incomplete2;
 
 TEST_CASE("ilist incomplete type", "[ilist]") {
     using L = utl::ilist<Incomplete2>;
-    BufferFor<L> buffer;
+    BufferFor<L> buffer{};
     auto* lPtr = reinterpret_cast<L*>(&buffer);
     lPtr = std::construct_at(lPtr);
     L& l = *lPtr;

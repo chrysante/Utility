@@ -91,9 +91,13 @@ public:
         template <typename, typename>
         friend class ilist;
         
-        explicit __iterator_impl(__iterator_impl<N const> rhs) requires(!std::is_const_v<N>):
-            __node(const_cast<N*>(rhs.__node)) {}
-        
+        explicit operator __iterator_impl<std::remove_const_t<N>>()
+            requires std::is_const_v<N>
+        {
+            using MutN = std::remove_const_t<N>;
+            return __iterator_impl<MutN>(const_cast<MutN*>(__node));
+        }
+
         explicit __iterator_impl(copy_cv_t<N, ilist_node<std::remove_const_t<N>>>* node):
             __node(static_cast<N*>(node)) {}
         
@@ -107,9 +111,13 @@ public:
         __iterator_impl(): __node(nullptr) {}
         
         explicit __iterator_impl(pointer node): __node(node) {}
-        __iterator_impl(__iterator_impl<std::remove_const_t<N>> rhs) requires(std::is_const_v<N>):
-            __node(rhs.__node) {}
         
+        operator __iterator_impl<std::add_const_t<N>>() const
+            requires(!std::is_const_v<N>)
+        {
+            return __iterator_impl<std::add_const_t<N>>(__node);
+        }
+
         /// Get the address of the object this iterator points to.
         pointer to_address() const { return __node; }
         
@@ -216,11 +224,11 @@ public:
     }
     
     // (8)
-    ilist(ilist&& rhs) requires std::is_default_constructible_v<allocator_type>:
+    ilist(ilist&& rhs) noexcept requires std::is_default_constructible_v<allocator_type>:
         ilist(std::move(rhs), rhs.__allocator_) {}
     
     // (9)
-    ilist(ilist&& rhs, allocator_type const& alloc): ilist(alloc) {
+    ilist(ilist&& rhs, allocator_type const& alloc) noexcept: ilist(alloc) {
         auto fast_path = [&] {
             __move_assign_pointer_swap(rhs.begin(), rhs.end());
             rhs.__reset();

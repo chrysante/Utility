@@ -600,7 +600,7 @@ struct vector {
 
     void __move_constr_impl(auto&& rhs) {
         bool const alloc_eq = __alloc() == rhs.__alloc();
-        if (rhs.__uses_inline_buffer() || !alloc_eq) {
+        if (rhs.__uses_inline_buffer() || !alloc_eq) {
             // Here we need to allocate and relocate
             __set_data(__allocate(rhs.__size()), rhs.__size(), rhs.__size(), false);
             __relocate_with_alloc(rhs.__begin(), rhs.__end(), __begin(), rhs.__alloc());

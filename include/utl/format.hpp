@@ -5,12 +5,12 @@
 #include "__base.hpp"
 _UTL_SYSTEM_HEADER_
 
-#if UTL_MSCV
+#if UTL_MSVC
 #include <format>
-#else // UTL_MSCV
+#else // UTL_MSVC
 #include "__fmt/format.h"
 #include "__fmt/ostream.h"
-#endif // UTL_MSCV
+#endif // UTL_MSVC
 
 
 namespace utl {

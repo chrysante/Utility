@@ -23,7 +23,7 @@ public:
     
     /// Run \p fn asynchronously on each item of \p range
     template <input_range R, typename F>
-    void async(R&& range, F&& fn) requires std::invocable<F> || std::invocable<F, decltype(*__utl_begin(range))> {
+    void async(R&& range, F&& fn) requires std::invocable<F> || std::invocable<F, decltype(*__utl_begin(range))> {
         for (auto&& elem: range) {
             m_pool.submit([f = UTL_FORWARD(fn), elem = UTL_FORWARD(elem)]{
                 if constexpr (std::invocable<F, decltype(elem)>) {
