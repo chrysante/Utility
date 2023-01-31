@@ -55,7 +55,15 @@ test_project_setup()
 files { 
     "test/utl/dyncast.t.cpp"
 }
---links { "utility" }
+
+-----------------------------------------------------------------------------------------
+-- Project utl-test-farray
+-----------------------------------------------------------------------------------------
+project "utl-test-farray"
+test_project_setup()
+files { 
+    "test/utl/farray.t.cpp"
+}
 
 -----------------------------------------------------------------------------------------
 -- Project utl-test-variant

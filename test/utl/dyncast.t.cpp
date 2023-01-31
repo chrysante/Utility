@@ -70,6 +70,39 @@ static bool canDyncast(From&& from) {
 
 using namespace utl_test;
 
+TEST_CASE("Dyncast basic", "[common][dyncast]") {
+    using namespace utl;
+    CHECK(__dyncast_is_abstract<Base>::value);
+    CHECK(!__dyncast_is_abstract<LDerivedA>::value);
+    CHECK(!__dyncast_is_abstract<LDerivedB>::value);
+    CHECK(!__dyncast_is_abstract<LDerivedC>::value);
+    CHECK(!__dyncast_is_abstract<RDerived>::value);
+
+    CHECK(__dyncast_type_to_enum<Base>      == ::Type::Base);
+    CHECK(__dyncast_type_to_enum<LDerivedA> == ::Type::LDerivedA);
+    CHECK(__dyncast_type_to_enum<LDerivedB> == ::Type::LDerivedB);
+    CHECK(__dyncast_type_to_enum<LDerivedC> == ::Type::LDerivedC);
+    CHECK(__dyncast_type_to_enum<RDerived>  == ::Type::RDerived);
+}
+
+TEST_CASE("__dispatch_return_type", "[common][dyncast]") {
+    using namespace utl;
+    auto f = overload{ 
+        [](Base&, Base&) {}
+    };
+    using DRT = __dispatch_return_type<type_sequence<Type, Type>, type_sequence<Base&, Base&>, decltype((f))>;
+    /// Test successfull compilation here.
+    using t = DRT::type;
+}
+
+TEST_CASE("__dispatch_return_type - 2", "[common][dyncast]") {
+    using namespace utl;
+    auto f    = [](Base& base) { return base.type(); };
+    using DRT = __dispatch_return_type<type_sequence<Type>, type_sequence<Base&>, decltype((f))>;
+    /// Test successfull compilation here.
+    CHECK(T<DRT::type> == T<::Type>);
+}
+
 TEST_CASE("Dyncast visit", "[common][dyncast]") {
     LDerivedA a;
     Base& base = a;
@@ -274,3 +307,7 @@ TEST_CASE("isa and dyncast", "[common][dyncast]") {
     CHECK_THROWS (utl::dyncast<LDerivedB const&>(*base));
     CHECK_NOTHROW(utl::dyncast<RDerived const&>(*base));
 }
+
+
+#if 0
+#endif // 0

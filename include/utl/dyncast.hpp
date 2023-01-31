@@ -12,7 +12,7 @@
 
 _UTL_SYSTEM_HEADER_
 
-namespace utl {
+namespace utl {
 
 template <typename T>
 struct __dyncast_type_to_enum_impl;
@@ -71,7 +71,7 @@ using __dc_enum_type = decltype(__dyncast_type_to_enum_impl<std::remove_cvref_t<
     template <>                                                                                                                \
     struct ::utl::__dyncast_is_abstract<type>: std::false_type {};
 
-namespace utl {
+namespace utl {
 
 // clang-format off
 
@@ -344,8 +344,14 @@ struct __dispatch_return_type<type_sequence<Enums...>, type_sequence<GivenTypes.
     static constexpr bool we_care = (... && __dc_is_properly_derived_from<type_at<FlatIndex, DimI>,
                                                                           typename type_sequence<GivenTypes...>::template at<DimI>>);
     
+    template <std::size_t DimIndex, std::size_t FlatIndex>
+    using qualified_concrete_type_at =
+        utl::copy_cvref_t<typename type_sequence<GivenTypes...>::template at<DimIndex>,
+                          __dyncast_enum_to_type<typename type_sequence<Enums...>::template at<DimIndex>{
+                              FArrayBase::__expand_index(FlatIndex)[DimIndex] }>>;
+
     template <std::size_t FlatIndex>
-    using invoke_result_wrapped = __dc_invoke_result<F, utl::copy_cvref_t<GivenTypes, __dyncast_enum_to_type<Enums{ FArrayBase::__expand_index(FlatIndex)[DimI] }>>...>;
+    using invoke_result_wrapped = __dc_invoke_result<F, qualified_concrete_type_at<DimI, FlatIndex>...>;
     
     template <std::size_t FlatIndex>
     using invoke_result = typename std::conditional_t<we_care<FlatIndex>,

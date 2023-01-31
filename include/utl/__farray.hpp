@@ -74,27 +74,32 @@ struct __farray_base_impl<std::integer_sequence<std::size_t, AxisSizes...>,
     
     template <typename ConcreteTypeGetter, typename R, typename F, typename... T>
     struct __make_impl {
+        template <std::size_t FlatIndex>
+        static constexpr R invoke_one(F&& f, T&&... t) {
+            constexpr auto index = __expand_index(FlatIndex);
+            constexpr bool is_any_void =
+                __any<std::is_same<void,
+                                   decltype(ConcreteTypeGetter{}(std::integral_constant<std::size_t, index[DimI]>{},
+                                                                 std::declval<T&&>()))>...>;
+            if constexpr (is_any_void) {
+                std::abort();
+            }
+#define _UTL_VISIT_CALL_EXPR()                                                                                         \
+    std::invoke(std::forward<F>(f),                                                                                    \
+                ConcreteTypeGetter{}(std::integral_constant<std::size_t, index[DimI]>{}, std::forward<T>(t))...);
+            else if constexpr (std::same_as<R, void>) {
+                _UTL_VISIT_CALL_EXPR();
+            }
+            else {
+                return _UTL_VISIT_CALL_EXPR();
+            }
+#undef _UTL_VISIT_CALL_EXPR
+        }
+
         static constexpr std::array<__visit_fn<R, F, T...>, __flat_array_size> call() {
             static_assert(std::is_empty_v<ConcreteTypeGetter>, "ConcreteTypeGetter must be empty as we don't want to capture it.");
             static_assert(sizeof...(T) > 0);
-            return {
-                [](F&& f, T&&... t) -> R {
-                    constexpr auto index = __expand_index(FlatI);
-                    constexpr bool is_any_void = __any<std::is_same<void, decltype(ConcreteTypeGetter{}(std::integral_constant<std::size_t, index[DimI]>{}, std::declval<T&&>()))>...>;
-                    if constexpr (is_any_void) {
-                        
-                    }
-    #define _UTL_VISIT_CALL_EXPR() \
-        std::invoke(std::forward<F>(f), ConcreteTypeGetter{}(std::integral_constant<std::size_t, index[DimI]>{}, std::forward<T>(t))...);
-                    else if constexpr (std::same_as<R, void>) {
-                        _UTL_VISIT_CALL_EXPR();
-                    }
-                    else {
-                        return _UTL_VISIT_CALL_EXPR();
-                    }
-    #undef _UTL_VISIT_CALL_EXPR
-                }...
-            };
+            return { invoke_one<FlatI>... };
         }
     };
     
