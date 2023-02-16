@@ -122,7 +122,22 @@ inline constexpr TYPE operator OP(TYPE a, typename _UTL_NSSTD::underlying_type<T
 #	define _UTL_ENUM_ASSIGNMENT(TYPE, OP) // Not supported in Metal
 #endif
 
-#define UTL_ENUM_OPERATORS(TYPE) \
+/// Define bitwise arithmetic operators for \p TYPE
+///
+/// Defines
+///     \p operator&
+///     \p operator&=
+///     \p operator|
+///     \p operator|=
+///     \p operator^
+///     \p operator^=
+///     \p operator~
+///     \p operator!
+///
+/// Also defines a function \code
+/// bool test(TYPE);
+/// \endcode to convert \p TYPE to boolean.
+#define UTL_BITFIELD_OPERATORS(TYPE) \
 	_UTL_ENUM_BINARY_PREFIX_OPERATOR(TYPE, &) \
 	_UTL_ENUM_BINARY_PREFIX_OPERATOR(TYPE, |) \
 	_UTL_ENUM_BINARY_PREFIX_OPERATOR(TYPE, ^) \
@@ -132,6 +147,9 @@ inline constexpr TYPE operator OP(TYPE a, typename _UTL_NSSTD::underlying_type<T
 	_UTL_ENUM_UNARY_PREFIX_OPERATOR(TYPE, TYPE, ~) \
 	_UTL_ENUM_UNARY_PREFIX_OPERATOR(TYPE, bool, !) \
 	constexpr bool test(TYPE value) { return !!value; }
+
+// For compatibility
+#define UTL_ENUM_OPERATORS(TYPE) UTL_BITFIELD_OPERATORS(TYPE)
 
 #if UTL_CPP // Guard here because general purpose header may be included in shader source
 
