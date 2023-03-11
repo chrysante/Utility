@@ -467,9 +467,9 @@ struct vector {
     }
 
     /// (4)
-    template <input_iterator_for<T> It, sentinel_for<It> S>
-    __utl_interface_export constexpr iterator insert(const_iterator pos, It first, S last) {
-        return __insert_impl(pos - begin(), distance(first, last), [first]() mutable -> decltype(auto) {
+    template <typename It>
+    __utl_interface_export constexpr iterator insert(const_iterator pos, It first, It last) {
+        return __insert_impl(pos - begin(), static_cast<std::size_t>(distance(first, last)), [first]() mutable -> decltype(auto) {
             return *first++;
         });
     }
