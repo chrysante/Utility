@@ -19,40 +19,45 @@
 _UTL_SYSTEM_HEADER_
 
 /// MARK: Synopsis
-// namespace utl {
-//
-//     template <typename T, typename A = std::allocator<T>>
-//     class vector {
-///        Implements the interface of \p std::vector<T,A> with the exception that
+/// ```
+/// namespace utl {
+///
+///     template <typename T, typename A = std::allocator<T>>
+///     class vector {
+/// ```
+///        Implements the interface of `std::vector<T,A>` with the exception that
 ///        iterator validity is not guaranteed after move operations. This enables the
-///        implementation of \p small_vector<T,N,A> (see below).
-//     };
-//
-//     template <typename T, std::size_t N = default_inline_capacity<T, std::allocator<T>>,
-//               typename A = std::allocator<T>>
-//     class small_vector: public vector<T, N> {
-///        Implements the same constructors and assignment operators as \p vector<T,A>.
-///        Inherits the remaining functionality of \p vector<T,A>.
-//
-//         static constexpr std::size_t inline_capacity() { return N; }
-//
-///        Returns true iff contents is stored in local buffer within the object.
-//         bool uses_inline_buffer() const noexcept;
-//     };
-
-///    The maximum inline capacity so that \p sizeof(small_vector<T,default_inline_capacity<T,A>,A>) == 64
-//     template <typename T, typename A>
-//     constexpr std::size_t default_inline_capacity;
-//
-//     namespace pmr {
-//         template <typename T>
-//         using vector = utl::vector<T, polymorphic_allocator<T>>;
-//         template <typename T>
-//         using small_vector = utl::vector<T, default_inline_capacity<T, polymorphic_allocator<T>>,
-//                                          polymorphic_allocator<T>>;
-//     }
-//
-// }
+///        implementation of `small_vector<T,N,A>` (see below).
+/// ```
+///     };
+///
+///     template <typename T, std::size_t N = default_inline_capacity<T, std::allocator<T>>,
+///               typename A = std::allocator<T>>
+///     class small_vector: public vector<T, N> {
+/// ```
+///        Implements the same constructors and assignment operators as `vector<T, A>`.
+///        Inherits the remaining functionality of `vector<T, A>`.
+/// ```
+///         static constexpr std::size_t inline_capacity() { return N; }
+///
+///         // Returns true iff contents is stored in local buffer within the object.
+///         bool uses_inline_buffer() const noexcept;
+///     };
+///
+///     /// The maximum inline capacity so that `sizeof(small_vector<T, default_inline_capacity<T, A>, A>) == 64`
+///     template <typename T, typename A>
+///     constexpr std::size_t default_inline_capacity;
+///
+///     namespace pmr {
+///         template <typename T>
+///         using vector = utl::vector<T, polymorphic_allocator<T>>;
+///         template <typename T>
+///         using small_vector = utl::vector<T, default_inline_capacity<T, polymorphic_allocator<T>>,
+///                                          polymorphic_allocator<T>>;
+///     }
+///
+/// }
+/// ```
 
 namespace utl {
 
@@ -799,7 +804,7 @@ struct vector {
         if constexpr (is_trivially_relocatable<value_type>::value) {
             std::size_t const size = utl::distance(begin, end) * sizeof(value_type);
             __utl_assert(begin != nullptr || size == 0);
-            /// We rely on undefined behaviour of \p memcpy here if \p begin==nullptr
+            /// We rely on undefined behaviour of `memcpy` here if `begin == nullptr`
             /// It should however not be a problem since in that case size is zero.
             std::memcpy(out, begin, size);
         }
@@ -868,7 +873,7 @@ struct vector {
     struct __data_t {
         static_assert(std::is_same_v<value_type*, pointer>);
         pointer_int_pair<value_type*, bool, 1> begin_inline;
-        std::uint32_t size; /// These should actually be of type \p size_type however lldb debugger then can't read them. 
+        std::uint32_t size; /// These should actually be of type `size_type` however lldb debugger then can't read them.
         std::uint32_t cap;
     };
 

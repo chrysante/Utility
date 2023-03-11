@@ -11,9 +11,9 @@ namespace utl {
 
 /// \brief   Topologically sorts a directed acyclic graph.
 ///
-/// \details Time complexity: \p O(n+m)
-/// \details Space complexity: \p O(n)
-/// \details where \p n is the number of vertices and \p m is the number of edges in the graph.
+/// \details Time complexity: `O(n+m)`
+/// Space complexity: `O(n)`
+/// where `n` is the number of vertices and `m` is the number of edges in the graph.
 ///
 /// \param   begin Iterator to the beginning of a range vertices.
 /// \param   end End of range.

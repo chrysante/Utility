@@ -22,28 +22,28 @@ struct __nc_assert {
     static constexpr void check(bool condition) { __utl_expect(condition); }
 };
 
-/// \brief Performs a checked integral \p static_cast
-/// \details Before performing the cast, \p narrow_cast checks if the argument fits into the destination type.
-/// \details Checks can be customized by the \p Traits template parameter.
+/// \brief Performs a checked integral `static_cast`
+/// \details Before performing the cast, `narrow_cast` checks if the argument fits into the destination type.
+/// Checks can be customized by the `Traits` template parameter.
 /// By default assertions are triggered when the cast fails.
 template <std::integral To, typename Traits = __nc_assert, std::integral From>
 constexpr To narrow_cast(From value) {
     if constexpr (std::is_signed_v<From> && std::is_unsigned_v<To>) {
-        // Casting from signed to unsigned.
+        /// Casting from `signed` to `unsigned`.
         Traits::check(value >= static_cast<From>(0));
-        // Hand off to narrow_cast from unsigned to unsigned.
+        /// Hand off to `narrow_cast` from `unsigned` to `unsigned`.
         return narrow_cast<To>(static_cast<std::make_unsigned_t<From>>(value));
     }
     else if constexpr (std::is_unsigned_v<From> && std::is_signed_v<To>) {
-        // Casting from unsigned to signed.
+        /// Casting from `unsigned` to `signed`.
         if constexpr (sizeof(From) <= sizeof(To)) {
-            // Conversion might narrow.
+            /// Conversion might narrow.
             Traits::check(value <= static_cast<std::make_unsigned_t<To>>(std::numeric_limits<To>::max()));
         }
         return static_cast<To>(value);
     }
     else {
-        // Both are either signed or unsigned.
+        /// Both are either `signed` or `unsigned`.
         if constexpr (sizeof(To) < sizeof(From)) {
             Traits::check(value <= static_cast<From>(std::numeric_limits<To>::max()));
             Traits::check(value >= static_cast<From>(std::numeric_limits<To>::min()));
@@ -52,7 +52,7 @@ constexpr To narrow_cast(From value) {
     }
 }
 
-/// \brief Performs a checked floating point \p static_cast
+/// \brief Performs a checked floating point `static_cast`
 template <std::floating_point To, typename Traits = __nc_assert, std::floating_point From>
 constexpr To narrow_cast(From value) {
     if constexpr (sizeof(From) <= sizeof(To)) {
@@ -85,7 +85,7 @@ noexcept {
 }
 
 /// \brief Wrapper around an array to be used as a fixed size buffer on the stack.
-/// \details Can be used in conjunction with \p monotonic_buffer_resource as initial buffer.
+/// \details Can be used in conjunction with `monotonic_buffer_resource` as initial buffer.
 template <std::size_t Size, std::size_t Alignment = alignof(std::max_align_t)>
 class stack_buffer {
 public:
@@ -173,8 +173,8 @@ __enum_map(std::pair<E, T>...) -> __enum_map<std::common_type_t<E...>, std::comm
 
 /// \brief Compressed pair of a pointer and an integer
 /// \details Stores the integer in the low bits of the pointer. E.g. the three lowest bits of a valid pointer to an 8 byte aligned type are always zero.
-/// \details \p pointer_int_pair uses these bits to store an integer.
-/// \details Thus \p IntWidth must not be greater than \p log2(alignof(*T))
+/// `pointer_int_pair` uses these bits to store an integer.
+/// Thus `IntWidth` must not be greater than `log2(alignof(T))`
 template <typename T, typename Int = int, std::size_t IntWidth = utl::log2(alignof(std::remove_pointer_t<T>))>
 class pointer_int_pair;
 

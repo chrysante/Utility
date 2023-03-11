@@ -54,8 +54,8 @@ concept iterator = requires(I i) {
     { *i } -> __utl_referenceable;
     { ++i } -> std::same_as<I&>;
     { *i++ } -> __utl_referenceable;
-    /// \p utl::transform_iterator can't satisfy \p std::copyable concept because lambdas are not copy assignable.
-    /// \p std::copy_constructible should be enough for most cases though.
+    /// `utl::transform_iterator` can't satisfy `std::copyable` concept because lambdas are not copy assignable.
+    /// `std::copy_constructible` should be enough for most cases though.
 } && /* std::copyable<I> */ std::copy_constructible<I>;
 // clang-format on
 

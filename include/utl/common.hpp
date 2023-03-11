@@ -125,18 +125,16 @@ inline constexpr TYPE operator OP(TYPE a, typename _UTL_NSSTD::underlying_type<T
 /// Define bitwise arithmetic operators for \p TYPE
 ///
 /// Defines
-///     \p operator&
-///     \p operator&=
-///     \p operator|
-///     \p operator|=
-///     \p operator^
-///     \p operator^=
-///     \p operator~
-///     \p operator!
+///     `operator&`
+///     `operator&=`
+///     `operator|`
+///     `operator|=`
+///     `operator^`
+///     `operator^=`
+///     `operator~`
+///     `operator!`
 ///
-/// Also defines a function \code
-/// bool test(TYPE);
-/// \endcode to convert \p TYPE to boolean.
+/// Also defines a function `bool test(TYPE)` to convert \p TYPE to `bool`.
 #define UTL_BITFIELD_OPERATORS(TYPE) \
 	_UTL_ENUM_BINARY_PREFIX_OPERATOR(TYPE, &) \
 	_UTL_ENUM_BINARY_PREFIX_OPERATOR(TYPE, |) \
@@ -302,8 +300,8 @@ namespace utl {
 	#define UTL_STORE_STREAM_STATE(stream) \
 	::utl::__utl_ios_state_store UTL_ANONYMOUS_VARIABLE(__utl_stream_state_store)(stream)
 
-	/// MARK: \p get_container
-	/// Get (legal) access to the container of STL container adapters
+	/// `get_container`
+	/// (Legal) access to the container of STL container adapters
 	template <typename ContainerAdapter>
 	decltype(auto) __utl_get_container_impl(auto&& a) {
 		static_assert(std::is_lvalue_reference_v<decltype(a)>);

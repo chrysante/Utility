@@ -12,13 +12,13 @@ _UTL_SYSTEM_HEADER_
 
 namespace utl {
 
-/// Thin wrapper around \p utl::thread_pool
+/// Thin wrapper around `utl::thread_pool`
 class concurrent_dispatch_queue {
 public:
     concurrent_dispatch_queue() = default;
     explicit concurrent_dispatch_queue(std::size_t thread_count): m_pool(thread_count) {}
     
-    /// Run \p fn asynchronously. Effectivly calls \p utl::thread_pool::submit()
+    /// Run \p fn asynchronously. Effectivly calls `utl::thread_pool::submit()`
     void async(utl::function<void()> fn) { m_pool.submit(std::move(fn)); }
     
     /// Run \p fn asynchronously on each item of \p range

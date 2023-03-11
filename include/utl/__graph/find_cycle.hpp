@@ -10,15 +10,15 @@ namespace utl {
 
 /// \brief   Finds a cycle in a directed graph.
 ///
-/// \details VertexType must be equality comparable and the set of vertices must be unique, i.e. \code (v == u) <==> (&v == &u) \endcode for all vertices \p v and \p u in the graph.
-/// \details Time complexity: \p O(n+m)
-/// \details Space complexity: \p O(n)
-/// \details where \p n is the number of vertices and \p m is the number of edges in the graph.
+/// \details VertexType must be equality comparable and the set of vertices must be unique, i.e. `(v == u)` iff `(&v == &u)` for all vertices `v` and `u` in the graph.
+/// Time complexity: `O(n+m)`
+/// Space complexity: `O(n)`
+/// where `n` is the number of vertices and `m` is the number of edges in the graph.
 ///
 /// \param   begin Iterator to the beginning of a range vertices.
 /// \param   end End of range.
 /// \param   edges Invocable retrieving a range of vertices from a vertex representing its edges.
-/// \returns The first encountered cycle in the graph as \p utl::small_vector</*VertexType*/>
+/// \returns The first encountered cycle in the graph as `utl::small_vector</*VertexType*/>`
 template <input_iterator Itr, sentinel_for<Itr> S, typename E, std::equality_comparable VertexType = std::decay_t<decltype(*std::declval<Itr>())>>
 small_vector<VertexType> find_cycle(Itr begin, S end, E edges);
 

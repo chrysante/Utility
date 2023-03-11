@@ -56,10 +56,10 @@ private:
 /// \details Submitted work items are executed in FIFO order.
 class thread_pool {
 public:
-    /// \brief Constructs a \p thread_pool with \p std::thread::hardware_concurrency() threads.
+    /// \brief Constructs a `thread_pool` with `std::thread::hardware_concurrency()` threads.
     thread_pool();
     
-    /// \brief Constructs a \p thread_pool with \p thread_count threads.
+    /// \brief Constructs a `thread_pool` with \p thread_count threads.
     explicit thread_pool(std::size_t thread_count);
     
     ~thread_pool();
@@ -70,10 +70,10 @@ public:
     
     /// \brief Cancels the submitted tasks.
     /// \details Tasks currently executing will finish before this function returns.
+    /// \param wait_for_current If true, waits for all currently executing tasks to finish before returning.
     void cancel_current_tasks(bool wait_for_current = true);
     
     /// \brief Wait for all submitted tasks to be executed.
-    /// \param wait_for_current If true, waits for all currently executing tasks to finish before returning.
     void wait_for_current_tasks();
     
     /// \brief Number of threads maintained.

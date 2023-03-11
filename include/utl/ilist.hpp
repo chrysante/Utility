@@ -233,7 +233,7 @@ public:
             __move_assign_pointer_swap(rhs.begin(), rhs.end());
             rhs.__reset();
         };
-        /// Use if constexpr here to prevent the path using \p __insert_impl from compiling when not needed.
+        /// Use `if constexpr` here to prevent the path using `__insert_impl()` from compiling when not needed.
         if constexpr (__alloc_always_eq) {
             fast_path();
         }
@@ -350,7 +350,7 @@ public:
     const_reverse_iterator crend() const { return rend(); }
     
     [[nodiscard]] bool empty() const {
-        /// Avoid using iterators to allow use with incomplete \p value_type
+        /// Avoid using iterators to allow use with incomplete `value_type`
         return __sentinel() == __sentinel()->__weak_prev();
     }
     

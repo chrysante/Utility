@@ -50,7 +50,7 @@ using __dc_enum_type = decltype(__dyncast_type_to_enum_impl<std::remove_cvref_t<
 //---=== Public interface =====================================================
 //---==========================================================================
 
-/// Mandatory customization point for the \p dyncast facilities. Every type in the inheritance hierarchy must be
+/// Mandatory customization point for the `dyncast` facilities. Every type in the inheritance hierarchy must be
 /// uniquely mapped to an enum or integral value. Using an enum is recommended. Use this macro at file scope to
 /// identify types in the hierarchy with a unique integral value.
 #define UTL_DYNCAST_MAP(type, enum_value)                                                                                      \
@@ -59,7 +59,7 @@ using __dc_enum_type = decltype(__dyncast_type_to_enum_impl<std::remove_cvref_t<
     template <>                                                                                                                \
     struct ::utl::__dyncast_enum_to_type_impl<enum_value>: std::type_identity<type> {};
 
-/// Optional customization point for the \p dyncast facilities. Mark types as abstract. The \p visit() function will
+/// Optional customization point for the `dyncast` facilities. Mark types as abstract. The `visit()` function will
 /// not require its function argument to be invocable with abstract types, however it is the responsibility of the user
 /// that no objects of abstract runtime type will exist.
 #define UTL_DYNCAST_ABSTRACT(type)                                                                                             \
@@ -75,15 +75,15 @@ namespace utl {
 
 // clang-format off
 
-/// Simple customization point for the \p dyncast facilities. If the types in the inheritance hierarchy expose their
-/// runtime type identifiers by a \p .type() method, this customiziation point is not needed. Otherwise define a
-/// function \p dyncast_get_type() with compatible signature for every type in the same namespace as the type. This can
+/// Simple customization point for the `dyncast` facilities. If the types in the inheritance hierarchy expose their
+/// runtime type identifiers by a `.type()` method, this customiziation point is not needed. Otherwise define a
+/// function `dyncast_get_type()` with compatible signature for every type in the same namespace as the type. This can
 /// of course be a (constrained) template.
-/// Note that for a class hierarchy with root \p NS::Base defining a function \p dyncast_get_type(Base \p const&) in
-/// namespace \p NS does not suffice in general: If a class derived from \p Base satisfies the requirements of the
-/// generic \p dyncast_get_type() function defined here, it will be called instead. In practice this may not matter much,
+/// Note that for a class hierarchy with root `NS::Base` defining a function `dyncast_get_type(Base const&)` in
+/// namespace `NS` does not suffice in general: If a class derived from `Base` satisfies the requirements of the
+/// generic `dyncast_get_type()` function defined here, it will be called instead. In practice this may not matter much,
 /// but to be safe and generic prefer defining the overload like so:
-/// \code auto NS::dyncast_get_type(std::convertible_to<Base> auto const&); \endcode
+/// `auto NS::dyncast_get_type(std::convertible_to<Base> auto const&);`
 template <typename T>
 auto dyncast_get_type(T const& t)
 requires requires { { t.type() } -> std::convertible_to<__dc_enum_type<T>>; }
@@ -94,8 +94,8 @@ requires requires { { t.type() } -> std::convertible_to<__dc_enum_type<T>>; }
 // clang-format on
 
 /// Optional second customization point. All fields below must be implemented. If a custom implementation for
-/// \p dyncast_traits<...>::type(...) which does not invoke \p dyncast_get_type() is given, the first customization point
-/// \p dyncast_get_type() is not used.
+/// `dyncast_traits<...>::type(...)` which does not invoke `dyncast_get_type()` is given, the first customization point
+/// `dyncast_get_type()` is not used.
 template <typename Enum>
 struct dyncast_traits {
     static Enum type(auto const& t) { return dyncast_get_type(t); }
@@ -104,72 +104,77 @@ struct dyncast_traits {
 };
 
 /// Visit the object \p obj as its most derived type.
-/// \param obj An object of type \p T which has support for the \p dyncast facilities.
-/// \param fn A callable which can be invoked with any of \p T 's derived types. The possible return types of \p fn
-///        when invoked with \p T 's derived types must have a common type determined by \p std::common_type.
-/// \returns \p std::invoke(fn,static_cast<MOST_DERIVED_TYPE>(obj)) where \p MOST_DERIVED_TYPE is the most derived type
+/// \param obj An object of type `T` which has support for the `dyncast` facilities.
+/// \param fn A callable which can be invoked with any of `T`'s derived types. The possible return types of \p fn
+///        when invoked with `T`'s derived types must have a common type determined by `std::common_type`.
+/// \returns `std::invoke(fn, static_cast<MOST_DERIVED_TYPE>(obj))` where `MOST_DERIVED_TYPE` is the most derived type
 ///          of \p obj with the same cv-ref qualifications as \p obj.
 template <typename T, typename F>
 requires __dc_dynamic<T>
 decltype(auto) visit(T&& obj, F&& fn);
 
+/// \overload
 template <typename T0, typename T1, typename F>
 requires __dc_dynamic<T0> && __dc_dynamic<T1>
 decltype(auto) visit(T0&& t0, T1&& t1, F&& fn);
 
+/// \overload
 template <typename T0, typename T1, typename T2, typename F>
 requires __dc_dynamic<T0> && __dc_dynamic<T1> && __dc_dynamic<T2>
 decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, F&& fn);
 
+/// \overload
 template <typename T0, typename T1, typename T2, typename T3, typename F>
 requires __dc_dynamic<T0> && __dc_dynamic<T1> && __dc_dynamic<T2> && __dc_dynamic<T3>
 decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, F&& fn);
 
+/// \overload
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename F>
 requires __dc_dynamic<T0> && __dc_dynamic<T1> && __dc_dynamic<T2> && __dc_dynamic<T3> && __dc_dynamic<T4>
 decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, F&& fn);
 
+/// \overload
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename F>
 requires __dc_dynamic<T0> && __dc_dynamic<T1> && __dc_dynamic<T2> && __dc_dynamic<T3> && __dc_dynamic<T4> && __dc_dynamic<T5>
 decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, T5&& t5, F&& fn);
 
-/// Check if \p from 's dymamic type is \p To or derived from \p To.
+/// Check if \p from 's dymamic type is `To` or derived from `To`.
 template <typename To, typename From>
 requires utl::__dyn_checkable<To, From> bool
 isa(From* from);
 
-/// Check if \p from 's dymamic type is \p To or derived from \p To.
+/// Check if \p from 's dymamic type is `To` or derived from `To`.
 template <typename To, typename From>
 requires utl::__dyn_checkable<To, From> bool
 isa(From& from);
 
-/// Downwards cast of \p from in its class hierarchy.
-/// \param from Pointer to an object of type \p From. Pointer must not be null.
-/// \returns A pointer of derived type \p To or null if \p *from is not of type \p To.
+/// Downward cast of \p from in its class hierarchy.
+/// \param from Pointer to an object of type `From`. Pointer must not be null.
+/// \returns A pointer of derived type `To` or null if \p *from is not of type `To`.
 template <typename To, typename From>
 requires __dyn_castable<To, From*> && std::is_pointer_v<To>
 constexpr To dyncast(From* from);
 
-/// Downwards cast of \p from in its class hierarchy.
-/// \param from Reference to an object of type \p From.
-/// \returns A Reference to the object of derived type \p T.o
-/// \throws \p std::bad_cast if \p from is not of type \p To.
+/// Downward cast of \p from in its class hierarchy.
+/// \param from Reference to an object of type `From`.
+/// \returns A Reference to the object of derived type `To`.
+/// \throws `std::bad_cast` if \p from is not of type `To`.
 template <typename To, typename From>
 requires __dyn_castable<To, From&> && std::is_lvalue_reference_v<To>
 constexpr To dyncast(From& from);
 
 /// Downwards cast of \p from in its class hierarchy.
-/// \param from Pointer to an object of type \p From. Pointer must not be null.
-/// \returns A pointer of derived type \p To.
-/// \warning Traps if \p *from is not of type \p To.
+/// \param from Pointer to an object of type `From`. Pointer must not be null.
+/// \returns A pointer of derived type `To`.
+/// \warning Traps if \p *from is not of type `To`.
 template <typename To, typename From>
 requires __dyn_castable<To, From*> && std::is_pointer_v<To>
 constexpr To cast(From* from);
 
 /// Downwards cast of \p from in its class hierarchy.
-/// \param from Reference to an object of type \p From .
-/// \returns A reference of derived type \p To .
-/// \warning Traps if \p from is not of type \p To .
+/// \param from Reference to an object of type `From`.
+/// \returns A reference of derived type `To`.
+/// \warning Traps if \p from is not of type `To` .
 template <typename To, typename From>
 requires __dyn_castable<To, From&> && std::is_lvalue_reference_v<To>
 constexpr To cast(From& from);
@@ -239,7 +244,7 @@ private:
 // clang-format on
 
 /// This machinery is needed to make visiting subtrees of the entire inheritance hierarchy possible. Without it,
-/// \p std::invoke_result would fail to compile on code paths that are never executed.
+/// `std::invoke_result` would fail to compile on code paths that are never executed.
 
 template <typename Derived, typename Base>
 inline constexpr bool __dc_is_properly_derived_from_impl = requires (Base* base) { static_cast<Derived*>(base); } && !std::is_convertible_v<Base*, Derived*>;
@@ -250,14 +255,14 @@ inline constexpr bool __dc_is_properly_derived_from = __dc_is_properly_derived_f
 /// Tag type to indicate that a function is not invocable for given parameters.
 enum class __not_invocable;
 
-/// Wrapper for \p std::is_reference to ignore \p __not_invocable.
+/// Wrapper for `std::is_reference` to ignore `__not_invocable`.
 template <typename T, bool DefCase>
 struct __is_ref_wrapper: std::is_reference<T> {};
 
 template <bool DefCase>
 struct __is_ref_wrapper<__not_invocable, DefCase>: std::bool_constant<DefCase> {};
 
-/// Wrapper that evaluates to \p __not_invocable if \p F is not invocable with \p Args...
+/// Wrapper that evaluates to `__not_invocable` if `F` is not invocable with `Args...`
 template <typename F, typename... Args>
 struct __dc_invoke_result {
     template <typename G, typename... T>
@@ -271,7 +276,7 @@ struct __dc_invoke_result {
 template <typename F, typename... Args>
 using __dc_invoke_result_t = typename __dc_invoke_result<F, Args...>::type;
 
-/// Wrapper for \p std::common_type or \p std::common_reference to ignore \p __not_invocable.
+/// Wrapper for `std::common_type` or `std::common_reference` to ignore `__not_invocable`.
 template <bool IsRef, typename...>
 struct __dc_common_type_wrapper_impl;
 
@@ -373,7 +378,7 @@ constexpr R __visit(F&& f, T&&... t) {
         constexpr bool staticallyCastable = requires { static_cast<target_type>(t); };
         static_assert(std::is_reference_v<target_type>, "To avoid copies when performing static_cast.");
         if constexpr (!staticallyCastable) {
-            /// If we can't even \p static_cast there is no way this can be invoked.
+            /// If we can't even `static_cast` there is no way this can be invoked.
             __utl_unreachable();
         }
         else if constexpr (std::is_convertible_v<U&&, target_type> && !std::is_same_v<U&&, target_type>) {

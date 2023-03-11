@@ -19,10 +19,10 @@ namespace utl::pmr {
 
 class monotonic_buffer_resource: public memory_resource {
 public:
-    /// \fn \p monotonic_buffer_resource
+    /// \fn `monotonic_buffer_resource`
     /// 1-2) Sets the current buffer to null and the next buffer size to an implementation-defined size.
-    /// 3-4) Sets the current buffer to null and the next buffer size to a size no smaller than \p initial_size.
-    /// 5-6) Sets the current buffer to \p buffer and the next buffer size to \p buffer_size (but not less than 1). Then
+    /// 3-4) Sets the current buffer to null and the next buffer size to a size no smaller than `initial_size`.
+    /// 5-6) Sets the current buffer to `buffer` and the next buffer size to `buffer_size` (but not less than 1). Then
     /// increase the next buffer size by an implementation-defined growth factor (which does not have to be integral). 7)
     /// Copy constructor is deleted.
     ///
@@ -47,10 +47,8 @@ public:
     // (7)
     monotonic_buffer_resource(monotonic_buffer_resource const&) = delete;
 
-    /// \fn \p ~monotonic_buffer_resource
     ~monotonic_buffer_resource() { release(); }
 
-    /// \fn \p release
     /// \brief
     ///  Releases all allocated memory by calling the deallocate function on the upstream memory resource as necessary.
     ///  Resets current buffer and next buffer size to their initial values at construction.
@@ -61,6 +59,7 @@ public:
         __local_buffer = { nullptr };
         __head_buffer  = &__local_buffer;
     }
+    
     void __release_impl() noexcept {
         __BufferNodeHeader* head = __head_buffer;
         if (!head) {
@@ -78,7 +77,6 @@ public:
         }
     }
 
-    /// \fn \p upstream_resource
     memory_resource* upstream_resource() const { return __upstream; }
 
     // Internals
@@ -93,17 +91,16 @@ public:
         std::size_t new_chunk_size = __calculate_next_buffer_size(__head_buffer->available_size(),
                                                                   size_requirement,
                                                                   alignment_requirement);
-        /// \code alignment_requirement >= __chunk_align == sizeof(__BufferNodeHeader) \endcode
+        /// `alignment_requirement >= __chunk_align == sizeof(__BufferNodeHeader)`
         /// This asserts that we have enough space to construct the Header in the buffer and still allocate required
-        /// size / alignment.
-        ///
+        /// `size / alignment`.
         new_chunk_size += alignment_requirement;
         __utl_log("allocating new chunk of size {}", new_chunk_size);
 
         std::byte* const new_chunk =
             (std::byte*)upstream_resource()->allocate(new_chunk_size,
-                                                      /// We still have to use \p __chunk_align here, because we don't
-                                                      /// store the alignment so we also deallocate with \p __chunk_align
+                                                      /// We still have to use `__chunk_align` here, because we don't
+                                                      /// store the alignment so we also deallocate with `__chunk_align`
                                                       /// and the alignment parameter has to match the allocation.
                                                       /// There is still enough space in the buffer to satisfy the
                                                       /// alignment requirement.
@@ -163,16 +160,15 @@ public:
 
         std::ptrdiff_t free_space() const { return end() - current(); }
         
-        /// Advances \p __current so it is aligned to \p alignment
-        /// If this buffer then has space for \p size bytes returns \p __current,
-        /// else resets \p __current and returns \p nullptr
-        ///
+        /// Advances `__current` so it is aligned to `alignment`
+        /// If this buffer then has space for \p size bytes returns `__current`,
+        /// else resets `__current` and returns `nullptr`
         std::byte* allocate(std::size_t size, std::size_t alignment) {
             if (begin() == nullptr) {
                 return nullptr;
             }
             std::byte* const old_current = __current;
-            /// We do this round trip cast to avoid doing pointer arithmetic on \p nullptr
+            /// We do this round trip cast to avoid doing pointer arithmetic on `nullptr`.
             auto const ucurrent = reinterpret_cast<std::uintptr_t>(__current);
             __current = reinterpret_cast<std::byte*>(__align_address(ucurrent, alignment));
             if (free_space() < static_cast<std::ptrdiff_t>(size)) {
@@ -204,11 +200,10 @@ private:
     /// Allocates storage.
     /// If the current buffer has sufficient unused space to fit a block with the specified size and alignment, allocates
     /// the return block from the current buffer. Otherwise, this function allocates a new buffer by calling
-    /// \p upstream_resource()->allocate(n,m) where \p n is not less than the greater of bytes and the next buffer size and \p m
+    /// `upstream_resource()->allocate(n, m)` where `n` is not less than the greater of bytes and the next buffer size and `m`
     /// is not less than alignment. It sets the new buffer as the current buffer, increases the next buffer size by an
     /// implementation-defined growth factor (which is not necessarily integral), and then allocates the return block from
     /// the newly allocated buffer.
-    ///
     void* do_allocate(std::size_t size, std::size_t alignment) override {
         __utl_assert_audit(__head_buffer != nullptr,
                            "_head_buffer must always be valid. If"
@@ -225,15 +220,11 @@ private:
         return result;
     }
 
-    /// \fn \p do_deallocate
     /// no-op
-    ///
     void do_deallocate(void* p, std::size_t bytes, std::size_t alignment) override {}
 
-    /** MARK: \p do_is_equal
-     Compare \p *this with other for identity - memory allocated using a \p monotonic_buffer_resource can only be
-     deallocated using that same resource.
-     */
+    /// Compare `*this` with \p rhs for identity - memory allocated using a `monotonic_buffer_resource` can only be
+    /// deallocated using that same resource.
     bool do_is_equal(memory_resource const& rhs) const noexcept override { return this == &rhs; }
 
     memory_resource* __upstream       = nullptr;
@@ -243,16 +234,13 @@ private:
 
 static_assert(sizeof(monotonic_buffer_resource::__BufferNodeHeader) == monotonic_buffer_resource::__chunk_align);
 
-/// \p pool_options
 struct pool_options {
     std::size_t max_blocks_per_chunk;
     std::size_t largest_required_pool_block;
 };
 
-/// \p unsynchronized_pool_resource
 class unsynchronized_pool_resource: public memory_resource {
 public:
-    /// \fn \p unsynchronized_pool_resource
     unsynchronized_pool_resource(): unsynchronized_pool_resource(get_default_resource()) {}
 
     explicit unsynchronized_pool_resource(memory_resource* upstream):
@@ -266,13 +254,10 @@ public:
 
     unsynchronized_pool_resource(unsynchronized_pool_resource const&) = delete;
 
-    /// \fn \p ~unsynchronized_pool_resource
     ~unsynchronized_pool_resource() {}
 
-    /// \fn \p upstream_resource
     memory_resource* upstream_resource() const { return _upstream; }
 
-    /// \fn \p options
     pool_options options() const { return _options; }
 
     static pool_options __sanitize_options(pool_options const& options) { return options; }
@@ -282,8 +267,7 @@ private:
     pool_options _options;
 };
 
-/// \p monitor_resource
-/// Logs all allocations and deallocations to \p std::cout
+/// Logs all allocations and deallocations to `std::cout`
 class monitor_resource: public memory_resource {
 public:
     monitor_resource(): monitor_resource(get_default_resource()) {}
