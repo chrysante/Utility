@@ -287,18 +287,21 @@ struct vector {
     /// MARK: assign
     /// (1)
     constexpr void assign(std::size_t count, T const& value) {
-        __assign_impl(count, [&count]() -> T const& { return count; });
+        __assign_impl(count, [&count]() -> decltype(auto) { return count; });
     }
 
     /// (2)
-    template <input_iterator_for<T> It, sentinel_for<It> S>
-    constexpr void assign(It first, S last) {
-        __assign_impl(distance(first, last), [i = first]() mutable -> T const& { return *i++; });
+    template <typename It> requires requires(It it) {
+        { *it } -> std::convertible_to<value_type>;
+        { it++ } -> std::same_as<It&>;
+    }
+    constexpr void assign(It first, It last) {
+        __assign_impl(distance(first, last), [i = first]() mutable -> decltype(auto) { return *i++; });
     }
 
     /// (3)
     __utl_interface_export constexpr void assign(std::initializer_list<T> ilist) {
-        __assign_impl(ilist.size(), [i = ilist.begin()]() mutable -> T const& { return *i++; });
+        __assign_impl(ilist.size(), [i = ilist.begin()]() mutable -> decltype(auto) { return *i++; });
     }
 
     /// MARK: get_allocator
