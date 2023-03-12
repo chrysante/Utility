@@ -26,9 +26,16 @@ auto __utl_distance(auto first, auto last, std::random_access_iterator_tag) {
 /// \brief Distance between two iterators.
 /// \details Same as \p std::distance except that it allows \p first and \p last to have different types.
 template <iterator Itr, sentinel_for<Itr> S>
-typename std::iterator_traits<Itr>::difference_type distance(Itr first, S last) {
-    return __utl_distance(first, last,
-                          typename std::iterator_traits<Itr>::iterator_category());
+auto distance(Itr first, S last) {
+    using deduced_diff_t = typename std::iterator_traits<Itr>::difference_type;
+    auto const result = __utl_distance(first, last,
+                                       typename std::iterator_traits<Itr>::iterator_category());
+    if constexpr (std::is_integral_v<deduced_diff_t>) {
+        return result;
+    }
+    else {
+        return static_cast<std::ptrdiff_t>(result);
+    }
 }
 
 /// MARK: iterator_type_t etc.
