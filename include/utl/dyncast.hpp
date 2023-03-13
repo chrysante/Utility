@@ -52,7 +52,7 @@ using __dc_enum_type = decltype(__dyncast_type_to_enum_impl<std::remove_cvref_t<
 
 /// Mandatory customization point for the `dyncast` facilities. Every type in the inheritance hierarchy must be
 /// uniquely mapped to an enum or integral value. Using an enum is recommended. Use this macro at file scope to
-/// identify types in the hierarchy with a unique integral value.
+/// associate types in the hierarchy with a unique integral value.
 #define UTL_DYNCAST_MAP(type, enum_value)                                                                                      \
     template <>                                                                                                                \
     struct ::utl::__dyncast_type_to_enum_impl<type>: std::integral_constant<decltype(enum_value), enum_value> {}; \
@@ -163,7 +163,7 @@ template <typename To, typename From>
 requires __dyn_castable<To, From&> && std::is_lvalue_reference_v<To>
 constexpr To dyncast(From& from);
 
-/// Downwards cast of \p from in its class hierarchy.
+/// Downward cast of \p from in its class hierarchy.
 /// \param from Pointer to an object of type `From`. Pointer must not be null.
 /// \returns A pointer of derived type `To`.
 /// \warning Traps if \p *from is not of type `To`.
@@ -171,7 +171,7 @@ template <typename To, typename From>
 requires __dyn_castable<To, From*> && std::is_pointer_v<To>
 constexpr To cast(From* from);
 
-/// Downwards cast of \p from in its class hierarchy.
+/// Downward cast of \p from in its class hierarchy.
 /// \param from Reference to an object of type `From`.
 /// \returns A reference of derived type `To`.
 /// \warning Traps if \p from is not of type `To` .
