@@ -345,9 +345,12 @@ struct __dispatch_return_type<type_sequence<Enums...>, type_sequence<GivenTypes.
     template <std::size_t FlatIndex, std::size_t DimIndex>
     using type_at = __dyncast_enum_to_type<typename type_sequence<Enums...>::template at<DimIndex>{ FArrayBase::__expand_index(FlatIndex)[DimIndex] }>;
 
+    /// TODO: Here we get weird compiler errors when we try to dispatch with `visit` where abstract types aren't invocable. 
     template <std::size_t FlatIndex>
-    static constexpr bool we_care = (... && __dc_is_properly_derived_from<type_at<FlatIndex, DimI>,
-                                                                          typename type_sequence<GivenTypes...>::template at<DimI>>);
+    static constexpr bool we_care =
+        // (... && (!__dyncast_is_abstract<type_at<FlatIndex, DimI>>::value)) &&
+        (... && __dc_is_properly_derived_from<type_at<FlatIndex, DimI>,
+         typename type_sequence<GivenTypes...>::template at<DimI>>);
     
     template <std::size_t DimIndex, std::size_t FlatIndex>
     using qualified_concrete_type_at =
