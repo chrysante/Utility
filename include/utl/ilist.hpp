@@ -515,26 +515,34 @@ public:
         __swap_impl(rhs, __alloc_traits::propagate_on_container_swap::value);
     }
     
-    void splice(const_iterator cpos, ilist& rhs) {
+    /// Insert content of \p rhs into `this` before \p pos. Behaviour is undefined if `this == &rhs`.
+    void splice(const_iterator pos, ilist& rhs) {
         __utl_assert(this != &rhs);
-        if (rhs.empty()) {
+        splice(pos, rhs.begin(), rhs.end());
+    }
+
+    /// \overload
+    void splice(const_iterator pos, ilist&& rhs) {
+        splice(pos, static_cast<ilist&>(rhs));
+    }
+    
+    /// Insert range `[begin, end)` into `this` before \p pos. Behaviour is undefined if inserted range is part of `this`.
+    void splice(const_iterator pos, iterator begin, const_iterator end) {
+        if (begin == end) {
             return;
         }
-        value_type* const last = const_cast<value_type*>(cpos.to_address());
+        value_type* const last = const_cast<value_type*>(pos.to_address());
         value_type* const first = last->prev();
-        value_type* const rhs_front = &rhs.front();
-        value_type* const rhs_back = &rhs.back();
+        value_type* const rhs_front = begin.to_address();
+        value_type* const rhs_before_front = rhs_front->prev();
+        value_type* const rhs_back = const_cast<value_type*>(end->prev());
         first->__set_next(rhs_front);
         rhs_front->__set_prev(first);
         last->__set_prev(rhs_back);
         rhs_back->__set_next(last);
-        value_type* const rhs_end = rhs.end().to_address();
-        rhs_end->__set_next(rhs_end);
-        rhs_end->__set_prev(rhs_end);
-    }
-    
-    void splice(const_iterator cpos, ilist&& rhs) {
-        splice(cpos, static_cast<ilist&>(rhs));
+        value_type* const rhs_end = const_cast<value_type*>(end.to_address());
+        rhs_before_front->__set_next(rhs_end);
+        rhs_end->__set_prev(rhs_before_front);
     }
     
     // MARK: Internals

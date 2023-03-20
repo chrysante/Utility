@@ -3,7 +3,6 @@
 #include <numeric>
 
 #include <utl/ilist.hpp>
-#include <utl/ranges.hpp>
 
 #include "LifetimeCounter.hpp"
 
@@ -231,7 +230,9 @@ LIST_TEST_CASE("ilist insert count value", "[ilist]") {
     }
     SECTION("end") {
         l.insert(l.end(), insertCount, 1);
-        for (std::size_t index = 0; auto elem: utl::reverse(l)) {
+        std::size_t index = 0;
+        for  (auto itr = l.rbegin(); itr != l.rend(); ++itr) {
+            auto elem = *itr;
             INFO(index);
             CHECK(elem.value == (index < insertCount ? 1 : 0));
             ++index;
@@ -395,6 +396,33 @@ LIST_TEST_CASE("ilist splice - 4", "[ilist][ilist-swap]") {
     CHECK(m.empty());
 }
 
+LIST_TEST_CASE("ilist splice - 5", "[ilist][ilist-swap]") {
+    utl::ilist<TestType, Allocator> l = { 1, 2, 3, 4 }, m;
+    m.splice(m.begin(), std::next(l.begin(), 2), l.end());
+    testEqual(l, { 1, 2 });
+    testEqual(m, { 3, 4 });
+}
+
+LIST_TEST_CASE("ilist splice - 6", "[ilist][ilist-swap]") {
+    utl::ilist<TestType, Allocator> l, m;
+    m.splice(m.begin(), l.begin(), l.end());
+    CHECK(l.empty());
+    CHECK(m.empty());
+}
+
+LIST_TEST_CASE("ilist splice - 7", "[ilist][ilist-swap]") {
+    utl::ilist<TestType, Allocator> l = { 1, 2, 3, 4 }, m = { 1, 2 };
+    m.splice(m.end(), std::next(l.begin(), 2), l.end());
+    testEqual(l, { 1, 2 });
+    testEqual(m, { 1, 2, 3, 4 });
+}
+
+LIST_TEST_CASE("ilist splice - 8", "[ilist][ilist-swap]") {
+    utl::ilist<TestType, Allocator> l = { 1, 2, 3, 4 }, m = { 1, 4 };
+    m.splice(std::next(m.begin()), std::next(l.begin()), std::prev(l.end()));
+    testEqual(l, { 1, 4 });
+    testEqual(m, { 1, 2, 3, 4 });
+}
 
 namespace {
 
