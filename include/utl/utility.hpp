@@ -224,16 +224,10 @@ private:
 };
 
 template <typename... F>
-struct [[deprecated("this sucks")]] visitor: F... {
-    using F::operator()...;
-    constexpr visitor(F... f): F(std::move(f))... {}
-};
-
-template <typename... F>
 struct overload: F... {
     using F::operator()...;
-    template <typename... G>
-    constexpr overload(G&&... g): F(std::forward<G>(g))... {}
+    
+    constexpr overload(F&&... f): F(std::move(f))... {}
 };
 
 template <typename... F>
