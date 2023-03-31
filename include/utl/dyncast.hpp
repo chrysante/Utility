@@ -379,10 +379,14 @@ constexpr R __visit(F&& f, T&&... t) {
         using target_type_raw = __dyncast_enum_to_type<enum_type{ TargetTypeIdx }>;
         using target_type = copy_cvref_t<U, target_type_raw>;
         constexpr bool staticallyCastable = requires { static_cast<target_type>(t); };
-        static_assert(std::is_reference_v<target_type>, "To avoid copies when performing static_cast.");
+        static_assert(std::is_reference_v<target_type>, "To avoid copies when performing static_cast");
         if constexpr (!staticallyCastable) {
             /// If we can't even `static_cast` there is no way this can be invoked.
             __utl_unreachable();
+            using base_type = __dyncast_enum_to_type<enum_type{ 0 }>;
+            static_assert(requires(base_type* p) { static_cast<target_type_raw*>(p); },
+                          "Target type must be in the same class hierarchy as base. "
+                          "This can be triggered by target_type being incomplete");
         }
         else if constexpr (std::is_convertible_v<U&&, target_type> && !std::is_same_v<U&&, target_type>) {
             /// If we can cast implicitly but destination type is not the same, this means we go up the hierarchy.
