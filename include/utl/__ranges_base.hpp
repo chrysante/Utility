@@ -67,6 +67,7 @@ public:
     using pointer           = typename __itr_traits::pointer;
     using reference         = typename __itr_traits::reference;
     using iterator_category = typename __itr_traits::iterator_category;
+    using iterator_concept  = typename __itr_traits::iterator_concept;
     
     __wrap_iterator() = default;
     constexpr __wrap_iterator(Itr itr): __itr(itr) {}
