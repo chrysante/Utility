@@ -586,6 +586,12 @@ struct vector {
     __utl_interface_export constexpr void resize(std::size_t count, no_init_t) {
         __resize_impl(count, [](auto&) {});
     }
+    
+    /// (4)
+    template <typename... Args> requires std::constructible_from<value_type, Args const&...>
+    __utl_interface_export constexpr void resize_emplace(std::size_t count, Args const&... args) {
+        __resize_impl(count, [&](auto& i) { __construct_at(std::addressof(i), args...); });
+    }
 
     /// MARK: swap
     __utl_interface_export constexpr void swap(vector& rhs) noexcept {
