@@ -31,7 +31,7 @@ function basic_workspace (name)
         buildoptions { "/Zc:__cplusplus", "/Zc:preprocessor", "/MP" }
         systemversion ("latest")
     filter "system:macosx"
-        --systemversion ("12.2") -- until i update
+        
     filter {}
     
 
