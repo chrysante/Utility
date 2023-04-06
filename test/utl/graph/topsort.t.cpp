@@ -1,8 +1,9 @@
 #include <catch/catch2.hpp>
 
+#include <ranges>
+
 #include <utl/__graph/topsort.hpp>
 #include <utl/vector.hpp>
-#include <utl/ranges.hpp>
 
 #include "Vertex.hpp"
 
@@ -15,11 +16,11 @@ TEST_CASE("topsort", "[graph]") {
         { 4 },
         { 5 },
     };
-    vertices[0].dependencies = { 1, 2 };
-    vertices[1].dependencies = { 2, 4, 5 };
-    vertices[2].dependencies = { 4 };
-    vertices[3].dependencies = { 2 };
-    vertices[3].dependencies = { 2 };
+    vertices[0].successors = { 1, 2 };
+    vertices[1].successors = { 2, 4, 5 };
+    vertices[2].successors = { 4 };
+    vertices[3].successors = { 2 };
+    vertices[3].successors = { 2 };
     
     //
     // 0 ---> 1---\---> 5
@@ -29,8 +30,9 @@ TEST_CASE("topsort", "[graph]") {
     //       /
     // 3 ---/
     
-    utl::small_vector<std::uint16_t> indices(utl::iota(vertices.size()));
-    utl::topsort(indices.begin(), indices.end(), [&](std::size_t index) { return vertices[index].dependencies; });
+    utl::small_vector<std::uint16_t> indices(std::views::iota(size_t(0), vertices.size()));
+    
+    utl::topsort(indices.begin(), indices.end(), [&](std::size_t index) { return vertices[index].successors; });
     /// For each index \p i all indices \p j coming afterwards in the sorted list must not be downstream of \p i
     for (std::size_t i = 0; i < indices.size(); ++i) {
         for (std::size_t j = i + 1; j < indices.size(); ++j) {
