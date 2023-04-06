@@ -281,21 +281,36 @@ public:
     ilist& operator=(ilist&& rhs) noexcept {
         constexpr bool alloc_propagate = __alloc_traits::propagate_on_container_move_assignment::value;
         if (this == &rhs) { return *this; }
-        if (__alloc_always_eq || __allocator_ == rhs.__allocator_) {
-            if constexpr (alloc_propagate) {
-                __allocator_ = rhs.__allocator_;
-            }
-            __swap_impl(rhs, false);
+        if constexpr (__alloc_always_eq) {
+            __move_assign_fast<alloc_propagate>(rhs);
         }
         else {
-            clear();
-            if constexpr (alloc_propagate) {
-                __allocator_ = rhs.__allocator_;
+            if (__alloc_always_eq || __allocator_ == rhs.__allocator_) {
+                __move_assign_fast<alloc_propagate>(rhs);
             }
-            // Assign element-wise, as we must reallocate because unequal allocators.
-            __assign_element_wise(std::move_iterator(rhs.begin()), std::move_iterator(rhs.end()));
+            else {
+                __move_assign_slow<alloc_propagate>(rhs);
+            }
         }
         return *this;
+    }
+    
+    template <bool AllocProp>
+    void __move_assign_fast(ilist& rhs) {
+        if constexpr (AllocProp) {
+            __allocator_ = rhs.__allocator_;
+        }
+        __swap_impl<false>(rhs);
+    }
+
+    template <bool AllocProp>
+    void __move_assign_slow(ilist& rhs) {
+        clear();
+        if constexpr (AllocProp) {
+            __allocator_ = rhs.__allocator_;
+        }
+        // Assign element-wise, as we must reallocate because unequal allocators.
+        __assign_element_wise(std::move_iterator(rhs.begin()), std::move_iterator(rhs.end()));
     }
     
     // (3)
@@ -512,7 +527,7 @@ public:
     void resize(size_type count, value_type const& value) requires false;
     
     void swap(ilist& rhs) noexcept {
-        __swap_impl(rhs, __alloc_traits::propagate_on_container_swap::value);
+        __swap_impl<__alloc_traits::propagate_on_container_swap::value>(rhs);
     }
     
     /// Insert content of \p rhs into `this` before \p pos. Behaviour is undefined if `this == &rhs`.
@@ -571,21 +586,28 @@ public:
         __assign_element_wise([&]{ return rhs_itr != rhs_end; }, [&]() -> decltype(auto) { return *rhs_itr++; });
     }
     
-    void __swap_impl(ilist& rhs, bool swap_allocs) noexcept {
-        if (swap_allocs || __alloc_always_eq || __allocator_ == rhs.__allocator_) {
-            __fast_swap(rhs, swap_allocs);
+    template <bool SwapAllocs>
+    void __swap_impl(ilist& rhs) noexcept {
+        if constexpr (SwapAllocs || __alloc_always_eq) {
+            __fast_swap<SwapAllocs>(rhs);
         }
         else {
-            __sentinel_type rhs_copy;
-            __move_assign_pointer_swap(rhs_copy, rhs.begin(), rhs.end());
-            rhs.__reset();
-            rhs.__assign_element_wise(begin(), end());
-            __assign_element_wise(iterator(rhs_copy.next()), iterator(static_cast<value_type*>(&rhs_copy)));
+            if (__allocator_ == rhs.__allocator_) {
+                __fast_swap<SwapAllocs>(rhs);
+            }
+            else {
+                __sentinel_type rhs_copy;
+                __move_assign_pointer_swap(rhs_copy, rhs.begin(), rhs.end());
+                rhs.__reset();
+                rhs.__assign_element_wise(begin(), end());
+                __assign_element_wise(iterator(rhs_copy.next()), iterator(static_cast<value_type*>(&rhs_copy)));
+            }
         }
     }
     
-    void __fast_swap(ilist& rhs, bool swap_allocs) {
-        if (swap_allocs) {
+    template <bool SwapAllocs>
+    void __fast_swap(ilist& rhs) {
+        if (SwapAllocs) {
             std::swap(__allocator_, rhs.__allocator_);
         }
         __sentinel_type rhs_copy;
