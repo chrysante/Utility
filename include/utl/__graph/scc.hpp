@@ -1,5 +1,7 @@
-#ifndef UTL_SCC_HPP
-#define UTL_SCC_HPP
+#ifndef UTL_GRAPH_SCC_HPP
+#define UTL_GRAPH_SCC_HPP
+
+#include <iterator>
 
 #include <utl/__base.hpp>
 #include <utl/hashset.hpp>
@@ -25,13 +27,19 @@ namespace utl {
 /// \param   emit_vertex Invocable to call when emitting a vertex into the
 ///          current SCC. Must store vertex into the SCC created by the last call to \p begin_scc
 ///
-template <typename Itr, typename S, typename E>
-void compute_sccs(Itr vertex_begin, S vertex_end, E successors, auto begin_scc, auto emit_vertex);
+template <
+    std::input_iterator Itr,
+    std::sentinel_for<Itr> S,
+    typename Vertex = std::iter_value_t<Itr>,
+    std::invocable<Vertex> E,
+    std::invocable BeginSccFn,
+    std::invocable<Vertex> EmitVertexFn>
+void compute_sccs(Itr vertex_begin, S vertex_end, E successors, BeginSccFn begin_scc, EmitVertexFn emit_vertex);
 
 /// Algorithm from here:
 /// https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
 
-template <typename Itr, typename S, typename E, typename F1, typename F2>
+template <typename Itr, typename S, typename Vertex, typename E, typename F1, typename F2>
 struct __tscca_context {
     struct vertex_data_t {
         uint32_t index   : 31 = 0;
@@ -40,7 +48,7 @@ struct __tscca_context {
         bool on_stack    : 1  = false;
     };
     
-    using vertex_t = std::iter_value_t<Itr>;
+    using vertex_t = Vertex;
     
     __tscca_context(Itr begin, S end, E successors, F1 begin_scc, F2 emit_vertex):
         begin(begin),
@@ -114,10 +122,16 @@ struct __tscca_context {
 
 } // namespace utl
 
-template <typename Itr, typename S, typename E>
-void utl::compute_sccs(Itr vertex_begin, S vertex_end, E successors, auto begin_scc, auto emit_vertex) {
-    __tscca_context ctx(vertex_begin, vertex_end, successors, begin_scc, emit_vertex);
+template <
+    std::input_iterator Itr,
+    std::sentinel_for<Itr> S,
+    typename Vertex,
+    std::invocable<Vertex> E,
+    std::invocable BeginSccFn,
+    std::invocable<Vertex> EmitVertexFn>
+void utl::compute_sccs(Itr vertex_begin, S vertex_end, E successors, BeginSccFn begin_scc, EmitVertexFn emit_vertex) {
+    __tscca_context<Itr, S, Vertex, E, BeginSccFn, EmitVertexFn> ctx(vertex_begin, vertex_end, successors, begin_scc, emit_vertex);
     ctx.compute();
 }
 
-#endif // UTL_SCC_HPP
+#endif // UTL_GRAPH_SCC_HPP

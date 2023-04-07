@@ -16,10 +16,8 @@ struct Set {
     utl::small_vector<T> elems;
 };
 
-} // namespace
-
 template <typename T>
-static bool operator==(Set<T> const& s, auto const& rng) {
+bool operator==(Set<T> const& s, auto const& rng) {
     if (std::size(rng) != s.elems.size()) {
         return false;
     }
@@ -30,11 +28,13 @@ static bool operator==(Set<T> const& s, auto const& rng) {
             }
         }
         return false;
-        endLoop:
+    endLoop:
         continue;
     }
     return true;
 }
+
+} // namespace
 
 static utl::vector<utl::small_vector<uint16_t>> computeSCCs(
     std::span<utl_test::Vertex const> vertices) {

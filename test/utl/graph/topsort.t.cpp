@@ -20,7 +20,6 @@ TEST_CASE("topsort", "[graph]") {
     vertices[1].successors = { 2, 4, 5 };
     vertices[2].successors = { 4 };
     vertices[3].successors = { 2 };
-    vertices[3].successors = { 2 };
     
     //
     // 0 ---> 1---\---> 5

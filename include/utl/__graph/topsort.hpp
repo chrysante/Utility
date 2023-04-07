@@ -1,5 +1,7 @@
-#ifndef UTL_TOPSORT_HPP
-#define UTL_TOPSORT_HPP
+#ifndef UTL_GRAPH_TOPSORT_HPP
+#define UTL_GRAPH_TOPSORT_HPP
+
+#include <iterator>
 
 #include <utl/__base.hpp>
 #include <utl/hashset.hpp>
@@ -20,7 +22,7 @@ namespace utl {
 /// \param   edges Invocable retrieving a range of vertices from a vertex representing its edges.
 ///
 /// \warning Behaviour is undefined if the graph has cycles.
-template <input_iterator Itr, sentinel_for<Itr> S, typename E> requires output_iterator<Itr>
+template <std::input_iterator Itr, std::sentinel_for<Itr> S, typename Vertex = std::iter_value_t<Itr>, typename E> requires std::output_iterator<Itr, Vertex>
 void topsort(Itr begin, S end, E edges);
 
 // Implementation
@@ -54,9 +56,8 @@ std::size_t __fast_dist_or_zero(auto, auto) {
     return 0;
 }
 
-template <input_iterator Itr, sentinel_for<Itr> S, typename E> requires output_iterator<Itr>
+template <std::input_iterator Itr, std::sentinel_for<Itr> S, typename Vertex, typename E> requires std::output_iterator<Itr, Vertex>
 void topsort(Itr begin, S end, E edges) {
-    using Vertex = std::iter_value_t<Itr>;
     utl::small_vector<Vertex> sorted;
     sorted.reserve(__fast_dist_or_zero(begin, end));
     __top_sort_context<Vertex, E> ctx{ sorted, edges };
@@ -66,6 +67,6 @@ void topsort(Itr begin, S end, E edges) {
     }
 }
 
-}
+} // namespace utl
 
-#endif // UTL_TOPSORT_HPP
+#endif // UTL_GRAPH_TOPSORT_HPP
