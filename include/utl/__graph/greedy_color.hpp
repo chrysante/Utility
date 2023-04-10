@@ -30,14 +30,17 @@ std::uint32_t __first_avail(utl::hashset<uint32_t> const& used) {
 /// \param neighbours Invocable returning the neighours a vertex `v` as a range of vertices.
 ///
 /// \param assign Invocable taking a vertex and a color. Can be used to assign the color to the vertex.
+///
+/// \Returns Number of colors used.
 template <
     std::input_iterator Itr,
     std::sentinel_for<Itr> S,
     typename Vertex = std::iter_value_t<Itr>,
     std::invocable<Vertex> Neighbours,
     std::invocable<Vertex, size_t> Assign>
-void greedy_color(Itr begin, S end, Neighbours neighbours, Assign assign) {
+size_t greedy_color(Itr begin, S end, Neighbours neighbours, Assign assign) {
     utl::hashmap<Vertex, uint32_t> colors;
+    std::int32_t max_col = -1;
     for (auto i = begin; i != end; ++i) {
         auto n = *i;
         utl::hashset<std::uint32_t> used;
@@ -48,9 +51,11 @@ void greedy_color(Itr begin, S end, Neighbours neighbours, Assign assign) {
             }
         }
         std::uint32_t col = __first_avail(used);
+        max_col = std::max(max_col, static_cast<std::int32_t>(col));
         colors.insert({ n, col });
         std::invoke(assign, n, col);
     }
+    return static_cast<std::size_t>(max_col + 1);
 }
 
 } // namespace utl
