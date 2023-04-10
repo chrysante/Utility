@@ -8,7 +8,7 @@
 
 namespace {
 
-struct TestType: utl::ilist_node_with_parent<TestType, TestType>, utl_test::LifetimeCounter {
+struct TestType: utl::ilist_node<TestType>, utl_test::LifetimeCounter {
     explicit TestType(): value(0) {}
     TestType(int value): value(value) {}
     
@@ -457,4 +457,15 @@ TEST_CASE("ilist incomplete type", "[ilist]") {
     lPtr = std::construct_at(lPtr);
     L& l = *lPtr;
     CHECK(l.empty());
+}
+
+namespace {
+
+struct Base: public utl::ilist_node<Base> {};
+struct Derived: public Base {};
+
+} // namespace
+
+TEST_CASE("ilist with derived type", "[ilist]") {
+    utl::ilist<Derived> L;
 }

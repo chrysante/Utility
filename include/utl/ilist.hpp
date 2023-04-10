@@ -15,76 +15,68 @@ namespace utl {
 template <typename T, typename Allocator = std::allocator<T>>
 class ilist;
 
-class __ilist_node_base {};
+template <typename>
+class __ilist_node_base2;
 
-template <typename Derived>
-class ilist_node: public __ilist_node_base {
-public:
-    Derived*       prev()       { return static_cast<Derived*      >(__prev); }
-    Derived const* prev() const { return static_cast<Derived const*>(__prev); }
-    Derived*       next()       { return static_cast<Derived*      >(__next); }
-    Derived const* next() const { return static_cast<Derived const*>(__next); }
-    
+template <typename, bool>
+class ilist_node;
+
+struct __ilist_node_base {
 protected:
-    ilist_node(ilist_node* prev = nullptr, ilist_node* next = nullptr):
+    __ilist_node_base(__ilist_node_base* prev = nullptr, __ilist_node_base* next = nullptr):
         __prev(prev), __next(next) {}
     
-    /// Copy operatrions are no-ops, as we don't want to propagate sibling relationship with copying.
-    ilist_node(ilist_node const&): ilist_node() {}
+    /// Copy operations are no-ops, as we don't want to propagate sibling relationship with copying.
+    __ilist_node_base(__ilist_node_base const&): __ilist_node_base() {}
     
-    ilist_node& operator=(ilist_node const&) { return *this; }
+    __ilist_node_base& operator=(__ilist_node_base const&) { return *this; }
     
 private:
     template <typename, typename>
     friend class ilist;
     
+    template <typename>
+    friend class __ilist_node_base2;
+    
+    template <typename, bool>
+    friend class ilist_node;
+    
     /// Instead of copy construction and assignment we provide a special function to be used by ilist to copy relationship information.
-    void __assign(ilist_node const& rhs) {
+    void __assign(__ilist_node_base const& rhs) {
         __prev = rhs.__prev;
         __next = rhs.__next;
     }
-
-    ilist_node*       __weak_prev()       { return __prev; }
-    ilist_node const* __weak_prev() const { return __prev; }
-    ilist_node*       __weak_next()       { return __next; }
-    ilist_node const* __weak_next() const { return __next; }
     
-    void __set_prev(ilist_node* prev) { __prev = prev; }
-    void __set_next(ilist_node* next) { __next = next; }
-    
-    ilist_node* __prev;
-    ilist_node* __next;
+    __ilist_node_base* __prev;
+    __ilist_node_base* __next;
 };
 
-template <typename Derived, typename Parent = Derived>
-struct ilist_node_with_parent: ilist_node<Derived> {
+template <typename Derived>
+class __ilist_node_base2: public __ilist_node_base {
 public:
-    ilist_node_with_parent(Parent* parent): _parent(parent) {}
-
-    ilist_node_with_parent(ilist_node_with_parent* prev = nullptr,
-                           ilist_node_with_parent* next = nullptr,
-                           Parent* parent = nullptr): ilist_node<Derived>(prev, next), _parent(parent) {}
-    
-    
-    Parent*       parent()       { return _parent; }
-    Parent const* parent() const { return _parent; }
-    
-    void set_parent(Parent* parent) { _parent = parent; }
-    
-private:
-    Parent* _parent;
+    Derived*       prev()       { return static_cast<Derived*      >(this->__prev); }
+    Derived const* prev() const { return static_cast<Derived const*>(this->__prev); }
+    Derived*       next()       { return static_cast<Derived*      >(this->__next); }
+    Derived const* next() const { return static_cast<Derived const*>(this->__next); }
 };
 
-// This basically models the std::derived_from concept.
-template <typename T>
-struct __is_ilist_node:
-    __all_t<std::is_base_of<__ilist_node_base, T>,
-            std::is_convertible<T, __ilist_node_base>>
-{};
+template <typename Derived, bool AllowSetSiblings = false>
+class ilist_node /* AllowSetSiblings = false */: public __ilist_node_base2<Derived> {};
+
+template <typename Derived>
+class ilist_node<Derived, /* AllowSetSiblings = */ true>: public __ilist_node_base2<Derived> {
+public:
+    void set_prev(Derived* next) { return this->__next = next; }
+    void set_next(Derived* prev) { return this->__prev = prev; }
+};
 
 template <typename T, typename Allocator>
 class ilist {
 public:
+    using __alloc_traits = std::allocator_traits<Allocator>;
+    using __sentinel_type = __ilist_node_base;
+    static constexpr bool __alloc_always_eq = __alloc_traits::is_always_equal::value;
+    
     template <typename N>
     struct __iterator_impl {
     private:
@@ -98,7 +90,7 @@ public:
             return __iterator_impl<MutN>(const_cast<MutN*>(__node));
         }
 
-        explicit __iterator_impl(copy_cv_t<N, ilist_node<std::remove_const_t<N>>>* node):
+        explicit __iterator_impl(copy_cv_t<N, __sentinel_type>* node):
             __node(static_cast<N*>(node)) {}
         
     public:
@@ -126,7 +118,7 @@ public:
         pointer operator->() const { return to_address(); }
         
         __iterator_impl& operator++() {
-            __node = __node->next();
+            __node = static_cast<pointer>(__node->__next);
             return *this;
         }
         
@@ -137,7 +129,7 @@ public:
         }
         
         __iterator_impl& operator--() {
-            __node = __node->prev();
+            __node = static_cast<pointer>(__node->prev());
             return *this;
         }
         
@@ -168,10 +160,6 @@ public:
     using const_iterator = __iterator_impl<value_type const>;
     using reverse_iterator = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
-    
-    using __alloc_traits = std::allocator_traits<allocator_type>;
-    using __sentinel_type = ilist_node<value_type>;
-    static constexpr bool __alloc_always_eq = __alloc_traits::is_always_equal::value;
     
     // MARK: Constructors
     
@@ -351,8 +339,8 @@ public:
     reference back() { return const_cast<reference>(static_cast<ilist const*>(this)->back()); }
     const_reference back() const { __utl_expect(!empty()); return *--end(); }
 
-    iterator begin() { return iterator(__sentinel()->next()); }
-    const_iterator begin() const { return const_iterator(__sentinel()->next()); }
+    iterator begin() { return iterator(__sentinel()->__next); }
+    const_iterator begin() const { return const_iterator(__sentinel()->__next); }
     const_iterator cbegin() const { return begin(); }
     iterator end() { return iterator(__sentinel()); }
     const_iterator end() const { return const_iterator(__sentinel()); }
@@ -365,8 +353,7 @@ public:
     const_reverse_iterator crend() const { return rend(); }
     
     [[nodiscard]] bool empty() const {
-        /// Avoid using iterators to allow use with incomplete `value_type`
-        return __sentinel() == __sentinel()->__weak_prev();
+        return __sentinel() == __sentinel()->__prev;
     }
     
     // MARK: Modifiers
@@ -423,17 +410,17 @@ public:
     
     std::pair<iterator, value_type*> __extract_impl(const_iterator cpos) {
         iterator pos(cpos);
-        std::prev(pos)->__set_next(std::next(pos).to_address());
+        std::prev(pos)->__next = std::next(pos).to_address();
         auto next = std::next(pos);
-        next->__set_prev(std::prev(pos).to_address());
+        next->__prev = std::prev(pos).to_address();
         return { next, pos.to_address() };
     }
     
     /// Remove an element from the list and take ownership of it.
     __utl_nodiscard value_type* extract(const_iterator cpos) {
         value_type* const result = __extract_impl(cpos).second;
-        result->__set_prev(nullptr);
-        result->__set_next(nullptr);
+        result->__prev = nullptr;
+        result->__next = nullptr;
         return result;
     }
     
@@ -463,8 +450,8 @@ public:
             iterator current = begin++;
             __destroy_and_deallocate(current.operator->());
         }
-        prev->__set_next(last.operator->());
-        last->__set_prev(prev.operator->());
+        prev->__next = last.operator->();
+        last->__prev = prev.operator->();
         return last;
     }
     
@@ -551,13 +538,13 @@ public:
         value_type* const rhs_front = begin.to_address();
         value_type* const rhs_before_front = rhs_front->prev();
         value_type* const rhs_back = const_cast<value_type*>(end->prev());
-        first->__set_next(rhs_front);
-        rhs_front->__set_prev(first);
-        last->__set_prev(rhs_back);
-        rhs_back->__set_next(last);
+        first->__next = rhs_front;
+        rhs_front->__prev = first;
+        last->__prev = rhs_back;
+        rhs_back->__next = last;
         value_type* const rhs_end = const_cast<value_type*>(end.to_address());
-        rhs_before_front->__set_next(rhs_end);
-        rhs_end->__set_prev(rhs_before_front);
+        rhs_before_front->__next = rhs_end;
+        rhs_end->__prev = rhs_before_front;
     }
     
     // MARK: Internals
@@ -600,7 +587,7 @@ public:
                 __move_assign_pointer_swap(rhs_copy, rhs.begin(), rhs.end());
                 rhs.__reset();
                 rhs.__assign_element_wise(begin(), end());
-                __assign_element_wise(iterator(rhs_copy.next()), iterator(static_cast<value_type*>(&rhs_copy)));
+                __assign_element_wise(iterator(rhs_copy.__next), iterator(static_cast<value_type*>(&rhs_copy)));
             }
         }
     }
@@ -613,7 +600,7 @@ public:
         __sentinel_type rhs_copy;
         __move_assign_pointer_swap(rhs_copy, rhs.begin(), rhs.end());
         __move_assign_pointer_swap(rhs.__sentinel_, this->begin(), this->end());
-        __move_assign_pointer_swap(this->__sentinel_, iterator(rhs_copy.next()), iterator(static_cast<value_type*>(&rhs_copy)));
+        __move_assign_pointer_swap(this->__sentinel_, iterator(rhs_copy.__next), iterator(static_cast<value_type*>(&rhs_copy)));
     }
     
     static void __move_assign_pointer_swap(__sentinel_type& sent, iterator begin, iterator end) {
@@ -622,10 +609,10 @@ public:
         }
         else {
             --end;
-            sent.__set_next(begin.operator->());
-            sent.__set_prev(end.operator->());
-            begin->__set_prev(&sent);
-            end->__set_next(&sent);
+            sent.__next = begin.operator->();
+            sent.__prev = end.operator->();
+            begin->__prev = &sent;
+            end->__next = &sent;
         }
         __assert_invariants(sent);
     }
@@ -649,13 +636,13 @@ public:
         iterator prev = std::prev(pos);
         while (insert_while()) {
             value_type* new_node = get_nodes();
-            prev->__set_next(new_node);
-            new_node->__set_prev(prev.operator->());
+            prev->__next = new_node;
+            new_node->__prev = prev.operator->();
             ++prev;
         }
-        prev->__set_next(pos.operator->());
+        prev->__next = pos.operator->();
         iterator result = std::prev(pos) == prev ? pos : std::prev(pos);
-        pos->__set_prev(prev.operator->());
+        pos->__prev = prev.operator->();
         return result;
     }
 
@@ -695,7 +682,7 @@ public:
     }
     
     static void __assert_invariants(__sentinel_type const& s) {
-        const_iterator i = const_iterator(s.next());
+        const_iterator i = const_iterator(s.__next);
         __utl_assert(i->prev() == &s);
         for (std::size_t index = 0; i != const_iterator(&s); ++index) {
             const_iterator next = std::next(i);
