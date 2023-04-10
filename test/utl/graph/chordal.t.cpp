@@ -7,8 +7,6 @@
 
 #include "Vertex.hpp"
 
-#include <iostream>
-
 TEST_CASE("Chordal graph - 1", "[graph]") {
     utl::vector<utl_test::Vertex> vertices = {
         { 0 }, { 1 }, { 2 }, { 3 }, { 4 },
