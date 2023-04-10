@@ -3,6 +3,7 @@
 
 #include <utl/__graph/chordal.hpp>
 #include <utl/__graph/find_cycle.hpp>
+#include <utl/__graph/greedy_color.hpp>
 #include <utl/__graph/scc.hpp>
 #include <utl/__graph/topsort.hpp>
 
