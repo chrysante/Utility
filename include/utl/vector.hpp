@@ -7,6 +7,7 @@
 #include <iosfwd>
 #include <memory>
 #include <stdexcept>
+#include <tuple>
 #include <type_traits>
 
 #include "__base.hpp"
@@ -608,6 +609,32 @@ struct vector {
         }
     }
 
+    /// MARK: acquire, release
+    
+    /// _Acquires_ the buffer \p data i.e. takes ownership of the buffer.
+    /// Behaviour is undefined if \p data cannot be destroyed and deallocated with \p allocator
+    void acquire(pointer data, size_type size, size_type capacity, allocator_type const& allocator = {}) {
+        __destroy_and_deallocate();
+        __set_data(data, size, capacity, false);
+        __alloc_ = allocator;
+    }
+    
+    /// _Releases_ the internal buffer. The caller becomes responsible for destruction of live objects and deallocated of memory.
+    /// If this vector uses a local buffer, elements will be moved into another buffer allocated by this vectors allocator and that buffer wil be returned.
+    /// \Returns A `std::tuple<pointer, size_type, size_type>` consisting of a data pointer, count of constructed objects and size of the buffer in terms of objects of type `value_type`.
+    std::tuple<pointer, size_type, size_type> release() {
+        if (!__uses_inline_buffer()) {
+            std::tuple<pointer, size_type, size_type> result = { __begin(), __size(), __cap() };
+            __set_data(__storage_begin(), 0, 0, false);
+            return result;
+        }
+        pointer buffer = __allocate(__size());
+        __relocate(__begin(), __end(), buffer);
+        size_type const old_size = __size();
+        __set_size(0);
+        return { buffer, old_size, old_size };
+    }
+    
     /// MARK: - Private Interface
     template <typename, std::size_t, typename>
     friend struct small_vector;
@@ -809,6 +836,7 @@ struct vector {
         }
     }
 
+    /// Relocation is move followed by destruction. Thus the data in a buffer that has been relocated is garbage.
     constexpr void __relocate(value_type* begin, value_type const* end, value_type* out) {
         if constexpr (is_trivially_relocatable<value_type>::value) {
             std::size_t const size = utl::distance(begin, end) * sizeof(value_type);
