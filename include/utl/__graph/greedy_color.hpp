@@ -12,7 +12,7 @@ _UTL_SYSTEM_HEADER_
 
 namespace utl {
 
-std::uint32_t __first_avail(utl::hashset<uint32_t> const& used) {
+inline std::uint32_t __first_avail(utl::hashset<uint32_t> const& used) {
     for (std::uint32_t i = 0; ; ++i) {
         if (!used.contains(i)) {
             return i;
