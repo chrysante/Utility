@@ -4,7 +4,6 @@
 
 #include "utl/structure_of_arrays.hpp"
 #include "utl/utility.hpp"
-#include "utl/ranges.hpp"
 
 #include <algorithm>
 #include <numeric>
@@ -154,10 +153,9 @@ TEST_CASE("structure_of_arrays::iterator") {
 		CHECK(s.end() - size == s.begin());
 	}
 	SECTION("Reverse Arithmetic") {
-		auto r = utl::reverse(s);
-		CHECK(r.end() - r.begin() == size);
-		CHECK(r.begin() + size == r.end());
-		CHECK(r.end() - size == r.begin());
+		CHECK(s.rend() - s.rbegin() == size);
+		CHECK(s.rbegin() + size == s.rend());
+		CHECK(s.rend() - size == s.rbegin());
 	}
 	SECTION("Increment") {
 		auto itr = s.begin();

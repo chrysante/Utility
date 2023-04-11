@@ -1,6 +1,5 @@
 #include <catch/catch2.hpp>
 
-#include <utl/ranges.hpp>
 #include <utl/vector.hpp>
 
 #include "VectorTest.hpp"
@@ -112,8 +111,8 @@ VECTOR_TEST_CASE(X, TRX, "vector-allocator-iterator-converting-constructor", "[v
 VECTOR_TEST_CASE(X, TRX, "vector-allocator-iterator-converting-constructor/2", "[vector]") {
     X::reset();
     auto const count = 10;
-    utl::iota io(count);
-    Vector v(io.begin(), io.end());
+    Vector v(count);
+    std::iota(v.begin(), v.end(), 0);
     REQUIRE(v.size() == count);
     CHECK(v.capacity() >= count);
     CHECK(X::liveObjects() == count);
@@ -131,7 +130,7 @@ VECTOR_PRODUCT_TEST_CASE(X, TRX, "vector-allocator-copy-ctor", "[vector]") {
     }
     auto const tag2 = GENERATE(Tag(1), Tag(2));
     VectorB w(v, tag2);
-    for (std::size_t i = 0; i < count; ++i) {
+    for (int i = 0; i < count; ++i) {
         v[i].alloc.tag = tag2;
         v[i].value     = i + 1;
     }
@@ -198,7 +197,7 @@ VECTOR_PRODUCT_TEST_CASE(X, TRX, "vector-allocator-move-assign", "[vector]") {
     X::reset();
     auto const count = GENERATE(0, 2, 10);
     VectorA v(Tag(1));
-    for (auto i : utl::iota(count)) {
+    for (std::size_t i = 0; i < count; ++i) {
         v.emplace_back(i);
     }
     auto const wCount = GENERATE(0, 2, 10);

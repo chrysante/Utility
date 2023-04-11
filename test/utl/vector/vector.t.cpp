@@ -1,6 +1,5 @@
 #include <catch/catch2.hpp>
 
-#include <utl/ranges.hpp>
 #include <utl/vector.hpp>
 
 #include "VectorTest.hpp"
@@ -158,8 +157,8 @@ VECTOR_PRODUCT_TEST_CASE(MoveOnly, "vector-move-only", "[vector]") {
 
 VECTOR_TEST_CASE(X, TRX, "vector-iterate", "[vector]") {
     Vector v = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19 };
-    for (auto [i, x] : utl::enumerate(v)) {
-        CHECK(x == X(i));
+    for (std::size_t i = 0; auto& x : v) {
+        CHECK(x == X(i++));
     }
     int i = 19;
     for (auto itr = v.rbegin(); itr != v.rend(); ++itr, --i) {
