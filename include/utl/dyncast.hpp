@@ -155,6 +155,11 @@ template <typename To, typename From>
 requires __dyn_castable<To, From*> && std::is_pointer_v<To>
 constexpr To dyncast(From* from);
 
+/// `dyncast` with `nullptr` check
+template <typename To, typename From>
+requires __dyn_castable<To, From*> && std::is_pointer_v<To>
+constexpr To dyncast_or_null(From* from);
+
 /// Downward cast of \p from in its class hierarchy.
 /// \param from Reference to an object of type `From`.
 /// \returns A Reference to the object of derived type `To`.
@@ -170,6 +175,11 @@ constexpr To dyncast(From& from);
 template <typename To, typename From>
 requires __dyn_castable<To, From*> && std::is_pointer_v<To>
 constexpr To cast(From* from);
+
+/// `cast` with `nullptr` check
+template <typename To, typename From>
+requires __dyn_castable<To, From*> && std::is_pointer_v<To>
+constexpr To cast_or_null(From* from);
 
 /// Downward cast of \p from in its class hierarchy.
 /// \param from Reference to an object of type `From`.
@@ -484,6 +494,13 @@ constexpr To utl::dyncast(From& from) {
     throw std::bad_cast();
 }
 
+/// `dyncast` with `nullptr` check
+template <typename To, typename From>
+requires utl::__dyn_castable<To, From*> && std::is_pointer_v<To>
+constexpr To utl::dyncast_or_null(From* from) {
+    return from ? dyncast<To>(from) : nullptr;
+}
+
 template <typename To, typename From>
 requires utl::__dyn_castable<To, From*> && std::is_pointer_v<To>
 constexpr To utl::cast(From* from) {
@@ -496,4 +513,11 @@ requires utl::__dyn_castable<To, From&> && std::is_lvalue_reference_v<To>
 constexpr To utl::cast(From& from) {
     using ToNoRef = std::remove_reference_t<To>;
     return *cast<ToNoRef*>(&from);
+}
+
+/// `cast` with `nullptr` check
+template <typename To, typename From>
+requires utl::__dyn_castable<To, From*> && std::is_pointer_v<To>
+constexpr To utl::cast_or_null(From* from) {
+    return from ? cast<To>(from) : nullptr;
 }
