@@ -2,6 +2,7 @@
 
 #include <concepts>
 #include <iosfwd>
+#include <functional>
 
 #include "__base.hpp"
 
@@ -28,6 +29,15 @@ struct streammanip {
     }
     
     F __f;
+};
+
+template <typename... Args>
+struct vstreammanip: streammanip<std::function<void(std::ostream&, Args...)>> {
+    using __base = streammanip<std::function<void(std::ostream&, Args...)>>;
+    using __base::__base;
+    
+    template <typename F>
+    vstreammanip(F&& f): __base(std::forward<F>(f)) {}
 };
 
 } // namespace utl
