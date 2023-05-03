@@ -13,7 +13,7 @@ _UTL_SYSTEM_HEADER_
 namespace utl {
 
 template <std::unsigned_integral T>
-constexpr T __utl_hash_seed = static_cast<T>(0x9e3779b97f4a7c15);
+inline constexpr T __utl_hash_seed = static_cast<T>(0x9e3779b97f4a7c15);
 
 template <typename T>
 _UTL_DISABLE_UBSAN_INTEGER void __do_hash_combine(std::size_t& seed, T const& v) {
