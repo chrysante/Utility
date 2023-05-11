@@ -462,7 +462,7 @@ struct __strip_signature<R (C::*)(Args...) const volatile& noexcept> {
 template <typename>
 struct __func_traits_impl;
 
-template <typename F, typename Sig = typename __strip_signature<decltype(&F::operator())>::type>
+template <typename F, typename Sig = typename __strip_signature<decltype(&std::remove_cvref_t<F>::operator())>::type>
 struct function_traits: __func_traits_impl<Sig> {
     using __mtl_base = __func_traits_impl<Sig>;
     using __mtl_base::argument;
