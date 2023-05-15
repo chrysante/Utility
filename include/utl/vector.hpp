@@ -392,7 +392,7 @@ struct vector {
         return const_reverse_iterator(__begin());
     }
     __utl_nodiscard __utl_interface_export __utl_always_inline constexpr const_reverse_iterator crend() const noexcept {
-        return const_reverse_Iterator(__begin());
+        return const_reverse_iterator(__begin());
     }
 
     /// MARK: empty
@@ -452,7 +452,7 @@ struct vector {
 
     /// (2a)
     __utl_interface_export constexpr iterator insert(std::size_t index, value_type&& value) {
-        return __insert_impl(index, 1, [&value]() -> value_type&& { return value; });
+        return __insert_impl(index, 1, [&value]() -> value_type&& { return std::move(value); });
     }
 
     /// (3)
@@ -910,8 +910,8 @@ struct vector {
     struct __data_t {
         static_assert(std::is_same_v<value_type*, pointer>);
         pointer_int_pair<value_type*, bool, 1> begin_inline;
-        std::uint32_t size; /// These should actually be of type `size_type` however lldb debugger then can't read them.
-        std::uint32_t cap;
+        size_type size; /// These should actually be of type `size_type` however lldb debugger then can't read them.
+        size_type cap;
     };
 
     constexpr __data_t __get_data() const { return __data_; }
