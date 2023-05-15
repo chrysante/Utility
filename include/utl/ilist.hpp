@@ -66,8 +66,8 @@ class ilist_node /* AllowSetSiblings = false */: public __ilist_node_base2<Deriv
 template <typename Derived>
 class ilist_node<Derived, /* AllowSetSiblings = */ true>: public __ilist_node_base2<Derived> {
 public:
-    void set_prev(Derived* next) { return this->__next = next; }
-    void set_next(Derived* prev) { return this->__prev = prev; }
+    void set_prev(Derived* next) { this->__next = next; }
+    void set_next(Derived* prev) { this->__prev = prev; }
 };
 
 template <typename T, typename Allocator>
