@@ -575,7 +575,7 @@ public:
     
     template <bool SwapAllocs>
     void __swap_impl(ilist& rhs) noexcept {
-        if constexpr (SwapAllocs || __alloc_always_eq) {
+        if constexpr (SwapAllocs || __alloc_always_eq) {
             __fast_swap<SwapAllocs>(rhs);
         }
         else {

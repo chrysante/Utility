@@ -1,6 +1,8 @@
 #include <catch/catch2.hpp>
 
-#include <ranges>
+#include <numeric>
+#include<ranges>
+
 
 #include <utl/__graph/find_cycle.hpp>
 #include <utl/vector.hpp>
@@ -9,17 +11,20 @@
 
 TEST_CASE("find_cycle", "[graph]") {
     utl::vector<utl_test::Vertex> vertices = {
-        { 0 },
-        { 1 },
-        { 2 },
-        { 3 },
-        { 4 },
+        utl_test::Vertex{ 0 },
+        utl_test::Vertex{ 1 },
+        utl_test::Vertex{ 2 },
+        utl_test::Vertex{ 3 },
+        utl_test::Vertex{ 4 },
     };
     vertices[0].successors = { 1 };
     vertices[1].successors = { 2 };
     vertices[2].successors = { 0, 3 };
     vertices[3].successors = { 4 };
     vertices[4].successors = { 2 };
+    
+    
+
     
     //
     //   /-> 1 -\
@@ -32,7 +37,10 @@ TEST_CASE("find_cycle", "[graph]") {
         return std::find(std::begin(range), std::end(range), value) != std::end(range);
     };
     
-    utl::small_vector<std::uint16_t> indices(std::views::iota(size_t(0), vertices.size()));
+    utl::small_vector<std::uint16_t> indices(vertices.size());
+    for (size_t index = 0; auto& i : indices) {
+        i = static_cast<std::uint16_t>(index++);
+    }
     
     auto edgeFn = [&](std::size_t index) -> auto const& { return vertices[index].successors; };
     

@@ -29,7 +29,10 @@ TEST_CASE("topsort", "[graph]") {
     //       /
     // 3 ---/
     
-    utl::small_vector<std::uint16_t> indices(std::views::iota(size_t(0), vertices.size()));
+    utl::small_vector<std::uint16_t> indices(vertices.size());
+    for (size_t index = 0; auto& i : indices) {
+        i = static_cast<std::uint16_t>(index++);
+    }
     
     utl::topsort(indices.begin(), indices.end(), [&](std::size_t index) { return vertices[index].successors; });
     /// For each index \p i all indices \p j coming afterwards in the sorted list must not be downstream of \p i

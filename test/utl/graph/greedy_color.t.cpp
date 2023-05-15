@@ -26,7 +26,10 @@ TEST_CASE("Greedy color - 1", "[graph]") {
     //  |    \|/
     //  3 --- 4
     
-    utl::small_vector<std::uint16_t> indices(std::views::iota(size_t(0), vertices.size()));
+    utl::small_vector<std::uint16_t> indices(vertices.size());
+    for (size_t index = 0; auto& i : indices) {
+        i = static_cast<std::uint16_t>(index++);
+    }
     auto neighbours = [&](size_t index) -> auto& { return vertices[index].successors; };
     utl::small_vector<std::uint16_t> lexOrdering;
     lexOrdering.reserve(vertices.size());

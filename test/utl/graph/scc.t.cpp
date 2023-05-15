@@ -38,8 +38,10 @@ bool operator==(Set<T> const& s, auto const& rng) {
 
 static utl::vector<utl::small_vector<uint16_t>> computeSCCs(
     std::span<utl_test::Vertex const> vertices) {
-    utl::small_vector<std::uint16_t> indices(std::views::iota(size_t(0),
-                                                              vertices.size()));
+    utl::small_vector<std::uint16_t> indices(vertices.size());
+    for (size_t index = 0; auto& i : indices) {
+        i = static_cast<std::uint16_t>(index++);
+    }
     utl::vector<utl::small_vector<uint16_t>> sccs;
     utl::compute_sccs(indices.begin(),
                       indices.end(),

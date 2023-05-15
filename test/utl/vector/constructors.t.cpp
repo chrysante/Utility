@@ -1,5 +1,8 @@
 #include <catch/catch2.hpp>
 
+#include <ranges>
+#include <numeric>
+
 #include <utl/vector.hpp>
 
 #include "VectorTest.hpp"
