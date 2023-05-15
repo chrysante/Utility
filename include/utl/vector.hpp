@@ -288,7 +288,7 @@ struct vector {
     /// MARK: assign
     /// (1)
     constexpr void assign(std::size_t count, T const& value) {
-        __assign_impl(count, [&count]() -> decltype(auto) { return count; });
+        __assign_impl(count, [&value]() -> decltype(auto) { return value; });
     }
 
     /// (2)
