@@ -63,6 +63,10 @@ _UTL_FUNCTION_OBJECT_DEF(
     bitwise_not,
     (auto const& x) const { return ~x; });
 
+_UTL_FUNCTION_OBJECT_DEF(
+    negate,
+    (auto const& x) const { return -x; });
+
 _UTL_BIN_FUNCTION_OBJECT_DEF(multiplies, multiply, *, true);
 _UTL_BIN_FUNCTION_OBJECT_DEF(divides, divide, /, false);
 _UTL_BIN_FUNCTION_OBJECT_DEF(modulo, modulo, %, false);
