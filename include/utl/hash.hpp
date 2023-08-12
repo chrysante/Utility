@@ -16,7 +16,7 @@ template <std::unsigned_integral T>
 inline constexpr T __utl_hash_seed = static_cast<T>(0x9e3779b97f4a7c15);
 
 template <typename T>
-_UTL_DISABLE_UBSAN_INTEGER void __do_hash_combine(std::size_t& seed, T const& v) {
+_UTL_DISABLE_UBSAN_INTEGER void hash_combine_seed(std::size_t& seed, T const& v) {
     seed ^= std::hash<T>{}(v) + __utl_hash_seed<std::size_t> + (seed << 6) + (seed >> 2);
 }
 
@@ -26,7 +26,7 @@ concept __utl_hashable = std::is_default_constructible_v<std::hash<Key>>;
 template <__utl_hashable... Keys>
 std::size_t hash_combine(Keys const&... keys) {
     size_t seed = 0;
-    (__do_hash_combine(seed, keys), ...);
+    (hash_combine_seed(seed, keys), ...);
     return seed;
 }
 
@@ -34,7 +34,7 @@ template <typename I, typename S>
 std::size_t hash_combine_range(I begin, S end) {
     size_t seed = __utl_hash_seed<std::size_t>;
     for (; begin != end; ++begin) {
-        __do_hash_combine(seed, *begin);
+        hash_combine_seed(seed, *begin);
     }
     return seed;
 }
