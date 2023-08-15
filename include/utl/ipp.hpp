@@ -102,7 +102,7 @@ constexpr auto get(ipp<T*, Signed> p) {
         return p.integer();
     }
     else {
-        static_assert(I == 2);
+        static_assert(I == 1);
         return p.pointer();
     }
 }
@@ -154,7 +154,7 @@ constexpr auto get(epp<E, P> p) {
         return p.enum_value();
     }
     else {
-        static_assert(I == 2);
+        static_assert(I == 1);
         return p.pointer();
     }
 }

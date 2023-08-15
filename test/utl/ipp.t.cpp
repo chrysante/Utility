@@ -97,4 +97,8 @@ TEST_CASE("epp") {
     p.set_enum(E::One);
     CHECK(p.enum_value() == E::One);
     CHECK(p.pointer() == &x);
+    auto [e, q] = p;
+    CHECK(e == E::One);
+    CHECK(q == &x);
 }
+
