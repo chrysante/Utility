@@ -10,6 +10,23 @@ _UTL_SYSTEM_HEADER_
 
 namespace utl {
 
+template <typename T>
+struct __strmanip_objwrapper {
+    T obj;
+};
+
+template <typename T>
+struct __strmanip_objwrapper<T&> {
+    T& obj;
+};
+
+template <typename T>
+__strmanip_objwrapper(T&&) -> __strmanip_objwrapper<T>;
+
+template <typename T>
+__strmanip_objwrapper(T&) -> __strmanip_objwrapper<T&>;
+
+
 template <typename F>
 struct streammanip {
     constexpr streammanip() requires std::is_default_constructible_v<F> = default;
@@ -18,7 +35,13 @@ struct streammanip {
 
     template <typename... Args>
     constexpr auto operator()(Args&&... args) const {
-        return utl::streammanip([=, f = __f](std::ostream& ostream) { std::invoke(f, ostream, args...); });
+        return utl::streammanip(
+            [args = std::tuple{ __strmanip_objwrapper{ std::forward<Args>(args) }... },
+             f = __f](std::ostream& ostream) {
+            std::apply(
+                [&](auto&... args) { std::invoke(f, ostream, args.obj...); },
+                args);
+        });
     }
 
     template <typename CharT, typename Traits>
