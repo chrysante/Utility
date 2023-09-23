@@ -34,7 +34,10 @@ struct streammanip {
     constexpr streammanip(F&& f): __f(std::move(f)) {}
 
     template <typename... Args>
-    constexpr auto operator()(Args&&... args) const {
+    constexpr auto operator()(Args&&... args) const
+    requires requires(F& f, std::ostream& ostream) {
+        std::invoke(f, ostream, args...);
+    } {
         return utl::streammanip(
             [args = std::tuple{ __strmanip_objwrapper{ std::forward<Args>(args) }... },
              f = __f](std::ostream& ostream) {
