@@ -138,6 +138,8 @@ template <typename T0, typename T1, typename T2, typename T3, typename T4, typen
 requires __dc_dynamic<T0> && __dc_dynamic<T1> && __dc_dynamic<T2> && __dc_dynamic<T3> && __dc_dynamic<T4> && __dc_dynamic<T5>
 decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, T5&& t5, F&& fn);
 
+/// These functions are not declared here (only in comment) because they are implemented as function objects
+
 /// Check if \p from 's dymamic type is `To` or derived from `To`.
 /// ```
 /// template <typename To, typename From>
@@ -479,141 +481,39 @@ decltype(auto) utl::visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, T5&& t5, 
 
 namespace utl {
 
-/// We have to disable the global function object implementations for the `isa`,
-/// `cast` and `dyncast` operators for now, because they cause issues where
-/// `std::is_convertible` is instantiated prematurely (before the classes
-/// involved are defined) and thus the type trait always returns false.
-#define UTL_DYNCAST_USE_GLOBAL_FUNCTION_OBJECTS 0
+namespace __dyncast_operators {
 
-#if UTL_DYNCAST_USE_GLOBAL_FUNCTION_OBJECTS
+template <typename To, typename From>
+bool isa(From* from) {
+    using enum_type   = decltype(__dyncast_type_to_enum<std::remove_const_t<From>>);
+    using to_stripped = std::remove_const_t<std::remove_pointer_t<To>>;
+    if (!from) {
+        return false;
+    }
+    return __dyncast_traits_impl<enum_type>::template is<__dyncast_type_to_enum<to_stripped>>(*from);
+}
+
+template <typename To, typename From>
+bool isa(From& from) {
+    return isa<To>(&from);
+}
 
 template <typename To>
-struct __isa_fn {
+struct isa_fn {
     template <typename From>
     requires utl::__dyn_checkable<To, From>
     constexpr bool operator()(From* from) const {
-        using enum_type   = decltype(__dyncast_type_to_enum<std::remove_const_t<From>>);
-        using to_stripped = std::remove_const_t<std::remove_pointer_t<To>>;
-        return __dyncast_traits_impl<enum_type>::template is<__dyncast_type_to_enum<to_stripped>>(*from);
+        return __dyncast_operators::isa<To>(from);
     }
 
     template <typename From>
     requires utl::__dyn_checkable<To, From>
     constexpr bool operator()(From& from) const {
-        return __isa_fn<To>{}(&from);
+        return __dyncast_operators::isa<To>(from);
     }
 };
-
-template <typename To>
-inline constexpr __isa_fn<To> isa{};
-
-template <typename To>
-struct __isa_or_null_fn {
-    template <typename From>
-    requires utl::__dyn_checkable<To, From>
-    constexpr bool operator()(From* from) const {
-        return from ? isa<To>(from) : nullptr;
-    }
-};
-
-template <typename To>
-inline constexpr __isa_or_null_fn<To> isa_or_null{};
-
-template <typename To>
-struct __dyncast_fn {
-    template <typename From>
-    requires utl::__dyn_castable<To, From*> && std::is_pointer_v<To>
-    constexpr To operator()(From* from) const {
-        if (isa<__decay_all<To>>(from)) {
-            return static_cast<To>(from);
-        }
-        return nullptr;
-    }
-    
-    template <typename From>
-    requires utl::__dyn_castable<To, From&> && std::is_lvalue_reference_v<To>
-    constexpr To operator()(From& from) const {
-        using ToNoRef = std::remove_reference_t<To>;
-        if (auto* result = __dyncast_fn<ToNoRef*>{}(&from)) {
-            return *result;
-        }
-        throw std::bad_cast();
-    }
-};
-
-template <typename To>
-inline constexpr __dyncast_fn<To> dyncast{};
-
-template <typename To>
-struct __dyncast_or_null_fn {
-    template <typename From>
-    requires utl::__dyn_castable<To, From*> && std::is_pointer_v<To>
-    constexpr To operator()(From* from) const {
-        return from ? dyncast<To>(from) : nullptr;
-    }
-};
-
-/// `dyncast` with `nullptr` check
-template <typename To>
-inline constexpr __dyncast_or_null_fn<To> dyncast_or_null{};
-
-template <typename To>
-struct __cast_fn {
-    template <typename From>
-    requires utl::__dyn_castable<To, From*> && std::is_pointer_v<To>
-    constexpr To operator()(From* from) const {
-        __utl_assert(dyncast<To>(from) != nullptr, "Cast failed.");
-        return static_cast<To>(from);
-    }
-
-    template <typename From>
-    requires utl::__dyn_castable<To, From&> && std::is_lvalue_reference_v<To>
-    constexpr To operator()(From& from) const {
-        using ToNoRef = std::remove_reference_t<To>;
-        return *__cast_fn<ToNoRef*>{}(&from);
-    }
-};
-
-template <typename To>
-inline constexpr __cast_fn<To> cast{};
-
-template <typename To>
-struct __cast_or_null_fn {
-    template <typename From>
-    requires utl::__dyn_castable<To, From*> && std::is_pointer_v<To>
-    constexpr To operator()(From* from) const {
-        return from ? cast<To>(from) : nullptr;
-    }
-};
-
-/// `dyncast` with `nullptr` check
-template <typename To>
-inline constexpr __cast_or_null_fn<To> cast_or_null{};
-
-#else // UTL_DYNCAST_USE_GLOBAL_FUNCTION_OBJECTS
 
 template <typename To, typename From>
-requires utl::__dyn_checkable<To, From> bool
-isa(From* from) {
-    using enum_type   = decltype(__dyncast_type_to_enum<std::remove_const_t<From>>);
-    using to_stripped = std::remove_const_t<std::remove_pointer_t<To>>;
-    return __dyncast_traits_impl<enum_type>::template is<__dyncast_type_to_enum<to_stripped>>(*from);
-}
-
-template <typename To, typename From>
-requires utl::__dyn_checkable<To, From> bool
-isa(From& from) {
-    return isa<To>(&from);
-}
-
-template <typename To, typename From>
-requires utl::__dyn_checkable<To, From> bool
-isa_or_null(From* from) {
-    return from ? isa<To>(from) : false;
-}
-
-template <typename To, typename From>
-requires utl::__dyn_castable<To, From*> && std::is_pointer_v<To>
 constexpr To dyncast(From* from) {
     if (isa<__decay_all<To>>(from)) {
         return static_cast<To>(from);
@@ -622,7 +522,6 @@ constexpr To dyncast(From* from) {
 }
 
 template <typename To, typename From>
-requires utl::__dyn_castable<To, From&> && std::is_lvalue_reference_v<To>
 constexpr To dyncast(From& from) {
     using ToNoRef = std::remove_reference_t<To>;
     if (auto* result = dyncast<ToNoRef*>(&from)) {
@@ -631,34 +530,66 @@ constexpr To dyncast(From& from) {
     throw std::bad_cast();
 }
 
-/// `dyncast` with `nullptr` check
-template <typename To, typename From>
-requires utl::__dyn_castable<To, From*> && std::is_pointer_v<To>
-constexpr To dyncast_or_null(From* from) {
-    return from ? dyncast<To>(from) : nullptr;
-}
+template <typename To>
+struct dyncast_fn {
+    template <typename From>
+    requires utl::__dyn_castable<To, From*> && std::is_pointer_v<To>
+    constexpr To operator()(From* from) const {
+        return __dyncast_operators::dyncast<To>(from);
+    }
+    
+    template <typename From>
+    requires utl::__dyn_castable<To, From&> && std::is_lvalue_reference_v<To>
+    constexpr To operator()(From& from) const {
+        return __dyncast_operators::dyncast<To>(from);
+    }
+};
 
 template <typename To, typename From>
-requires utl::__dyn_castable<To, From*> && std::is_pointer_v<To>
 constexpr To cast(From* from) {
-    __utl_assert(dyncast<To>(from) != nullptr, "Cast failed.");
+    __utl_assert(!from || dyncast<To>(from), "Cast failed.");
     return static_cast<To>(from);
 }
 
 template <typename To, typename From>
-requires utl::__dyn_castable<To, From&> && std::is_lvalue_reference_v<To>
 constexpr To cast(From& from) {
     using ToNoRef = std::remove_reference_t<To>;
     return *cast<ToNoRef*>(&from);
 }
 
-/// `cast` with `nullptr` check
-template <typename To, typename From>
-requires utl::__dyn_castable<To, From*> && std::is_pointer_v<To>
-constexpr To cast_or_null(From* from) {
-    return from ? cast<To>(from) : nullptr;
-}
+template <typename To>
+struct cast_fn {
+    template <typename From>
+    requires utl::__dyn_castable<To, From*> && std::is_pointer_v<To>
+    constexpr To operator()(From* from) const {
+        return __dyncast_operators::cast<To>(from);
+    }
 
-#endif // UTL_DYNCAST_USE_GLOBAL_FUNCTION_OBJECTS
+    template <typename From>
+    requires utl::__dyn_castable<To, From&> && std::is_lvalue_reference_v<To>
+    constexpr To operator()(From& from) const {
+        return __dyncast_operators::cast<To>(from);
+    }
+};
+
+} // namespace __dyncast_operators
+
+template <typename To>
+inline constexpr __dyncast_operators::isa_fn<To> isa{};
+
+template <typename To>
+inline constexpr __dyncast_operators::isa_fn<To> isa_or_null{};
+
+template <typename To>
+inline constexpr __dyncast_operators::dyncast_fn<To> dyncast{};
+
+template <typename To>
+inline constexpr __dyncast_operators::dyncast_fn<To> dyncast_or_null{};
+
+template <typename To>
+inline constexpr __dyncast_operators::cast_fn<To> cast{};
+
+template <typename To>
+inline constexpr __dyncast_operators::cast_fn<To> cast_or_null{};
 
 } // namespace utl
