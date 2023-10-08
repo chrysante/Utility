@@ -227,11 +227,8 @@ template <typename... F>
 struct overload: F... {
     using F::operator()...;
     
-    constexpr overload(F&&... f): F(std::move(f))... {}
+    constexpr overload(F... f): F(std::move(f))... {}
 };
-
-template <typename... F>
-overload(F...) -> overload<F...>;
 
 } // namespace utl
 
