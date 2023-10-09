@@ -16,6 +16,8 @@ class __function_view_impl {
     using __sig = std::conditional_t<IsNoexcept, R(Args...) noexcept, R(Args...)>;
     
 public:
+    __function_view_impl() = default;
+    
     template <typename F>
     requires __all<std::is_invocable_r<R, F, Args...>,
                    __any_t<std::bool_constant<!IsNoexcept>, std::is_nothrow_invocable_r<R, F, Args...>>,
@@ -30,6 +32,10 @@ public:
         return __invoke_ptr(__state_ptr, std::forward<Args>(args)...);
     }
     
+    explicit constexpr operator bool() const {
+        return __invoke_ptr != nullptr;
+    }
+    
 private:
     template <typename F>
     constexpr static R __static_invoke(void const* state, Args... args) {
@@ -42,8 +48,8 @@ private:
         }
     }
     
-    decltype(&__static_invoke<void>) __invoke_ptr;
-    void const* __state_ptr;
+    decltype(&__static_invoke<void>) __invoke_ptr = nullptr;
+    void const* __state_ptr = nullptr;
 };
 
 template <typename R, typename... Args>
