@@ -294,7 +294,7 @@ struct vector {
     /// (2)
     template <typename It> requires requires(It it) {
         { *it } -> std::convertible_to<value_type>;
-        { it++ } -> std::same_as<It&>;
+        { ++it } -> std::same_as<It&>;
     }
     constexpr void assign(It first, It last) {
         __assign_impl(distance(first, last), [i = first]() mutable -> decltype(auto) { return *i++; });
