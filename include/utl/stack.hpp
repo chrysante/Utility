@@ -54,6 +54,8 @@ public:
         return this->emplace_back(UTL_FORWARD(args)...);
     }
 
+    using container_type::clear;
+    
     __utl_interface_export T pop() {
         T result = top();
         this->pop_back();
