@@ -48,7 +48,8 @@ private:
         }
     }
     
-    decltype(&__static_invoke<void>) __invoke_ptr = nullptr;
+    using __invoke_ptr_type = R(*)(void const*, Args...);
+    __invoke_ptr_type __invoke_ptr = nullptr;
     void const* __state_ptr = nullptr;
 };
 
