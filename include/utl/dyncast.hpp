@@ -238,7 +238,11 @@ public:
 private:
     template <Enum CurrentTestType, Enum TargetTestType, typename ActualType>
     requires std::is_convertible_v<ActualType*, __dyncast_enum_to_type<CurrentTestType>*>
-    static constexpr bool is_exactly() { return CurrentTestType == TargetTestType; }
+    static constexpr bool is_exactly() {
+        (void)sizeof(ActualType);
+        (void)sizeof(__dyncast_enum_to_type<CurrentTestType>);
+        return CurrentTestType == TargetTestType;
+    }
 
     template <Enum CurrentTestType, Enum TargetTestType, typename ActualType>
     static constexpr bool is_exactly() {
@@ -488,6 +492,8 @@ template <typename To, typename From>
 bool isa(From* from) {
     using enum_type   = decltype(__dyncast_type_to_enum<std::remove_const_t<From>>);
     using to_stripped = std::remove_const_t<std::remove_pointer_t<To>>;
+    (void)sizeof(From);
+    (void)sizeof(to_stripped);
     if (!from) {
         return false;
     }
