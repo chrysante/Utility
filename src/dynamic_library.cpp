@@ -1,6 +1,6 @@
 #include <utl/dynamic_library.hpp>
 
-#include <exception>
+#include <stdexcept>
 
 #include <utl/__debug.hpp>
 #include <utl/format.hpp>
@@ -8,91 +8,122 @@
 
 #if defined(__unix__) || defined(__APPLE__)
 #include <dlfcn.h>
+#else
+#error Unsupported system
+#endif
 
 namespace utl {
 
-dynamic_library::dynamic_library(std::filesystem::path path): _path(path) {
-    _load_lib();
+static bool operator!(dynamic_load_mode mode) {
+    return !static_cast<int>(mode);
 }
 
-dynamic_library::dynamic_library(dynamic_library&& rhs) noexcept: _path(std::move(rhs._path)), _handle(rhs._handle) {
+dynamic_library::dynamic_library(std::filesystem::path libpath,
+                                 dynamic_load_mode mode):
+    _path(std::move(libpath)), _handle(nullptr), _mode(mode) {
+    load_impl();
+}
+
+dynamic_library::dynamic_library(dynamic_library&& rhs) noexcept:
+    _path(std::move(rhs._path)), _handle(rhs._handle) {
     rhs._handle = nullptr;
 }
 
 dynamic_library::~dynamic_library() {
-    _destroy();
+    destroy();
 }
 
 dynamic_library& dynamic_library::operator=(dynamic_library&& rhs) & noexcept {
-    _destroy();
-    this->_path   = std::move(rhs._path);
-    this->_handle = rhs._handle;
-    rhs._handle   = nullptr;
+    if (this == &rhs) {
+        return *this;
+    }
+    destroy();
+    _path       = std::move(rhs._path);
+    _handle     = rhs._handle;
+    _mode       = rhs._mode;
+    rhs._handle = nullptr;
     return *this;
 }
 
 void dynamic_library::reload() {
-    _destroy();
-    _load_lib();
+    reload(_mode);
+}
+
+void dynamic_library::reload(dynamic_load_mode mode) {
+    destroy();
+    _mode = mode;
+    load_impl();
 }
 
 void dynamic_library::load(std::filesystem::path new_path) {
-    _path = new_path;
+    _path = std::move(new_path);
     reload();
 }
 
-bool dynamic_library::is_loaded() const {
-    void* handle = dlopen(_path.c_str(), RTLD_NOW | RTLD_NOLOAD);
-    if (handle != nullptr) {
-        dlclose(handle);
-        return true;
+void* dynamic_library::resolve(std::string_view name) const {
+    std::string_view err;
+    void* sym = resolve(name, &err);
+    if (!sym) {
+        throw std::runtime_error(std::string(err));
     }
-    return false;
+    return sym;
 }
 
-// MARK: - private
-void* dynamic_library::_load_symbol(std::string_view name) const {
-    _clear_errors();
+void* dynamic_library::resolve(std::string_view name,
+                               std::string_view* error) const {
+    clear_errors();
     auto* const result = dlsym(_handle, name.data());
-    _handle_error(utl::format("Failed to load Symbol '{}'", name));
+    if (char const* native = dlerror()) {
+        if (error) {
+            *error = native;
+        }
+        return nullptr;
+    }
     return result;
 }
 
-void dynamic_library::_load_lib() {
-    __utl_assert(!_path.empty(), "path is empty");
-    _clear_errors();
-    _handle                                    = dlopen(_path.c_str(), RTLD_NOW);
-    utl::scope_guard_failure const _on_failure = [&] { _handle = nullptr; };
-    _handle_error("Failed to load Library");
+static int translateMode(dynamic_load_mode mode) {
+    using enum dynamic_load_mode;
+    int result = 0;
+    if (!!(mode & lazy)) {
+        result |= RTLD_LAZY;
+    }
+    if (!!(mode & now)) {
+        result |= RTLD_NOW;
+    }
+    if (!!(mode & local)) {
+        result |= RTLD_LOCAL;
+    }
+    if (!!(mode & global)) {
+        result |= RTLD_GLOBAL;
+    }
+    return result;
 }
 
-void dynamic_library::_destroy() noexcept {
+void dynamic_library::load_impl() {
+    __utl_assert(!_path.empty(),
+                 "path must be set before calling this function");
+    clear_errors();
+    _handle = dlopen(_path.c_str(), translateMode(_mode));
+    if (char const* native = dlerror()) {
+        _handle = nullptr;
+        throw std::runtime_error(
+            utl::format("Failed to load library {}. Native Error: {}\n",
+                        _path,
+                        native));
+    }
+}
+
+void dynamic_library::destroy() noexcept {
     if (!_handle) {
         return;
     }
-    [[maybe_unused]] auto const result = dlclose(_handle);
-    __utl_assert(result == 0, "Failed to close Library");
-
-    dlopen(_path.c_str(), RTLD_NOLOAD);
-
-    if (is_loaded()) {
-        //			utl_log(error, "Failed to unload library {}", _path);
-    }
-    else {
-        //			utl_log(trace, "Successfully unloaded library {}", _path);
-    }
+    dlclose(_handle);
     _handle = nullptr;
 }
 
-void dynamic_library::_handle_error(std::string_view msg) const {
-    if (char const* error = dlerror()) {
-        throw std::runtime_error(utl::format("{}. Native Error: {}\n", msg, error));
-    }
-}
-
-void dynamic_library::_clear_errors() const {
+void dynamic_library::clear_errors() const {
     dlerror();
 }
 
 } // namespace utl
-#endif // defined(__unix__) || defined(__APPLE__)
