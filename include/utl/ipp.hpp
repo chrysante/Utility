@@ -93,6 +93,8 @@ struct ipp<T*, Signed> {
         return (__uint_type)__ptr & __int_mask;
     }
     
+    constexpr bool operator==(ipp const& rhs) const = default;
+    
     pointer_type __ptr;
 };
 
@@ -144,6 +146,8 @@ struct epp {
     constexpr void set_pointer(pointer_type ptr) {
         __impl.set_pointer(ptr);
     }
+    
+    constexpr bool operator==(epp const& rhs) const = default;
     
     ipp<pointer_type, __Signed> __impl;
 };
