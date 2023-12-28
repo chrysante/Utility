@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "__base.hpp"
 #include "__debug.hpp"
 #include "type_traits.hpp"
