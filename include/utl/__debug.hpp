@@ -54,7 +54,7 @@ _UTL_SYSTEM_HEADER_
 #if __clang__
 #define __utl_debugbreak(...) __builtin_debugtrap()
 #elif __GNUC__
-#define __utl_debugfail(...) __builtin_trap()
+#define __utl_debugbreak(...) __builtin_trap()
 #elif _MSC_VER
 #define __utl_debugbreak(...) __debugbreak()
 #else

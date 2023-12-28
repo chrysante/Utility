@@ -3,8 +3,8 @@
 #include <stdexcept>
 
 #include <utl/__debug.hpp>
-#include <utl/format.hpp>
 #include <utl/scope_guard.hpp>
+#include <utl/strcat.hpp>
 
 #if defined(__unix__) || defined(__APPLE__)
 #include <dlfcn.h>
@@ -108,9 +108,7 @@ void dynamic_library::load_impl() {
     if (char const* native = dlerror()) {
         _handle = nullptr;
         throw std::runtime_error(
-            utl::format("Failed to load library {}. Native Error: {}\n",
-                        _path,
-                        native));
+            utl::strcat("Failed to load library ", _path, ". Native Error: ", native, "\n"));
     }
 }
 

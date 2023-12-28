@@ -1,6 +1,6 @@
 #include <utl/memory_resource.hpp>
 
-#include <utl/stdio.hpp>
+#include <iostream>
 
 namespace utl::pmr {
 
@@ -21,12 +21,17 @@ memory_resource*& __utl_get_default_resource() noexcept {
 
 void* monitor_resource::do_allocate(std::size_t size, std::size_t align) {
     void* const result = upstream()->allocate(size, align);
-    utl::print("allocate: [upstream: {}, size: {}, align: {}] -> {}\n", upstream(), size, align, result);
+    std::cout << "allocate: [upstream: " 
+              << upstream() << ", size: " 
+              << size << ", align: " << align << "] -> "
+              << result << "\n";
     return result;
 }
 
 void monitor_resource::do_deallocate(void* ptr, std::size_t size, std::size_t align) {
-    utl::print("deallocate: [upstream: {}, ptr: {}, size: {}, align: {}]\n", upstream(), ptr, size, align);
+    std::cout << "deallocate: [upstream: " << upstream() 
+              << ", ptr: " << ptr << ", size: " << size 
+              << ", align: " << align << "]\n";
     upstream()->deallocate(ptr, size, align);
 }
 

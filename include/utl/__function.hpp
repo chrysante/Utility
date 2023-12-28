@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 #include "__base.hpp"
 _UTL_SYSTEM_HEADER_
 

@@ -5,7 +5,8 @@
 #include <array>
 #include <random>
 
-#include <utl/format.hpp>
+#include <sstream>
+
 #include <utl/bit.hpp>
 
 namespace utl {
@@ -44,7 +45,12 @@ uuid uuid::from_string(std::string&& str) {
 
 std::string uuid::to_string() const {
     auto const data = utl::bit_cast<std::array<std::uint32_t, 4>>(this->value());
-    return utl::format("{:x} {:x} {:x} {:x}", data[0], data[1], data[2], data[3]);
+    std::stringstream sstr;
+    sstr << std::hex << data[0];
+    for (size_t i = 1; i < 4; ++i) {
+        sstr << " " << data[i];
+    }
+    return std::move(sstr).str();
 }
 
 std::ostream& operator<<(std::ostream& str, uuid id) {
