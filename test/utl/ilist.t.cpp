@@ -40,12 +40,27 @@ struct PropagatingNeverEqualAllocator: std::allocator<T> {
     bool operator==(PropagatingNeverEqualAllocator const&) const { return false; }
 };
 
+template <typename T>
+static std::ostream& operator<<(std::ostream& str, std::initializer_list<T> ilist) {
+    str << "[";
+    bool first = true;
+    for (auto& i: ilist) {
+        if (!first) {
+            str << ", ";
+        }
+        first = false;
+        str << i;
+    }
+    return str << "]";
+} 
+
 } // namespace
 
 template <typename Allocator>
 static void testEqual(utl::ilist<TestType, Allocator> const& l, std::initializer_list<TestType> init_list) {
     auto ilItr = init_list.begin();
     INFO("l = " << l);
+    INFO("ref = " << init_list);
     for (auto& elem: l) {
         REQUIRE(ilItr != init_list.end());
         CHECK(elem == *ilItr);

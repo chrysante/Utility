@@ -55,7 +55,6 @@ files {
     "test/utl/LifetimeCounter.cpp",
     "test/utl/ilist.t.cpp"
 }
-links { "utility" }
 
 -----------------------------------------------------------------------------------------
 -- Project utl-test-dyncast

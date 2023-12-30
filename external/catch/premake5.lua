@@ -3,10 +3,14 @@ location "."
 kind "StaticLib"
 language "C++"
 
-externalincludedirs {
-    "include"
+includedirs {
+    "include/catch"
 }
 
 files { 
-    "main.cpp"
+    "catch_amalgamated.cpp"
 }
+
+filter "system:linux"
+    buildoptions "-fPIC"
+filter {}

@@ -309,7 +309,7 @@ public:
     
     // (1)
     void assign(size_type count, value_type const& value) {
-        __assign_element_wise([&, i = size_type(0)]() mutable { return i != count; }, [&]() -> decltype(auto) { return value; });
+        __assign_element_wise_f([&, i = size_type(0)]() mutable { return i != count; }, [&]() -> decltype(auto) { return value; });
     }
     
     // (2)
@@ -549,7 +549,7 @@ public:
     
     // MARK: Internals
     
-    void __assign_element_wise(std::invocable auto&& insert_while, auto&& get_elems) {
+    void __assign_element_wise_f(std::invocable auto&& insert_while, auto&& get_elems) {
         iterator itr = begin();
         for (;; ++itr) {
             if (itr == end()) {
@@ -570,7 +570,7 @@ public:
     }
     
     void __assign_element_wise(auto rhs_itr, auto rhs_end) {
-        __assign_element_wise([&]{ return rhs_itr != rhs_end; }, [&]() -> decltype(auto) { return *rhs_itr++; });
+        __assign_element_wise_f([&]{ return rhs_itr != rhs_end; }, [&]() -> decltype(auto) { return *rhs_itr++; });
     }
     
     template <bool SwapAllocs>

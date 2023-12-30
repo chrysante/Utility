@@ -9,10 +9,15 @@ function basic_workspace (name)
     }
 
     filter "configurations:Debug" 
-    symbols "On"
+        symbols "On"
     filter "configurations:Development or Release"
-        optimize "Speed"
-        defines "NDEBUG"
+        filter "system:linux"
+            buildoptions "-O1" -- probably due to a compiler bug the ilist move assignment test fails on higher optimization levels
+            defines "NDEBUG"
+
+        filter "system:not linux"
+            optimize "Speed"
+            defines "NDEBUG"
     filter {}
 
     filter { "configurations:Debug" }
@@ -37,7 +42,6 @@ function basic_workspace (name)
 
     targetdir("build/bin/%{cfg.longname}")
     objdir("build/obj/%{cfg.longname}")
-    
 end
 
 function test_project_setup()
@@ -52,5 +56,4 @@ function test_project_setup()
     }
 
     links { "catch" }
-
 end
