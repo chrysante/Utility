@@ -29,7 +29,7 @@ public:
 
     /// MARK: Queries
     using container_type::empty;
-    explicit operator bool() const { return !empty(); }
+    [[deprecated]] explicit operator bool() const { return !empty(); }
     using container_type::size;
     __utl_nodiscard __utl_interface_export container_type const& container() const& { return *this; }
     __utl_nodiscard __utl_interface_export container_type& container()& { return *this; }
@@ -47,10 +47,10 @@ public:
     using container_type::crend;
 
     /// MARK: Modifiers
-    T const& push(T const& elem) { return this->push_back(elem); }
-    T const& push(T&& elem) { return this->push_back(std::move(elem)); }
+    T& push(T const& elem) { return this->push_back(elem); }
+    T& push(T&& elem) { return this->push_back(std::move(elem)); }
     template <typename... Args>
-    requires std::constructible_from<T, Args...> T const& emplace(Args&&... args) {
+    requires std::constructible_from<T, Args...> T& emplace(Args&&... args) {
         return this->emplace_back(UTL_FORWARD(args)...);
     }
 
