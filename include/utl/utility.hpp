@@ -6,6 +6,7 @@
 #include <iosfwd>
 #include <memory>
 #include <thread>
+#include <cstddef>
 
 #include "__base.hpp"
 #include "__debug.hpp"

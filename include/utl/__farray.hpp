@@ -8,6 +8,7 @@ _UTL_SYSTEM_HEADER_
 #include <concepts>
 #include <memory>
 #include <type_traits>
+#include <functional>
 
 #include "__debug.hpp"
 #include "__union.hpp"

@@ -12,6 +12,8 @@ files {
     "src/**.cc",
 }
 
+filter "system:linux" 
+    buildoptions "-fPIC"
 filter "system:windows" -- MSVC implemented std::format
     removefiles { "include/utl/__fmt/**", "src/fmt/**" }
 filter {}

@@ -55,21 +55,21 @@ using __dc_enum_type = decltype(__dyncast_type_to_enum_impl<std::remove_cvref_t<
 /// associate types in the hierarchy with a unique integral value.
 #define UTL_DYNCAST_MAP(type, enum_value)                                                                                      \
     template <>                                                                                                                \
-    struct ::utl::__dyncast_type_to_enum_impl<type>: std::integral_constant<decltype(enum_value), enum_value> {}; \
+    struct utl::__dyncast_type_to_enum_impl<type>: std::integral_constant<decltype(enum_value), enum_value> {}; \
     template <>                                                                                                                \
-    struct ::utl::__dyncast_enum_to_type_impl<enum_value>: std::type_identity<type> {};
+    struct utl::__dyncast_enum_to_type_impl<enum_value>: std::type_identity<type> {};
 
 /// Optional customization point for the `dyncast` facilities. Mark types as abstract. The `visit()` function will
 /// not require its function argument to be invocable with abstract types, however it is the responsibility of the user
 /// that no objects of abstract runtime type will exist.
 #define UTL_DYNCAST_ABSTRACT(type)                                                                                             \
     template <>                                                                                                                \
-    struct ::utl::__dyncast_is_abstract<type>: std::true_type {};
+    struct utl::__dyncast_is_abstract<type>: std::true_type {};
 
 /// Opposite of abstract. This is just for symmetry with abstract, types are concrete by default.
 #define UTL_DYNCAST_CONCRETE(type)                                                                                             \
     template <>                                                                                                                \
-    struct ::utl::__dyncast_is_abstract<type>: std::false_type {};
+    struct utl::__dyncast_is_abstract<type>: std::false_type {};
 
 namespace utl {
 
