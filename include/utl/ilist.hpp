@@ -83,15 +83,18 @@ public:
         template <typename, typename>
         friend class ilist;
         
+        using __node_base = copy_cv_t<N, __sentinel_type>;
+        using __node_base_ptr = __node_base*;
+        
         explicit operator __iterator_impl<std::remove_const_t<N>>()
             requires std::is_const_v<N>
         {
-            using MutN = std::remove_const_t<N>;
-            return __iterator_impl<MutN>(const_cast<MutN*>(__node));
+            using mut_node_base = std::remove_const_t<__node_base>;
+            return __iterator_impl<std::remove_const_t<N>>(const_cast<mut_node_base*>(__node));
         }
 
-        explicit __iterator_impl(copy_cv_t<N, __sentinel_type>* node):
-            __node(static_cast<N*>(node)) {}
+        explicit __iterator_impl(__node_base_ptr node):
+            __node(node) {}
         
     public:
         using difference_type = std::ptrdiff_t;
@@ -111,14 +114,14 @@ public:
         }
 
         /// Get the address of the object this iterator points to.
-        pointer to_address() const { return __node; }
+        pointer to_address() const { return static_cast<pointer>(__node); }
         
         explicit operator pointer() const { return to_address(); }
         
         pointer operator->() const { return to_address(); }
         
         __iterator_impl& operator++() {
-            __node = static_cast<pointer>(__node->__next);
+            __node = __node->__next;
             return *this;
         }
         
@@ -129,7 +132,7 @@ public:
         }
         
         __iterator_impl& operator--() {
-            __node = static_cast<pointer>(__node->prev());
+            __node = __node->__prev;
             return *this;
         }
         
@@ -143,9 +146,9 @@ public:
         bool operator==(__iterator_impl<std::add_const_t<N>> const& rhs) const requires (!std::is_const_v<N>) { return __node == rhs.__node; }
         bool operator==(__iterator_impl<std::remove_const_t<N>> const& rhs) const requires std::is_const_v<N> { return __node == rhs.__node; }
         
-        reference operator*() const { return *__node; }
+        reference operator*() const { return *to_address(); }
         
-        pointer __node;
+        __node_base_ptr __node;
     };
     
     using value_type = T;
@@ -584,10 +587,10 @@ public:
             }
             else {
                 __sentinel_type rhs_copy;
-                __move_assign_pointer_swap(rhs_copy, rhs.begin(), rhs.end());
+                __move_assign_pointer_swap_s(rhs_copy, rhs.begin(), rhs.end());
                 rhs.__reset();
                 rhs.__assign_element_wise(begin(), end());
-                __assign_element_wise(iterator(rhs_copy.__next), iterator(static_cast<value_type*>(&rhs_copy)));
+                __assign_element_wise(iterator(rhs_copy.__next), iterator(&rhs_copy));
             }
         }
     }
@@ -598,12 +601,12 @@ public:
             std::swap(__allocator_, rhs.__allocator_);
         }
         __sentinel_type rhs_copy;
-        __move_assign_pointer_swap(rhs_copy, rhs.begin(), rhs.end());
-        __move_assign_pointer_swap(rhs.__sentinel_, this->begin(), this->end());
-        __move_assign_pointer_swap(this->__sentinel_, iterator(rhs_copy.__next), iterator(static_cast<value_type*>(&rhs_copy)));
+        __move_assign_pointer_swap_s(rhs_copy, rhs.begin(), rhs.end());
+        __move_assign_pointer_swap_s(rhs.__sentinel_, this->begin(), this->end());
+        __move_assign_pointer_swap_s(this->__sentinel_, iterator(rhs_copy.__next), iterator(&rhs_copy));
     }
     
-    static void __move_assign_pointer_swap(__sentinel_type& sent, iterator begin, iterator end) {
+    static void __move_assign_pointer_swap_s(__sentinel_type& sent, iterator begin, iterator end) {
         if (begin == end) {
             __reset(sent);
         }
@@ -618,7 +621,7 @@ public:
     }
     
     void __move_assign_pointer_swap(iterator begin, iterator end) {
-        __move_assign_pointer_swap(__sentinel_, begin, end);
+        __move_assign_pointer_swap_s(__sentinel_, begin, end);
     }
     
     iterator __insert_impl(const_iterator cpos, size_type count, std::invocable auto&& get_nodes) {
