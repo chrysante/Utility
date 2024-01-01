@@ -38,7 +38,7 @@ TEST_CASE("Greedy color - 1", "[graph]") {
                            neighbours,
                            std::back_inserter(lexOrdering));
     bool const isChordal = utl::is_chordal(lexOrdering.begin(), lexOrdering.end(), neighbours);
-    assert(isChordal);
+    REQUIRE(isChordal);
     
     utl::vector<uint32_t> colors(vertices.size());
     utl::greedy_color(lexOrdering.begin(), lexOrdering.end(), neighbours, [&](size_t index, uint32_t color) {

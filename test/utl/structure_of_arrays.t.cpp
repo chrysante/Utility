@@ -1,13 +1,13 @@
+#include <algorithm>
+#include <iostream>
+#include <numeric>
+#include <random>
+
 #include <catch/catch2.hpp>
+#include <utl/structure_of_arrays.hpp>
+#include <utl/utility.hpp>
 
 #include "LifetimeCounter.hpp"
-
-#include "utl/structure_of_arrays.hpp"
-#include "utl/utility.hpp"
-
-#include <algorithm>
-#include <numeric>
-#include <iostream>
 
 using namespace utl_test;
 
