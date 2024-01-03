@@ -11,13 +11,22 @@
 
 namespace utl {
 
+/// `std::vector`-like contiguous container of pointers that is space-optimized
+/// for the case of zero or one elements. This container has a memory footprint
+/// of a single pointer (plus the allocator if that is non-empty). If it
+/// contains zero or one elements, the element is stored in the object. If more
+/// than one element is stored, the pointer points to a heap allocated
+/// `small_vector` object that contains our elements. The lower 2 bits in the
+/// pointer are used to discriminate the state of the container. This implies
+/// that the value type must have an alignment of at least 4 and no unaligned
+/// pointers can be stored in the container. This property is asserted at
+/// runtime in debug builds.
 template <typename T, typename Allocator = std::allocator<T>>
 class small_ptr_vector {
     static_assert(std::is_pointer_v<T>,
                   "Can only instantiate with pointers as value type");
-    static_assert(alignof(std::remove_pointer_t<T>) >= 4,
-                  "We need the lowest two bits in the pointer to discriminate "
-                  "the empty and single value state");
+    /// We don't `static_assert` that the pointer is properly aligned to be able
+    /// to instantiate the template with pointers to incomplete types
 
     using impl_type    = utl::small_vector<T, 6, Allocator>;
     using vector_alloc = typename std::allocator_traits<
