@@ -1,6 +1,7 @@
 #ifndef UTL_SMALLPTRVECTOR_H_
 #define UTL_SMALLPTRVECTOR_H_
 
+#include <algorithm>
 #include <cassert>
 #include <type_traits>
 
@@ -31,8 +32,8 @@ public:
     using const_reference        = typename impl_type::const_reference;
     using pointer                = typename impl_type::pointer;
     using const_pointer          = typename impl_type::const_pointer;
-    using iterator               = pointer;
-    using const_iterator         = const_pointer;
+    using iterator               = value_type*;
+    using const_iterator         = value_type const*;
     using reverse_iterator       = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
@@ -68,7 +69,7 @@ public:
         if constexpr (utl::forward_iterator<InputIt>) {
             impl_type impl(first, last, alloc);
             switch (impl.size()) {
-            case 0: assert(false); break;
+            case 0: __utl_unreachable(); break;
             case 1: set_single_value(impl.front()); break;
             default: set_heap(new_heap(std::move(impl))); break;
             }
@@ -111,7 +112,7 @@ public:
     }
 
     /// (8)
-    small_ptr_vector(small_ptr_vector&& other):
+    small_ptr_vector(small_ptr_vector&& other) noexcept:
         small_ptr_vector(other.get_allocator()) {
         __copy_move_ctor_impl(other, [&] {
             /// For now
@@ -122,7 +123,8 @@ public:
     }
 
     /// (9)
-    small_ptr_vector(small_ptr_vector&& other, allocator_type const& alloc):
+    small_ptr_vector(small_ptr_vector&& other,
+                     allocator_type const& alloc) noexcept:
         small_ptr_vector(alloc) {
         __copy_move_ctor_impl(other, [&] {
             /// For now
@@ -134,11 +136,11 @@ public:
 
     /// (10)
     small_ptr_vector(std::initializer_list<T> init,
-                     allocator_type const& alloc):
+                     allocator_type const& alloc = allocator_type()):
         small_ptr_vector(alloc) {
         switch (init.size()) {
         case 0: break;
-        case 1: set_single_value(init.front()); break;
+        case 1: set_single_value(*init.begin()); break;
         default: set_heap(new_heap(init, alloc)); break;
         }
     }
@@ -151,7 +153,161 @@ public:
     }
 
     /// (1)
+    small_ptr_vector& operator=(small_ptr_vector const& other) {
+        if (!other.is_heap()) {
+            if (is_heap()) {
+                delete_heap(get_heap());
+            }
+            ptr = other.ptr;
+        }
+        else {
+            if (is_heap()) {
+                *get_heap() = *other.get_heap();
+            }
+            else {
+                set_heap(new_heap(*other.get_heap()));
+            }
+        }
+        return *this;
+    }
+
+    /// (2)
+    small_ptr_vector& operator=(small_ptr_vector&& other) noexcept {
+        if (!other.is_heap()) {
+            if (is_heap()) {
+                delete_heap(get_heap());
+            }
+            ptr = other.ptr;
+        }
+        else {
+            if (is_heap()) {
+                delete_heap(get_heap());
+            }
+            __utl_assert(alloc == other.alloc);
+            set_heap(other.get_heap());
+            other.set_empty();
+        }
+        return *this;
+    }
+
+    /// (3)
+    small_ptr_vector& operator=(std::initializer_list<value_type> ilist) {
+        assign(ilist);
+        return *this;
+    }
+
+    /// (1)
+    void assign(std::size_t count, value_type value) {
+        switch (count) {
+        case 0: clear(); break;
+        case 1:
+            clear();
+            set_single_value(value);
+            break;
+        default:
+            if (is_heap()) {
+                get_heap()->assign(count, value);
+            }
+            else {
+                set_heap(new_heap(count, value));
+            }
+            break;
+        }
+    }
+
+    /// (2)
+    template <utl::input_iterator_for<value_type> InputIt,
+              utl::sentinel_for<InputIt> Sentinel>
+    void assign(InputIt first, Sentinel last) {
+        if (first == last) {
+            clear();
+        }
+        else if constexpr (utl::forward_iterator<InputIt>) {
+            impl_type impl(first, last, alloc);
+            switch (impl.size()) {
+            case 1:
+                if (is_heap()) {
+                    delete_heap(get_heap());
+                }
+                set_single_value(impl.front());
+                break;
+            default:
+                /// Must be greater 1 because we have a special case for 1 and
+                /// test for not empty in the beginning of the function
+                __utl_assert(impl.size() > 1);
+                if (is_heap()) {
+                    *get_heap() = std::move(impl);
+                }
+                else {
+                    set_heap(new_heap(std::move(impl)));
+                }
+            }
+        }
+        else if (std::next(first) == last) {
+            clear();
+            set_single_value(*first);
+        }
+        else {
+            if (is_heap()) {
+                get_heap()->assign(first, last);
+            }
+            else {
+                set_heap(new_heap(first, last));
+            }
+        }
+    }
+
+    /// (3)
+    void assign(std::initializer_list<value_type> ilist) {
+        assign(ilist.begin(), ilist.end());
+    }
+
+    /// (1)
     allocator_type get_allocator() const { return alloc; }
+
+    /// # Iterators
+    iterator begin() {
+        return const_cast<iterator>(
+            static_cast<small_ptr_vector const*>(this)->begin());
+    }
+    const_iterator begin() const {
+        if (is_empty()) {
+            return nullptr;
+        }
+        if (is_single_value()) {
+            return &get_single_value();
+        }
+        return get_heap()->data();
+    }
+
+    iterator end() {
+        return const_cast<iterator>(
+            static_cast<small_ptr_vector const*>(this)->end());
+    }
+    const_iterator end() const {
+        if (is_empty()) {
+            return nullptr;
+        }
+        if (is_single_value()) {
+            return &get_single_value() + 1;
+        }
+        return get_heap()->data() + get_heap()->size();
+    }
+
+    const_iterator cbegin() const { return begin(); }
+    const_iterator cend() const { return end(); }
+
+    reverse_iterator rbegin() { return reverse_iterator(end()); }
+    const_reverse_iterator rbegin() const {
+        return const_reverse_iterator(end());
+    }
+    reverse_iterator rend() { return reverse_iterator(begin()); }
+    const_reverse_iterator rend() const {
+        return const_reverse_iterator(begin());
+    }
+
+    const_reverse_iterator crbegin() const { return rbegin(); }
+    const_reverse_iterator crend() const { return rend(); }
 
     /// # Element access
 
@@ -216,7 +372,12 @@ public:
     /// # Capacity
 
     /// (1)
-    bool empty() const { return is_empty(); }
+    bool empty() const {
+        if (is_heap()) {
+            return get_heap()->empty();
+        }
+        return is_empty();
+    }
 
     /// (1)
     std::size_t size() const {
@@ -227,6 +388,200 @@ public:
             return 1;
         }
         return get_heap()->size();
+    }
+
+    static constexpr size_type max_size() { return impl_type::max_size(); }
+
+    void reserve(std::size_t new_cap) {
+        if (!is_heap()) {
+            set_heap(new_heap(alloc));
+        }
+        get_heap()->reserve(new_cap);
+    }
+
+    std::size_t capacity() const {
+        if (is_heap()) {
+            return get_heap()->capacity();
+        }
+        return 1;
+    }
+
+    void shrink_to_fit() { /* no-op */
+    }
+
+    /// # Modifiers
+
+    void clear() {
+        if (is_heap()) {
+            delete_heap(get_heap());
+        }
+        set_empty();
+    }
+
+    /// Helper function for the insert methods to bring the vector into heap
+    /// state
+    void __make_heap() {
+        if (is_heap()) {
+            return;
+        }
+        if (is_empty()) {
+            set_heap(new_heap(alloc));
+        }
+        else {
+            set_heap(new_heap(1, get_single_value(), alloc));
+        }
+    }
+
+    static typename impl_type::const_iterator
+    __to_heap_itr(const_iterator itr) {
+        return typename impl_type::const_iterator(itr);
+    }
+
+    iterator __insert_heap(const_iterator pos, auto... args) {
+        std::size_t index = pos - begin();
+        __make_heap();
+        return get_heap()->insert(get_heap()->begin() + index, args...).__itr;
+    }
+
+    /// (1)
+    iterator insert(const_iterator pos, value_type value) {
+        if (is_empty()) {
+            __utl_assert(pos == begin());
+            set_single_value(value);
+            return begin();
+        }
+        else {
+            return __insert_heap(pos, value);
+        }
+    }
+
+    /// (3)
+    iterator insert(const_iterator pos, size_type count, value_type value) {
+        switch (count) {
+        case 0: return const_cast<iterator>(pos);
+        case 1: return insert(pos, value);
+        default: return __insert_heap(pos, count, value);
+        }
+    }
+
+    /// (4)
+    template <utl::input_iterator_for<value_type> InputIt,
+              utl::sentinel_for<InputIt> Sentinel>
+    iterator insert(const_iterator pos, InputIt first, Sentinel last) {
+        if (first == last) {
+            return const_cast<iterator>(pos);
+        }
+        if constexpr (!utl::forward_iterator<InputIt>) {
+            impl_type impl(first, last);
+            switch (impl.size()) {
+            case 1: return insert(pos, impl.front());
+            default:
+                __utl_assert(impl.empty());
+                return __insert_heap(pos, impl.begin(), impl.end());
+            }
+        }
+        if (std::next(first) == last) {
+            return insert(pos, *first);
+        }
+        return __insert_heap(pos, first, last);
+    }
+
+    /// (5)
+    iterator insert(const_iterator pos, std::initializer_list<T> ilist) {
+        return insert(pos, ilist.begin(), ilist.end());
+    }
+
+    template <typename... Args>
+    requires std::constructible_from<value_type, Args...>
+    iterator emplace(const_iterator pos, Args&&... args) {
+        insert(pos, value_type(std::forward<Args>(args)...));
+    }
+
+    /// (1)
+    iterator erase(iterator pos) {
+        if (is_heap()) {
+            return get_heap()->erase(__to_heap_itr(pos)).__itr;
+        }
+        /// _The iterator pos must be valid and dereferenceable_
+        /// (https://en.cppreference.com/w/cpp/container/vector/erase)
+        __utl_assert(pos == begin());
+        __utl_assert(!is_empty());
+        set_empty();
+        return end();
+    }
+
+    /// (2)
+    iterator erase(iterator first, iterator last) {
+        if (first == last) {
+            return last;
+        }
+        if (is_heap()) {
+            return get_heap()
+                ->erase(__to_heap_itr(first), __to_heap_itr(last))
+                .__itr;
+        }
+        /// Only possible values for `first` and `last` because we check for the
+        /// empty case above
+        __utl_assert(first == begin());
+        __utl_assert(last == end());
+        __utl_assert(!is_empty());
+        set_empty();
+        return end();
+    }
+
+    value_type& push_back(value_type value) {
+        if (is_empty()) {
+            set_single_value(value);
+            return get_single_value();
+        }
+        __make_heap();
+        return get_heap()->push_back(value);
+    }
+
+    template <typename... Args>
+    requires std::constructible_from<value_type, Args...>
+    value_type& emplace_back(Args&&... args) {
+        return push_back(value_type(std::forward<Args>(args)...));
+    }
+
+    void pop_back() {
+        __utl_assert(!is_empty());
+        if (is_heap()) {
+            auto* heap = get_heap();
+            if (heap->size() == 1) {
+                clear();
+                return;
+            }
+            heap->pop_back();
+            return;
+        }
+        set_empty();
+    }
+
+    void resize(std::size_t count, value_type value = value_type()) {
+        switch (count) {
+        case 0: clear(); break;
+        case 1: {
+            if (!empty()) {
+                value = front();
+            }
+            clear();
+            set_single_value(value);
+            break;
+        }
+        default:
+            __make_heap();
+            get_heap()->resize(count, value);
+            break;
+        }
+    }
+
+    void swap(small_ptr_vector& other) {
+        __utl_assert(alloc == other.alloc);
+        void* this_state;
+        std::memcpy(&this_state, &ptr, sizeof(void*));
+        std::memcpy(&ptr, &other.ptr, sizeof(void*));
+        std::memcpy(&other.ptr, &this_state, sizeof(void*));
     }
 
 private:
@@ -262,7 +617,7 @@ private:
     ///
     /// \Warning this function does not destroy any existing state
     void set_single_value(value_type value) {
-        assert(is_aligned(value));
+        __utl_assert(is_aligned(value));
         ptr = value;
     }
 
@@ -289,7 +644,7 @@ private:
 
     /// \overload
     impl_type const* get_heap() const {
-        assert(is_heap());
+        __utl_assert(is_heap());
         uintptr_t i = reinterpret_cast<uintptr_t>(heap);
         i &= ~uintptr_t{ 3 };
         return reinterpret_cast<impl_type const*>(i);
@@ -321,6 +676,12 @@ private:
     };
     [[no_unique_address]] vector_alloc alloc;
 };
+
+template <typename T, typename Allocator>
+bool operator==(small_ptr_vector<T, Allocator> const& lhs,
+                small_ptr_vector<T, Allocator> const& rhs) {
+    return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+}
 
 } // namespace utl
 
