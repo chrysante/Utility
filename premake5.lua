@@ -105,6 +105,17 @@ files {
 }
 
 -----------------------------------------------------------------------------------------
+-- Project utl-test-small_ptr_vector
+-----------------------------------------------------------------------------------------
+project "utl-test-small_ptr_vector"
+test_project_setup()
+files { 
+    "test/utl/LifetimeCounter.hpp",
+    "test/utl/LifetimeCounter.cpp",
+    "test/utl/small_ptr_vector.t.cpp" 
+}
+
+-----------------------------------------------------------------------------------------
 -- Project utl-test-ranges
 -----------------------------------------------------------------------------------------
 project "utl-test-ranges"

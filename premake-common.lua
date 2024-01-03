@@ -11,13 +11,8 @@ function basic_workspace (name)
     filter "configurations:Debug" 
         symbols "On"
     filter "configurations:Development or Release"
-        filter "system:linux"
-            buildoptions "-O1" -- probably due to a compiler bug the ilist move assignment test fails on higher optimization levels
-            defines "NDEBUG"
-
-        filter "system:not linux"
-            optimize "Speed"
-            defines "NDEBUG"
+        optimize "Speed"
+        defines "NDEBUG"
     filter {}
 
     filter { "configurations:Debug" }
