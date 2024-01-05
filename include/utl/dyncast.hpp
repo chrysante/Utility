@@ -559,8 +559,10 @@ struct InvokeVisitorCases<ReturnType, TypeList<Cases...>,
         static constexpr size_t NumTotalCombinations = (TypeToBound<T> * ...);
         static constexpr auto DispatchArray =
             makeDispatchArray<FuncPtrType, NumTotalCombinations, F, T...>();
-        return DispatchArray[flatIndex](static_cast<F&&>(f),
-                                        static_cast<T&&>(t)...);
+        FuncPtrType dispatcher = DispatchArray[flatIndex];
+        /// ** Is the type hierarchy correctly defined? **
+        /// If not `dispatcher` can be null
+        return dispatcher(static_cast<F&&>(f), static_cast<T&&>(t)...);
     }
 };
 
