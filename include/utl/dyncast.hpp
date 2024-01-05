@@ -1,667 +1,635 @@
-#pragma once
+#ifndef UTL_DYNCAST_HPP_
+#define UTL_DYNCAST_HPP_
 
+#include <array>
+#include <cassert>
+#include <tuple>
+#include <type_traits>
 #include <typeinfo>
-#include <utility>
 
-#include "__base.hpp"
 #include "__debug.hpp"
-#include "__farray.hpp"
-#include "common.hpp"
-#include "type_traits.hpp"
-#include "utility.hpp"
 
-_UTL_SYSTEM_HEADER_
-
-namespace utl {
-
-template <typename T>
-struct __dyncast_type_to_enum_impl;
-
-template <auto EnumValue>
-struct __dyncast_enum_to_type_impl;
-
-template <typename T>
-struct __dyncast_is_abstract: std::false_type {};
-
-template <typename T>
-using __decay_all = std::remove_const_t<std::remove_pointer_t<std::decay_t<T>>>;
-
-template <typename T>
-decltype(__dyncast_type_to_enum_impl<__decay_all<T>>::value, std::true_type{})
-__is_dc_dynamic_impl(int);
-
-template <typename T>
-std::false_type __is_dc_dynamic_impl(...);
-
-template <typename T>
-concept __dc_dynamic = decltype(__is_dc_dynamic_impl<T>(0))::value;
-
-template <typename To, typename From>
-concept __dyn_checkable =
-    __dc_dynamic<From> && __dc_dynamic<To>; // TODO: Check that To and From a
-                                            // part of the same hierarchy.
-
-template <typename To, typename From>
-concept __dyn_castable =
-    __dyn_checkable<To, From> && requires(From from) { static_cast<To>(from); };
-
-template <typename T>
-using __dc_enum_type =
-    decltype(__dyncast_type_to_enum_impl<std::remove_cvref_t<T>>::value);
-
-} // namespace utl
-
-//---==========================================================================
-//---=== Public interface =====================================================
-//---==========================================================================
-
-/// Mandatory customization point for the `dyncast` facilities. Every type in
-/// the inheritance hierarchy must be uniquely mapped to an enum or integral
-/// value. Using an enum is recommended. Use this macro at file scope to
-/// associate types in the hierarchy with a unique integral value.
-#define UTL_DYNCAST_MAP(type, enum_value)                                      \
+/// Declares a mapping of \p type to its identifier \p ID
+#define UTL_DYNCAST_IMPL_MAP(Type, ID)                                         \
     template <>                                                                \
-    struct utl::__dyncast_type_to_enum_impl<type>:                             \
-        std::integral_constant<decltype(enum_value), enum_value> {};           \
+    [[maybe_unused]] constexpr decltype(ID) utl::dc::TypeToID<Type> = ID;      \
     template <>                                                                \
-    struct utl::__dyncast_enum_to_type_impl<enum_value>:                       \
-        std::type_identity<type> {};
-
-/// Optional customization point for the `dyncast` facilities. Mark types as
-/// abstract. The `visit()` function will not require its function argument to
-/// be invocable with abstract types, however it is the responsibility of the
-/// user that no objects of abstract runtime type will exist.
-#define UTL_DYNCAST_ABSTRACT(type)                                             \
-    template <>                                                                \
-    struct utl::__dyncast_is_abstract<type>: std::true_type {};
-
-/// Opposite of abstract. This is just for symmetry with abstract, types are
-/// concrete by default.
-#define UTL_DYNCAST_CONCRETE(type)                                             \
-    template <>                                                                \
-    struct utl::__dyncast_is_abstract<type>: std::false_type {};
-
-namespace utl {
-
-// clang-format off
-
-/// Simple customization point for the `dyncast` facilities. If the types in the inheritance hierarchy expose their
-/// runtime type identifiers by a `.type()` method, this customiziation point is not needed. Otherwise define a
-/// function `dyncast_get_type()` with compatible signature for every type in the same namespace as the type. This can
-/// of course be a (constrained) template.
-/// Note that for a class hierarchy with root `NS::Base` defining a function `dyncast_get_type(Base const&)` in
-/// namespace `NS` does not suffice in general: If a class derived from `Base` satisfies the requirements of the
-/// generic `dyncast_get_type()` function defined here, it will be called instead. In practice this may not matter much,
-/// but to be safe and generic prefer defining the overload like so:
-/// `auto NS::dyncast_get_type(std::convertible_to<Base> auto const&);`
-template <typename T>
-auto dyncast_get_type(T const& t)
-requires requires { { t.type() } -> std::convertible_to<__dc_enum_type<T>>; }
-{
-    return t.type();
-}
-
-// clang-format on
-
-/// Optional second customization point. All fields below must be implemented.
-/// If a custom implementation for `dyncast_traits<...>::type(...)` which does
-/// not invoke `dyncast_get_type()` is given, the first customization point
-/// `dyncast_get_type()` is not used.
-template <typename Enum>
-struct dyncast_traits {
-    static Enum type(auto const& t) { return dyncast_get_type(t); }
-    static constexpr Enum first = Enum{ 0 };
-    static constexpr Enum last = Enum::_count;
-};
-
-/// Visit the object \p obj as its most derived type.
-/// \param obj An object of type `T` which has support for the `dyncast`
-/// facilities. \param fn A callable which can be invoked with any of `T`'s
-/// derived types. The possible return types of \p fn
-///        when invoked with `T`'s derived types must have a common type
-///        determined by `std::common_type`.
-/// \returns `std::invoke(fn, static_cast<MOST_DERIVED_TYPE>(obj))` where
-/// `MOST_DERIVED_TYPE` is the most derived type
-///          of \p obj with the same cv-ref qualifications as \p obj.
-template <typename T, typename F>
-requires __dc_dynamic<T>
-decltype(auto) visit(T&& obj, F&& fn);
-
-/// \overload
-template <typename T0, typename T1, typename F>
-requires __dc_dynamic<T0> && __dc_dynamic<T1>
-decltype(auto) visit(T0&& t0, T1&& t1, F&& fn);
-
-/// \overload
-template <typename T0, typename T1, typename T2, typename F>
-requires __dc_dynamic<T0> && __dc_dynamic<T1> && __dc_dynamic<T2>
-decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, F&& fn);
-
-/// \overload
-template <typename T0, typename T1, typename T2, typename T3, typename F>
-requires __dc_dynamic<T0> && __dc_dynamic<T1> && __dc_dynamic<T2> &&
-         __dc_dynamic<T3>
-decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, F&& fn);
-
-/// \overload
-template <typename T0, typename T1, typename T2, typename T3, typename T4,
-          typename F>
-requires __dc_dynamic<T0> && __dc_dynamic<T1> && __dc_dynamic<T2> &&
-         __dc_dynamic<T3> && __dc_dynamic<T4>
-decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, F&& fn);
-
-/// \overload
-template <typename T0, typename T1, typename T2, typename T3, typename T4,
-          typename T5, typename F>
-requires __dc_dynamic<T0> && __dc_dynamic<T1> && __dc_dynamic<T2> &&
-         __dc_dynamic<T3> && __dc_dynamic<T4> && __dc_dynamic<T5>
-decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, T5&& t5,
-                     F&& fn);
-
-/// These functions are not declared here (only in comment) because they are
-/// implemented as function objects
-
-/// Check if \p from 's dymamic type is `To` or derived from `To`.
-///
-///     template <typename To, typename From>
-///     requires utl::__dyn_checkable<To, From> bool
-///     isa(From* from);
-
-/// Check if \p from 's dymamic type is `To` or derived from `To`.
-///
-///     template <typename To, typename From>
-///     requires utl::__dyn_checkable<To, From> bool
-///     isa(From& from);
-
-/// Downward cast of \p from in its class hierarchy.
-/// \param from Pointer to an object of type `From`. Pointer must not be null.
-/// \returns A pointer of derived type `To` or null if \p *from is not of type
-/// `To`.
-///
-///     template <typename To, typename From>
-///     requires __dyn_castable<To, From*> && std::is_pointer_v<To>
-///     constexpr To dyncast(From* from);
-
-/// Downward cast of \p from in its class hierarchy.
-/// \param from Reference to an object of type `From`.
-/// \returns A Reference to the object of derived type `To`.
-/// \throws `std::bad_cast` if \p from is not of type `To`.
-///
-///     template <typename To, typename From>
-///     requires __dyn_castable<To, From&> && std::is_lvalue_reference_v<To>
-///     constexpr To dyncast(From& from);
-
-/// Downward cast of \p from in its class hierarchy.
-/// \param from Pointer to an object of type `From`. Pointer must not be null.
-/// \returns A pointer of derived type `To`.
-/// \warning Traps if \p *from is not of type `To`.
-///
-///     template <typename To, typename From>
-///     requires __dyn_castable<To, From*> && std::is_pointer_v<To>
-///     constexpr To cast(From* from);
-
-/// Downward cast of \p from in its class hierarchy.
-/// \param from Reference to an object of type `From`.
-/// \returns A reference of derived type `To`.
-/// \warning Traps if \p from is not of type `To` .
-///
-///     template <typename To, typename From>
-///     requires __dyn_castable<To, From&> && std::is_lvalue_reference_v<To>
-///     constexpr To cast(From& from);
-
-} // namespace utl
-
-//---==========================================================================
-//---=== Implementation =======================================================
-//---==========================================================================
-
-namespace utl {
-
-template <typename T>
-inline constexpr auto __dyncast_type_to_enum =
-    __dyncast_type_to_enum_impl<T>::value;
-
-template <auto EnumValue>
-using __dyncast_enum_to_type =
-    typename __dyncast_enum_to_type_impl<EnumValue>::type;
-
-// clang-format off
-template <typename Enum>
-struct __dyncast_traits_impl: dyncast_traits<Enum> {
-public:
-    using dyncast_traits<Enum>::type;
-    using dyncast_traits<Enum>::first;
-    using dyncast_traits<Enum>::last;
-    static constexpr size_t numElements = static_cast<size_t>(last) - static_cast<size_t>(first);
-
-    template <Enum TestType>
-    static bool is(auto const& t) {
-        return isa_dispatch_array[static_cast<size_t>(TestType)][static_cast<size_t>(type(t))];
-    }
-
-private:
-    template <Enum CurrentTestType, Enum TargetTestType, typename ActualType>
-    requires std::is_convertible_v<ActualType*, __dyncast_enum_to_type<CurrentTestType>*>
-    static constexpr bool is_exactly() {
-        (void)sizeof(ActualType);
-        (void)sizeof(__dyncast_enum_to_type<CurrentTestType>);
-        return CurrentTestType == TargetTestType;
-    }
-
-    template <Enum CurrentTestType, Enum TargetTestType, typename ActualType>
-    static constexpr bool is_exactly() {
-        return false;
-    }
-
-    template <Enum TargetTestType, typename ActualType, size_t... I>
-    static constexpr bool walk_tree(std::index_sequence<I...>) {
-        constexpr bool result = (... || is_exactly<Enum{ I }, TargetTestType, ActualType>());
-        return result;
-    }
-
-    template <Enum TargetTestType, typename ActualType>
-    static constexpr bool is_impl() {
-        return walk_tree<TargetTestType, ActualType>(std::make_index_sequence<numElements>{});
-    }
-
-    /// Build a 2D boolean matrix at compile time indicating if a dynamic cast is possible for every origin-destination
-    /// pair.
-    static constexpr auto make_isa_dispatch_array() {
-        return []<size_t... I>(std::index_sequence<I...>) {
-            return std::array{
-                []<Enum TestType, size_t... J>(std::index_sequence<J...>) {
-                    return std::array{ is_impl<TestType, __dyncast_enum_to_type<Enum{ J }>>()... };
-                }.template operator()<Enum{ I }>(std::make_index_sequence<numElements>{})...
-            };
-        }(std::make_index_sequence<numElements>{});
-    }
-    static constexpr auto isa_dispatch_array = make_isa_dispatch_array();
-};
-// clang-format on
-
-/// This machinery is needed to make visiting subtrees of the entire inheritance
-/// hierarchy possible. Without it, `std::invoke_result` would fail to compile
-/// on code paths that are never executed.
-
-template <typename Derived, typename Base>
-inline constexpr bool __dc_is_properly_derived_from_impl =
-    requires(Base* base) { static_cast<Derived*>(base); } &&
-    !std::is_convertible_v<Base*, Derived*>;
-
-template <typename Derived, typename Base>
-inline constexpr bool __dc_is_properly_derived_from =
-    __dc_is_properly_derived_from_impl<std::remove_cvref_t<Derived>,
-                                       std::remove_cvref_t<Base>>;
-
-/// Tag type to indicate that a function is not invocable for given parameters.
-enum class __not_invocable;
-
-/// Wrapper for `std::is_reference` to ignore `__not_invocable`.
-template <typename T, bool DefCase>
-struct __is_ref_wrapper: std::is_reference<T> {};
-
-template <bool DefCase>
-struct __is_ref_wrapper<__not_invocable, DefCase>:
-    std::bool_constant<DefCase> {};
-
-/// Wrapper that evaluates to `__not_invocable` if `F` is not invocable with
-/// `Args...`
-template <typename F, typename... Args>
-struct __dc_invoke_result {
-    template <typename G, typename... T>
-    static auto impl(int)
-        -> decltype(std::invoke(std::declval<G>(), std::declval<T>()...));
-    template <typename G, typename... T>
-    static __not_invocable impl(...);
-
-    using type = decltype(impl<F, Args...>(0));
-};
-
-template <typename F, typename... Args>
-using __dc_invoke_result_t = typename __dc_invoke_result<F, Args...>::type;
-
-/// Wrapper for `std::common_type` or `std::common_reference` to ignore
-/// `__not_invocable`.
-template <bool IsRef, typename...>
-struct __dc_common_type_wrapper_impl;
-
-template <bool IsRef>
-struct __dc_common_type_wrapper_impl<IsRef> {};
-
-template <bool IsRef, typename A, typename B, typename... Rest>
-struct __dc_common_type_wrapper_impl<IsRef, A, B, Rest...> {
-    using trait_result =
-        typename std::conditional_t<IsRef, std::common_reference<A, B>,
-                                    std::common_type<A, B>>::type;
-    using type = typename __dc_common_type_wrapper_impl<IsRef, trait_result,
-                                                        Rest...>::type;
-};
-
-template <bool IsRef, typename... Rest, typename B>
-struct __dc_common_type_wrapper_impl<IsRef, __not_invocable, B, Rest...> {
-    using type =
-        typename __dc_common_type_wrapper_impl<IsRef, B, Rest...>::type;
-};
-
-template <bool IsRef, typename A, typename... Rest>
-struct __dc_common_type_wrapper_impl<IsRef, A, __not_invocable, Rest...> {
-    using type =
-        typename __dc_common_type_wrapper_impl<IsRef, A, Rest...>::type;
-};
-
-template <bool IsRef, typename... Rest>
-struct __dc_common_type_wrapper_impl<IsRef, __not_invocable, __not_invocable,
-                                     Rest...> {
-    using type = typename __dc_common_type_wrapper_impl<IsRef, Rest...>::type;
-};
-
-template <bool IsRef, typename A>
-struct __dc_common_type_wrapper_impl<IsRef, A> {
-    using type = A;
-};
-
-template <typename... T>
-struct __dc_common_type_wrapper:
-    __dc_common_type_wrapper_impl<__all<__is_ref_wrapper<T, true>...>, T...> {
-    static_assert(__all<__is_ref_wrapper<T, true>...> ||
-                      !__any<__is_ref_wrapper<T, false>...>,
-                  "Either all or no cases must return references. "
-                  "This rule is in place to prevent unindented copies or "
-                  "dangling references "
-                  "when one case does not return a reference while another "
-                  "does, as we have "
-                  "to agree on one common return type.");
-};
-
-template <typename Enums>
-struct __dc_enum_sizes_impl;
-
-template <typename Enums>
-using __dc_enum_sizes = typename __dc_enum_sizes_impl<Enums>::type;
-
-template <typename... E>
-struct __dc_enum_sizes_impl<type_sequence<E...>> {
-    using type = std::index_sequence<static_cast<std::size_t>(
-        __dyncast_traits_impl<E>::last)...>;
-};
-
-template <typename Enums, typename GivenTypes, typename F,
-          typename FArrayBase = __farray_base_impl<__dc_enum_sizes<Enums>>,
-          typename DimI = std::make_index_sequence<Enums::size>,
-          typename FlatI =
-              std::make_index_sequence<FArrayBase::__flat_array_size>>
-struct __dispatch_return_type;
-
-template <typename... Enums, typename... GivenTypes, typename F,
-          typename FArrayBase, std::size_t... DimI, size_t... FlatI>
-struct __dispatch_return_type<
-    type_sequence<Enums...>, type_sequence<GivenTypes...>, F, FArrayBase,
-    std::index_sequence<DimI...>, std::index_sequence<FlatI...>> {
-    static constexpr std::size_t __dim = sizeof...(Enums);
-
-    template <std::size_t FlatIndex, std::size_t DimIndex>
-    using type_at =
-        __dyncast_enum_to_type<typename type_sequence<Enums...>::template at<
-            DimIndex>{ FArrayBase::__expand_index(FlatIndex)[DimIndex] }>;
-
-    /// TODO: Here we get weird compiler errors when we try to dispatch with
-    /// `visit` where abstract types aren't invocable.
-    template <std::size_t FlatIndex>
-    static constexpr bool we_care =
-        (... && (!__dyncast_is_abstract<type_at<FlatIndex, DimI>>::value)) &&
-        (... && __dc_is_properly_derived_from<
-                    type_at<FlatIndex, DimI>,
-                    typename type_sequence<GivenTypes...>::template at<DimI>>);
-
-    template <std::size_t DimIndex, std::size_t FlatIndex>
-    using qualified_concrete_type_at = utl::copy_cvref_t<
-        typename type_sequence<GivenTypes...>::template at<DimIndex>,
-        __dyncast_enum_to_type<typename type_sequence<Enums...>::template at<
-            DimIndex>{ FArrayBase::__expand_index(FlatIndex)[DimIndex] }>>;
-
-    template <std::size_t FlatIndex>
-    using invoke_result_wrapped =
-        __dc_invoke_result<F, qualified_concrete_type_at<DimI, FlatIndex>...>;
-
-    template <std::size_t FlatIndex>
-    using invoke_result =
-        typename std::conditional_t<we_care<FlatIndex>,
-                                    invoke_result_wrapped<FlatIndex>,
-                                    std::type_identity<__not_invocable>>::type;
-
-    using type =
-        typename __dc_common_type_wrapper<invoke_result<FlatI>...>::type;
-};
-
-template <typename T>
-using __dc_traits = __dyncast_traits_impl<__dc_enum_type<T>>;
-
-template <typename R, typename F, typename... T>
-constexpr R __visit(F&& f, T&&... t) {
-    auto constexpr getter =
-        []<std::size_t TargetTypeIdx,
-           typename U>(std::integral_constant<std::size_t, TargetTypeIdx>,
-                       U&& t) -> decltype(auto) {
-        using enum_type = __dc_enum_type<U>;
-        using target_type_raw =
-            __dyncast_enum_to_type<enum_type{ TargetTypeIdx }>;
-        using target_type = copy_cvref_t<U, target_type_raw>;
-        constexpr bool staticallyCastable =
-            requires { static_cast<target_type>(t); };
-        static_assert(std::is_reference_v<target_type>,
-                      "To avoid copies when performing static_cast");
-        if constexpr (!staticallyCastable) {
-            /// If we can't even `static_cast` there is no way this can be
-            /// invoked.
-            __utl_unreachable();
-            using base_type = __dyncast_enum_to_type<enum_type{ 0 }>;
-            static_assert(
-                requires(base_type* p) { static_cast<target_type_raw*>(p); },
-                "Target type must be in the same class hierarchy as base. "
-                "This can be triggered by target_type being incomplete");
-        }
-        else if constexpr (std::is_convertible_v<U&&, target_type> &&
-                           !std::is_same_v<U&&, target_type>)
-        {
-            /// If we can cast implicitly but destination type is not the same,
-            /// this means we go up the hierarchy. Since we are dispatching on
-            /// the most derived type, this path should be unreachable.
-            __utl_unreachable();
-        }
-        else if constexpr (__dyncast_is_abstract<
-                               __decay_all<target_type>>::value)
-        {
-            __utl_unreachable();
-        }
-        else {
-            return static_cast<target_type>(t);
-        }
+    struct utl::dc::IDToTypeImpl<ID> {                                         \
+        using type = Type;                                                     \
     };
-    constexpr __farray<
-        R, F, type_sequence<T...>,
-        std::integer_sequence<std::size_t, __dc_traits<T>::numElements...>>
-        vis(getter);
-    return vis[{ static_cast<std::size_t>(
-        dyncast_get_type(t))... }](std::forward<F>(f), std::forward<T>(t)...);
-}
 
-template <typename F, typename... T>
-constexpr decltype(auto) __visit(F&& f, T&&... t) {
-    using return_type =
-        typename __dispatch_return_type<type_sequence<__dc_enum_type<T>...>,
-                                        type_sequence<T&&...>, F&&>::type;
-    return __visit<return_type>(std::forward<F>(f), std::forward<T>(t)...);
-}
+/// Declares a mapping of \p type to its parent type \p Parent
+#define UTL_DYNCAST_IMPL_PARENT(Type, Parent)                                  \
+    template <>                                                                \
+    struct utl::dc::TypeToParentImpl<Type> {                                   \
+        using type = Parent;                                                   \
+    };
 
-} // namespace utl
+/// Declares a mapping of \p type to its corporeality \p CorporealityKind
+#define UTL_DYNCAST_IMPL_ABSTRACT(Type, CorporealityKind)                      \
+    template <>                                                                \
+    [[maybe_unused]] constexpr utl::dc::Corporeality                           \
+        utl::dc::TypeToCorporeality<Type> =                                    \
+            utl::dc::Corporeality::CorporealityKind;
 
-template <typename T, typename F>
-requires utl::__dc_dynamic<T>
-decltype(auto) utl::visit(T&& t, F&& fn) {
-    return __visit(std::forward<F>(fn), std::forward<T>(t));
-}
-
-template <typename T0, typename T1, typename F>
-requires utl::__dc_dynamic<T0> && utl::__dc_dynamic<T1>
-decltype(auto) utl::visit(T0&& t0, T1&& t1, F&& fn) {
-    return __visit(std::forward<F>(fn), std::forward<T0>(t0),
-                   std::forward<T1>(t1));
-}
-
-template <typename T0, typename T1, typename T2, typename F>
-requires utl::__dc_dynamic<T0> && utl::__dc_dynamic<T1> && utl::__dc_dynamic<T2>
-decltype(auto) utl::visit(T0&& t0, T1&& t1, T2&& t2, F&& fn) {
-    return __visit(std::forward<F>(fn), std::forward<T0>(t0),
-                   std::forward<T1>(t1), std::forward<T2>(t2));
-}
-
-template <typename T0, typename T1, typename T2, typename T3, typename F>
-requires utl::__dc_dynamic<T0> && utl::__dc_dynamic<T1> &&
-         utl::__dc_dynamic<T2> && utl::__dc_dynamic<T3>
-decltype(auto) utl::visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, F&& fn) {
-    return __visit(std::forward<F>(fn), std::forward<T0>(t0),
-                   std::forward<T1>(t1), std::forward<T2>(t2),
-                   std::forward<T3>(t3));
-}
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4,
-          typename F>
-requires utl::__dc_dynamic<T0> && utl::__dc_dynamic<T1> &&
-         utl::__dc_dynamic<T2> && utl::__dc_dynamic<T3> && utl::__dc_dynamic<T4>
-decltype(auto) utl::visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, F&& fn) {
-    return __visit(std::forward<F>(fn), std::forward<T0>(t0),
-                   std::forward<T1>(t1), std::forward<T2>(t2),
-                   std::forward<T3>(t3), std::forward<T4>(t4));
-}
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4,
-          typename T5, typename F>
-requires utl::__dc_dynamic<T0> && utl::__dc_dynamic<T1> &&
-         utl::__dc_dynamic<T2> && utl::__dc_dynamic<T3> &&
-         utl::__dc_dynamic<T4> && utl::__dc_dynamic<T5>
-decltype(auto) utl::visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, T5&& t5,
-                          F&& fn) {
-    return __visit(std::forward<F>(fn), std::forward<T0>(t0),
-                   std::forward<T1>(t1), std::forward<T2>(t2),
-                   std::forward<T3>(t3), std::forward<T4>(t4),
-                   std::forward<T5>(t5));
-}
+/// User facing macro that declares all mappings defined above
+#define UTL_DYNCAST_DEFINE(Type, ID, ParentType, Corporeality)                 \
+    UTL_DYNCAST_IMPL_MAP(Type, ID)                                             \
+    UTL_DYNCAST_IMPL_PARENT(Type, ParentType)                                  \
+    UTL_DYNCAST_IMPL_ABSTRACT(Type, Corporeality)
 
 namespace utl {
 
-namespace __dyncast_operators {
+namespace dc {
 
-template <typename To, typename From>
-bool isa(From* from) {
-    using enum_type =
-        decltype(__dyncast_type_to_enum<std::remove_const_t<From>>);
-    using to_stripped = std::remove_const_t<std::remove_pointer_t<To>>;
-    (void)sizeof(From);
-    (void)sizeof(to_stripped);
-    if (!from) {
+/// MARK: - TMP debug utilities
+
+#define UTL_DC_CONCAT(a, b)      UTL_DC_CONCAT_IMPL(a, b)
+#define UTL_DC_CONCAT_IMPL(a, b) a##b
+
+#define CTPrintType(...) CTTP<__VA_ARGS__> UTL_DC_CONCAT(ctPrintVar, __LINE__);
+
+#define CTPrintVal(...) CTVP<__VA_ARGS__> UTL_DC_CONCAT(ctPrintVar, __LINE__);
+
+template <typename...>
+struct CTTP;
+
+template <auto...>
+struct CTVP;
+
+/// MARK: - General utilities
+
+[[noreturn]] inline void unreachable() {
+    assert(false);
+}
+
+template <typename T, typename U>
+struct copy_cv_reference {
+private:
+    using R = std::remove_reference_t<T>;
+    using U1 =
+        std::conditional_t<std::is_const<R>::value, std::add_const_t<U>, U>;
+    using U2 = std::conditional_t<std::is_volatile<R>::value,
+                                  std::add_volatile_t<U1>, U1>;
+    using U3 = std::conditional_t<std::is_lvalue_reference<T>::value,
+                                  std::add_lvalue_reference_t<U2>, U2>;
+    using U4 = std::conditional_t<std::is_rvalue_reference<T>::value,
+                                  std::add_rvalue_reference_t<U3>, U3>;
+
+public:
+    using type = U4;
+};
+
+template <typename T, typename U>
+using copy_cv_reference_t = typename copy_cv_reference<T, U>::type;
+
+/// Enum class to denote invalid type IDs
+enum class Invalid {};
+
+/// Used to identify the base case in `isaImpl()`
+template <auto Fallback>
+constexpr decltype(Fallback) ValueOr(auto value) {
+    return value;
+}
+
+/// Base case
+template <auto Fallback>
+constexpr decltype(Fallback) ValueOr(Invalid) {
+    return Fallback;
+}
+
+/// Variadic type list useful for template meta programming
+template <typename... T>
+struct TypeList {
+    TypeList() = default;
+    constexpr TypeList(T...) {}
+};
+
+template <typename T, typename...>
+struct FirstImpl {
+    using type = T;
+};
+
+/// Evaluates to the first type in the parameter pack \p T...
+template <typename... T>
+using First = typename FirstImpl<T...>::type;
+
+template <typename>
+struct IndexSequenceToArrayImpl;
+
+template <size_t... I>
+struct IndexSequenceToArrayImpl<std::index_sequence<I...>> {
+    static constexpr std::array<size_t, sizeof...(I)> value = { I... };
+};
+
+/// Converts the `std::index_sequence` \p IdxSeq to an `std::array<size_t,
+/// IdxSeq::size()>`
+template <typename IdxSeq>
+constexpr std::array IndexSequenceToArray =
+    IndexSequenceToArrayImpl<IdxSeq>::value;
+
+/// MARK: - General RTTI implementation
+
+/// Different kinds of _corporeality_. Corporeality is meant to denote the
+/// 'class' of abstractness and concreteness.
+enum class Corporeality { Abstract, Concrete };
+
+/// Common traits of an ID type
+template <typename IDType>
+struct IDTraits {
+    static constexpr size_t count = (size_t)IDType::LAST + 1;
+    static constexpr IDType first = IDType{ 0 };
+    static constexpr IDType last = IDType(count);
+};
+
+/// MARK: - Maps
+
+/// Maps \p T from the type domain to the identifier domain
+template <typename T>
+constexpr Invalid TypeToID{};
+
+template <auto>
+struct IDToTypeImpl {
+    using type = void;
+};
+
+/// Maps \p ID from the identifier domain to the type domain
+template <auto ID>
+using IDToType = typename IDToTypeImpl<ID>::type;
+
+template <typename>
+struct TypeToParentImpl;
+
+/// Maps \p T types to its parent type
+template <typename T>
+using TypeToParent = typename TypeToParentImpl<T>::type;
+
+/// Maps \p ID to the ID of its parent type
+template <typename IDType>
+constexpr IDType IDToParent(IDType ID) {
+    constexpr std::array ParentArray =
+        []<size_t... I>(std::index_sequence<I...>) {
+        return std::array{ ValueOr<IDTraits<IDType>::last>(
+            TypeToID<TypeToParent<IDToType<IDType{ I }>>>)... };
+    }(std::make_index_sequence<IDTraits<IDType>::count>{});
+    return ParentArray[(size_t)ID];
+}
+
+/// Maps \p T to the ID type of its class hierarchy
+template <typename T>
+using TypeToIDType = decltype(TypeToID<std::decay_t<T>>);
+
+/// Maps \p T to the number of types in its class hierarchy
+template <typename T>
+constexpr size_t TypeToBound = IDTraits<TypeToIDType<T>>::count;
+
+/// Maps \p T to its corporeality
+template <typename T>
+constexpr Corporeality TypeToCorporeality = Corporeality{ -1 };
+
+/// Maps \p ID to its corporeality
+template <auto ID>
+constexpr Corporeality IDToCorporeality = TypeToCorporeality<IDToType<ID>>;
+
+/// `true` if \p ID denotes a concrete type
+template <auto ID>
+constexpr bool IDIsConcrete = IDToCorporeality<ID> == Corporeality::Concrete;
+
+/// `true` if \p ID denotes an abstract type
+template <auto ID>
+constexpr bool IDIsAbstract = IDToCorporeality<ID> == Corporeality::Abstract;
+
+/// MARK: - isa
+
+/// \Returns `true` if \p TestID is a super class of \p ActualID
+/// This function should ideally be `consteval` if we were writing C++23,
+/// therefore the `ct` prefix
+template <typename IDType>
+static constexpr bool ctIsaImpl(IDType TestID, IDType ActualID) {
+    if (ActualID == IDTraits<IDType>::last) {
         return false;
     }
-    return __dyncast_traits_impl<enum_type>::template is<
-        __dyncast_type_to_enum<to_stripped>>(*from);
+    if (ActualID == TestID) {
+        return true;
+    }
+    return ctIsaImpl(TestID, IDToParent(ActualID));
 }
 
-template <typename To, typename From>
-bool isa(From& from) {
-    return isa<To>(&from);
+template <typename TestType>
+static constexpr auto makeIsaDispatchArray() {
+    using IDType = decltype(TypeToID<TestType>);
+    return []<size_t... Actual>(std::index_sequence<Actual...>) {
+        return std::array{ ctIsaImpl(TypeToID<TestType>, IDType{ Actual })... };
+    }(std::make_index_sequence<IDTraits<IDType>::count>{});
 }
 
-template <typename To>
-struct isa_fn {
-    template <typename From>
-    requires utl::__dyn_checkable<To, From>
-    constexpr bool operator()(From* from) const {
-        return __dyncast_operators::isa<To>(from);
+template <typename TestType>
+static constexpr std::array IsaDispatchArray = makeIsaDispatchArray<TestType>();
+
+template <typename Test, typename Known>
+bool isaImpl(Known* obj) {
+    if (!obj) {
+        return false;
+    }
+    using IDType = decltype(dc::TypeToID<Known>);
+    return dc::IsaDispatchArray<Test>[(size_t)dyncast_get_type(*obj)];
+}
+
+template <typename Test, typename Known>
+bool isaImpl(Known& obj) {
+    return isaImpl<Test>(&obj);
+}
+
+template <typename Test>
+struct IsaFn {
+    template <typename Known>
+    constexpr bool operator()(Known* obj) const {
+        return isaImpl<Test>(obj);
     }
 
-    template <typename From>
-    requires utl::__dyn_checkable<To, From>
-    constexpr bool operator()(From& from) const {
-        return __dyncast_operators::isa<To>(from);
+    template <typename Known>
+    constexpr bool operator()(Known& obj) const {
+        return isaImpl<Test>(obj);
     }
 };
 
+/// MARK: - dyncast and cast
+
 template <typename To, typename From>
-constexpr To dyncast(From* from) {
-    if (isa<__decay_all<To>>(from)) {
+constexpr To dyncastImpl(From* from) {
+    if (isaImpl<std::remove_const_t<std::remove_pointer_t<To>>>(from)) {
         return static_cast<To>(from);
     }
     return nullptr;
 }
 
 template <typename To, typename From>
-constexpr To dyncast(From& from) {
+constexpr To dyncastImpl(From& from) {
     using ToNoRef = std::remove_reference_t<To>;
-    if (auto* result = dyncast<ToNoRef*>(&from)) {
+    if (auto* result = dyncastImpl<ToNoRef*>(&from)) {
         return *result;
     }
     throw std::bad_cast();
 }
 
 template <typename To>
-struct dyncast_fn {
+struct DyncastFn {
     template <typename From>
-    requires utl::__dyn_castable<To, From*> && std::is_pointer_v<To>
+    requires std::is_pointer_v<To>
     constexpr To operator()(From* from) const {
-        return __dyncast_operators::dyncast<To>(from);
+        return dyncastImpl<To>(from);
     }
 
     template <typename From>
-    requires utl::__dyn_castable<To, From&> && std::is_lvalue_reference_v<To>
+    requires std::is_reference_v<To>
     constexpr To operator()(From& from) const {
-        return __dyncast_operators::dyncast<To>(from);
+        return dyncastImpl<To>(from);
     }
 };
 
 template <typename To, typename From>
-constexpr To cast(From* from) {
-    __utl_assert(!from || dyncast<To>(from), "Cast failed.");
+constexpr To castImpl(From* from) {
+    __utl_assert(!from || dyncastImpl<To>(from) && "cast failed.");
     return static_cast<To>(from);
 }
 
 template <typename To, typename From>
-constexpr To cast(From& from) {
+constexpr To castImpl(From& from) {
     using ToNoRef = std::remove_reference_t<To>;
     return *cast<ToNoRef*>(&from);
 }
 
 template <typename To>
-struct cast_fn {
+struct CastFn {
     template <typename From>
-    requires utl::__dyn_castable<To, From*> && std::is_pointer_v<To>
+    requires std::is_pointer_v<To>
     constexpr To operator()(From* from) const {
-        return __dyncast_operators::cast<To>(from);
+        return castImpl<To>(from);
     }
 
     template <typename From>
-    requires utl::__dyn_castable<To, From&> && std::is_lvalue_reference_v<To>
+    requires std::is_reference_v<To>
     constexpr To operator()(From& from) const {
-        return __dyncast_operators::cast<To>(from);
+        return castImpl<To>(from);
     }
 };
 
-} // namespace __dyncast_operators
+} // namespace dc
+
+template <typename Test>
+inline constexpr dc::IsaFn<Test> isa{};
 
 template <typename To>
-inline constexpr __dyncast_operators::isa_fn<To> isa{};
+inline constexpr dc::DyncastFn<To> dyncast{};
 
 template <typename To>
-inline constexpr __dyncast_operators::isa_fn<To> isa_or_null{};
+inline constexpr dc::CastFn<To> cast{};
 
-template <typename To>
-inline constexpr __dyncast_operators::dyncast_fn<To> dyncast{};
+/// MARK: - visit
 
-template <typename To>
-inline constexpr __dyncast_operators::dyncast_fn<To> dyncast_or_null{};
+namespace dc {
 
-template <typename To>
-inline constexpr __dyncast_operators::cast_fn<To> cast{};
+/// Tag type used by the overloads of `visit()` that don't take an explicit
+/// return type parameter to instruct `visitImpl()` to deduce the return type
+enum class DeduceReturnType {};
 
-template <typename To>
-inline constexpr __dyncast_operators::cast_fn<To> cast_or_null{};
+/// Converts the N-dimensional multi-index \p index to a single dimensional flat
+/// index according to \p bounds
+template <size_t N>
+constexpr size_t flattenIndex(std::array<size_t, N> index,
+                              std::array<size_t, N> bounds) {
+    static_assert(N > 0);
+    __utl_assert(index[0] < bounds[0]);
+    size_t acc = index[0];
+    for (size_t i = 1; i < N; ++i) {
+        __utl_assert(index[i] < bounds[i]);
+        acc *= bounds[i];
+        acc += index[i];
+    }
+    return acc;
+}
+
+/// Converts the a single dimensional flat index \p flatIdex to an N-dimensional
+/// multi-index according to \p bounds
+template <size_t N>
+constexpr std::array<std::size_t, N> expandIndex(std::size_t flatIndex,
+                                                 std::array<size_t, N> bounds) {
+    std::array<std::size_t, N> index;
+    for (size_t i = 0, j = N - 1; i < N; ++i, --j) {
+        size_t m = 1;
+        for (size_t k = N - 1; k > i; --k) {
+            m *= bounds[k];
+        }
+        index[i] = flatIndex / m;
+        flatIndex -= index[i] * m;
+    }
+    return index;
+}
+
+/// Implementation of `ComputeInvocableIndices`
+template <auto ID, typename IDType, size_t Current, size_t Last,
+          size_t... InvocableIndices>
+struct InvocableIndicesImpl:
+    std::conditional_t<
+        /// `IsInvocable` =
+        IDIsConcrete<(IDType)Current> /// `Current` must be concrete to even be
+                                      /// considered invocable
+            && ctIsaImpl(ID, (IDType)Current), /// and `Current` must be derived
+                                               /// from `ID`
+        InvocableIndicesImpl<ID, IDType, Current + 1, Last, InvocableIndices...,
+                             Current>,
+        InvocableIndicesImpl<ID, IDType, Current + 1, Last,
+                             InvocableIndices...>> {};
+
+/// Base case where `Current == Last`
+template <auto ID, typename IDType, size_t Last, size_t... InvocableIndices>
+struct InvocableIndicesImpl<ID, IDType, Last, Last, InvocableIndices...> {
+    using Indices = std::index_sequence<InvocableIndices...>;
+};
+
+/// Computes which dispatch cases have to be generated for a given type `T`,
+/// i.e. the list of all type IDs (represented as integers) that could be the
+/// runtime type of `T`. This using declaration evaluates to a
+/// `std::index_sequence` of the invocable indices
+template <typename T>
+using ComputeInvocableIndices = typename InvocableIndicesImpl<
+    TypeToID<std::decay_t<T>>, TypeToIDType<T>,
+    (size_t)IDTraits<TypeToIDType<T>>::first,
+    (size_t)IDTraits<TypeToIDType<T>>::last>::Indices;
+
+template <size_t FlatInvokeIndex, typename... InvocableIndices>
+struct MakeStructuredIndexImpl {
+    static constexpr std::array ExIndex = expandIndex<sizeof...(
+        InvocableIndices)>(FlatInvokeIndex, { InvocableIndices::size()... });
+
+    template <size_t... I>
+    static auto makeStructured(std::index_sequence<I...>) {
+        return std::index_sequence<
+            IndexSequenceToArray<InvocableIndices>[ExIndex[I]]...>{};
+    }
+
+    using type = decltype(makeStructured(
+        std::make_index_sequence<sizeof...(InvocableIndices)>{}));
+};
+
+/// Converts the flat index `FlatInvokeIndex` in the space of _invocable_ types
+/// to a structured multi-index in the space of all types. Here "space of
+/// invocable types" means
+/// `[0,...,NumInvocableTypes<T0>) x ... x  [0,...,NumInvocableTypes<TN>)`
+/// where `NumInvocableTypes<T> = ComputeInvocableIndices<T>::size()`
+/// This template evaluates to a `std::index_sequence` of the structured indices
+template <size_t FlatInvokeIndex, typename... InvocableIndices>
+using MakeStructuredIndex =
+    typename MakeStructuredIndexImpl<FlatInvokeIndex,
+                                     InvocableIndices...>::type;
+
+template <typename R, typename F, typename T, typename StructuredIndex>
+struct VisitorCase;
+
+/// Defines the invocation for one combination of runtime argument types. Users
+/// of this class are only interested in the static member variable `impl`.
+template <typename R, typename F, typename... T, size_t... StructuredIndex>
+struct VisitorCase<R, F, TypeList<T...>,
+                   std::index_sequence<StructuredIndex...>> {
+private:
+    ///
+    template <typename U, size_t I>
+    using DerivedAt = copy_cv_reference_t<U&&, IDToType<(TypeToIDType<U>)I>>;
+
+public:
+    static constexpr auto impl = [](F&& f, T&&... t) -> decltype(auto) {
+        if constexpr (std::is_same_v<R, DeduceReturnType>) {
+            return f(static_cast<DerivedAt<T, StructuredIndex>>(t)...);
+        }
+        else {
+            return [&]() -> R {
+                return f(static_cast<DerivedAt<T, StructuredIndex>>(t)...);
+            }();
+        }
+    };
+};
+
+template <typename R, typename F, typename T, typename InvocableIndices>
+struct MakeVisitorCasesImpl;
+
+template <typename R, typename F, typename... T,
+          typename... InvocableIndices // <- Pack of index_sequences with the
+                                       // same size as T that hold the invocable
+                                       // indices for each T
+          >
+struct MakeVisitorCasesImpl<R, F, TypeList<T...>,
+                            TypeList<InvocableIndices...>> {
+    /// The total number of invocable cases. This is used to make an index
+    /// sequence of this size, create structured indices for every flat index
+    /// and create dispatch cases from the that
+    static constexpr size_t TotalInvocableCases =
+        (InvocableIndices::size() * ...);
+
+    template <size_t... FlatInvokeIndex>
+    static auto makeCaseTypeList(std::index_sequence<FlatInvokeIndex...>) {
+        return TypeList<
+            decltype(VisitorCase<
+                     R, F, TypeList<T...>,
+                     MakeStructuredIndex<FlatInvokeIndex,
+                                         InvocableIndices...>>::impl)...>{};
+    }
+
+    template <size_t... FlatInvokeIndex>
+    static auto makeFlatCaseIndexList(std::index_sequence<FlatInvokeIndex...>) {
+        /// Debug code to print the computed values
+        if constexpr (false) {
+            constexpr size_t TestInvokeIndex = 3;
+            using StructuredIndex =
+                MakeStructuredIndex<TestInvokeIndex, InvocableIndices...>;
+            CTPrintType(StructuredIndex);
+            constexpr size_t FlatIndex =
+                flattenIndex(IndexSequenceToArray<StructuredIndex>,
+                             { TypeToBound<T>... });
+            CTPrintVal(FlatIndex);
+            constexpr std::array RestructuredIndex =
+                expandIndex<sizeof...(T)>(FlatIndex, { TypeToBound<T>... });
+            CTPrintVal(RestructuredIndex);
+        }
+        return std::index_sequence<
+            flattenIndex(IndexSequenceToArray<MakeStructuredIndex<
+                             FlatInvokeIndex, InvocableIndices...>>,
+                         { TypeToBound<T>... })...>{};
+    }
+
+    using CaseTypeList = decltype(makeCaseTypeList(
+        std::make_index_sequence<TotalInvocableCases>{}));
+
+    using FlatCaseIndexList = decltype(makeFlatCaseIndexList(
+        std::make_index_sequence<TotalInvocableCases>{}));
+};
+
+template <typename R, typename F, typename... T>
+struct MakeVisitorCases:
+    MakeVisitorCasesImpl<R, F, TypeList<T...>,
+                         TypeList<ComputeInvocableIndices<T>...>> {};
+
+template <typename R, typename F, typename T, typename Cases>
+struct DoDeduceReturnTypeImpl {
+    using type = R;
+};
+
+template <typename F, typename... T, typename... Cases>
+struct DoDeduceReturnTypeImpl<DeduceReturnType, F, TypeList<T...>,
+                              TypeList<Cases...>> {
+    template <typename Case>
+    using ReturnType =
+        decltype(Case{}(std::declval<F&&>(), std::declval<T&&>()...));
+    using type = typename std::conditional_t<
+        std::is_reference_v<First<ReturnType<Cases>...>>,
+        std::common_reference<ReturnType<Cases>...>,
+        std::common_type<ReturnType<Cases>...>>::type;
+};
+
+template <typename R, typename F, typename T_TypeList, typename Cases_TypeList>
+using DoDeduceReturnType =
+    typename DoDeduceReturnTypeImpl<R, F, T_TypeList, Cases_TypeList>::type;
+
+template <typename ReturnType, typename CaseTypeList,
+          typename FlatCaseIndexList>
+struct InvokeVisitorCases;
+
+template <typename ReturnType, typename... Cases, size_t... FlatCaseIndices>
+struct InvokeVisitorCases<ReturnType, TypeList<Cases...>,
+                          std::index_sequence<FlatCaseIndices...>> {
+    template <typename FuncPtrType, size_t NumTotalCombinations, typename F,
+              typename... T>
+    static constexpr auto makeDispatchArray() {
+        std::array<FuncPtrType, NumTotalCombinations> DispatchArray{};
+        ((DispatchArray[FlatCaseIndices] = [](F&& f, T&&... t) -> ReturnType {
+             return Cases{}(static_cast<F&&>(f), static_cast<T&&>(t)...);
+         }),
+         ...);
+        return DispatchArray;
+    }
+
+    template <typename F, typename... T>
+    static ReturnType impl(size_t flatIndex, F&& f, T&&... t) {
+        using FuncPtrType = ReturnType (*)(F&&, T&&...);
+        static constexpr size_t NumTotalCombinations = (TypeToBound<T> * ...);
+        static constexpr auto DispatchArray =
+            makeDispatchArray<FuncPtrType, NumTotalCombinations, F, T...>();
+        return DispatchArray[flatIndex](static_cast<F&&>(f),
+                                        static_cast<T&&>(t)...);
+    }
+};
+
+template <typename R, typename F, typename... T>
+decltype(auto) visitImpl(F&& f, T&&... t) {
+    using CaseTypeList = typename MakeVisitorCases<R, F, T...>::CaseTypeList;
+    using FlatCaseIndexList =
+        typename MakeVisitorCases<R, F, T...>::FlatCaseIndexList;
+    using ReturnType = DoDeduceReturnType<R, F, TypeList<T...>, CaseTypeList>;
+    static constexpr std::array Bounds = { TypeToBound<T>... };
+
+    std::array index = { (size_t)dyncast_get_type(t)... };
+    size_t flatIndex = flattenIndex(index, Bounds);
+    return InvokeVisitorCases<ReturnType, CaseTypeList,
+                              FlatCaseIndexList>::impl(flatIndex,
+                                                       static_cast<F&&>(f),
+                                                       static_cast<T&&>(t)...);
+}
+
+} // namespace dc
+
+template <typename T, typename F>
+decltype(auto) visit(T&& t, F&& fn) {
+    return dc::visitImpl<dc::DeduceReturnType>(static_cast<F&&>(fn),
+                                               static_cast<T&&>(t));
+}
+
+template <typename T0, typename T1, typename F>
+decltype(auto) visit(T0&& t0, T1&& t1, F&& fn) {
+    return dc::visitImpl<dc::DeduceReturnType>(static_cast<F&&>(fn),
+                                               static_cast<T0&&>(t0),
+                                               static_cast<T1&&>(t1));
+}
+
+template <typename T0, typename T1, typename T2, typename F>
+decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, F&& fn) {
+    return dc::visitImpl<dc::DeduceReturnType>(static_cast<F&&>(fn),
+                                               static_cast<T0&&>(t0),
+                                               static_cast<T1&&>(t1),
+                                               static_cast<T2&&>(t2));
+}
+
+template <typename T0, typename T1, typename T2, typename T3, typename F>
+decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, F&& fn) {
+    return dc::visitImpl<dc::DeduceReturnType>(static_cast<F&&>(fn),
+                                               static_cast<T0&&>(t0),
+                                               static_cast<T1&&>(t1),
+                                               static_cast<T2&&>(t2),
+                                               static_cast<T3&&>(t3));
+}
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4,
+          typename F>
+decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, F&& fn) {
+    return dc::visitImpl<dc::DeduceReturnType>(static_cast<F&&>(fn),
+                                               static_cast<T0&&>(t0),
+                                               static_cast<T1&&>(t1),
+                                               static_cast<T2&&>(t2),
+                                               static_cast<T3&&>(t3),
+                                               static_cast<T4&&>(t4));
+}
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4,
+          typename T5, typename F>
+decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, T5&& t5,
+                     F&& fn) {
+    return dc::visitImpl<dc::DeduceReturnType>(static_cast<F&&>(fn),
+                                               static_cast<T0&&>(t0),
+                                               static_cast<T1&&>(t1),
+                                               static_cast<T2&&>(t2),
+                                               static_cast<T3&&>(t3),
+                                               static_cast<T4&&>(t4),
+                                               static_cast<T5&&>(t5));
+}
 
 } // namespace utl
+
+#endif // UTL_DYNCAST_HPP_
