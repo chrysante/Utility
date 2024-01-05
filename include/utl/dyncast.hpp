@@ -12,7 +12,8 @@
 /// Declares a mapping of \p type to its identifier \p ID
 #define UTL_DYNCAST_IMPL_MAP(Type, ID)                                         \
     template <>                                                                \
-    [[maybe_unused]] constexpr decltype(ID) utl::dc::TypeToID<Type> = ID;      \
+    [[maybe_unused]] inline constexpr decltype(ID) utl::dc::TypeToID<Type> =   \
+        ID;                                                                    \
     template <>                                                                \
     struct utl::dc::IDToTypeImpl<ID> {                                         \
         using type = Type;                                                     \
@@ -28,7 +29,7 @@
 /// Declares a mapping of \p type to its corporeality \p CorporealityKind
 #define UTL_DYNCAST_IMPL_ABSTRACT(Type, CorporealityKind)                      \
     template <>                                                                \
-    [[maybe_unused]] constexpr utl::dc::Corporeality                           \
+    [[maybe_unused]] inline constexpr utl::dc::Corporeality                    \
         utl::dc::TypeToCorporeality<Type> =                                    \
             utl::dc::Corporeality::CorporealityKind;
 
@@ -206,6 +207,10 @@ constexpr bool IDIsAbstract = IDToCorporeality<ID> == Corporeality::Abstract;
 /// therefore the `ct` prefix
 template <typename IDType>
 static constexpr bool ctIsaImpl(IDType TestID, IDType ActualID) {
+    if constexpr (std::is_same_v<IDType, Invalid>) {
+        CTPrintVal(TestID);
+        CTPrintVal(ActualID);
+    }
     if (ActualID == IDTraits<IDType>::last) {
         return false;
     }
@@ -231,7 +236,6 @@ bool isaImpl(Known* obj) {
     if (!obj) {
         return false;
     }
-    using IDType = decltype(dc::TypeToID<Known>);
     return dc::IsaDispatchArray<Test>[(size_t)dyncast_get_type(*obj)];
 }
 
@@ -243,11 +247,13 @@ bool isaImpl(Known& obj) {
 template <typename Test>
 struct IsaFn {
     template <typename Known>
+    requires std::is_class_v<Test>
     constexpr bool operator()(Known* obj) const {
         return isaImpl<Test>(obj);
     }
 
     template <typename Known>
+    requires std::is_class_v<Test>
     constexpr bool operator()(Known& obj) const {
         return isaImpl<Test>(obj);
     }
@@ -296,7 +302,7 @@ constexpr To castImpl(From* from) {
 template <typename To, typename From>
 constexpr To castImpl(From& from) {
     using ToNoRef = std::remove_reference_t<To>;
-    return *cast<ToNoRef*>(&from);
+    return *castImpl<ToNoRef*>(&from);
 }
 
 template <typename To>
