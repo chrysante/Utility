@@ -28,22 +28,22 @@ class small_ptr_vector {
     /// We don't `static_assert` that the pointer is properly aligned to be able
     /// to instantiate the template with pointers to incomplete types
 
-    using impl_type    = utl::small_vector<T, 6, Allocator>;
+    using impl_type = utl::small_vector<T, 6, Allocator>;
     using vector_alloc = typename std::allocator_traits<
         Allocator>::template rebind_alloc<impl_type>;
 
 public:
-    using value_type             = typename impl_type::value_type;
-    using allocator_type         = typename impl_type::allocator_type;
-    using size_type              = typename impl_type::size_type;
-    using difference_type        = typename impl_type::difference_type;
-    using reference              = typename impl_type::reference;
-    using const_reference        = typename impl_type::const_reference;
-    using pointer                = typename impl_type::pointer;
-    using const_pointer          = typename impl_type::const_pointer;
-    using iterator               = value_type*;
-    using const_iterator         = value_type const*;
-    using reverse_iterator       = std::reverse_iterator<iterator>;
+    using value_type = typename impl_type::value_type;
+    using allocator_type = typename impl_type::allocator_type;
+    using size_type = typename impl_type::size_type;
+    using difference_type = typename impl_type::difference_type;
+    using reference = typename impl_type::reference;
+    using const_reference = typename impl_type::const_reference;
+    using pointer = typename impl_type::pointer;
+    using const_pointer = typename impl_type::const_pointer;
+    using iterator = value_type*;
+    using const_iterator = value_type const*;
+    using reverse_iterator = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
     /// (1)
@@ -54,8 +54,7 @@ public:
         ptr(empty_state()), alloc(alloc) {}
 
     /// (3) & (4)
-    explicit small_ptr_vector(std::size_t count,
-                              T const& value              = T(),
+    explicit small_ptr_vector(std::size_t count, T const& value = T(),
                               allocator_type const& alloc = allocator_type()):
         small_ptr_vector(alloc) {
         switch (count) {
@@ -68,8 +67,7 @@ public:
     /// (5)
     template <utl::input_iterator_for<value_type> InputIt,
               utl::sentinel_for<InputIt> Sentinel>
-    small_ptr_vector(InputIt first,
-                     Sentinel last,
+    small_ptr_vector(InputIt first, Sentinel last,
                      allocator_type const& alloc = allocator_type()):
         small_ptr_vector(alloc) {
         if (first == last) {
@@ -664,7 +662,7 @@ private:
     /// vector
     template <typename... Args>
     impl_type* new_heap(Args&&... args) {
-        using traits    = std::allocator_traits<vector_alloc>;
+        using traits = std::allocator_traits<vector_alloc>;
         impl_type* impl = traits::allocate(alloc, 1);
         traits::construct(alloc, impl, std::forward<Args>(args)...);
         return impl;
