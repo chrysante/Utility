@@ -26,7 +26,7 @@ public:
                    std::negation<std::is_same<function_view<__sig>, std::remove_cvref_t<F>>>>
     constexpr __function_view_impl(F&& f) noexcept:
         __invoke_ptr(&__static_invoke<std::remove_reference_t<F>>),
-        __state_ptr(reinterpret_cast<void*>(&f))
+        __state_ptr(const_cast<void*>(reinterpret_cast<void const volatile*>(&f)))
     {}
     
     constexpr R operator()(Args... args) const noexcept(IsNoexcept) {
