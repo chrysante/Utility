@@ -34,7 +34,7 @@ struct streammanip {
     constexpr streammanip(F&& f): __f(std::move(f)) {}
 
     template <typename... Args>
-    constexpr auto operator()(Args&&... args) const
+    [[nodiscard]] constexpr auto operator()(Args&&... args) const
     requires requires(F& f, std::ostream& ostream) {
         std::invoke(f, ostream, args...);
     } {
