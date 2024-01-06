@@ -444,13 +444,26 @@ private:
 
 public:
     static constexpr auto impl = [](F&& f, T&&... t) -> decltype(auto) {
-        if constexpr (std::is_same_v<R, DeduceReturnType>) {
+        auto invoke = [&]() -> decltype(auto) {
             return f(static_cast<DerivedAt<T, StructuredIndex>>(t)...);
+        };
+        if constexpr (std::is_same_v<R, DeduceReturnType>) {
+            return invoke();
+        }
+        else if constexpr (std::is_same_v<R, void>) {
+            invoke();
+        }
+        else if constexpr (std::is_same_v<decltype(invoke()), void>) {
+            return [&]() -> R {
+                invoke();
+                /// Unreachable because we invoke UB by returning from a
+                /// non-void function without a value. This must be fixed in
+                /// user code
+                __utl_unreachable();
+            }();
         }
         else {
-            return [&]() -> R {
-                return f(static_cast<DerivedAt<T, StructuredIndex>>(t)...);
-            }();
+            return [&]() -> R { return invoke(); }();
         }
     };
 };
@@ -636,6 +649,49 @@ decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, T5&& t5,
                                                static_cast<T3&&>(t3),
                                                static_cast<T4&&>(t4),
                                                static_cast<T5&&>(t5));
+}
+
+template <typename R, typename T, typename F>
+decltype(auto) visit(T&& t, F&& fn) {
+    return dc::visitImpl<R>(static_cast<F&&>(fn), static_cast<T&&>(t));
+}
+
+template <typename R, typename T0, typename T1, typename F>
+decltype(auto) visit(T0&& t0, T1&& t1, F&& fn) {
+    return dc::visitImpl<R>(static_cast<F&&>(fn), static_cast<T0&&>(t0),
+                            static_cast<T1&&>(t1));
+}
+
+template <typename R, typename T0, typename T1, typename T2, typename F>
+decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, F&& fn) {
+    return dc::visitImpl<R>(static_cast<F&&>(fn), static_cast<T0&&>(t0),
+                            static_cast<T1&&>(t1), static_cast<T2&&>(t2));
+}
+
+template <typename R, typename T0, typename T1, typename T2, typename T3,
+          typename F>
+decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, F&& fn) {
+    return dc::visitImpl<R>(static_cast<F&&>(fn), static_cast<T0&&>(t0),
+                            static_cast<T1&&>(t1), static_cast<T2&&>(t2),
+                            static_cast<T3&&>(t3));
+}
+
+template <typename R, typename T0, typename T1, typename T2, typename T3,
+          typename T4, typename F>
+decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, F&& fn) {
+    return dc::visitImpl<R>(static_cast<F&&>(fn), static_cast<T0&&>(t0),
+                            static_cast<T1&&>(t1), static_cast<T2&&>(t2),
+                            static_cast<T3&&>(t3), static_cast<T4&&>(t4));
+}
+
+template <typename R, typename T0, typename T1, typename T2, typename T3,
+          typename T4, typename T5, typename F>
+decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, T5&& t5,
+                     F&& fn) {
+    return dc::visitImpl<R>(static_cast<F&&>(fn), static_cast<T0&&>(t0),
+                            static_cast<T1&&>(t1), static_cast<T2&&>(t2),
+                            static_cast<T3&&>(t3), static_cast<T4&&>(t4),
+                            static_cast<T5&&>(t5));
 }
 
 } // namespace utl
