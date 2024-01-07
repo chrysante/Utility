@@ -71,7 +71,7 @@ enum class ID {
     Whale = 2,
     Dolphin = 3,
     Leopard = 4,
-    LAST = Leopard
+    COUNT
 };
 
 struct Animal;
@@ -93,10 +93,12 @@ namespace {
 
 struct Animal {
 protected:
-    Animal(ID id): id(id) {}
+    constexpr Animal(ID id): id(id) {}
 
 private:
-    friend ID dyncast_get_type(Animal const& animal) { return animal.id; }
+    constexpr friend ID dyncast_get_type(Animal const& animal) {
+        return animal.id;
+    }
 
     ID id;
 };
@@ -107,7 +109,7 @@ protected:
 };
 
 struct Whale: Cetacea {
-    Whale(): Cetacea(ID::Whale) {}
+    constexpr Whale(): Cetacea(ID::Whale) {}
 };
 
 } // namespace
@@ -115,18 +117,27 @@ struct Whale: Cetacea {
 // Dolphin and Leopard remain undefined at this point
 
 TEST_CASE("isa and dyncast", "[dyncast]") {
-    Whale whale;
-    Animal* animal = &whale;
+    static constexpr Whale whale;
+    constexpr Animal const* animal = &whale;
 
-    CHECK(utl::isa<Animal>(animal));
-    CHECK(utl::isa<Cetacea>(animal));
-    CHECK(utl::isa<Whale>(animal));
-    CHECK(!utl::isa<Leopard>(animal));
-    CHECK(!utl::isa<Dolphin>(animal));
+    /// Pointers
+    static_assert(utl::isa<Animal>(animal));
+    static_assert(utl::isa<Cetacea>(animal));
+    static_assert(utl::isa<Whale>(animal));
+    static_assert(!utl::isa<Leopard>(animal));
+    static_assert(!utl::isa<Dolphin>(animal));
 
-    CHECK(utl::dyncast<Animal*>(animal));
-    CHECK(utl::dyncast<Cetacea*>(animal));
-    CHECK(utl::dyncast<Whale*>(animal));
+    /// References
+    static_assert(utl::isa<Animal>(*animal));
+    static_assert(utl::isa<Cetacea>(*animal));
+    static_assert(utl::isa<Whale>(*animal));
+    static_assert(!utl::isa<Leopard>(*animal));
+    static_assert(!utl::isa<Dolphin>(*animal));
+
+    /// Dyncast for good measure
+    static_assert(utl::dyncast<Animal const*>(animal));
+    static_assert(utl::dyncast<Cetacea const*>(animal));
+    static_assert(utl::dyncast<Whale const*>(animal));
 }
 
 // Now we define the remaining types
@@ -134,11 +145,11 @@ TEST_CASE("isa and dyncast", "[dyncast]") {
 namespace {
 
 struct Dolphin: Cetacea {
-    Dolphin(): Cetacea(ID::Dolphin) {}
+    constexpr Dolphin(): Cetacea(ID::Dolphin) {}
 };
 
 struct Leopard: Animal {
-    Leopard(): Animal(ID::Leopard) {}
+    constexpr Leopard(): Animal(ID::Leopard) {}
 };
 
 } // namespace
@@ -199,6 +210,33 @@ TEST_CASE("Visitation") {
         CHECK(std::is_same_v<decltype(res), Base&>);
     }
 }
+
+static constexpr bool constexprVisitationReturnVoid() {
+    Dolphin d;
+    bool foundDolphin = false;
+    // clang-format off
+    utl::visit((Cetacea&)d, utl::overload{
+        [&](Dolphin const&) { foundDolphin = true; },
+        [&](Animal const&) {}
+    }); // clang-format on
+    return foundDolphin;
+}
+
+static_assert(constexprVisitationReturnVoid());
+
+static constexpr int constexprVisitationMultipleArguments() {
+    Dolphin d;
+    Leopard l;
+    return utl::visit((Cetacea&)d, (Animal const&)l,
+                      utl::overload{
+                          [&](Cetacea const&, Leopard const&) { return 1; },
+                          [&](Cetacea const&, Animal const&) { return '\0'; },
+                          [&](Animal const&, Animal const&) {
+        return (unsigned short)0;
+    } }); // clang-format on
+}
+
+static_assert(constexprVisitationMultipleArguments() == 1);
 
 /// # Second class hierarchy of old test cases
 
@@ -312,13 +350,13 @@ TEST_CASE("Dyncast visit returning reference to hierarchy",
     SECTION("Reference") {
         decltype(auto) result =
             utl::visit(base, [b = B{}]<typename T>(T&) -> auto& {
-                if constexpr (std::is_same_v<T, LDerivedB>) {
-                    return static_cast<A const&>(b);
-                }
-                else {
-                    return b;
-                }
-            });
+            if constexpr (std::is_same_v<T, LDerivedB>) {
+                return static_cast<A const&>(b);
+            }
+            else {
+                return b;
+            }
+        });
         CHECK(T<decltype(result)> == T<A const&>);
     }
     SECTION("Pointer") {
@@ -484,3 +522,33 @@ TEST_CASE("isa and dyncast", "[common][dyncast]") {
     CHECK_THROWS(utl::dyncast<LDerivedB const&>(*base));
     CHECK_NOTHROW(utl::dyncast<RDerived const&>(*base));
 }
+
+template <typename X, typename Int>
+static void errorTestDynConcept() {
+    static_assert(!utl::dc::Dynamic<int>);
+    static_assert(!utl::dc::Dynamic<X>);
+}
+
+template <typename X, typename Int>
+static void errorTestVisit() {
+    static_assert(!requires { utl::visit(Int{}, [](Int) {}); });
+    static_assert(!requires { utl::visit(X{}, [](X) {}); });
+}
+
+struct X {};
+template void errorTestDynConcept<X, int>();
+template void errorTestVisit<X, int>();
+
+#ifndef UTL_DYNCAST_TEST_COMPILER_ERRORS
+#define UTL_DYNCAST_TEST_COMPILER_ERRORS 0
+#endif
+
+#if UTL_DYNCAST_TEST_COMPILER_ERRORS
+
+static void missingCase() {
+    Dolphin d;
+    Cetacea& c = d;
+    utl::visit(c, [](Dolphin&) {});
+}
+
+#endif // UTL_DYNCAST_TEST_COMPILER_ERRORS

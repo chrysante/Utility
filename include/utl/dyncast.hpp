@@ -3,11 +3,10 @@
 
 #include <array>
 #include <cassert>
+#include <cstddef>
 #include <tuple>
 #include <type_traits>
 #include <typeinfo>
-
-#include "__debug.hpp"
 
 /// Declares a mapping of \p type to its identifier \p ID
 #define UTL_DYNCAST_IMPL_MAP(Type, ID)                                         \
@@ -43,14 +42,18 @@ namespace utl {
 
 namespace dc {
 
+using std::size_t;
+
 /// MARK: - TMP debug utilities
 
 #define UTL_DC_CONCAT(a, b)      UTL_DC_CONCAT_IMPL(a, b)
 #define UTL_DC_CONCAT_IMPL(a, b) a##b
 
-#define CTPrintType(...) CTTP<__VA_ARGS__> UTL_DC_CONCAT(ctPrintVar, __LINE__);
+#define UTL_DC_CTPrintType(...)                                                \
+    CTTP<__VA_ARGS__> UTL_DC_CONCAT(ctPrintVar, __LINE__);
 
-#define CTPrintVal(...) CTVP<__VA_ARGS__> UTL_DC_CONCAT(ctPrintVar, __LINE__);
+#define UTL_DC_CTPrintVal(...)                                                 \
+    CTVP<__VA_ARGS__> UTL_DC_CONCAT(ctPrintVar, __LINE__);
 
 template <typename...>
 struct CTTP;
@@ -61,9 +64,16 @@ struct CTVP;
 /// MARK: - General utilities
 
 [[noreturn]] inline void unreachable() {
+#if defined(__GNUC__)
+    __builtin_unreachable();
+#elif defined(_MSC_VER)
+    __assume(false);
+#else
     assert(false);
+#endif
 }
 
+/// https://stackoverflow.com/a/31173086/21285803
 template <typename T, typename U>
 struct copy_cv_reference {
 private:
@@ -84,8 +94,26 @@ public:
 template <typename T, typename U>
 using copy_cv_reference_t = typename copy_cv_reference<T, U>::type;
 
+template <typename T>
+struct remove_ref_ptr_cv {
+    using type = T;
+};
+template <typename T>
+struct remove_ref_ptr_cv<T const>: remove_ref_ptr_cv<T> {};
+template <typename T>
+struct remove_ref_ptr_cv<T*>: remove_ref_ptr_cv<T> {};
+template <typename T>
+struct remove_ref_ptr_cv<T&>: remove_ref_ptr_cv<T> {};
+template <typename T>
+struct remove_ref_ptr_cv<T&&>: remove_ref_ptr_cv<T> {};
+
+template <typename T>
+using remove_ref_ptr_cv_t = typename remove_ref_ptr_cv<T>::type;
+
 /// Enum class to denote invalid type IDs
-enum class Invalid {};
+/// This is used internally to indicate the root of an inheritance hierarchy but
+/// should not be visible to users.
+enum class InvalidTypeID {};
 
 /// Used to identify the base case in `isaImpl()`
 template <auto Fallback>
@@ -95,7 +123,7 @@ constexpr decltype(Fallback) ValueOr(auto value) {
 
 /// Base case
 template <auto Fallback>
-constexpr decltype(Fallback) ValueOr(Invalid) {
+constexpr decltype(Fallback) ValueOr(InvalidTypeID) {
     return Fallback;
 }
 
@@ -103,7 +131,9 @@ constexpr decltype(Fallback) ValueOr(Invalid) {
 template <typename... T>
 struct TypeList {
     TypeList() = default;
-    constexpr TypeList(T...) {}
+    constexpr TypeList(T...)
+    requires(sizeof...(T) > 0)
+    {}
 };
 
 template <typename T, typename...>
@@ -135,10 +165,26 @@ constexpr std::array IndexSequenceToArray =
 /// 'class' of abstractness and concreteness.
 enum class Corporeality { Abstract, Concrete };
 
+template <typename IDType>
+struct DetermineCount;
+
+template <typename IDType>
+requires requires { IDType::COUNT; }
+struct DetermineCount<IDType> {
+    static constexpr size_t value = (size_t)IDType::COUNT;
+};
+
+template <typename IDType>
+requires(!requires { IDType::COUNT; }) && requires { IDType::LAST; }
+struct DetermineCount<IDType> {
+    static constexpr size_t value = (size_t)IDType::LAST + 1;
+};
+
 /// Common traits of an ID type
 template <typename IDType>
 struct IDTraits {
-    static constexpr size_t count = (size_t)IDType::LAST + 1;
+    static constexpr size_t count = DetermineCount<IDType>::value;
+
     static constexpr IDType first = IDType{ 0 };
     static constexpr IDType last = IDType(count);
 };
@@ -147,7 +193,7 @@ struct IDTraits {
 
 /// Maps \p T from the type domain to the identifier domain
 template <typename T>
-constexpr Invalid TypeToID{};
+constexpr InvalidTypeID TypeToID{};
 
 template <auto>
 struct IDToTypeImpl {
@@ -160,6 +206,15 @@ using IDToType = typename IDToTypeImpl<ID>::type;
 
 template <typename>
 struct TypeToParentImpl;
+
+template <typename T>
+concept DynamicImpl =
+    !std::is_same_v<remove_ref_ptr_cv_t<decltype(TypeToID<T>)>,
+                    InvalidTypeID> &&
+    std::is_class_v<T>;
+
+template <typename T>
+concept Dynamic = DynamicImpl<typename remove_ref_ptr_cv<T>::type>;
 
 /// Maps \p T types to its parent type
 template <typename T>
@@ -184,6 +239,9 @@ using TypeToIDType = decltype(TypeToID<std::decay_t<T>>);
 template <typename T>
 constexpr size_t TypeToBound = IDTraits<TypeToIDType<T>>::count;
 
+template <typename... T>
+constexpr std::array TypesToBounds = { TypeToBound<T>... };
+
 /// Maps \p T to its corporeality
 template <typename T>
 constexpr Corporeality TypeToCorporeality = Corporeality{ -1 };
@@ -207,9 +265,9 @@ constexpr bool IDIsAbstract = IDToCorporeality<ID> == Corporeality::Abstract;
 /// therefore the `ct` prefix
 template <typename IDType>
 static constexpr bool ctIsaImpl(IDType TestID, IDType ActualID) {
-    if constexpr (std::is_same_v<IDType, Invalid>) {
-        CTPrintVal(TestID);
-        CTPrintVal(ActualID);
+    if constexpr (std::is_same_v<IDType, InvalidTypeID>) {
+        UTL_DC_CTPrintVal(TestID);
+        UTL_DC_CTPrintVal(ActualID);
     }
     if (ActualID == IDTraits<IDType>::last) {
         return false;
@@ -232,7 +290,7 @@ template <typename TestType>
 static constexpr std::array IsaDispatchArray = makeIsaDispatchArray<TestType>();
 
 template <typename Test, typename Known>
-bool isaImpl(Known* obj) {
+constexpr bool isaImpl(Known* obj) {
     if (!obj) {
         return false;
     }
@@ -240,11 +298,12 @@ bool isaImpl(Known* obj) {
 }
 
 template <typename Test, typename Known>
-bool isaImpl(Known& obj) {
+constexpr bool isaImpl(Known& obj) {
     return isaImpl<Test>(&obj);
 }
 
 template <typename Test>
+requires dc::Dynamic<Test>
 struct IsaFn {
     template <typename Known>
     requires std::is_class_v<Test>
@@ -279,6 +338,7 @@ constexpr To dyncastImpl(From& from) {
 }
 
 template <typename To>
+requires dc::Dynamic<To>
 struct DyncastFn {
     template <typename From>
     requires std::is_pointer_v<To>
@@ -295,7 +355,7 @@ struct DyncastFn {
 
 template <typename To, typename From>
 constexpr To castImpl(From* from) {
-    __utl_assert(!from || dyncastImpl<To>(from) && "cast failed.");
+    assert(!from || dyncastImpl<To>(from) && "cast failed.");
     return static_cast<To>(from);
 }
 
@@ -306,7 +366,8 @@ constexpr To castImpl(From& from) {
 }
 
 template <typename To>
-struct CastFn {
+requires dc::Dynamic<To>
+struct UnsafeCaseFn {
     template <typename From>
     requires std::is_pointer_v<To>
     constexpr To operator()(From* from) const {
@@ -329,7 +390,10 @@ template <typename To>
 inline constexpr dc::DyncastFn<To> dyncast{};
 
 template <typename To>
-inline constexpr dc::CastFn<To> cast{};
+inline constexpr dc::UnsafeCaseFn<To> cast{};
+
+template <typename To>
+inline constexpr dc::UnsafeCaseFn<To> unsafe_cast{};
 
 /// MARK: - visit
 
@@ -345,10 +409,10 @@ template <size_t N>
 constexpr size_t flattenIndex(std::array<size_t, N> index,
                               std::array<size_t, N> bounds) {
     static_assert(N > 0);
-    __utl_assert(index[0] < bounds[0]);
+    assert(index[0] < bounds[0]);
     size_t acc = index[0];
     for (size_t i = 1; i < N; ++i) {
-        __utl_assert(index[i] < bounds[i]);
+        assert(index[i] < bounds[i]);
         acc *= bounds[i];
         acc += index[i];
     }
@@ -459,7 +523,7 @@ public:
                 /// Unreachable because we invoke UB by returning from a
                 /// non-void function without a value. This must be fixed in
                 /// user code
-                __utl_unreachable();
+                unreachable();
             }();
         }
         else {
@@ -480,7 +544,7 @@ struct MakeVisitorCasesImpl<R, F, TypeList<T...>,
                             TypeList<InvocableIndices...>> {
     /// The total number of invocable cases. This is used to make an index
     /// sequence of this size, create structured indices for every flat index
-    /// and create dispatch cases from the that
+    /// and create dispatch cases from that
     static constexpr size_t TotalInvocableCases =
         (InvocableIndices::size() * ...);
 
@@ -500,19 +564,19 @@ struct MakeVisitorCasesImpl<R, F, TypeList<T...>,
             constexpr size_t TestInvokeIndex = 3;
             using StructuredIndex =
                 MakeStructuredIndex<TestInvokeIndex, InvocableIndices...>;
-            CTPrintType(StructuredIndex);
+            UTL_DC_CTPrintType(StructuredIndex);
             constexpr size_t FlatIndex =
                 flattenIndex(IndexSequenceToArray<StructuredIndex>,
-                             { TypeToBound<T>... });
-            CTPrintVal(FlatIndex);
+                             TypesToBounds<T...>);
+            UTL_DC_CTPrintVal(FlatIndex);
             constexpr std::array RestructuredIndex =
                 expandIndex<sizeof...(T)>(FlatIndex, { TypeToBound<T>... });
-            CTPrintVal(RestructuredIndex);
+            UTL_DC_CTPrintVal(RestructuredIndex);
         }
         return std::index_sequence<
             flattenIndex(IndexSequenceToArray<MakeStructuredIndex<
                              FlatInvokeIndex, InvocableIndices...>>,
-                         { TypeToBound<T>... })...>{};
+                         TypesToBounds<T...>)...>{};
     }
 
     using CaseTypeList = decltype(makeCaseTypeList(
@@ -560,35 +624,37 @@ struct InvokeVisitorCases<ReturnType, TypeList<Cases...>,
     static constexpr auto makeDispatchArray() {
         std::array<FuncPtrType, NumTotalCombinations> DispatchArray{};
         ((DispatchArray[FlatCaseIndices] = [](F&& f, T&&... t) -> ReturnType {
-             return Cases{}(static_cast<F&&>(f), static_cast<T&&>(t)...);
-         }),
+            return Cases{}(static_cast<F&&>(f), static_cast<T&&>(t)...);
+        }),
          ...);
         return DispatchArray;
     }
 
     template <typename F, typename... T>
-    static ReturnType impl(size_t flatIndex, F&& f, T&&... t) {
-        using FuncPtrType = ReturnType (*)(F&&, T&&...);
-        static constexpr size_t NumTotalCombinations = (TypeToBound<T> * ...);
-        static constexpr auto DispatchArray =
-            makeDispatchArray<FuncPtrType, NumTotalCombinations, F, T...>();
-        FuncPtrType dispatcher = DispatchArray[flatIndex];
-        /// ** Is the type hierarchy correctly defined? **
+    static constexpr std::array DispatchArray =
+        makeDispatchArray</* FuncPtrType = */ ReturnType (*)(F&&, T&&...),
+                          /* NumTotalCombinations= */ (TypeToBound<T>*...), F,
+                          T...>();
+
+    template <typename F, typename... T>
+    static constexpr ReturnType impl(size_t flatIndex, F&& f, T&&... t) {
+        auto* dispatcher = DispatchArray<F, T...>[flatIndex];
+        /// ** Is the type hierarchy defined correctly? **
         /// If not `dispatcher` can be null
+        assert(dispatcher);
         return dispatcher(static_cast<F&&>(f), static_cast<T&&>(t)...);
     }
 };
 
 template <typename R, typename F, typename... T>
-decltype(auto) visitImpl(F&& f, T&&... t) {
+constexpr decltype(auto) visitImpl(F&& f, T&&... t) {
     using CaseTypeList = typename MakeVisitorCases<R, F, T...>::CaseTypeList;
     using FlatCaseIndexList =
         typename MakeVisitorCases<R, F, T...>::FlatCaseIndexList;
     using ReturnType = DoDeduceReturnType<R, F, TypeList<T...>, CaseTypeList>;
-    static constexpr std::array Bounds = { TypeToBound<T>... };
 
     std::array index = { (size_t)dyncast_get_type(t)... };
-    size_t flatIndex = flattenIndex(index, Bounds);
+    size_t flatIndex = flattenIndex(index, TypesToBounds<T...>);
     return InvokeVisitorCases<ReturnType, CaseTypeList,
                               FlatCaseIndexList>::impl(flatIndex,
                                                        static_cast<F&&>(f),
@@ -598,20 +664,23 @@ decltype(auto) visitImpl(F&& f, T&&... t) {
 } // namespace dc
 
 template <typename T, typename F>
-decltype(auto) visit(T&& t, F&& fn) {
+requires dc::Dynamic<T>
+constexpr decltype(auto) visit(T&& t, F&& fn) {
     return dc::visitImpl<dc::DeduceReturnType>(static_cast<F&&>(fn),
                                                static_cast<T&&>(t));
 }
 
 template <typename T0, typename T1, typename F>
-decltype(auto) visit(T0&& t0, T1&& t1, F&& fn) {
+requires dc::Dynamic<T0> && dc::Dynamic<T1>
+constexpr decltype(auto) visit(T0&& t0, T1&& t1, F&& fn) {
     return dc::visitImpl<dc::DeduceReturnType>(static_cast<F&&>(fn),
                                                static_cast<T0&&>(t0),
                                                static_cast<T1&&>(t1));
 }
 
 template <typename T0, typename T1, typename T2, typename F>
-decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, F&& fn) {
+requires dc::Dynamic<T0> && dc::Dynamic<T1> && dc::Dynamic<T2>
+constexpr decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, F&& fn) {
     return dc::visitImpl<dc::DeduceReturnType>(static_cast<F&&>(fn),
                                                static_cast<T0&&>(t0),
                                                static_cast<T1&&>(t1),
@@ -619,7 +688,9 @@ decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, F&& fn) {
 }
 
 template <typename T0, typename T1, typename T2, typename T3, typename F>
-decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, F&& fn) {
+requires dc::Dynamic<T0> && dc::Dynamic<T1> && dc::Dynamic<T2> &&
+         dc::Dynamic<T3>
+constexpr decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, F&& fn) {
     return dc::visitImpl<dc::DeduceReturnType>(static_cast<F&&>(fn),
                                                static_cast<T0&&>(t0),
                                                static_cast<T1&&>(t1),
@@ -629,7 +700,10 @@ decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, F&& fn) {
 
 template <typename T0, typename T1, typename T2, typename T3, typename T4,
           typename F>
-decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, F&& fn) {
+requires dc::Dynamic<T0> && dc::Dynamic<T1> && dc::Dynamic<T2> &&
+         dc::Dynamic<T3> && dc::Dynamic<T4>
+constexpr decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4,
+                               F&& fn) {
     return dc::visitImpl<dc::DeduceReturnType>(static_cast<F&&>(fn),
                                                static_cast<T0&&>(t0),
                                                static_cast<T1&&>(t1),
@@ -640,8 +714,10 @@ decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, F&& fn) {
 
 template <typename T0, typename T1, typename T2, typename T3, typename T4,
           typename T5, typename F>
-decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, T5&& t5,
-                     F&& fn) {
+requires dc::Dynamic<T0> && dc::Dynamic<T1> && dc::Dynamic<T2> &&
+         dc::Dynamic<T3> && dc::Dynamic<T4> && dc::Dynamic<T5>
+constexpr decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4,
+                               T5&& t5, F&& fn) {
     return dc::visitImpl<dc::DeduceReturnType>(static_cast<F&&>(fn),
                                                static_cast<T0&&>(t0),
                                                static_cast<T1&&>(t1),
@@ -652,25 +728,30 @@ decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, T5&& t5,
 }
 
 template <typename R, typename T, typename F>
-decltype(auto) visit(T&& t, F&& fn) {
+requires dc::Dynamic<T>
+constexpr decltype(auto) visit(T&& t, F&& fn) {
     return dc::visitImpl<R>(static_cast<F&&>(fn), static_cast<T&&>(t));
 }
 
 template <typename R, typename T0, typename T1, typename F>
-decltype(auto) visit(T0&& t0, T1&& t1, F&& fn) {
+requires dc::Dynamic<T0> && dc::Dynamic<T1>
+constexpr decltype(auto) visit(T0&& t0, T1&& t1, F&& fn) {
     return dc::visitImpl<R>(static_cast<F&&>(fn), static_cast<T0&&>(t0),
                             static_cast<T1&&>(t1));
 }
 
 template <typename R, typename T0, typename T1, typename T2, typename F>
-decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, F&& fn) {
+requires dc::Dynamic<T0> && dc::Dynamic<T1> && dc::Dynamic<T2>
+constexpr decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, F&& fn) {
     return dc::visitImpl<R>(static_cast<F&&>(fn), static_cast<T0&&>(t0),
                             static_cast<T1&&>(t1), static_cast<T2&&>(t2));
 }
 
 template <typename R, typename T0, typename T1, typename T2, typename T3,
           typename F>
-decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, F&& fn) {
+requires dc::Dynamic<T0> && dc::Dynamic<T1> && dc::Dynamic<T2> &&
+         dc::Dynamic<T3>
+constexpr decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, F&& fn) {
     return dc::visitImpl<R>(static_cast<F&&>(fn), static_cast<T0&&>(t0),
                             static_cast<T1&&>(t1), static_cast<T2&&>(t2),
                             static_cast<T3&&>(t3));
@@ -678,7 +759,10 @@ decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, F&& fn) {
 
 template <typename R, typename T0, typename T1, typename T2, typename T3,
           typename T4, typename F>
-decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, F&& fn) {
+requires dc::Dynamic<T0> && dc::Dynamic<T1> && dc::Dynamic<T2> &&
+         dc::Dynamic<T3> && dc::Dynamic<T4>
+constexpr decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4,
+                               F&& fn) {
     return dc::visitImpl<R>(static_cast<F&&>(fn), static_cast<T0&&>(t0),
                             static_cast<T1&&>(t1), static_cast<T2&&>(t2),
                             static_cast<T3&&>(t3), static_cast<T4&&>(t4));
@@ -686,8 +770,10 @@ decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, F&& fn) {
 
 template <typename R, typename T0, typename T1, typename T2, typename T3,
           typename T4, typename T5, typename F>
-decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, T5&& t5,
-                     F&& fn) {
+requires dc::Dynamic<T0> && dc::Dynamic<T1> && dc::Dynamic<T2> &&
+         dc::Dynamic<T3> && dc::Dynamic<T4> && dc::Dynamic<T5>
+constexpr decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4,
+                               T5&& t5, F&& fn) {
     return dc::visitImpl<R>(static_cast<F&&>(fn), static_cast<T0&&>(t0),
                             static_cast<T1&&>(t1), static_cast<T2&&>(t2),
                             static_cast<T3&&>(t3), static_cast<T4&&>(t4),
@@ -695,5 +781,10 @@ decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, T5&& t5,
 }
 
 } // namespace utl
+
+#undef UTL_DC_CONCAT
+#undef UTL_DC_CONCAT_IMPL
+#undef UTL_DC_CTPrintType
+#undef UTL_DC_CTPrintVal
 
 #endif // UTL_DYNCAST_HPP_
