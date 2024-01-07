@@ -1,34 +1,50 @@
-#include <catch/catch2.hpp>
+#define UTL_IMPL_KEEP_DEBUG_MACROS
 #include <utl/dyncast.hpp>
+
+#include <catch/catch2.hpp>
 #include <utl/utility.hpp>
 
 #include "TypeCompare.h"
 
+namespace utl::dc {
+
+template <typename T, size_t N>
+constexpr bool operator==(Array<T, N> const& A, Array<T, N> const& B) {
+    for (size_t i = 0; i < N; ++i) {
+        if (A[i] != B[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+} // namespace utl::dc
+
 TEST_CASE("dyncast internals", "[dyncast]") {
     using namespace utl::dc;
     // Single dimensional case
-    CHECK(flattenIndex<1>({ 0 }, { 3 }) == 0);
-    CHECK(expandIndex<1>(0, { 3 }) == std::array<size_t, 1>{ 0 });
-    CHECK(flattenIndex<1>({ 2 }, { 3 }) == 2);
-    CHECK(expandIndex<1>(2, { 3 }) == std::array<size_t, 1>{ 2 });
+    static_assert(flattenIndex<1>({ 0 }, { 3 }) == 0);
+    static_assert(expandIndex<1>(0, { 3 }) == Array<size_t, 1>{ 0 });
+    static_assert(flattenIndex<1>({ 2 }, { 3 }) == 2);
+    static_assert(expandIndex<1>(2, { 3 }) == Array<size_t, 1>{ 2 });
 
     // +---+---+
     // | 0 | 1 |
     // +---+---+
     // | 2 | 3 |
     // +---+---+
-    CHECK(flattenIndex<2>({ 1, 1 }, { 2, 2 }) == 3);
-    CHECK(expandIndex<2>(3, { 2, 2 }) == std::array<size_t, 2>{ 1, 1 });
+    static_assert(flattenIndex<2>({ 1, 1 }, { 2, 2 }) == 3);
+    static_assert(expandIndex<2>(3, { 2, 2 }) == Array<size_t, 2>{ 1, 1 });
 
     // +---+---+---+
     // | 0 | 1 | 2 |
     // +---+---+---+
     // | 3 | 4 | 5 |
     // +---+---+---+
-    CHECK(flattenIndex<2>({ 1, 1 }, { 2, 3 }) == 4);
-    CHECK(expandIndex<2>(4, { 2, 3 }) == std::array<size_t, 2>{ 1, 1 });
-    CHECK(flattenIndex<2>({ 0, 2 }, { 2, 3 }) == 2);
-    CHECK(expandIndex<2>(2, { 2, 3 }) == std::array<size_t, 2>{ 0, 2 });
+    static_assert(flattenIndex<2>({ 1, 1 }, { 2, 3 }) == 4);
+    static_assert(expandIndex<2>(4, { 2, 3 }) == Array<size_t, 2>{ 1, 1 });
+    static_assert(flattenIndex<2>({ 0, 2 }, { 2, 3 }) == 2);
+    static_assert(expandIndex<2>(2, { 2, 3 }) == Array<size_t, 2>{ 0, 2 });
 
     // +---+---+
     // | 0 | 1 |
@@ -37,14 +53,14 @@ TEST_CASE("dyncast internals", "[dyncast]") {
     // +---+---+
     // | 4 | 5 |
     // +---+---+
-    CHECK(flattenIndex<2>({ 1, 1 }, { 3, 2 }) == 3);
-    CHECK(expandIndex<2>(3, { 3, 2 }) == std::array<size_t, 2>{ 1, 1 });
-    CHECK(flattenIndex<2>({ 0, 1 }, { 3, 2 }) == 1);
-    CHECK(expandIndex<2>(1, { 3, 2 }) == std::array<size_t, 2>{ 0, 1 });
-    CHECK(flattenIndex<2>({ 2, 0 }, { 3, 2 }) == 4);
-    CHECK(expandIndex<2>(4, { 3, 2 }) == std::array<size_t, 2>{ 2, 0 });
-    CHECK(flattenIndex<2>({ 2, 1 }, { 3, 2 }) == 5);
-    CHECK(expandIndex<2>(5, { 3, 2 }) == std::array<size_t, 2>{ 2, 1 });
+    static_assert(flattenIndex<2>({ 1, 1 }, { 3, 2 }) == 3);
+    static_assert(expandIndex<2>(3, { 3, 2 }) == Array<size_t, 2>{ 1, 1 });
+    static_assert(flattenIndex<2>({ 0, 1 }, { 3, 2 }) == 1);
+    static_assert(expandIndex<2>(1, { 3, 2 }) == Array<size_t, 2>{ 0, 1 });
+    static_assert(flattenIndex<2>({ 2, 0 }, { 3, 2 }) == 4);
+    static_assert(expandIndex<2>(4, { 3, 2 }) == Array<size_t, 2>{ 2, 0 });
+    static_assert(flattenIndex<2>({ 2, 1 }, { 3, 2 }) == 5);
+    static_assert(expandIndex<2>(5, { 3, 2 }) == Array<size_t, 2>{ 2, 1 });
 
     // +---+---+
     // | 0 | 3 |---+---+
@@ -55,10 +71,12 @@ TEST_CASE("dyncast internals", "[dyncast]") {
     // +---+---+13 |16 |---+---+
     //         +---+---+14 |17 |
     //                 +---+---+
-    CHECK(flattenIndex<3>({ 1, 1, 1 }, { 3, 2, 3 }) == 10);
-    CHECK(expandIndex<3>(10, { 3, 2, 3 }) == std::array<size_t, 3>{ 1, 1, 1 });
-    CHECK(flattenIndex<3>({ 0, 1, 2 }, { 3, 2, 3 }) == 5);
-    CHECK(expandIndex<3>(5, { 3, 2, 3 }) == std::array<size_t, 3>{ 0, 1, 2 });
+    static_assert(flattenIndex<3>({ 1, 1, 1 }, { 3, 2, 3 }) == 10);
+    static_assert(expandIndex<3>(10, { 3, 2, 3 }) ==
+                  Array<size_t, 3>{ 1, 1, 1 });
+    static_assert(flattenIndex<3>({ 0, 1, 2 }, { 3, 2, 3 }) == 5);
+    static_assert(expandIndex<3>(5, { 3, 2, 3 }) ==
+                  Array<size_t, 3>{ 0, 1, 2 });
 }
 
 /// # Class hierarchy of new test cases
@@ -162,7 +180,7 @@ TEST_CASE("Visitation") {
         // clang-format off
         utl::visit((Cetacea&)d, utl::overload{
             [&](Dolphin const&) { foundDolphin = true; },
-            [&](Animal const&) {}
+            [&](Whale const&) {}
         }); // clang-format on
         CHECK(foundDolphin);
     }
@@ -545,9 +563,7 @@ template void errorTestVisit<X, int>();
 
 #if UTL_DYNCAST_TEST_COMPILER_ERRORS
 
-static void missingCase() {
-    Dolphin d;
-    Cetacea& c = d;
+static void visitMissingCase(Cetacea& c) {
     utl::visit(c, [](Dolphin&) {});
 }
 

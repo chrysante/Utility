@@ -1,12 +1,11 @@
 #ifndef UTL_DYNCAST_HPP_
 #define UTL_DYNCAST_HPP_
 
-#include <array>
 #include <cassert>
 #include <cstddef>
-#include <tuple>
 #include <type_traits>
-#include <typeinfo>
+#include <typeinfo> // For std::bad_cast
+#include <utility>
 
 /// Declares a mapping of \p type to its identifier \p ID
 #define UTL_DYNCAST_IMPL_MAP(Type, ID)                                         \
@@ -50,10 +49,10 @@ using std::size_t;
 #define UTL_DC_CONCAT_IMPL(a, b) a##b
 
 #define UTL_DC_CTPrintType(...)                                                \
-    CTTP<__VA_ARGS__> UTL_DC_CONCAT(ctPrintVar, __LINE__);
+    ::utl::dc::CTTP<__VA_ARGS__> UTL_DC_CONCAT(ctPrintVar, __LINE__);
 
 #define UTL_DC_CTPrintVal(...)                                                 \
-    CTVP<__VA_ARGS__> UTL_DC_CONCAT(ctPrintVar, __LINE__);
+    ::utl::dc::CTVP<__VA_ARGS__> UTL_DC_CONCAT(ctPrintVar, __LINE__);
 
 template <typename...>
 struct CTTP;
@@ -72,6 +71,48 @@ struct CTVP;
     assert(false);
 #endif
 }
+
+#if defined(__GNUC__)
+#define UTL_DC_ALWAYS_INLINE __attribute__((always_inline))
+#elif defined(_MSC_VER)
+#define UTL_DC_ALWAYS_INLINE __forceinline
+#else
+#define UTL_DC_ALWAYS_INLINE
+#endif
+
+/// Small and simple array implementation to avoid `<array>` dependency
+template <typename T, size_t Size>
+struct Array {
+    constexpr T& operator[](size_t index) { return elems[index]; }
+    constexpr T const& operator[](size_t index) const { return elems[index]; }
+
+    T elems[Size];
+};
+
+template <
+    typename First, typename... Rest,
+    typename = std::enable_if_t<(std::is_same_v<First, Rest> && ...), void>>
+Array(First, Rest...) -> Array<First, sizeof...(Rest) + 1>;
+
+/// Compile time `Min` and `Max` implementations to avoid `<algorithm>`
+/// dependency
+template <size_t...>
+inline constexpr auto Min = nullptr;
+
+template <size_t N, size_t M>
+inline constexpr size_t Min<N, M> = N < M ? N : M;
+
+template <size_t N, size_t... M>
+inline constexpr size_t Min<N, M...> = Min<N, Min<M...>>;
+
+template <size_t...>
+inline constexpr auto Max = nullptr;
+
+template <size_t N, size_t M>
+inline constexpr size_t Max<N, M> = N > M ? N : M;
+
+template <size_t N, size_t... M>
+inline constexpr size_t Max<N, M...> = Max<N, Max<M...>>;
 
 /// https://stackoverflow.com/a/31173086/21285803
 template <typename T, typename U>
@@ -150,14 +191,13 @@ struct IndexSequenceToArrayImpl;
 
 template <size_t... I>
 struct IndexSequenceToArrayImpl<std::index_sequence<I...>> {
-    static constexpr std::array<size_t, sizeof...(I)> value = { I... };
+    static constexpr Array<size_t, sizeof...(I)> value = { I... };
 };
 
-/// Converts the `std::index_sequence` \p IdxSeq to an `std::array<size_t,
-/// IdxSeq::size()>`
+/// Converts the `std::index_sequence` \p IdxSeq to an
+/// `Array<size_t, IdxSeq::size()>`
 template <typename IdxSeq>
-constexpr std::array IndexSequenceToArray =
-    IndexSequenceToArrayImpl<IdxSeq>::value;
+constexpr Array IndexSequenceToArray = IndexSequenceToArrayImpl<IdxSeq>::value;
 
 /// MARK: - General RTTI implementation
 
@@ -223,9 +263,8 @@ using TypeToParent = typename TypeToParentImpl<T>::type;
 /// Maps \p ID to the ID of its parent type
 template <typename IDType>
 constexpr IDType IDToParent(IDType ID) {
-    constexpr std::array ParentArray =
-        []<size_t... I>(std::index_sequence<I...>) {
-        return std::array{ ValueOr<IDTraits<IDType>::last>(
+    constexpr Array ParentArray = []<size_t... I>(std::index_sequence<I...>) {
+        return Array{ ValueOr<IDTraits<IDType>::last>(
             TypeToID<TypeToParent<IDToType<IDType{ I }>>>)... };
     }(std::make_index_sequence<IDTraits<IDType>::count>{});
     return ParentArray[(size_t)ID];
@@ -240,7 +279,7 @@ template <typename T>
 constexpr size_t TypeToBound = IDTraits<TypeToIDType<T>>::count;
 
 template <typename... T>
-constexpr std::array TypesToBounds = { TypeToBound<T>... };
+constexpr Array TypesToBounds = { TypeToBound<T>... };
 
 /// Maps \p T to its corporeality
 template <typename T>
@@ -265,6 +304,8 @@ constexpr bool IDIsAbstract = IDToCorporeality<ID> == Corporeality::Abstract;
 /// therefore the `ct` prefix
 template <typename IDType>
 static constexpr bool ctIsaImpl(IDType TestID, IDType ActualID) {
+    /// Poor mans `consteval`
+    assert(std::is_constant_evaluated());
     if constexpr (std::is_same_v<IDType, InvalidTypeID>) {
         UTL_DC_CTPrintVal(TestID);
         UTL_DC_CTPrintVal(ActualID);
@@ -282,12 +323,12 @@ template <typename TestType>
 static constexpr auto makeIsaDispatchArray() {
     using IDType = decltype(TypeToID<TestType>);
     return []<size_t... Actual>(std::index_sequence<Actual...>) {
-        return std::array{ ctIsaImpl(TypeToID<TestType>, IDType{ Actual })... };
+        return Array{ ctIsaImpl(TypeToID<TestType>, IDType{ Actual })... };
     }(std::make_index_sequence<IDTraits<IDType>::count>{});
 }
 
 template <typename TestType>
-static constexpr std::array IsaDispatchArray = makeIsaDispatchArray<TestType>();
+static constexpr Array IsaDispatchArray = makeIsaDispatchArray<TestType>();
 
 template <typename Test, typename Known>
 constexpr bool isaImpl(Known* obj) {
@@ -367,7 +408,7 @@ constexpr To castImpl(From& from) {
 
 template <typename To>
 requires dc::Dynamic<To>
-struct UnsafeCaseFn {
+struct UnsafeCastFn {
     template <typename From>
     requires std::is_pointer_v<To>
     constexpr To operator()(From* from) const {
@@ -390,10 +431,10 @@ template <typename To>
 inline constexpr dc::DyncastFn<To> dyncast{};
 
 template <typename To>
-inline constexpr dc::UnsafeCaseFn<To> cast{};
+inline constexpr dc::UnsafeCastFn<To> cast{};
 
 template <typename To>
-inline constexpr dc::UnsafeCaseFn<To> unsafe_cast{};
+inline constexpr dc::UnsafeCastFn<To> unsafe_cast{};
 
 /// MARK: - visit
 
@@ -401,13 +442,13 @@ namespace dc {
 
 /// Tag type used by the overloads of `visit()` that don't take an explicit
 /// return type parameter to instruct `visitImpl()` to deduce the return type
-enum class DeduceReturnType {};
+enum class DeduceReturnTypeTag {};
 
 /// Converts the N-dimensional multi-index \p index to a single dimensional flat
 /// index according to \p bounds
 template <size_t N>
-constexpr size_t flattenIndex(std::array<size_t, N> index,
-                              std::array<size_t, N> bounds) {
+UTL_DC_ALWAYS_INLINE constexpr size_t flattenIndex(Array<size_t, N> index,
+                                                   Array<size_t, N> bounds) {
     static_assert(N > 0);
     assert(index[0] < bounds[0]);
     size_t acc = index[0];
@@ -422,9 +463,10 @@ constexpr size_t flattenIndex(std::array<size_t, N> index,
 /// Converts the a single dimensional flat index \p flatIdex to an N-dimensional
 /// multi-index according to \p bounds
 template <size_t N>
-constexpr std::array<std::size_t, N> expandIndex(std::size_t flatIndex,
-                                                 std::array<size_t, N> bounds) {
-    std::array<std::size_t, N> index;
+constexpr Array<size_t, N> expandIndex(size_t flatIndex,
+                                       Array<size_t, N> bounds) {
+    assert(std::is_constant_evaluated());
+    Array<size_t, N> index;
     for (size_t i = 0, j = N - 1; i < N; ++i, --j) {
         size_t m = 1;
         for (size_t k = N - 1; k > i; --k) {
@@ -467,9 +509,10 @@ using ComputeInvocableIndices = typename InvocableIndicesImpl<
     (size_t)IDTraits<TypeToIDType<T>>::first,
     (size_t)IDTraits<TypeToIDType<T>>::last>::Indices;
 
+/// Implementation of `MakeStructuredIndex`
 template <size_t FlatInvokeIndex, typename... InvocableIndices>
 struct MakeStructuredIndexImpl {
-    static constexpr std::array ExIndex = expandIndex<sizeof...(
+    static constexpr Array ExIndex = expandIndex<sizeof...(
         InvocableIndices)>(FlatInvokeIndex, { InvocableIndices::size()... });
 
     template <size_t... I>
@@ -497,39 +540,48 @@ template <typename R, typename F, typename T, typename StructuredIndex>
 struct VisitorCase;
 
 /// Defines the invocation for one combination of runtime argument types. Users
-/// of this class are only interested in the static member variable `impl`.
+/// of this class are only interested in the member typedef `type
 template <typename R, typename F, typename... T, size_t... StructuredIndex>
 struct VisitorCase<R, F, TypeList<T...>,
                    std::index_sequence<StructuredIndex...>> {
 private:
-    ///
+    /// Evaluates to the type at index \p I in the class hierarchy of \p U with
+    /// the same cv-qualifications as \p U
     template <typename U, size_t I>
     using DerivedAt = copy_cv_reference_t<U&&, IDToType<(TypeToIDType<U>)I>>;
 
-public:
-    static constexpr auto impl = [](F&& f, T&&... t) -> decltype(auto) {
-        auto invoke = [&]() -> decltype(auto) {
-            return f(static_cast<DerivedAt<T, StructuredIndex>>(t)...);
-        };
-        if constexpr (std::is_same_v<R, DeduceReturnType>) {
-            return invoke();
-        }
-        else if constexpr (std::is_same_v<R, void>) {
-            invoke();
-        }
-        else if constexpr (std::is_same_v<decltype(invoke()), void>) {
-            return [&]() -> R {
-                invoke();
-                /// Unreachable because we invoke UB by returning from a
-                /// non-void function without a value. This must be fixed in
-                /// user code
-                unreachable();
-            }();
+    static auto make() {
+        /// We use a macro here to not repeat ourselves and we don't wrap the
+        /// expression in a lambda to avoid one unnecessary runtime indirection
+        /// in debug builds
+#define UTL_DC_INVOKE_EXPR() f(static_cast<DerivedAt<T, StructuredIndex>>(t)...)
+        if constexpr (std::is_same_v<R, DeduceReturnTypeTag>) {
+            return [](F&& f, T&&... t) -> decltype(auto) {
+                return UTL_DC_INVOKE_EXPR();
+            };
         }
         else {
-            return [&]() -> R { return invoke(); }();
+            return [](F&& f, T&&... t) -> R {
+                using ExprType = decltype(UTL_DC_INVOKE_EXPR());
+                if constexpr (std::is_same_v<R, void>) {
+                    UTL_DC_INVOKE_EXPR();
+                }
+                if constexpr (std::is_same_v<ExprType, void>) {
+                    UTL_DC_INVOKE_EXPR();
+                    /// Unreachable because we invoke UB by leaving a non-void
+                    /// function without a value.
+                    unreachable();
+                }
+                else {
+                    return UTL_DC_INVOKE_EXPR();
+                }
+            };
         }
-    };
+#undef UTL_DC_INVOKE_EXPR
+    }
+
+public:
+    using type = decltype(make());
 };
 
 template <typename R, typename F, typename T, typename InvocableIndices>
@@ -550,11 +602,10 @@ struct MakeVisitorCasesImpl<R, F, TypeList<T...>,
 
     template <size_t... FlatInvokeIndex>
     static auto makeCaseTypeList(std::index_sequence<FlatInvokeIndex...>) {
-        return TypeList<
-            decltype(VisitorCase<
-                     R, F, TypeList<T...>,
-                     MakeStructuredIndex<FlatInvokeIndex,
-                                         InvocableIndices...>>::impl)...>{};
+        return TypeList<typename VisitorCase<
+            R, F, TypeList<T...>,
+            MakeStructuredIndex<FlatInvokeIndex,
+                                InvocableIndices...>>::type...>{};
     }
 
     template <size_t... FlatInvokeIndex>
@@ -569,7 +620,7 @@ struct MakeVisitorCasesImpl<R, F, TypeList<T...>,
                 flattenIndex(IndexSequenceToArray<StructuredIndex>,
                              TypesToBounds<T...>);
             UTL_DC_CTPrintVal(FlatIndex);
-            constexpr std::array RestructuredIndex =
+            constexpr Array RestructuredIndex =
                 expandIndex<sizeof...(T)>(FlatIndex, { TypeToBound<T>... });
             UTL_DC_CTPrintVal(RestructuredIndex);
         }
@@ -586,59 +637,88 @@ struct MakeVisitorCasesImpl<R, F, TypeList<T...>,
         std::make_index_sequence<TotalInvocableCases>{}));
 };
 
+/// Provides two member typedefs
+/// - `CaseTypeList` is a `TypeList` of lambda types for all possible invoke
+///   cases that downcast to the runtime argument types. Instances of all types
+///   can be converted to function pointers.
+/// - `FlatCaseIndexList` is an `std::index_sequence` with the same size as
+///   `CaseTypeList` that contains the corresponding flat indices in the space
+///   of all possible type combinations.
 template <typename R, typename F, typename... T>
 struct MakeVisitorCases:
     MakeVisitorCasesImpl<R, F, TypeList<T...>,
                          TypeList<ComputeInvocableIndices<T>...>> {};
 
 template <typename R, typename F, typename T, typename Cases>
-struct DoDeduceReturnTypeImpl {
+struct DeduceReturnTypeImpl {
     using type = R;
 };
 
 template <typename F, typename... T, typename... Cases>
-struct DoDeduceReturnTypeImpl<DeduceReturnType, F, TypeList<T...>,
-                              TypeList<Cases...>> {
-    template <typename Case>
-    using ReturnType =
-        decltype(Case{}(std::declval<F&&>(), std::declval<T&&>()...));
-    using type = typename std::conditional_t<
-        std::is_reference_v<First<ReturnType<Cases>...>>,
-        std::common_reference<ReturnType<Cases>...>,
-        std::common_type<ReturnType<Cases>...>>::type;
-};
+struct DeduceReturnTypeImpl<DeduceReturnTypeTag, F, TypeList<T...>,
+                            TypeList<Cases...>>:
+    std::common_reference<decltype(Cases{}(std::declval<F&&>(),
+                                           std::declval<T&&>()...))...> {};
 
+/// Deduces the common return type of the `visit` expression by applying
+/// `std::common_reference` over all possible return types.
 template <typename R, typename F, typename T_TypeList, typename Cases_TypeList>
-using DoDeduceReturnType =
-    typename DoDeduceReturnTypeImpl<R, F, T_TypeList, Cases_TypeList>::type;
+using DeduceReturnType =
+    typename DeduceReturnTypeImpl<R, F, T_TypeList, Cases_TypeList>::type;
+
+template <size_t... Indices>
+requires(sizeof...(Indices) > 0)
+inline constexpr size_t IndexRangeSize = Max<Indices...> - Min<Indices...> + 1;
 
 template <typename ReturnType, typename CaseTypeList,
           typename FlatCaseIndexList>
 struct InvokeVisitorCases;
 
+/// This class instantiates an array of function pointers to all invocable
+/// visitor cases and provides the `impl()` function to invoke a specific case.
+///
+/// We only generate function pointers in the smallest possible range of
+/// invocable indices to avoid generating large chunks of unused zero bytes in
+/// the executable. Therefore we have to subtract an offset (the smallest of the
+/// `FlatCaseIndices`) from the runtime computed flat index before dispatching.
 template <typename ReturnType, typename... Cases, size_t... FlatCaseIndices>
 struct InvokeVisitorCases<ReturnType, TypeList<Cases...>,
                           std::index_sequence<FlatCaseIndices...>> {
-    template <typename FuncPtrType, size_t NumTotalCombinations, typename F,
-              typename... T>
+    static constexpr size_t FirstFlatInvokeIndex = Min<FlatCaseIndices...>;
+
+    /// The size of the function pointer array that is generated
+    static constexpr size_t FlatInvokeIndexRangeSize =
+        IndexRangeSize<FlatCaseIndices...>;
+
+    /// Function pointer for one invoke case
+    template <typename Case, typename F, typename... T>
+    static constexpr ReturnType casePtr(F&& f, T&&... t) {
+        return Case{}(static_cast<F&&>(f), static_cast<T&&>(t)...);
+    }
+
+    /// Computes the array of function pointers
+    template <typename FuncPtrType, typename F, typename... T>
     static constexpr auto makeDispatchArray() {
-        std::array<FuncPtrType, NumTotalCombinations> DispatchArray{};
-        ((DispatchArray[FlatCaseIndices] = [](F&& f, T&&... t) -> ReturnType {
-            return Cases{}(static_cast<F&&>(f), static_cast<T&&>(t)...);
-        }),
+        Array<FuncPtrType, FlatInvokeIndexRangeSize> DispatchArray{};
+        ((DispatchArray[FlatCaseIndices - FirstFlatInvokeIndex] =
+              casePtr<Cases, F, T...>),
          ...);
         return DispatchArray;
     }
 
+    /// The computed array of function pointers
     template <typename F, typename... T>
-    static constexpr std::array DispatchArray =
-        makeDispatchArray</* FuncPtrType = */ ReturnType (*)(F&&, T&&...),
-                          /* NumTotalCombinations= */ (TypeToBound<T>*...), F,
-                          T...>();
+    static constexpr Array DispatchArray =
+        makeDispatchArray<ReturnType (*)(F&&, T&&...), F, T...>();
 
+    /// Subtracts the index offset from \p flatIndex and invokes the function
+    /// pointer at that index
     template <typename F, typename... T>
     static constexpr ReturnType impl(size_t flatIndex, F&& f, T&&... t) {
-        auto* dispatcher = DispatchArray<F, T...>[flatIndex];
+        /// We use `.elems` directly here to avoid one function call in debug
+        /// builds
+        auto* dispatcher =
+            DispatchArray<F, T...>.elems[flatIndex - FirstFlatInvokeIndex];
         /// ** Is the type hierarchy defined correctly? **
         /// If not `dispatcher` can be null
         assert(dispatcher);
@@ -651,9 +731,9 @@ constexpr decltype(auto) visitImpl(F&& f, T&&... t) {
     using CaseTypeList = typename MakeVisitorCases<R, F, T...>::CaseTypeList;
     using FlatCaseIndexList =
         typename MakeVisitorCases<R, F, T...>::FlatCaseIndexList;
-    using ReturnType = DoDeduceReturnType<R, F, TypeList<T...>, CaseTypeList>;
+    using ReturnType = DeduceReturnType<R, F, TypeList<T...>, CaseTypeList>;
 
-    std::array index = { (size_t)dyncast_get_type(t)... };
+    Array index = { (size_t)dyncast_get_type(t)... };
     size_t flatIndex = flattenIndex(index, TypesToBounds<T...>);
     return InvokeVisitorCases<ReturnType, CaseTypeList,
                               FlatCaseIndexList>::impl(flatIndex,
@@ -666,36 +746,36 @@ constexpr decltype(auto) visitImpl(F&& f, T&&... t) {
 template <typename T, typename F>
 requires dc::Dynamic<T>
 constexpr decltype(auto) visit(T&& t, F&& fn) {
-    return dc::visitImpl<dc::DeduceReturnType>(static_cast<F&&>(fn),
-                                               static_cast<T&&>(t));
+    return dc::visitImpl<dc::DeduceReturnTypeTag>(static_cast<F&&>(fn),
+                                                  static_cast<T&&>(t));
 }
 
 template <typename T0, typename T1, typename F>
 requires dc::Dynamic<T0> && dc::Dynamic<T1>
 constexpr decltype(auto) visit(T0&& t0, T1&& t1, F&& fn) {
-    return dc::visitImpl<dc::DeduceReturnType>(static_cast<F&&>(fn),
-                                               static_cast<T0&&>(t0),
-                                               static_cast<T1&&>(t1));
+    return dc::visitImpl<dc::DeduceReturnTypeTag>(static_cast<F&&>(fn),
+                                                  static_cast<T0&&>(t0),
+                                                  static_cast<T1&&>(t1));
 }
 
 template <typename T0, typename T1, typename T2, typename F>
 requires dc::Dynamic<T0> && dc::Dynamic<T1> && dc::Dynamic<T2>
 constexpr decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, F&& fn) {
-    return dc::visitImpl<dc::DeduceReturnType>(static_cast<F&&>(fn),
-                                               static_cast<T0&&>(t0),
-                                               static_cast<T1&&>(t1),
-                                               static_cast<T2&&>(t2));
+    return dc::visitImpl<dc::DeduceReturnTypeTag>(static_cast<F&&>(fn),
+                                                  static_cast<T0&&>(t0),
+                                                  static_cast<T1&&>(t1),
+                                                  static_cast<T2&&>(t2));
 }
 
 template <typename T0, typename T1, typename T2, typename T3, typename F>
 requires dc::Dynamic<T0> && dc::Dynamic<T1> && dc::Dynamic<T2> &&
          dc::Dynamic<T3>
 constexpr decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, F&& fn) {
-    return dc::visitImpl<dc::DeduceReturnType>(static_cast<F&&>(fn),
-                                               static_cast<T0&&>(t0),
-                                               static_cast<T1&&>(t1),
-                                               static_cast<T2&&>(t2),
-                                               static_cast<T3&&>(t3));
+    return dc::visitImpl<dc::DeduceReturnTypeTag>(static_cast<F&&>(fn),
+                                                  static_cast<T0&&>(t0),
+                                                  static_cast<T1&&>(t1),
+                                                  static_cast<T2&&>(t2),
+                                                  static_cast<T3&&>(t3));
 }
 
 template <typename T0, typename T1, typename T2, typename T3, typename T4,
@@ -704,12 +784,12 @@ requires dc::Dynamic<T0> && dc::Dynamic<T1> && dc::Dynamic<T2> &&
          dc::Dynamic<T3> && dc::Dynamic<T4>
 constexpr decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4,
                                F&& fn) {
-    return dc::visitImpl<dc::DeduceReturnType>(static_cast<F&&>(fn),
-                                               static_cast<T0&&>(t0),
-                                               static_cast<T1&&>(t1),
-                                               static_cast<T2&&>(t2),
-                                               static_cast<T3&&>(t3),
-                                               static_cast<T4&&>(t4));
+    return dc::visitImpl<dc::DeduceReturnTypeTag>(static_cast<F&&>(fn),
+                                                  static_cast<T0&&>(t0),
+                                                  static_cast<T1&&>(t1),
+                                                  static_cast<T2&&>(t2),
+                                                  static_cast<T3&&>(t3),
+                                                  static_cast<T4&&>(t4));
 }
 
 template <typename T0, typename T1, typename T2, typename T3, typename T4,
@@ -718,13 +798,13 @@ requires dc::Dynamic<T0> && dc::Dynamic<T1> && dc::Dynamic<T2> &&
          dc::Dynamic<T3> && dc::Dynamic<T4> && dc::Dynamic<T5>
 constexpr decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4,
                                T5&& t5, F&& fn) {
-    return dc::visitImpl<dc::DeduceReturnType>(static_cast<F&&>(fn),
-                                               static_cast<T0&&>(t0),
-                                               static_cast<T1&&>(t1),
-                                               static_cast<T2&&>(t2),
-                                               static_cast<T3&&>(t3),
-                                               static_cast<T4&&>(t4),
-                                               static_cast<T5&&>(t5));
+    return dc::visitImpl<dc::DeduceReturnTypeTag>(static_cast<F&&>(fn),
+                                                  static_cast<T0&&>(t0),
+                                                  static_cast<T1&&>(t1),
+                                                  static_cast<T2&&>(t2),
+                                                  static_cast<T3&&>(t3),
+                                                  static_cast<T4&&>(t4),
+                                                  static_cast<T5&&>(t5));
 }
 
 template <typename R, typename T, typename F>
@@ -782,9 +862,15 @@ constexpr decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4,
 
 } // namespace utl
 
+#ifndef UTL_IMPL_KEEP_DEBUG_MACROS
+
 #undef UTL_DC_CONCAT
 #undef UTL_DC_CONCAT_IMPL
 #undef UTL_DC_CTPrintType
 #undef UTL_DC_CTPrintVal
+
+#endif // UTL_IMPL_KEEP_DEBUG_MACROS
+
+#undef UTL_DC_ALWAYS_INLINE
 
 #endif // UTL_DYNCAST_HPP_
