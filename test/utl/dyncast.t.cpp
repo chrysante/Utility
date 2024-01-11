@@ -1,4 +1,5 @@
-#define UTL_IMPL_KEEP_DEBUG_MACROS
+#define UTL_DC_ENABLE_DEBUGGING
+
 #include <utl/dyncast.hpp>
 
 #include <catch/catch2.hpp>
@@ -179,7 +180,9 @@ TEST_CASE("Visitation") {
         bool foundDolphin = false;
         // clang-format off
         utl::visit((Cetacea&)d, utl::overload{
-            [&](Dolphin const&) { foundDolphin = true; },
+            [&](Dolphin const&) { 
+                foundDolphin = true;
+            },
             [&](Whale const&) {}
         }); // clang-format on
         CHECK(foundDolphin);
