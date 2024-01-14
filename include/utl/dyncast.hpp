@@ -693,6 +693,8 @@ struct InvokeVisitorCases<ReturnType, TypeList<Cases...>,
                           std::index_sequence<FlatCaseIndices...>> {
     static constexpr size_t FirstFlatInvokeIndex = Min<FlatCaseIndices...>;
 
+    static constexpr size_t NumFlatCaseIndices = sizeof...(FlatCaseIndices);
+
     /// The size of the function pointer array that is generated
     static constexpr size_t FlatInvokeIndexRangeSize =
         IndexRangeSize<FlatCaseIndices...>;
@@ -703,13 +705,25 @@ struct InvokeVisitorCases<ReturnType, TypeList<Cases...>,
         return Case::impl(static_cast<F&&>(f), static_cast<T&&>(t)...);
     }
 
+    /// Runs a for loop to assign the case index function pointers to avoid a fold expression.
+    /// Unlike a for loop fold expressions can run into issues with the 
+    /// expression nesting depth of the compiler.
+    template <typename FuncPtrType>
+    static constexpr void assignDispatchArray(
+        Array<FuncPtrType, FlatInvokeIndexRangeSize>& DispatchArray,
+        Array<size_t, NumFlatCaseIndices> const& indices,
+        Array<FuncPtrType, NumFlatCaseIndices> const& casePtrs) {
+        for (size_t i = 0; i < NumFlatCaseIndices; ++i) {
+            DispatchArray[indices[i] - FirstFlatInvokeIndex] = casePtrs[i];
+        }
+    }
+
     /// Computes the array of function pointers
     template <typename FuncPtrType, typename F, typename... T>
     static constexpr auto makeDispatchArray() {
         Array<FuncPtrType, FlatInvokeIndexRangeSize> DispatchArray{};
-        ((DispatchArray[FlatCaseIndices - FirstFlatInvokeIndex] =
-              casePtr<Cases, F, T...>),
-         ...);
+        assignDispatchArray<FuncPtrType>(DispatchArray, { FlatCaseIndices... },
+                                         { casePtr<Cases, F, T...>... });
         return DispatchArray;
     }
 
