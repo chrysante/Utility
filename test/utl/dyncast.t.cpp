@@ -570,4 +570,10 @@ static void visitMissingCase(Cetacea& c) {
     utl::visit(c, [](Dolphin&) {});
 }
 
+static void convertToInvalidDerived(Cetacea& c) {
+    utl::dyncast<Leopard const&>(c);
+    utl::unsafe_cast<Leopard const&>(c);
+    utl::isa<Leopard>(c);
+}
+
 #endif // UTL_DYNCAST_TEST_COMPILER_ERRORS
