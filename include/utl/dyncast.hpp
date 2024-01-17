@@ -258,15 +258,6 @@ using IDToType = typename IDToTypeImpl<ID>::type;
 template <typename>
 struct TypeToParentImpl;
 
-template <typename T>
-concept DynamicImpl =
-    !std::is_same_v<remove_ref_ptr_cv_t<decltype(TypeToID<T>)>,
-                    InvalidTypeID> &&
-    std::is_class_v<T>;
-
-template <typename T>
-concept Dynamic = DynamicImpl<typename remove_ref_ptr_cv<T>::type>;
-
 /// Maps \p T types to its parent type
 template <typename T>
 using TypeToParent = typename TypeToParentImpl<T>::type;
@@ -307,6 +298,31 @@ constexpr bool IDIsConcrete = IDToCorporeality<ID> == Corporeality::Concrete;
 /// `true` if \p ID denotes an abstract type
 template <auto ID>
 constexpr bool IDIsAbstract = IDToCorporeality<ID> == Corporeality::Abstract;
+
+/// MARK: Concepts to constrain the public interfaces
+
+template <typename T>
+concept DynamicImpl =
+    !std::is_same_v<remove_ref_ptr_cv_t<decltype(TypeToID<T>)>,
+                    InvalidTypeID> &&
+    std::is_class_v<T>;
+
+/// Evaluates to `true` if \p T is registered with the RTTI facilities
+/// disregarding any cv-ref qualifiers of \p T
+template <typename T>
+concept Dynamic = DynamicImpl<remove_ref_ptr_cv_t<T>>;
+
+template <typename T, typename U>
+concept SharesTypeHierarchyWithImpl =
+    DynamicImpl<T> && DynamicImpl<U> &&
+    std::same_as<TypeToIDType<T>, TypeToIDType<U>>;
+
+/// Evaluates to `true` if \p T and \p U are registered with the RTTI facilities
+/// disregarding any cv-ref qualifiers and are part of the same class hierarchy.
+/// \Note This is implemented by checking if the ID types are the same
+template <typename T, typename U>
+concept SharesTypeHierarchyWith =
+    SharesTypeHierarchyWithImpl<remove_ref_ptr_cv_t<T>, remove_ref_ptr_cv_t<U>>;
 
 /// MARK: - isa
 
@@ -358,13 +374,13 @@ template <typename Test>
 requires dc::Dynamic<Test>
 struct IsaFn {
     template <typename Known>
-    requires std::is_class_v<Test>
+    requires std::is_class_v<Test> && SharesTypeHierarchyWith<Known, Test>
     UTL_DC_NODEBUG constexpr bool operator()(Known* obj) const {
         return isaImpl<Test>(obj);
     }
 
     template <typename Known>
-    requires std::is_class_v<Test>
+    requires std::is_class_v<Test> && SharesTypeHierarchyWith<Known, Test>
     UTL_DC_NODEBUG constexpr bool operator()(Known& obj) const {
         return isaImpl<Test>(obj);
     }
@@ -393,13 +409,13 @@ template <typename To>
 requires dc::Dynamic<To>
 struct DyncastFn {
     template <typename From>
-    requires std::is_pointer_v<To>
+    requires std::is_pointer_v<To> && SharesTypeHierarchyWith<From, To>
     UTL_DC_NODEBUG constexpr To operator()(From* from) const {
         return dyncastImpl<To>(from);
     }
 
     template <typename From>
-    requires std::is_reference_v<To>
+    requires std::is_reference_v<To> && SharesTypeHierarchyWith<From, To>
     UTL_DC_NODEBUG constexpr To operator()(From& from) const {
         return dyncastImpl<To>(from);
     }
@@ -421,13 +437,13 @@ template <typename To>
 requires dc::Dynamic<To>
 struct UnsafeCastFn {
     template <typename From>
-    requires std::is_pointer_v<To>
+    requires std::is_pointer_v<To> && SharesTypeHierarchyWith<From, To>
     UTL_DC_NODEBUG constexpr To operator()(From* from) const {
         return castImpl<To>(from);
     }
 
     template <typename From>
-    requires std::is_reference_v<To>
+    requires std::is_reference_v<To> && SharesTypeHierarchyWith<From, To>
     UTL_DC_NODEBUG constexpr To operator()(From& from) const {
         return castImpl<To>(from);
     }
@@ -705,9 +721,9 @@ struct InvokeVisitorCases<ReturnType, TypeList<Cases...>,
         return Case::impl(static_cast<F&&>(f), static_cast<T&&>(t)...);
     }
 
-    /// Runs a for loop to assign the case index function pointers to avoid a fold expression.
-    /// Unlike a for loop fold expressions can run into issues with the 
-    /// expression nesting depth of the compiler.
+    /// Runs a for loop to assign the case index function pointers to avoid a
+    /// fold expression. Unlike a for loop fold expressions can run into issues
+    /// with the expression nesting depth of the compiler.
     template <typename FuncPtrType>
     static constexpr void assignDispatchArray(
         Array<FuncPtrType, FlatInvokeIndexRangeSize>& DispatchArray,
@@ -765,23 +781,20 @@ UTL_DC_NODEBUG constexpr decltype(auto) visitImpl(F&& f, T&&... t) {
 
 } // namespace dc
 
-template <typename T, typename F>
-requires dc::Dynamic<T>
+template <dc::Dynamic T, typename F>
 UTL_DC_NODEBUG constexpr decltype(auto) visit(T&& t, F&& fn) {
     return dc::visitImpl<dc::DeduceReturnTypeTag>(static_cast<F&&>(fn),
                                                   static_cast<T&&>(t));
 }
 
-template <typename T0, typename T1, typename F>
-requires dc::Dynamic<T0> && dc::Dynamic<T1>
+template <dc::Dynamic T0, dc::Dynamic T1, typename F>
 UTL_DC_NODEBUG constexpr decltype(auto) visit(T0&& t0, T1&& t1, F&& fn) {
     return dc::visitImpl<dc::DeduceReturnTypeTag>(static_cast<F&&>(fn),
                                                   static_cast<T0&&>(t0),
                                                   static_cast<T1&&>(t1));
 }
 
-template <typename T0, typename T1, typename T2, typename F>
-requires dc::Dynamic<T0> && dc::Dynamic<T1> && dc::Dynamic<T2>
+template <dc::Dynamic T0, dc::Dynamic T1, dc::Dynamic T2, typename F>
 UTL_DC_NODEBUG constexpr decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2,
                                               F&& fn) {
     return dc::visitImpl<dc::DeduceReturnTypeTag>(static_cast<F&&>(fn),
@@ -790,9 +803,8 @@ UTL_DC_NODEBUG constexpr decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2,
                                                   static_cast<T2&&>(t2));
 }
 
-template <typename T0, typename T1, typename T2, typename T3, typename F>
-requires dc::Dynamic<T0> && dc::Dynamic<T1> && dc::Dynamic<T2> &&
-         dc::Dynamic<T3>
+template <dc::Dynamic T0, dc::Dynamic T1, dc::Dynamic T2, dc::Dynamic T3,
+          typename F>
 UTL_DC_NODEBUG constexpr decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2,
                                               T3&& t3, F&& fn) {
     return dc::visitImpl<dc::DeduceReturnTypeTag>(static_cast<F&&>(fn),
@@ -802,10 +814,8 @@ UTL_DC_NODEBUG constexpr decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2,
                                                   static_cast<T3&&>(t3));
 }
 
-template <typename T0, typename T1, typename T2, typename T3, typename T4,
-          typename F>
-requires dc::Dynamic<T0> && dc::Dynamic<T1> && dc::Dynamic<T2> &&
-         dc::Dynamic<T3> && dc::Dynamic<T4>
+template <dc::Dynamic T0, dc::Dynamic T1, dc::Dynamic T2, dc::Dynamic T3,
+          dc::Dynamic T4, typename F>
 UTL_DC_NODEBUG constexpr decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2,
                                               T3&& t3, T4&& t4, F&& fn) {
     return dc::visitImpl<dc::DeduceReturnTypeTag>(static_cast<F&&>(fn),
@@ -816,10 +826,8 @@ UTL_DC_NODEBUG constexpr decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2,
                                                   static_cast<T4&&>(t4));
 }
 
-template <typename T0, typename T1, typename T2, typename T3, typename T4,
-          typename T5, typename F>
-requires dc::Dynamic<T0> && dc::Dynamic<T1> && dc::Dynamic<T2> &&
-         dc::Dynamic<T3> && dc::Dynamic<T4> && dc::Dynamic<T5>
+template <dc::Dynamic T0, dc::Dynamic T1, dc::Dynamic T2, dc::Dynamic T3,
+          dc::Dynamic T4, dc::Dynamic T5, typename F>
 UTL_DC_NODEBUG constexpr decltype(auto)
 visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, T5&& t5, F&& fn) {
     return dc::visitImpl<dc::DeduceReturnTypeTag>(static_cast<F&&>(fn),
@@ -831,31 +839,27 @@ visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, T5&& t5, F&& fn) {
                                                   static_cast<T5&&>(t5));
 }
 
-template <typename R, typename T, typename F>
-requires dc::Dynamic<T>
+template <typename R, dc::Dynamic T, typename F>
 UTL_DC_NODEBUG constexpr decltype(auto) visit(T&& t, F&& fn) {
     return dc::visitImpl<R>(static_cast<F&&>(fn), static_cast<T&&>(t));
 }
 
-template <typename R, typename T0, typename T1, typename F>
-requires dc::Dynamic<T0> && dc::Dynamic<T1>
+template <typename R, dc::Dynamic T0, dc::Dynamic T1, typename F>
 UTL_DC_NODEBUG constexpr decltype(auto) visit(T0&& t0, T1&& t1, F&& fn) {
     return dc::visitImpl<R>(static_cast<F&&>(fn), static_cast<T0&&>(t0),
                             static_cast<T1&&>(t1));
 }
 
-template <typename R, typename T0, typename T1, typename T2, typename F>
-requires dc::Dynamic<T0> && dc::Dynamic<T1> && dc::Dynamic<T2>
+template <typename R, dc::Dynamic T0, dc::Dynamic T1, dc::Dynamic T2,
+          typename F>
 UTL_DC_NODEBUG constexpr decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2,
                                               F&& fn) {
     return dc::visitImpl<R>(static_cast<F&&>(fn), static_cast<T0&&>(t0),
                             static_cast<T1&&>(t1), static_cast<T2&&>(t2));
 }
 
-template <typename R, typename T0, typename T1, typename T2, typename T3,
-          typename F>
-requires dc::Dynamic<T0> && dc::Dynamic<T1> && dc::Dynamic<T2> &&
-         dc::Dynamic<T3>
+template <typename R, dc::Dynamic T0, dc::Dynamic T1, dc::Dynamic T2,
+          dc::Dynamic T3, typename F>
 UTL_DC_NODEBUG constexpr decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2,
                                               T3&& t3, F&& fn) {
     return dc::visitImpl<R>(static_cast<F&&>(fn), static_cast<T0&&>(t0),
@@ -863,10 +867,8 @@ UTL_DC_NODEBUG constexpr decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2,
                             static_cast<T3&&>(t3));
 }
 
-template <typename R, typename T0, typename T1, typename T2, typename T3,
-          typename T4, typename F>
-requires dc::Dynamic<T0> && dc::Dynamic<T1> && dc::Dynamic<T2> &&
-         dc::Dynamic<T3> && dc::Dynamic<T4>
+template <typename R, dc::Dynamic T0, dc::Dynamic T1, dc::Dynamic T2,
+          dc::Dynamic T3, dc::Dynamic T4, typename F>
 UTL_DC_NODEBUG constexpr decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2,
                                               T3&& t3, T4&& t4, F&& fn) {
     return dc::visitImpl<R>(static_cast<F&&>(fn), static_cast<T0&&>(t0),
@@ -874,10 +876,8 @@ UTL_DC_NODEBUG constexpr decltype(auto) visit(T0&& t0, T1&& t1, T2&& t2,
                             static_cast<T3&&>(t3), static_cast<T4&&>(t4));
 }
 
-template <typename R, typename T0, typename T1, typename T2, typename T3,
-          typename T4, typename T5, typename F>
-requires dc::Dynamic<T0> && dc::Dynamic<T1> && dc::Dynamic<T2> &&
-         dc::Dynamic<T3> && dc::Dynamic<T4> && dc::Dynamic<T5>
+template <typename R, dc::Dynamic T0, dc::Dynamic T1, dc::Dynamic T2,
+          dc::Dynamic T3, dc::Dynamic T4, dc::Dynamic T5, typename F>
 UTL_DC_NODEBUG constexpr decltype(auto)
 visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, T5&& t5, F&& fn) {
     return dc::visitImpl<R>(static_cast<F&&>(fn), static_cast<T0&&>(t0),
