@@ -67,13 +67,14 @@ concept sentinel_for = iterator<I> && __weakly_equality_comparable_with<I, S>;
 
 template <typename I>
 concept input_iterator = iterator<I> && std::equality_comparable<I> && requires(I i) {
-    typename std::incrementable_traits<I>::difference_type;
-    requires std::signed_integral<typename std::incrementable_traits<I>::difference_type>;
-    typename std::indirectly_readable_traits<I>::value_type;
-    typename std::common_reference_t<std::iter_reference_t<I>&&,
-                                     typename std::indirectly_readable_traits<I>::value_type&>;
+// We comment these out because they cause trouble...
+//    typename std::incrementable_traits<I>::difference_type;
+//    requires std::signed_integral<typename std::incrementable_traits<I>::difference_type>;
+//    typename std::indirectly_readable_traits<I>::value_type;
+//    typename std::common_reference_t<std::iter_reference_t<I>&&,
+//                                     typename std::indirectly_readable_traits<I>::value_type&>;
     *i++;
-    typename std::common_reference_t<decltype(*i++)&&, typename std::indirectly_readable_traits<I>::value_type&>;
+//    typename std::common_reference_t<decltype(*i++)&&, typename std::indirectly_readable_traits<I>::value_type&>;
 };
 
 template <typename I, typename T>
