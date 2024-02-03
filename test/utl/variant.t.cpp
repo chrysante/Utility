@@ -6,6 +6,7 @@
 #include <utl/variant.hpp>
 #include <utl/typeinfo.hpp>
 #include <utl/utility.hpp>
+#include <utl/overload.hpp>
 
 #include "TypeCompare.h"
 

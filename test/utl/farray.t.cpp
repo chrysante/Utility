@@ -1,5 +1,6 @@
 #include <catch/catch2.hpp>
 #include <utl/__farray.hpp>
+#include <utl/overload.hpp>
 
 #include "TypeCompare.h"
 

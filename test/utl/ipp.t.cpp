@@ -47,19 +47,19 @@ TEST_CASE("ipp") {
     }
     SECTION("int pointer constructor") {
         Object<8> obj;
-        utl::ipp<Object<8>*, unsigned, 3> p = { 7, &obj };
+        utl::ipp<Object<8>*, unsigned, 3> p = { &obj, 7 };
         CHECK(p.pointer() == &obj);
         CHECK(p.integer() == 7);
     }
     SECTION("extended alignment type") {
         Object<16> obj;
-        utl::ipp<Object<16>*, unsigned, 4> p = { 15, &obj };
+        utl::ipp<Object<16>*, unsigned, 4> p = { &obj, 15 };
         CHECK(p.pointer() == &obj);
         CHECK(p.integer() == 15);
     }
     SECTION("signed ipp") {
         Object<16> obj;
-        utl::ipp<Object<16>*, unsigned, 4> p = { 15, &obj };
+        utl::ipp<Object<16>*, unsigned, 4> p = { &obj, 15 };
         CHECK(p.pointer() == &obj);
         CHECK(p.integer() == 15);
         p.set_integer(7);
@@ -75,7 +75,7 @@ enum class E { One, Two, Three };
 
 TEST_CASE("ipp with enum") {
     uint64_t x;
-    utl::ipp<uint64_t*, E, 3> p = { E::Three, &x };
+    utl::ipp<uint64_t*, E, 3> p = { &x, E::Three };
     CHECK(p.integer() == E::Three);
     CHECK(p.pointer() == &x);
     p.set_integer(E::One);
@@ -94,7 +94,7 @@ struct Incomplete;
 
 TEST_CASE("ipp with incomplete pointee type") {
     auto* ptr = reinterpret_cast<Incomplete*>(0xDEAD'BEEF'0);
-    utl::ipp<Incomplete*, E, 1> p = { E::Two, ptr };
+    utl::ipp<Incomplete*, E, 1> p = { ptr, E::Two };
     CHECK(p.integer() == E::Two);
     CHECK(p.pointer() == ptr);
     p.set_integer(E::One);
