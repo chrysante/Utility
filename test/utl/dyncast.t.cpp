@@ -3,7 +3,7 @@
 #include <utl/dyncast.hpp>
 
 #include <catch/catch2.hpp>
-#include <utl/utility.hpp>
+#include <utl/overload.hpp>
 
 #include "TypeCompare.h"
 
@@ -559,6 +559,26 @@ static void errorTestVisit() {
 struct X {};
 template void errorTestDynConcept<X, int>();
 template void errorTestVisit<X, int>();
+
+namespace {
+
+int testFunction(int) {
+    return 42;
+}
+
+struct TestClass {
+    int foo(int) { return 42; }
+};
+
+} // namespace
+
+TEST_CASE("toFunction", "[dyncast]") {
+    auto f = utl::overload{ testFunction };
+    CHECK(f(0) == 42);
+    auto g = utl::overload{ &TestClass::foo };
+    TestClass t;
+    CHECK(g(t, 0) == 42);
+}
 
 #ifndef UTL_DYNCAST_TEST_COMPILER_ERRORS
 #define UTL_DYNCAST_TEST_COMPILER_ERRORS 0

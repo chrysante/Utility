@@ -170,68 +170,6 @@ __enum_map(std::pair<E, T>...) -> __enum_map<std::common_type_t<E...>, std::comm
 
 #define UTL_SERIALIZE_ENUM(__utl_e, ...) UTL_MAP_ENUM(__utl_e, std::string_view, __VA_ARGS__)
 
-/// MARK: pointer_int_pair
-
-/// \brief Compressed pair of a pointer and an integer
-/// \details Stores the integer in the low bits of the pointer. E.g. the three lowest bits of a valid pointer to an 8 byte aligned type are always zero.
-/// `pointer_int_pair` uses these bits to store an integer.
-/// Thus `IntWidth` must not be greater than `log2(alignof(T))`
-template <typename T, typename Int = int, std::size_t IntWidth = utl::log2(alignof(std::remove_pointer_t<T>))>
-class pointer_int_pair;
-
-template <typename T, typename Int, std::size_t IntWidth>
-class pointer_int_pair<T*, Int, IntWidth> {
-public:
-    static constexpr bool fits(Int i) noexcept {
-        if constexpr (std::is_signed_v<Int>) {
-            // n bits represent { -2^(n-1), ..., 2^(n-1) - 1 }
-            return (std::intmax_t)i >= -((std::intmax_t)(1) << (int_size - 1)) &&
-                   (std::intmax_t)i < ((std::intmax_t)(1) << (int_size - 1));
-        }
-        else {
-            // n bits represent { 0, ..., 2^(n) - 1 }
-            return (std::uintmax_t)i < ((std::uintmax_t)(1) << (int_size));
-        }
-    }
-
-    pointer_int_pair() = default;
-
-    constexpr pointer_int_pair(T* p, Int i = 0) {
-        __utl_expect(fits(i), "integer out of range");
-        _p = p;
-        _i = i;
-    }
-
-    constexpr T* pointer() const { return reinterpret_cast<T*>(reinterpret_cast<std::uintptr_t>(_p) & pointer_mask); }
-
-    constexpr void pointer(T* p) {
-        [[maybe_unused]] std::uintptr_t const masked_ptr = reinterpret_cast<std::uintptr_t>(p) & ~pointer_mask;
-        __utl_expect(masked_ptr == 0, "pointer alignment not satisfied");
-        *this = pointer_int_pair{ p, _i };
-    }
-
-    constexpr auto integer() const { return _i; }
-
-    constexpr void integer(Int i) { _i = i; }
-
-private:
-    static constexpr std::size_t    int_size        = IntWidth;
-    static constexpr std::uintptr_t pointer_mask = ~((std::uintptr_t(1) << int_size) - 1);
-    
-    union {
-        T* _p;
-        Int _i: int_size;
-    };
-};
-
-template <typename... F>
-struct overload: F... {
-    using F::operator()...;
-};
-
-template <typename... F>
-overload(F...) -> overload<F...>;
-
 } // namespace utl
 
 #endif // UTL_UTILITY_HPP
