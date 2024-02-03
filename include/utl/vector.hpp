@@ -16,6 +16,7 @@
 #include "common.hpp"
 #include "concepts.hpp"
 #include "utility.hpp"
+#include "ipp.hpp"
 
 _UTL_SYSTEM_HEADER_
 
@@ -1112,7 +1113,7 @@ struct vector {
     }
 
     constexpr void __set_begin(pointer p) noexcept {
-        __data_.begin_inline.pointer(p);
+        __data_.begin_inline.set_pointer(p);
     }
     constexpr void __set_size(std::size_t size) noexcept {
         __data_.size = narrow_cast<size_type>(size);
@@ -1120,9 +1121,8 @@ struct vector {
 
     struct __data_t {
         static_assert(std::is_same_v<value_type*, pointer>);
-        pointer_int_pair<value_type*, bool, 1> begin_inline;
-        size_type size; /// These should actually be of type `size_type` however
-                        /// lldb debugger then can't read them.
+        ipp<value_type*, bool, 1> begin_inline;
+        size_type size;
         size_type cap;
     };
 

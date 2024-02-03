@@ -54,13 +54,16 @@ public:
     ipp() = default;
 
     /// Construct from an integer and a pointer
-    constexpr ipp(int_type value, pointer_type ptr = nullptr) {
+    constexpr ipp(pointer_type ptr, int_type value) {
         set_integer(value);
         set_pointer(ptr);
     }
 
     /// Construct from a pointer and set the integer value to zero
-    constexpr ipp(pointer_type ptr): ipp(int_type{}, ptr) {}
+    constexpr ipp(pointer_type ptr): ipp(ptr, int_type{}) {}
+
+    /// Construct from an integer and set the pointer to null
+    constexpr ipp(int_type value): ipp(nullptr, value) {}
 
     /// Access the integer stored in the pair
     constexpr int_type integer() const {
