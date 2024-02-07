@@ -10,7 +10,9 @@ template <typename>
 struct TagType {};
 
 template <typename A, typename B>
-bool operator==(TagType<A>, TagType<B>) { return std::is_same_v<A, B>; }
+bool operator==(TagType<A>, TagType<B>) {
+    return std::is_same_v<A, B>;
+}
 
 template <typename T>
 std::ostream& operator<<(std::ostream& str, TagType<T>) {

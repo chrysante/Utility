@@ -21,33 +21,51 @@ struct derived_tag_t {
 template <typename T>
 constexpr derived_tag_t<T> derived_tag = derived_tag_t<T>{};
 
-template <typename Impl, std::size_t Size, std::size_t Alignment = alignof(std::max_align_t)>
+template <typename Impl, std::size_t Size,
+          std::size_t Alignment = alignof(std::max_align_t)>
 class local_pimpl {
 public:
-    local_pimpl() requires(std::is_default_constructible_v<Impl>) { _construct(); }
+    local_pimpl()
+    requires(std::is_default_constructible_v<Impl>)
+    {
+        _construct();
+    }
 
     template <typename... Args>
-    local_pimpl(Args&&... args) requires(std::is_constructible_v<Impl, Args...>) {
+    local_pimpl(Args&&... args)
+    requires(std::is_constructible_v<Impl, Args...>)
+    {
         _construct(UTL_FORWARD(args)...);
     }
 
     template <std::derived_from<Impl> Derived, typename... Args>
-    requires(std::is_constructible_v<Derived, Args...>) local_pimpl(derived_tag_t<Derived>, Args&&... args) {
+    requires(std::is_constructible_v<Derived, Args...>)
+    local_pimpl(derived_tag_t<Derived>, Args&&... args) {
         _construct<Derived>(UTL_FORWARD(args)...);
     }
 
-    local_pimpl(local_pimpl const& rhs) requires(std::is_copy_constructible_v<Impl>) { _construct(*rhs); }
+    local_pimpl(local_pimpl const& rhs)
+    requires(std::is_copy_constructible_v<Impl>)
+    {
+        _construct(*rhs);
+    }
 
-    local_pimpl(local_pimpl&& rhs) noexcept requires(std::is_move_constructible_v<Impl>) {
+    local_pimpl(local_pimpl&& rhs) noexcept
+    requires(std::is_move_constructible_v<Impl>)
+    {
         _construct(std::move(*rhs));
     }
 
-    local_pimpl& operator=(local_pimpl const& rhs) requires(std::is_copy_assignable_v<Impl>) {
+    local_pimpl& operator=(local_pimpl const& rhs)
+    requires(std::is_copy_assignable_v<Impl>)
+    {
         pointer()->operator=(*rhs);
         return *this;
     }
 
-    local_pimpl& operator=(local_pimpl&& rhs) noexcept requires(std::is_move_assignable_v<Impl>) {
+    local_pimpl& operator=(local_pimpl&& rhs) noexcept
+    requires(std::is_move_assignable_v<Impl>)
+    {
         pointer()->operator=(std::move(*rhs));
         return *this;
     }
@@ -61,12 +79,17 @@ public:
     local_pimpl(no_init_t) noexcept {}
 
     template <std::derived_from<Impl> Derived = Impl, typename... Args>
-    requires(std::is_constructible_v<Derived, Args...>) void construct(Args&&... args) {
+    requires(std::is_constructible_v<Derived, Args...>)
+    void construct(Args&&... args) {
         _construct<Derived>(UTL_FORWARD(args)...);
     }
 
-    Impl* pointer() noexcept { return const_cast<Impl*>(utl::as_const(*this).pointer()); }
-    Impl const* pointer() const noexcept { return reinterpret_cast<Impl const*>(_buffer); }
+    Impl* pointer() noexcept {
+        return const_cast<Impl*>(utl::as_const(*this).pointer());
+    }
+    Impl const* pointer() const noexcept {
+        return reinterpret_cast<Impl const*>(_buffer);
+    }
 
     Impl* operator->() noexcept { return pointer(); }
     Impl const* operator->() const noexcept { return pointer(); }

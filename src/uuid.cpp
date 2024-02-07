@@ -1,9 +1,9 @@
 #include <utl/uuid.hpp>
 
-#include <ostream>
-#include <sstream>
 #include <array>
+#include <ostream>
 #include <random>
+#include <sstream>
 
 #include <sstream>
 
@@ -44,7 +44,8 @@ uuid uuid::from_string(std::string&& str) {
 }
 
 std::string uuid::to_string() const {
-    auto const data = utl::bit_cast<std::array<std::uint32_t, 4>>(this->value());
+    auto const data =
+        utl::bit_cast<std::array<std::uint32_t, 4>>(this->value());
     std::stringstream sstr;
     sstr << std::hex << data[0];
     for (size_t i = 1; i < 4; ++i) {

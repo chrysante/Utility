@@ -1,5 +1,4 @@
-#include <catch/catch2.hpp>
-
+#include <catch2/catch_test_macros.hpp>
 #include <utl/queue.hpp>
 
 TEST_CASE("empty queue") {

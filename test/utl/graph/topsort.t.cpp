@@ -1,11 +1,10 @@
-#include <catch/catch2.hpp>
-
 #include <ranges>
 
+#include <catch2/catch_test_macros.hpp>
 #include <utl/__graph/topsort.hpp>
 #include <utl/vector.hpp>
 
-#include "Vertex.hpp"
+#include "utl/graph/Vertex.hpp"
 
 TEST_CASE("topsort", "[graph]") {
     utl::vector<utl_test::Vertex> vertices = {

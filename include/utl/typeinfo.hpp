@@ -16,7 +16,8 @@ namespace utl {
 template <typename T>
 constexpr auto __ctti_nameof_impl() {
     auto constexpr prettySize = std::size(__PRETTY_FUNCTION__);
-    auto constexpr beginSize  = std::size("auto utl::__ctti_nameof_impl() [T = ") - 1;
+    auto constexpr beginSize =
+        std::size("auto utl::__ctti_nameof_impl() [T = ") - 1;
 
     utl::basic_static_string pretty = __PRETTY_FUNCTION__;
     return pretty.template substr<prettySize - beginSize - 2>(beginSize);
@@ -25,8 +26,9 @@ constexpr auto __ctti_nameof_impl() {
 template <typename T>
 constexpr auto __ctti_nameof_impl() {
     constexpr utl::basic_static_string pretty = __FUNCSIG__;
-    auto constexpr prettySize                 = utl::strlen(pretty.data());
-    auto constexpr beginSize                  = std::size("auto __cdecl utl::__ctti_nameof_impl");
+    auto constexpr prettySize = utl::strlen(pretty.data());
+    auto constexpr beginSize =
+        std::size("auto __cdecl utl::__ctti_nameof_impl");
 
     return pretty.template substr<prettySize - beginSize - 7>(beginSize);
 }

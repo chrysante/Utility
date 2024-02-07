@@ -50,7 +50,8 @@ _UTL_SYSTEM_HEADER_
 #endif
 #endif
 
-#ifdef UTL_CPP // guard here because general purpose header may be included in shader source
+#ifdef UTL_CPP // guard here because general purpose header may be included in
+               // shader source
 
 /// MARK: Attributes
 /*
@@ -70,11 +71,9 @@ _UTL_SYSTEM_HEADER_
 
 #define __utl_pure      __attribute__((const))
 #define __utl_nodiscard [[nodiscard]]
-#if UTL_DEBUG_LEVEL > 1
-#define __utl_always_inline
-#else // UTL_DEBUG_LEVEL > 1
-#define __utl_always_inline // __attribute__((always_inline)) // We disable this because it only causes problems with debugging.
-#endif // UTL_DEBUG_LEVEL > 1
+
+#define __utl_always_inline // This only exists because I'm too lazy to remove
+                            // it from the source code
 
 #define __utl_noinline __attribute__((noinline))
 #if UTL_DEBUG_LEVEL > 1

@@ -26,13 +26,9 @@ public:
 public:
     uuid() = default;
     static uuid generate();
-    value_type value() const noexcept {
-        return _value;
-    }
+    value_type value() const noexcept { return _value; }
 
-    static uuid construct_from_value(value_type value) {
-        return uuid(value);
-    }
+    static uuid construct_from_value(value_type value) { return uuid(value); }
 
     static uuid from_string(std::string_view);
     static uuid from_string(std::string&&);

@@ -61,20 +61,23 @@ struct _is_any_invocable<T, false> {
             return _is_any_invocable<std::remove_cvref_t<T>>::value;
         }
         else if constexpr (std::is_scalar_v<T>) {
-            return std::is_function_v<std::remove_pointer_t<T>> || std::is_member_pointer_v<T>;
+            return std::is_function_v<std::remove_pointer_t<T>> ||
+                   std::is_member_pointer_v<T>;
         }
     }();
 };
 } // namespace _private
 
 template <typename T>
-struct is_any_invocable: std::bool_constant<_private::_is_any_invocable<T>::value> {};
+struct is_any_invocable:
+    std::bool_constant<_private::_is_any_invocable<T>::value> {};
 
 } // namespace utl
 
 namespace utl {
 namespace _private {
-// from https://stackoverflow.com/questions/12032771/how-to-check-if-an-arbitrary-type-is-an-iterator
+// from
+// https://stackoverflow.com/questions/12032771/how-to-check-if-an-arbitrary-type-is-an-iterator
 template <typename T>
 struct is_iterator_impl {
     static char test(...);
@@ -85,16 +88,19 @@ struct is_iterator_impl {
               typename = typename std::iterator_traits<U>::value_type,
               typename = typename std::iterator_traits<U>::iterator_category>
     static long test(U&&);
-    constexpr static bool value = std::is_same<decltype(test(std::declval<T>())), long>::value;
+    constexpr static bool value =
+        std::is_same<decltype(test(std::declval<T>())), long>::value;
 };
 } // namespace _private
 template <typename T>
-struct is_iterator: std::integral_constant<bool, _private::is_iterator_impl<T>::value> {};
+struct is_iterator:
+    std::integral_constant<bool, _private::is_iterator_impl<T>::value> {};
 } // namespace utl
 
 namespace utl::_private {
 template <typename T>
-constexpr auto has_member_begin(int) -> decltype(std::declval<T>().begin(), bool{}) {
+constexpr auto has_member_begin(int)
+    -> decltype(std::declval<T>().begin(), bool{}) {
     return true;
 }
 template <typename T>
@@ -103,7 +109,8 @@ constexpr auto has_member_begin(...) {
 }
 
 template <typename T>
-constexpr auto has_free_begin(int) -> decltype(begin(std::declval<T>()), bool{}) {
+constexpr auto has_free_begin(int)
+    -> decltype(begin(std::declval<T>()), bool{}) {
     return true;
 }
 template <typename T>
@@ -117,7 +124,8 @@ constexpr auto has_begin() {
 }
 
 template <typename T>
-constexpr auto has_member_end(int) -> decltype(std::declval<T>().end(), bool{}) {
+constexpr auto has_member_end(int)
+    -> decltype(std::declval<T>().end(), bool{}) {
     return true;
 }
 template <typename T>
@@ -149,7 +157,8 @@ constexpr auto is_range() {
             using T_ = decltype(*std::declval<T>());
             using U_ = decltype(*std::declval<U>());
             return (
-                bool)std::is_same<typename std::remove_const<T_>::type, typename std::remove_const<U_>::type>::value;
+                bool)std::is_same<typename std::remove_const<T_>::type,
+                                  typename std::remove_const<U_>::type>::value;
         }
     }
     return false;
@@ -178,7 +187,7 @@ private:
     }
 
 public:
-    using iterator_type  = decltype(_begin());
+    using iterator_type = decltype(_begin());
     using reference_type = decltype(*_begin());
 };
 
@@ -227,24 +236,30 @@ struct is_scalar: is_arithmetic<T> {};
 
 namespace _private {
 template <typename T, typename U>
-auto _do_promote2(int) -> decltype(bool{} ? std::declval<T>() : std::declval<U>());
+auto _do_promote2(int)
+    -> decltype(bool{} ? std::declval<T>() : std::declval<U>());
 
 template <typename T>
 T _do_promote();
 template <typename T, typename U, typename... Rest>
 auto _do_promote() {
-    return _do_promote<std::remove_reference_t<decltype(_do_promote2<T, U>(0))>, Rest...>();
+    return _do_promote<std::remove_reference_t<decltype(_do_promote2<T, U>(0))>,
+                       Rest...>();
 }
 
 template <typename T, typename U>
-auto _can_promote2(int) -> decltype(bool{} ? std::declval<T>() : std::declval<U>(), std::true_type{});
+auto _can_promote2(int)
+    -> decltype(bool{} ? std::declval<T>() : std::declval<U>(),
+                std::true_type{});
 template <typename T, typename U>
 std::false_type _can_promote2(...);
 template <typename T, typename U, typename... Rest>
 constexpr bool _can_promote(...) {
     if constexpr (decltype(_can_promote2<T, U>(0))::value) {
         if constexpr (sizeof...(Rest) > 0) {
-            return _can_promote<std::remove_reference_t<decltype(_do_promote2<T, U>(0))>, Rest...>(0);
+            return _can_promote<
+                std::remove_reference_t<decltype(_do_promote2<T, U>(0))>,
+                Rest...>(0);
         }
         else {
             return true;
@@ -260,12 +275,15 @@ template <typename T, typename... U>
 struct promote;
 
 template <typename T, typename U>
-requires(_private::_can_promote<T, U>(0)) struct promote<T, U> {
-    using type = std::remove_reference_t<decltype(_private::_do_promote<T, U>())>;
+requires(_private::_can_promote<T, U>(0))
+struct promote<T, U> {
+    using type =
+        std::remove_reference_t<decltype(_private::_do_promote<T, U>())>;
 };
 
 template <typename T, typename U, typename... V>
-requires(_private::_can_promote<T, U, V...>(0)) struct promote<T, U, V...> {
+requires(_private::_can_promote<T, U, V...>(0))
+struct promote<T, U, V...> {
     using type = typename promote<typename promote<T, U>::type, V...>::type;
 };
 
@@ -345,17 +363,21 @@ template <typename T>
 using remove_cvref_t = typename remove_cvref<T>::type;
 
 template <typename T>
-struct is_relocatable: std::conjunction<std::is_move_constructible<T>, std::is_destructible<T>> {};
+struct is_relocatable:
+    std::conjunction<std::is_move_constructible<T>, std::is_destructible<T>> {};
 
 template <typename T>
 struct is_trivially_relocatable:
-    std::conjunction<std::is_trivially_move_constructible<T>, std::is_trivially_destructible<T>> {};
+    std::conjunction<std::is_trivially_move_constructible<T>,
+                     std::is_trivially_destructible<T>> {};
 
 template <typename T, typename U>
 struct copy_cv {
-    using __type0 = std::conditional_t<std::is_const<T>::value, std::add_const_t<U>, U>;
-    using __type1 = std::conditional_t<std::is_volatile<T>::value, std::add_volatile_t<__type0>, __type0>;
-    
+    using __type0 =
+        std::conditional_t<std::is_const<T>::value, std::add_const_t<U>, U>;
+    using __type1 = std::conditional_t<std::is_volatile<T>::value,
+                                       std::add_volatile_t<__type0>, __type0>;
+
     using type = __type1;
 };
 
@@ -364,9 +386,12 @@ using copy_cv_t = typename copy_cv<T, U>::type;
 
 template <typename T, typename U>
 struct copy_ref {
-    using __type0 = std::conditional_t<std::is_lvalue_reference<T>::value, std::add_lvalue_reference_t<U>, U>;
-    using __type1 = std::conditional_t<std::is_rvalue_reference<T>::value, std::add_rvalue_reference_t<__type0>, __type0>;
-    
+    using __type0 = std::conditional_t<std::is_lvalue_reference<T>::value,
+                                       std::add_lvalue_reference_t<U>, U>;
+    using __type1 =
+        std::conditional_t<std::is_rvalue_reference<T>::value,
+                           std::add_rvalue_reference_t<__type0>, __type0>;
+
     using type = __type1;
 };
 
@@ -377,7 +402,7 @@ template <typename T, typename U>
 struct copy_cvref {
     using __type0 = copy_cv_t<std::remove_reference_t<T>, U>;
     using __type1 = copy_ref_t<T, __type0>;
-    
+
     using type = __type1;
 };
 
@@ -443,26 +468,27 @@ struct __strip_signature<R (C::*)(Args...) const volatile noexcept> {
 };
 
 template <typename R, typename C, typename... Args>
-struct __strip_signature<R (C::*)(Args...)& noexcept> {
+struct __strip_signature<R (C::*)(Args...) & noexcept> {
     using type = R(Args...);
 };
 template <typename R, typename C, typename... Args>
-struct __strip_signature<R (C::*)(Args...) const& noexcept> {
+struct __strip_signature<R (C::*)(Args...) const & noexcept> {
     using type = R(Args...);
 };
 template <typename R, typename C, typename... Args>
-struct __strip_signature<R (C::*)(Args...) volatile& noexcept> {
+struct __strip_signature<R (C::*)(Args...) volatile & noexcept> {
     using type = R(Args...);
 };
 template <typename R, typename C, typename... Args>
-struct __strip_signature<R (C::*)(Args...) const volatile& noexcept> {
+struct __strip_signature<R (C::*)(Args...) const volatile & noexcept> {
     using type = R(Args...);
 };
 
 template <typename>
 struct __func_traits_impl;
 
-template <typename F, typename Sig = typename __strip_signature<decltype(&std::remove_cvref_t<F>::operator())>::type>
+template <typename F, typename Sig = typename __strip_signature<
+                          decltype(&std::remove_cvref_t<F>::operator())>::type>
 struct function_traits: __func_traits_impl<Sig> {
     using __mtl_base = __func_traits_impl<Sig>;
     using __mtl_base::argument;
@@ -472,25 +498,30 @@ struct function_traits: __func_traits_impl<Sig> {
 
 template <typename R, typename... Args>
 struct __func_traits_impl<R(Args...)> {
-    using result_type                           = R;
+    using result_type = R;
     static constexpr std::size_t argument_count = sizeof...(Args);
     template <std::size_t N>
-    requires(N < argument_count) using argument = std::tuple_element_t<N, std::tuple<Args...>>;
+    requires(N < argument_count)
+    using argument = std::tuple_element_t<N, std::tuple<Args...>>;
 };
 
 template <typename Base, typename... T>
-struct have_common_base: std::bool_constant<(std::derived_from<T, Base> && ...)> {};
+struct have_common_base:
+    std::bool_constant<(std::derived_from<T, Base> && ...)> {};
 
 #if defined(__clang__)
 
 #define UTL_HAS_COMPILE_TIME_BASE_OFFSET 1
 
-#define _UTL_OFFSET_EXPR(BASE, DERIVED) \
-reinterpret_cast<char*>(static_cast<BASE*>((DERIVED*)sizeof(DERIVED))) - reinterpret_cast<char const volatile*>((DERIVED*)sizeof(DERIVED))
+#define _UTL_OFFSET_EXPR(BASE, DERIVED)                                        \
+    reinterpret_cast<char*>(static_cast<BASE*>((DERIVED*)sizeof(DERIVED))) -   \
+        reinterpret_cast<char const volatile*>((DERIVED*)sizeof(DERIVED))
 
 template <typename Base, typename Derived>
-inline constexpr std::size_t compile_time_base_offset = __builtin_constant_p(_UTL_OFFSET_EXPR(Base, Derived)) ?
-    (_UTL_OFFSET_EXPR(Base, Derived)) : (_UTL_OFFSET_EXPR(Base, Derived));
+inline constexpr std::size_t compile_time_base_offset =
+    __builtin_constant_p(_UTL_OFFSET_EXPR(Base, Derived)) ?
+        (_UTL_OFFSET_EXPR(Base, Derived)) :
+        (_UTL_OFFSET_EXPR(Base, Derived));
 
 #undef _UTL_OFFSET_EXPR
 
@@ -499,6 +530,5 @@ inline constexpr std::size_t compile_time_base_offset = __builtin_constant_p(_UT
 #define UTL_HAS_COMPILE_TIME_BASE_OFFSET 0
 
 #endif
-
 
 } // namespace utl

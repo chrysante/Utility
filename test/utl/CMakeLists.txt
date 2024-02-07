@@ -1,0 +1,49 @@
+
+target_sources(
+    test PRIVATE
+    DebugMemoryResource.hpp
+    LifetimeCounter.cpp
+    LifetimeCounter.hpp
+    TypeCompare.h
+    __prime.t.cpp
+    common.t.cpp
+    concurrent_dispatch_queue.t.cpp
+    dynamic_dispatch.t.cpp
+    dynamic_library.t.cpp
+    dyncast.t.cpp
+    farray.t.cpp
+    format_time.t.cpp
+    function.t.cpp
+    function_view.t.cpp
+    graph/Vertex.hpp
+    graph/chordal.t.cpp
+    graph/find_cycle.t.cpp
+    graph/greedy_color.t.cpp
+    graph/scc.t.cpp
+    graph/topsort.t.cpp
+    ilist.t.cpp
+    ipp.t.cpp
+    lazy.t.cpp
+    math.t.cpp
+    memory_resource.t.cpp
+    messenger.t.cpp
+    monotonic_buffer_resource.t.cpp
+    pimpl.t.cpp
+    pool_resource.t.cpp
+    queue.t.cpp
+    scope_guard.t.cpp
+    small_ptr_vector.t.cpp
+    stack.t.cpp
+    streammanip.t.cpp
+    structure_of_arrays.t.cpp
+    terminates.hpp
+    thread_pool.t.cpp
+    type_traits.t.cpp
+    utility.t.cpp
+    uuid.t.cpp
+    variant.t.cpp
+    vector/VectorTest.hpp
+    vector/constructors.t.cpp
+    vector/insert-erase.t.cpp
+    vector/vector.t.cpp
+)

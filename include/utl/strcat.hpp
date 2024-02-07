@@ -11,11 +11,10 @@ _UTL_SYSTEM_HEADER_
 namespace utl {
 
 template <typename T>
-concept __utl_printable = requires(std::ostream& s, T&& t) {
-    s << t;
-};
+concept __utl_printable = requires(std::ostream& s, T&& t) { s << t; };
 
-[[nodiscard]] std::string strcat(__utl_printable auto&& f, __utl_printable auto&&... r) {
+[[nodiscard]] std::string strcat(__utl_printable auto&& f,
+                                 __utl_printable auto&&... r) {
     std::stringstream sstr;
     sstr << UTL_FORWARD(f);
     ((sstr << UTL_FORWARD(r)), ...);

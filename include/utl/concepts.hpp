@@ -66,26 +66,33 @@ template <typename S, typename I>
 concept sentinel_for = iterator<I> && __weakly_equality_comparable_with<I, S>;
 
 template <typename I>
-concept input_iterator = iterator<I> && std::equality_comparable<I> && requires(I i) {
-// We comment these out because they cause trouble...
-//    typename std::incrementable_traits<I>::difference_type;
-//    requires std::signed_integral<typename std::incrementable_traits<I>::difference_type>;
-//    typename std::indirectly_readable_traits<I>::value_type;
-//    typename std::common_reference_t<std::iter_reference_t<I>&&,
-//                                     typename std::indirectly_readable_traits<I>::value_type&>;
-    *i++;
-//    typename std::common_reference_t<decltype(*i++)&&, typename std::indirectly_readable_traits<I>::value_type&>;
-};
+concept input_iterator =
+    iterator<I> && std::equality_comparable<I> && requires(I i) {
+        // We comment these out because they cause trouble...
+        //    typename std::incrementable_traits<I>::difference_type;
+        //    requires std::signed_integral<typename
+        //    std::incrementable_traits<I>::difference_type>; typename
+        //    std::indirectly_readable_traits<I>::value_type; typename
+        //    std::common_reference_t<std::iter_reference_t<I>&&,
+        //                                     typename
+        //                                     std::indirectly_readable_traits<I>::value_type&>;
+        *i++;
+        //    typename std::common_reference_t<decltype(*i++)&&, typename
+        //    std::indirectly_readable_traits<I>::value_type&>;
+    };
 
 template <typename I, typename T>
 concept input_iterator_for = input_iterator<I> && __iter_for<I, T>;
 
 template <typename I>
-concept output_iterator = iterator<I> && std::equality_comparable<I> && requires(I i, std::iter_value_t<I> value) {
-    typename std::incrementable_traits<I>::difference_type;
-    requires std::signed_integral<typename std::incrementable_traits<I>::difference_type>;
-    *i++ = value;
-};
+concept output_iterator =
+    iterator<I> && std::equality_comparable<I> &&
+    requires(I i, std::iter_value_t<I> value) {
+        typename std::incrementable_traits<I>::difference_type;
+        requires std::signed_integral<
+            typename std::incrementable_traits<I>::difference_type>;
+        *i++ = value;
+    };
 
 template <typename I, typename T>
 concept output_iterator_for = output_iterator<I> && __iter_for<I, T>;
@@ -123,7 +130,8 @@ concept bidirectional_iterator = forward_iterator<I> && requires(I i) {
 // clang-format on
 
 template <typename I, typename T>
-concept bidirectional_iterator_for = bidirectional_iterator<I> && __iter_for<I, T>;
+concept bidirectional_iterator_for =
+    bidirectional_iterator<I> && __iter_for<I, T>;
 
 // clang-format off
 template <typename I>
@@ -140,10 +148,21 @@ concept random_access_iterator = bidirectional_iterator<I> && std::totally_order
 // clang-format on
 
 template <typename I, typename T>
-concept random_access_iterator_for = random_access_iterator<I> && __iter_for<I, T>;
+concept random_access_iterator_for =
+    random_access_iterator<I> && __iter_for<I, T>;
 
-decltype(auto) __utl_begin(auto& x) requires requires { begin(x); } || requires { std::begin(x); } { using std::begin; return begin(x); }
-decltype(auto) __utl_end(auto& x) requires requires { end(x); } || requires { std::end(x); } { using std::end; return end(x); }
+decltype(auto) __utl_begin(auto& x)
+requires requires { begin(x); } || requires { std::begin(x); }
+{
+    using std::begin;
+    return begin(x);
+}
+decltype(auto) __utl_end(auto& x)
+requires requires { end(x); } || requires { std::end(x); }
+{
+    using std::end;
+    return end(x);
+}
 
 // clang-format off
 template <typename R>
@@ -230,7 +249,5 @@ concept random_access_range_for = requires(R&& r) {
     { __utl_end(r) } -> sentinel_for<decltype(__utl_begin(r))>;
 };
 // clang-format on
-
-
 
 } // namespace utl

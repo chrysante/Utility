@@ -1,8 +1,8 @@
 #pragma once
 
 #include <concepts>
-#include <iosfwd>
 #include <functional>
+#include <iosfwd>
 
 #include "__base.hpp"
 
@@ -26,10 +26,11 @@ __strmanip_objwrapper(T&&) -> __strmanip_objwrapper<T>;
 template <typename T>
 __strmanip_objwrapper(T&) -> __strmanip_objwrapper<T&>;
 
-
 template <typename F>
 struct streammanip {
-    constexpr streammanip() requires std::is_default_constructible_v<F> = default;
+    constexpr streammanip()
+    requires std::is_default_constructible_v<F>
+    = default;
     constexpr streammanip(F const& f): __f(f) {}
     constexpr streammanip(F&& f): __f(std::move(f)) {}
 
@@ -37,10 +38,11 @@ struct streammanip {
     [[nodiscard]] constexpr auto operator()(Args&&... args) const
     requires requires(F& f, std::ostream& ostream) {
         std::invoke(f, ostream, args...);
-    } {
-        return utl::streammanip(
-            [args = std::tuple{ __strmanip_objwrapper{ std::forward<Args>(args) }... },
-             f = __f](std::ostream& ostream) {
+    }
+    {
+        return utl::streammanip([args = std::tuple{ __strmanip_objwrapper{
+                                     std::forward<Args>(args) }... },
+                                 f = __f](std::ostream& ostream) {
             std::apply(
                 [&](auto&... args) { std::invoke(f, ostream, args.obj...); },
                 args);
@@ -49,11 +51,13 @@ struct streammanip {
 
     template <typename CharT, typename Traits>
     requires std::invocable<F, std::basic_ostream<CharT, Traits>&>
-    friend std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& ostream, streammanip<F> const& manip) {
+    friend std::basic_ostream<CharT, Traits>&
+    operator<<(std::basic_ostream<CharT, Traits>& ostream,
+               streammanip<F> const& manip) {
         std::invoke(manip.__f, ostream);
         return ostream;
     }
-    
+
     F __f;
 };
 
@@ -61,7 +65,7 @@ template <typename... Args>
 struct vstreammanip: streammanip<std::function<void(std::ostream&, Args...)>> {
     using __base = streammanip<std::function<void(std::ostream&, Args...)>>;
     using __base::__base;
-    
+
     template <typename F>
     vstreammanip(F&& f): __base(std::forward<F>(f)) {}
 };

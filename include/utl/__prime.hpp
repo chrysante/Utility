@@ -19,7 +19,9 @@ inline constexpr bool __is_prime(std::size_t number) {
         return false;
     }
 
-    for (std::size_t divisor = 6; (divisor - 1) * (divisor - 1) <= number; divisor += 6) {
+    for (std::size_t divisor = 6; (divisor - 1) * (divisor - 1) <= number;
+         divisor += 6)
+    {
         if (number % (divisor - 1) == 0) {
             return false;
         }

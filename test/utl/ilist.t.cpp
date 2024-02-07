@@ -1,21 +1,22 @@
-#include <catch/catch2.hpp>
-
 #include <numeric>
 
+#include <catch2/catch_template_test_macros.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
 #include <utl/ilist.hpp>
 
-#include "LifetimeCounter.hpp"
+#include "utl/LifetimeCounter.hpp"
 
 namespace {
 
 struct TestType: utl::ilist_node<TestType>, utl_test::LifetimeCounter {
     explicit TestType(): value(0) {}
     TestType(int value): value(value) {}
-    
+
     friend std::ostream& operator<<(std::ostream& str, TestType const& t) {
         return str << t.value;
     }
-    
+
     int value;
 };
 
@@ -23,28 +24,35 @@ template <typename T>
 struct NotPropagatingNeverEqualAllocator: std::allocator<T> {
     using propagate_on_container_move_assignment = std::false_type;
     using is_always_equal = std::false_type;
-    bool operator==(NotPropagatingNeverEqualAllocator const&) const { return false; }
+    bool operator==(NotPropagatingNeverEqualAllocator const&) const {
+        return false;
+    }
 };
 
 template <typename T>
 struct NotPropagatingAlwaysEqualAllocator: std::allocator<T> {
     using propagate_on_container_move_assignment = std::false_type;
     using is_always_equal = std::true_type;
-    bool operator==(NotPropagatingAlwaysEqualAllocator const&) const { return true; }
+    bool operator==(NotPropagatingAlwaysEqualAllocator const&) const {
+        return true;
+    }
 };
 
 template <typename T>
 struct PropagatingNeverEqualAllocator: std::allocator<T> {
     using propagate_on_container_move_assignment = std::true_type;
     using is_always_equal = std::false_type;
-    bool operator==(PropagatingNeverEqualAllocator const&) const { return false; }
+    bool operator==(PropagatingNeverEqualAllocator const&) const {
+        return false;
+    }
 };
 
 template <typename T>
-static std::ostream& operator<<(std::ostream& str, std::initializer_list<T> ilist) {
+static std::ostream& operator<<(std::ostream& str,
+                                std::initializer_list<T> ilist) {
     str << "[";
     bool first = true;
-    for (auto& i: ilist) {
+    for (auto& i : ilist) {
         if (!first) {
             str << ", ";
         }
@@ -52,16 +60,17 @@ static std::ostream& operator<<(std::ostream& str, std::initializer_list<T> ilis
         str << i;
     }
     return str << "]";
-} 
+}
 
 } // namespace
 
 template <typename Allocator>
-static void testEqual(utl::ilist<TestType, Allocator> const& l, std::initializer_list<TestType> init_list) {
+static void testEqual(utl::ilist<TestType, Allocator> const& l,
+                      std::initializer_list<TestType> init_list) {
     auto ilItr = init_list.begin();
     INFO("l = " << l);
     INFO("ref = " << init_list);
-    for (auto& elem: l) {
+    for (auto& elem : l) {
         REQUIRE(ilItr != init_list.end());
         CHECK(elem == *ilItr);
         ++ilItr;
@@ -69,12 +78,13 @@ static void testEqual(utl::ilist<TestType, Allocator> const& l, std::initializer
     CHECK(ilItr == init_list.end());
 }
 
-#define LIST_TEST_CASE(...)                                                          \
-TEMPLATE_TEST_CASE_SIG(__VA_ARGS__, ((typename Allocator, int __I), Allocator, __I), \
-                       (std::allocator<::TestType>, 0),                              \
-                       (NotPropagatingNeverEqualAllocator<TestType>, 0),             \
-                       (NotPropagatingAlwaysEqualAllocator<TestType>, 0),            \
-                       (PropagatingNeverEqualAllocator<::TestType>, 0))              \
+#define LIST_TEST_CASE(...)                                                    \
+    TEMPLATE_TEST_CASE_SIG(__VA_ARGS__,                                        \
+                           ((typename Allocator, int __I), Allocator, __I),    \
+                           (std::allocator<::TestType>, 0),                    \
+                           (NotPropagatingNeverEqualAllocator<TestType>, 0),   \
+                           (NotPropagatingAlwaysEqualAllocator<TestType>, 0),  \
+                           (PropagatingNeverEqualAllocator<::TestType>, 0))
 
 LIST_TEST_CASE("ilist def ctor", "[ilist]") {
     TestType::reset();
@@ -90,20 +100,20 @@ LIST_TEST_CASE("ilist count value ctor", "[ilist]") {
         CHECK(TestType::liveObjects() == 10);
         CHECK(!l.empty());
         CHECK(std::count(l.begin(), l.end(), TestType(-1)) == 10);
-        for (auto value: l) {
+        for (auto value : l) {
             CHECK(value.value == -1);
         }
     }
     CHECK(TestType::liveObjects() == 0);
 }
-    
+
 LIST_TEST_CASE("ilist count ctor", "[ilist]") {
     TestType::reset();
     {
         utl::ilist<TestType, Allocator> l(10);
         CHECK(TestType::liveObjects() == 10);
         CHECK(!l.empty());
-        for (auto value: l) {
+        for (auto value : l) {
             CHECK(value.value == 0);
         }
     }
@@ -118,7 +128,7 @@ LIST_TEST_CASE("ilist range ctor", "[ilist]") {
         utl::ilist<TestType, Allocator> l(data.begin(), data.end());
         CHECK(TestType::liveObjects() == data.size());
         CHECK(l.empty() == data.empty());
-        for (auto value: l) {
+        for (auto value : l) {
             CHECK(value.value == 1);
         }
     }
@@ -195,7 +205,10 @@ LIST_TEST_CASE("ilist clear", "[ilist]") {
 
 template <typename Allocator>
 static int sum(utl::ilist<TestType, Allocator> const& l) {
-    return std::accumulate(l.begin(), l.end(), 0, [](int acc, TestType const& rhs) { return acc + rhs.value; });
+    return std::accumulate(l.begin(), l.end(), 0,
+                           [](int acc, TestType const& rhs) {
+        return acc + rhs.value;
+    });
 }
 
 LIST_TEST_CASE("ilist insert single value", "[ilist]") {
@@ -223,7 +236,7 @@ LIST_TEST_CASE("ilist insert count value", "[ilist]") {
     utl::ilist<TestType, Allocator> l(beginCount);
     SECTION("begin") {
         l.insert(l.begin(), insertCount, 1);
-        for (std::size_t index = 0; auto elem: l) {
+        for (std::size_t index = 0; auto elem : l) {
             INFO(index);
             CHECK(elem.value == (index < insertCount ? 1 : 0));
             ++index;
@@ -235,18 +248,19 @@ LIST_TEST_CASE("ilist insert count value", "[ilist]") {
         std::size_t const insertIndex = std::min<std::size_t>(beginCount, 3);
         std::advance(itr, insertIndex);
         itr = l.insert(itr, insertCount, 1);
-        for (std::size_t index = 0; auto elem: l) {
+        for (std::size_t index = 0; auto elem : l) {
             INFO(index);
-            CHECK(elem.value == (index < insertIndex ? 0 : index < insertIndex + insertCount ? 1 : 0));
+            CHECK(elem.value == (index < insertIndex               ? 0 :
+                                 index < insertIndex + insertCount ? 1 :
+                                                                     0));
             ++index;
         }
         CHECK(sum(l) == insertCount);
-        
     }
     SECTION("end") {
         l.insert(l.end(), insertCount, 1);
         std::size_t index = 0;
-        for  (auto itr = l.rbegin(); itr != l.rend(); ++itr) {
+        for (auto itr = l.rbegin(); itr != l.rend(); ++itr) {
             auto elem = *itr;
             INFO(index);
             CHECK(elem.value == (index < insertCount ? 1 : 0));
@@ -261,7 +275,7 @@ LIST_TEST_CASE("ilist emplace", "[ilist]") {
     utl::ilist<TestType, Allocator> l(count);
     std::size_t const insertIndex = std::min<std::size_t>(count, 3);
     l.emplace(std::next(l.begin(), insertIndex), 1);
-    for (std::size_t index = 0; auto& elem: l) {
+    for (std::size_t index = 0; auto& elem : l) {
         CHECK(elem.value == (index == insertIndex ? 1 : 0));
         ++index;
     }
@@ -269,14 +283,16 @@ LIST_TEST_CASE("ilist emplace", "[ilist]") {
 
 LIST_TEST_CASE("ilist erase", "[ilist]") {
     TestType::reset();
-    utl::ilist<TestType, Allocator> l = { 0, 1, 2, 3, /* >> */ 3, /* << */ 4, 5 };
+    utl::ilist<TestType, Allocator> l = {
+        0, 1, 2, 3, /* >> */ 3, /* << */ 4, 5
+    };
     CHECK(TestType::liveObjects() == 7);
     auto itr = l.erase(std::next(l.begin(), 3));
     CHECK(itr == std::next(l.begin(), 3));
     CHECK(*itr == TestType(3));
     CHECK(TestType::liveObjects() == 6);
     std::size_t index = 0;
-    for (auto& elem: l) {
+    for (auto& elem : l) {
         CHECK(elem.value == index);
         ++index;
     }
@@ -296,7 +312,7 @@ LIST_TEST_CASE("ilist erase - 2", "[ilist]") {
     CHECK(TestType::liveObjects() == 5);
     std::size_t index = 0;
     INFO("pos = " << pos);
-    for (auto& elem: l) {
+    for (auto& elem : l) {
         if (index == pos) {
             ++index;
         }
@@ -308,14 +324,15 @@ LIST_TEST_CASE("ilist erase - 2", "[ilist]") {
 
 LIST_TEST_CASE("ilist erase range", "[ilist]") {
     TestType::reset();
-    utl::ilist<TestType, Allocator> l = { 0, 1, /* >> */ 1, 1, 1, 1, /* << */ 2, 3 };
+    utl::ilist<TestType, Allocator> l = { 0, 1, /* >> */ 1, 1,
+                                          1, 1, /* << */ 2, 3 };
     CHECK(TestType::liveObjects() == 8);
     auto itr = l.erase(std::next(l.begin(), 2), std::prev(l.end(), 2));
     CHECK(itr == std::prev(l.end(), 2));
     CHECK(*itr == TestType(2));
     CHECK(TestType::liveObjects() == 4);
     std::size_t index = 0;
-    for (auto& elem: l) {
+    for (auto& elem : l) {
         CHECK(elem.value == index);
         ++index;
     }
@@ -351,7 +368,9 @@ LIST_TEST_CASE("ilist push_front", "[ilist]") {
     CHECK(l.front() == TestType(1));
     CHECK(l.front().prev() == l.end().to_address());
     size_t size = 0;
-    for ([[maybe_unused]] auto& _: l) { ++size; }
+    for ([[maybe_unused]] auto& _ : l) {
+        ++size;
+    }
     CHECK(size == count + 1);
 }
 
@@ -453,7 +472,7 @@ struct UsesIncompleteList {
     utl::ilist<Incomplete> list;
 };
 
-struct Incomplete: utl::ilist_node<Incomplete>{};
+struct Incomplete: utl::ilist_node<Incomplete> {};
 
 UsesIncompleteList::~UsesIncompleteList() = default;
 

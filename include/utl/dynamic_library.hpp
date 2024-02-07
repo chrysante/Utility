@@ -113,7 +113,7 @@ private:
 
 private:
     std::filesystem::path _path;
-    void* _handle           = nullptr;
+    void* _handle = nullptr;
     dynamic_load_mode _mode = dynamic_load_mode::now | dynamic_load_mode::local;
 };
 

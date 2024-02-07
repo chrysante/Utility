@@ -7,8 +7,9 @@
 #include <cxxabi.h>
 
 std::string utl::demangle_name(char const* mangled_name) {
-    int status           = 0;
-    char* demangled_name = abi::__cxa_demangle(mangled_name, nullptr, nullptr, &status);
+    int status = 0;
+    char* demangled_name =
+        abi::__cxa_demangle(mangled_name, nullptr, nullptr, &status);
     __utl_assert(status == 0, "Name demangling failed");
 
     std::string const result(demangled_name);
@@ -26,10 +27,10 @@ std::string utl::demangle_name(char const* mangled_name) {
 
 std::string utl::qualified_function_name(std::string_view pretty) {
     try {
-        auto const end   = pretty.find('(');
+        auto const end = pretty.find('(');
         auto const begin = [&]() -> std::size_t {
             std::size_t i = end;
-            int openAngle    = 0;
+            int openAngle = 0;
             while (i > 0) {
                 --i;
                 if (pretty[i] == '>') {

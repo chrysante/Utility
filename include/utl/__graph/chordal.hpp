@@ -18,15 +18,14 @@ namespace utl {
 ///
 /// \param end End of the range of vertices.
 ///
-/// \param neighbours Invocable returning the neighours a vertex `v` as a range of vertices.
+/// \param neighbours Invocable returning the neighours a vertex `v` as a range
+/// of vertices.
 ///
-/// \param result Output iterator to which the lexicographical ordering is written.
-template <
-    std::input_iterator Itr,
-    std::sentinel_for<Itr> S,
-    typename Vertex = std::iter_value_t<Itr>,
-    std::invocable<Vertex> Neighbours,
-    std::output_iterator<Vertex> Out>
+/// \param result Output iterator to which the lexicographical ordering is
+/// written.
+template <std::input_iterator Itr, std::sentinel_for<Itr> S,
+          typename Vertex = std::iter_value_t<Itr>,
+          std::invocable<Vertex> Neighbours, std::output_iterator<Vertex> Out>
 void find_lex_ordering(Itr begin, S end, Neighbours neighbours, Out result);
 
 /// Checks wether a graph `([begin, end), neighbours)` is chordal.
@@ -35,14 +34,13 @@ void find_lex_ordering(Itr begin, S end, Neighbours neighbours, Out result);
 ///
 /// \param end End of the range of lexicographically sorted vertices.
 ///
-/// \param neighbours Invocable returning the neighours a vertex `v` as a range of vertices.
+/// \param neighbours Invocable returning the neighours a vertex `v` as a range
+/// of vertices.
 ///
 /// \Returns `true` iff the graph is chordal.
-template <
-    std::input_iterator Itr,
-    std::sentinel_for<Itr> S,
-    typename Vertex = std::iter_value_t<Itr>,
-    std::invocable<Vertex> Neighbours>
+template <std::input_iterator Itr, std::sentinel_for<Itr> S,
+          typename Vertex = std::iter_value_t<Itr>,
+          std::invocable<Vertex> Neighbours>
 bool is_chordal(Itr begin, S end, Neighbours neighbours);
 
 } // namespace utl
@@ -55,7 +53,7 @@ struct __lex_bfs_context {
         sigma{ { 0, utl::hashset<Vertex>(begin, end) } },
         neighbours(neighbours),
         outItr(outItr) {}
-    
+
     void run() {
         /// If the graph is empty we return early.
         if (sigma.front().second.empty()) {
@@ -69,11 +67,11 @@ struct __lex_bfs_context {
             }
             *outItr++ = v;
             utl::hashset<uint16_t> replaced;
-            for (auto w: std::invoke(neighbours, v)) {
+            for (auto w : std::invoke(neighbours, v)) {
                 // TODO: Replace this linear search by a constant time algorithm
-                auto sItr = std::find_if(sigma.begin(),
-                                         sigma.end(),
-                                         [&](auto& s) { return s.second.contains(w); });
+                auto sItr =
+                    std::find_if(sigma.begin(), sigma.end(),
+                                 [&](auto& s) { return s.second.contains(w); });
                 if (sItr == sigma.end()) {
                     continue;
                 }
@@ -94,7 +92,7 @@ struct __lex_bfs_context {
             }
         }
     }
-    
+
     static Vertex pop(utl::hashset<Vertex>& set) {
         __utl_assert(!set.empty());
         auto itr = set.begin();
@@ -102,7 +100,7 @@ struct __lex_bfs_context {
         set.erase(itr);
         return result;
     }
-    
+
     utl::vector<std::pair<size_t, utl::hashset<Vertex>>> sigma;
     size_t setID = 1;
     Neighbours neighbours;
@@ -111,14 +109,12 @@ struct __lex_bfs_context {
 
 } // namespace utl
 
-template <
-    std::input_iterator Itr,
-    std::sentinel_for<Itr> S,
-    typename Vertex,
-    std::invocable<Vertex> Neighbours,
-    std::output_iterator<Vertex> Out>
-void utl::find_lex_ordering(Itr begin, S end, Neighbours neighbours, Out outItr) {
-    __lex_bfs_context<Vertex, Neighbours, Out> ctx(begin, end, neighbours, outItr);
+template <std::input_iterator Itr, std::sentinel_for<Itr> S, typename Vertex,
+          std::invocable<Vertex> Neighbours, std::output_iterator<Vertex> Out>
+void utl::find_lex_ordering(Itr begin, S end, Neighbours neighbours,
+                            Out outItr) {
+    __lex_bfs_context<Vertex, Neighbours, Out> ctx(begin, end, neighbours,
+                                                   outItr);
     ctx.run();
 }
 
@@ -131,14 +127,13 @@ struct __is_chordal_context {
             Vertex v = *vItr;
             auto&& neighboursOfV = std::invoke(neighbours, v);
             std::optional<Itr> wItr;
-            for (auto j = vItr; ; ) {
+            for (auto j = vItr;;) {
                 if (j == begin) {
                     break;
                 }
                 --j;
-                if (std::find(neighboursOfV.begin(),
-                              neighboursOfV.end(), *j) !=
-                        neighboursOfV.end())
+                if (std::find(neighboursOfV.begin(), neighboursOfV.end(), *j) !=
+                    neighboursOfV.end())
                 {
                     wItr = j;
                     break;
@@ -156,7 +151,7 @@ struct __is_chordal_context {
         }
         return true;
     }
-    
+
     utl::hashset<Vertex> setOfPrevNeighbours(Itr itr) {
         utl::hashset<Vertex> result;
         auto&& neigh = std::invoke(neighbours, *itr);
@@ -171,17 +166,18 @@ struct __is_chordal_context {
         }
         return result;
     }
-    
+
     /// Checks wether \p a is a subset of \p b
-    bool isSubset(utl::hashset<Vertex> const& a, utl::hashset<Vertex> const& b) {
-        for (auto const& x: a) {
+    bool isSubset(utl::hashset<Vertex> const& a,
+                  utl::hashset<Vertex> const& b) {
+        for (auto const& x : a) {
             if (!b.contains(x)) {
                 return false;
             }
         }
         return true;
     }
-    
+
     Itr begin;
     S end;
     Neighbours neighbours;
@@ -189,13 +185,11 @@ struct __is_chordal_context {
 
 } // namespace utl
 
-template <
-    std::input_iterator Itr,
-    std::sentinel_for<Itr> S,
-    typename Vertex,
-    std::invocable<Vertex> Neighbours>
+template <std::input_iterator Itr, std::sentinel_for<Itr> S, typename Vertex,
+          std::invocable<Vertex> Neighbours>
 bool utl::is_chordal(Itr begin, S end, Neighbours neighbours) {
-    __is_chordal_context<Itr, S, Vertex, Neighbours> ctx{ begin, end, neighbours };
+    __is_chordal_context<Itr, S, Vertex, Neighbours> ctx{ begin, end,
+                                                          neighbours };
     return ctx.run();
 }
 

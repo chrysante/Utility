@@ -1,15 +1,14 @@
-#include <catch/catch2.hpp>
-
-#include "utl/dynamic_library.hpp"
+#include <catch2/catch_test_macros.hpp>
+#include <utl/dynamic_library.hpp>
 
 #ifdef __APPLE__
-#define LIB_NAME "libtest-library.dylib"
+static constexpr auto* LibName = "libtest-lib.dylib";
 #else
 #error Unsupported system
 #endif
 
 TEST_CASE("dynamic_library") {
-    utl::dynamic_library lib(LIB_NAME);
+    utl::dynamic_library lib(LibName);
     SECTION("Resolve function") {
         auto* fn = lib.resolve_as<int()>("test_function");
         CHECK(fn() == 42);
@@ -23,7 +22,7 @@ TEST_CASE("dynamic_library") {
     }
     SECTION("Close and load") {
         lib.close();
-        lib.load(LIB_NAME);
+        lib.load(LibName);
         CHECK_NOTHROW(lib.resolve("test_function"));
     }
 }

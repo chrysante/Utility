@@ -25,21 +25,23 @@ public:
 
     template <typename T>
     listener_id listen(std::invocable<T> auto&& listener) {
-        using U                    = std::decay_t<T>;
+        using U = std::decay_t<T>;
         std::type_index const type = typeid(U);
-        auto& typed_listeners      = _listeners[type];
-        typed_listeners[_index]    = [listener = UTL_FORWARD(listener)](std::any const& message) {
+        auto& typed_listeners = _listeners[type];
+        typed_listeners[_index] =
+            [listener = UTL_FORWARD(listener)](std::any const& message) {
             std::invoke(listener, std::any_cast<U const&>(message));
         };
         return listener_id{ type, _index++ };
     }
 
     template <typename L>
-        listener_id listen(L&& listener) requires(utl::function_traits<L>::argument_count == 1) && requires {
-        typename utl::function_traits<L>::template argument<0>;
-    }
+    listener_id listen(L&& listener)
+    requires(utl::function_traits<L>::argument_count == 1) &&
+            requires { typename utl::function_traits<L>::template argument<0>; }
     {
-        using T = std::decay_t<typename utl::function_traits<L>::template argument<0>>;
+        using T = std::decay_t<
+            typename utl::function_traits<L>::template argument<0>>;
         return listen<T>(UTL_FORWARD(listener));
     }
 
@@ -47,7 +49,7 @@ public:
         auto const list_itr = _listeners.find(id.__utl_type);
         __utl_expect(list_itr != _listeners.end(), "Invalid ID");
         auto& typed_listeners = list_itr->second;
-        auto const itr        = typed_listeners.find(id.__utl_index);
+        auto const itr = typed_listeners.find(id.__utl_index);
         __utl_expect(itr != typed_listeners.end(), "Invalid ID");
         typed_listeners.erase(itr);
     }
@@ -55,7 +57,7 @@ public:
 private:
     template <typename T>
     void send_impl(T&& message) {
-        std::type_index const type  = message.type();
+        std::type_index const type = message.type();
         auto const& typed_listeners = _listeners[type];
         for (auto&& [key, listener] : typed_listeners) {
             listener(message);
@@ -63,7 +65,9 @@ private:
     }
 
 private:
-    hashmap<std::type_index, hashmap<std::size_t, function<void(std::any const&)>>> _listeners;
+    hashmap<std::type_index,
+            hashmap<std::size_t, function<void(std::any const&)>>>
+        _listeners;
     std::size_t _index = 0;
 };
 
@@ -86,7 +90,7 @@ public:
         if (flushing) {
             return;
         }
-        flushing          = true;
+        flushing = true;
         scope_guard reset = [&] { flushing = false; };
         for (auto const& msg : _messages) {
             messenger::send(msg);
@@ -105,15 +109,16 @@ private:
 /// MARK: reciever
 template <typename Messenger>
 class reciever {
-    static_assert(std::is_same_v<Messenger, messenger> || std::is_same_v<Messenger, buffered_messenger>);
+    static_assert(std::is_same_v<Messenger, messenger> ||
+                  std::is_same_v<Messenger, buffered_messenger>);
 
 public:
     reciever() = default;
     explicit reciever(std::weak_ptr<Messenger> m): m(std::move(m)) {}
-    reciever(reciever const&)            = delete;
-    reciever(reciever&&)                 = default;
+    reciever(reciever const&) = delete;
+    reciever(reciever&&) = default;
     reciever& operator=(reciever const&) = delete;
-    reciever& operator=(reciever&&)      = default;
+    reciever& operator=(reciever&&) = default;
     ~reciever() { unlisten_all(); }
 
     void set_messenger(std::weak_ptr<Messenger> m) {
@@ -156,7 +161,8 @@ private:
 /// MARK: emitter
 template <typename Messenger>
 class emitter {
-    static_assert(std::is_same_v<Messenger, messenger> || std::is_same_v<Messenger, buffered_messenger>);
+    static_assert(std::is_same_v<Messenger, messenger> ||
+                  std::is_same_v<Messenger, buffered_messenger>);
 
 public:
     emitter() = default;

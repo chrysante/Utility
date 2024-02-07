@@ -38,9 +38,9 @@ dynamic_library& dynamic_library::operator=(dynamic_library&& rhs) & noexcept {
         return *this;
     }
     destroy();
-    _path       = std::move(rhs._path);
-    _handle     = rhs._handle;
-    _mode       = rhs._mode;
+    _path = std::move(rhs._path);
+    _handle = rhs._handle;
+    _mode = rhs._mode;
     rhs._handle = nullptr;
     return *this;
 }
@@ -107,8 +107,8 @@ void dynamic_library::load_impl() {
     _handle = dlopen(_path.c_str(), translateMode(_mode));
     if (char const* native = dlerror()) {
         _handle = nullptr;
-        throw std::runtime_error(
-            utl::strcat("Failed to load library ", _path, ". Native Error: ", native, "\n"));
+        throw std::runtime_error(utl::strcat("Failed to load library ", _path,
+                                             ". Native Error: ", native, "\n"));
     }
 }
 

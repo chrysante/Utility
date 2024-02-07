@@ -1,8 +1,8 @@
 #include <optional>
 
-#include <catch/catch2.hpp>
-
-#include "utl/small_ptr_vector.hpp"
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
+#include <utl/small_ptr_vector.hpp>
 
 static int gInt;
 static int* gPtr = &gInt;

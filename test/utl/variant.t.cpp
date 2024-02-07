@@ -1,18 +1,18 @@
-#include <catch/catch2.hpp>
-
-#include <tuple>
 #include <iostream>
+#include <tuple>
 
-#include <utl/variant.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <utl/overload.hpp>
 #include <utl/typeinfo.hpp>
 #include <utl/utility.hpp>
-#include <utl/overload.hpp>
+#include <utl/variant.hpp>
 
-#include "TypeCompare.h"
+#include "utl/TypeCompare.h"
 
 using utl_test::T;
 
-template <std::size_t> struct tag {
+template <std::size_t>
+struct tag {
     tag() {}
     tag(tag const&) {}
     tag(tag&&) noexcept {}
@@ -90,17 +90,26 @@ TEST_CASE("variant swap", "[variant]") {
 
 TEST_CASE("variant visit helper", "[variant]") {
     auto v = [i = 0](auto...) -> int const& { return i; };
-    using VisitHelper = utl::__variant_visit<true, void, decltype(v),
-                                             utl::type_sequence<utl::variant<float, int, int>,
-                                                                utl::variant<char, std::nullptr_t, char, std::nullptr_t>,
-                                                                utl::variant<char, std::nullptr_t>>>;
-    CHECK(T<VisitHelper::__variant_at_index<0>> == T<utl::variant<float, int, int>>);
-    CHECK(T<VisitHelper::__variant_at_index<1>> == T<utl::variant<char, std::nullptr_t, char, std::nullptr_t>>);
-    CHECK(T<VisitHelper::__variant_at_index<2>> == T<utl::variant<char, std::nullptr_t>>);
+    using VisitHelper = utl::__variant_visit<
+        true, void, decltype(v),
+        utl::type_sequence<
+            utl::variant<float, int, int>,
+            utl::variant<char, std::nullptr_t, char, std::nullptr_t>,
+            utl::variant<char, std::nullptr_t>>>;
+    CHECK(T<VisitHelper::__variant_at_index<0>> ==
+          T<utl::variant<float, int, int>>);
+    CHECK(T<VisitHelper::__variant_at_index<1>> ==
+          T<utl::variant<char, std::nullptr_t, char, std::nullptr_t>>);
+    CHECK(T<VisitHelper::__variant_at_index<2>> ==
+          T<utl::variant<char, std::nullptr_t>>);
     CHECK(VisitHelper::__variant_count == 3);
-    UTL_WITH_INDEX_SEQUENCE((I, 24), { ([&]{
-        CHECK(T<VisitHelper::__deduced_return_type_at<I>> == T<int const&>);
-    }(), ...); });
+    UTL_WITH_INDEX_SEQUENCE((I, 24), {
+        (
+            [&] {
+            CHECK(T<VisitHelper::__deduced_return_type_at<I>> == T<int const&>);
+        }(),
+            ...);
+    });
     CHECK(T<VisitHelper::__common_return_type> == T<int const&>);
     auto const size = VisitHelper::__variant_sizes;
     CHECK(size[0] == 3);
@@ -109,7 +118,8 @@ TEST_CASE("variant visit helper", "[variant]") {
     for (std::size_t i = 0; i < size[0]; ++i) {
         for (std::size_t j = 0; j < size[1]; ++j) {
             for (std::size_t k = 0; k < size[2]; ++k) {
-                std::size_t const flat = VisitHelper::__flatten_index({ i, j, k });
+                std::size_t const flat =
+                    VisitHelper::__flatten_index({ i, j, k });
                 auto const expanded = VisitHelper::__expand_index(flat);
                 CHECK(expanded[0] == i);
                 CHECK(expanded[1] == j);
@@ -122,24 +132,27 @@ TEST_CASE("variant visit helper", "[variant]") {
 TEST_CASE("variant visit", "[variant]") {
     utl::variant<tag<0>, tag<1>, tag<2>, tag<3>> u(std::in_place_type<tag<2>>);
     utl::variant<int, char> v(std::in_place_type<int>, 1);
-    utl::variant<float, std::nullptr_t> w(std::in_place_type<std::nullptr_t>, nullptr);
-    auto result = utl::visit(utl::overload{
-        [&](auto...) { return 0; },
-        [&](tag<2>, int, std::nullptr_t) { return 1; }
-    }, u, v, w);
+    utl::variant<float, std::nullptr_t> w(std::in_place_type<std::nullptr_t>,
+                                          nullptr);
+    auto result = utl::visit(utl::overload{ [&](auto...) { return 0; },
+                                            [&](tag<2>, int, std::nullptr_t) {
+        return 1;
+    } },
+                             u, v, w);
     CHECK(std::same_as<decltype(result), int>);
     CHECK(result == 1);
-    // Test instantiation of visitation with visitor with different but similar return types
+    // Test instantiation of visitation with visitor with different but similar
+    // return types
     auto d = utl::visit(utl::overload{
-        [&](auto...) { return 0.0; },
-        [&](tag<2>, int, std::nullptr_t) { return 1; }
-    }, u, v, w);
+                            [&](auto...) { return 0.0; },
+                            [&](tag<2>, int, std::nullptr_t) { return 1; } },
+                        u, v, w);
     CHECK(std::same_as<decltype(d), double>);
     // Test instantiation of void visitation with non void visitor
     utl::visit<void>(utl::overload{
-        [&](auto...) { return 0; },
-        [&](tag<2>, int, std::nullptr_t) { return 1; }
-    }, u, v, w);
+                         [&](auto...) { return 0; },
+                         [&](tag<2>, int, std::nullptr_t) { return 1; } },
+                     u, v, w);
 }
 
 TEST_CASE("variant visit returning references", "[variant]") {
@@ -159,7 +172,9 @@ struct Base {
     int i;
 };
 
-int& f(Base& b) { return b.i; }
+int& f(Base& b) {
+    return b.i;
+}
 
 struct A: Base {
     A(int i, float a): Base{ i }, a(a) {}
@@ -171,7 +186,9 @@ struct B: Base {
     long a;
 };
 
-struct X { int _; };
+struct X {
+    int _;
+};
 
 struct C: X, B {
     using B::B;
@@ -210,9 +227,11 @@ struct NonTrivial {
 
 TEST_CASE("variant trivial lifetime", "[variant]") {
     return;
-#if defined(__clang__) 
+#if defined(__clang__)
     if (__clang_major__ < 15) {
-        std::cout << "Clang " __clang_version__ << " insufficient for correct lifetime triviality." << std::endl;
+        std::cout << "Clang " __clang_version__
+                  << " insufficient for correct lifetime triviality."
+                  << std::endl;
         return;
     }
 #endif

@@ -5,19 +5,21 @@
 
 #include <utl/__base.hpp>
 #include <utl/hashset.hpp>
-#include <utl/vector.hpp>
-#include <utl/stack.hpp>
 #include <utl/hashtable.hpp>
+#include <utl/stack.hpp>
+#include <utl/vector.hpp>
 
 _UTL_SYSTEM_HEADER_
 
 namespace utl {
 
-/// \brief   Compute strongly connected components of the graph `([vertex_begin, vertex_end), successors)`
+/// \brief   Compute strongly connected components of the graph `([vertex_begin,
+/// vertex_end), successors)`
 ///
 /// \details Time complexity: `O(n+m)`
 /// Space complexity: `O(n)`
-/// where `n` is the number of vertices and `m` is the number of edges in the graph.
+/// where `n` is the number of vertices and `m` is the number of edges in the
+/// graph.
 ///
 /// \param   vertex_begin Iterator to the beginning of a range vertices.
 /// \param   vvertex_end End of range.
@@ -25,38 +27,38 @@ namespace utl {
 ///          representing its successors.
 /// \param   begin_scc Invocable to call before emitting an SCC.
 /// \param   emit_vertex Invocable to call when emitting a vertex into the
-///          current SCC. Must store vertex into the SCC created by the last call to \p begin_scc
+///          current SCC. Must store vertex into the SCC created by the last
+///          call to \p begin_scc
 ///
-template <
-    std::input_iterator Itr,
-    std::sentinel_for<Itr> S,
-    typename Vertex = std::iter_value_t<Itr>,
-    std::invocable<Vertex> E,
-    std::invocable BeginSccFn,
-    std::invocable<Vertex> EmitVertexFn>
-void compute_sccs(Itr vertex_begin, S vertex_end, E successors, BeginSccFn begin_scc, EmitVertexFn emit_vertex);
+template <std::input_iterator Itr, std::sentinel_for<Itr> S,
+          typename Vertex = std::iter_value_t<Itr>, std::invocable<Vertex> E,
+          std::invocable BeginSccFn, std::invocable<Vertex> EmitVertexFn>
+void compute_sccs(Itr vertex_begin, S vertex_end, E successors,
+                  BeginSccFn begin_scc, EmitVertexFn emit_vertex);
 
 /// Algorithm from here:
 /// https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
 
-template <typename Itr, typename S, typename Vertex, typename E, typename F1, typename F2>
+template <typename Itr, typename S, typename Vertex, typename E, typename F1,
+          typename F2>
 struct __tscca_context {
     struct vertex_data_t {
-        uint32_t index   : 31 = 0;
-        bool defined     : 1  = false;
+        uint32_t index : 31 = 0;
+        bool defined : 1 = false;
         uint32_t lowlink : 31 = 0;
-        bool on_stack    : 1  = false;
+        bool on_stack : 1 = false;
     };
-    
+
     using vertex_t = Vertex;
-    
-    __tscca_context(Itr begin, S end, E successors, F1 begin_scc, F2 emit_vertex):
+
+    __tscca_context(Itr begin, S end, E successors, F1 begin_scc,
+                    F2 emit_vertex):
         begin(begin),
         end(end),
         successors(successors),
         begin_scc(begin_scc),
         emit_vertex(emit_vertex) {}
-    
+
     void compute() {
         for (auto itr = begin; itr != end; ++itr) {
             vertex_data[*itr];
@@ -67,17 +69,17 @@ struct __tscca_context {
             }
         }
     }
-    
+
     void strong_connect(auto v) {
         auto& v_data = vertex_data[v];
         /// Set the depth index for `v` to the smallest unused index
-        v_data.index   = index;
+        v_data.index = index;
         v_data.defined = true;
         v_data.lowlink = index;
         ++index;
         stack.push(v);
         v_data.on_stack = true;
-        for (auto w: successors(v)) {
+        for (auto w : successors(v)) {
             auto& w_data = vertex_data[w];
             if (!w_data.defined) {
                 /// Successor `w` has not yet been visited; recurse on it.
@@ -100,8 +102,8 @@ struct __tscca_context {
         }
         std::invoke(begin_scc);
         while (true) {
-            auto w        = stack.pop();
-            auto& w_data   = vertex_data[w];
+            auto w = stack.pop();
+            auto& w_data = vertex_data[w];
             w_data.on_stack = false;
             std::invoke(emit_vertex, w);
             if (w == v) {
@@ -109,7 +111,7 @@ struct __tscca_context {
             }
         }
     }
-    
+
     Itr begin;
     S end;
     E successors;
@@ -122,15 +124,13 @@ struct __tscca_context {
 
 } // namespace utl
 
-template <
-    std::input_iterator Itr,
-    std::sentinel_for<Itr> S,
-    typename Vertex,
-    std::invocable<Vertex> E,
-    std::invocable BeginSccFn,
-    std::invocable<Vertex> EmitVertexFn>
-void utl::compute_sccs(Itr vertex_begin, S vertex_end, E successors, BeginSccFn begin_scc, EmitVertexFn emit_vertex) {
-    __tscca_context<Itr, S, Vertex, E, BeginSccFn, EmitVertexFn> ctx(vertex_begin, vertex_end, successors, begin_scc, emit_vertex);
+template <std::input_iterator Itr, std::sentinel_for<Itr> S, typename Vertex,
+          std::invocable<Vertex> E, std::invocable BeginSccFn,
+          std::invocable<Vertex> EmitVertexFn>
+void utl::compute_sccs(Itr vertex_begin, S vertex_end, E successors,
+                       BeginSccFn begin_scc, EmitVertexFn emit_vertex) {
+    __tscca_context<Itr, S, Vertex, E, BeginSccFn, EmitVertexFn>
+        ctx(vertex_begin, vertex_end, successors, begin_scc, emit_vertex);
     ctx.compute();
 }
 

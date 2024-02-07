@@ -22,7 +22,8 @@ _UTL_SYSTEM_HEADER_
 
 // __utl_assert
 #if UTL_DEBUG_LEVEL > 0
-#define __utl_assert(COND, ...) (!(COND) ? (__utl_debugbreak("Assertion Failed"), (void)0) : (void)0)
+#define __utl_assert(COND, ...)                                                \
+    (!(COND) ? (__utl_debugbreak("Assertion Failed"), (void)0) : (void)0)
 #else // UTL_DEBUG_LEVEL > 0
 #define __utl_assert(COND, ...) (void)0
 #endif // UTL_DEBUG_LEVEL > 0
@@ -41,7 +42,8 @@ _UTL_SYSTEM_HEADER_
 #define __utl_ensure_audit(COND, ...) __utl_assert_audit(COND)
 
 // __utl_bounds_check
-#define __utl_bounds_check(index, lower, upper) (__utl_expect(index >= lower), __utl_expect(index < upper))
+#define __utl_bounds_check(index, lower, upper)                                \
+    (__utl_expect(index >= lower), __utl_expect(index < upper))
 
 // utl_debug
 #if UTL_DEBUG_LEVEL > 0
@@ -93,7 +95,8 @@ void __utl_debug_print(std::string_view);
 #if UTL_CPP
 #ifdef UTL_LOG
 #include "format.hpp"
-#define __utl_log(FORMAT, ...) utl::__utl_debug_print(utl::format(FORMAT __VA_OPT__(, ) __VA_ARGS__))
+#define __utl_log(FORMAT, ...)                                                 \
+    utl::__utl_debug_print(utl::format(FORMAT __VA_OPT__(, ) __VA_ARGS__))
 #else
 #define __utl_log(FORMAT, ...) (void)0
 #endif

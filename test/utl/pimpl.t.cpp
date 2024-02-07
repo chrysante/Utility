@@ -1,5 +1,4 @@
-#include <catch/catch2.hpp>
-
+#include <catch2/catch_test_macros.hpp>
 #include <utl/pimpl.hpp>
 
 namespace {
@@ -16,7 +15,7 @@ struct X: Base {
     void f(int& x) const override { x = 1; }
 };
 
-}
+} // namespace
 
 TEST_CASE("local_pimpl") {
     utl::local_pimpl<Base, 16> p(utl::derived_tag<X>, 1);

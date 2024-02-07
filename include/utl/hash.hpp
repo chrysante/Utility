@@ -16,8 +16,10 @@ template <std::unsigned_integral T>
 inline constexpr T __utl_hash_seed = static_cast<T>(0x9e3779b97f4a7c15);
 
 template <typename T>
-_UTL_DISABLE_UBSAN_INTEGER void hash_combine_seed(std::size_t& seed, T const& v) {
-    seed ^= std::hash<T>{}(v) + __utl_hash_seed<std::size_t> + (seed << 6) + (seed >> 2);
+_UTL_DISABLE_UBSAN_INTEGER void hash_combine_seed(std::size_t& seed,
+                                                  T const& v) {
+    seed ^= std::hash<T>{}(v) + __utl_hash_seed<std::size_t> + (seed << 6) +
+            (seed >> 2);
 }
 
 template <typename Key>
@@ -44,14 +46,17 @@ struct hash: ankerl::unordered_dense::hash<T> {
     using is_transparent = void;
     using ankerl::unordered_dense::hash<T>::operator();
     template <typename U>
-    decltype(std::declval<std::common_type_t<T, U>>(), std::size_t{}) operator()(U const& u) const {
+    decltype(std::declval<std::common_type_t<T, U>>(), std::size_t{})
+    operator()(U const& u) const {
         return ankerl::unordered_dense::hash<U>{}(u);
     }
 };
 
 template <typename T, typename U>
 struct hash<std::pair<T, U>> {
-    std::size_t operator()(std::pair<T, U> const& p) const { return utl::hash_combine(p.first, p.second); }
+    std::size_t operator()(std::pair<T, U> const& p) const {
+        return utl::hash_combine(p.first, p.second);
+    }
 };
 
 template <typename... T>
@@ -60,10 +65,11 @@ struct hash<std::tuple<T...>> {
 #ifdef _MSC_VER
         return [&]<std::size_t... I>(std::index_sequence<I...>) {
             return utl::hash_combine(std::get<I>(t)...);
-        }
-        (std::make_index_sequence<sizeof...(T)>());
+        }(std::make_index_sequence<sizeof...(T)>());
 #else
-        return UTL_WITH_INDEX_SEQUENCE((I, sizeof...(T)), { return utl::hash_combine(std::get<I>(t)...); });
+        return UTL_WITH_INDEX_SEQUENCE((I, sizeof...(T)), {
+            return utl::hash_combine(std::get<I>(t)...);
+        });
 #endif
     }
 };

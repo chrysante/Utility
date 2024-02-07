@@ -1,11 +1,10 @@
-#include <catch/catch2.hpp>
-
 #include <ranges>
 
+#include <catch2/catch_test_macros.hpp>
 #include <utl/__graph/scc.hpp>
 #include <utl/vector.hpp>
 
-#include "Vertex.hpp"
+#include "utl/graph/Vertex.hpp"
 
 namespace {
 

@@ -31,8 +31,11 @@ class unique_function; // undefined
 #define _UTL_LOCAL_FUNCTION_SIZE_IN_WORDS 3
 
 #if UTL_ANNOTATE_UTL_FUNCTION_ALLOCATION
-#define _UTL_LOGF_ALLOC(S, A)      utl_log("utl::function allocates: (size = {}, align = {})", S, A)
-#define _UTL_LOGF_DEALLOC(P, S, A) utl_log("utl::function deallocates: (p = {}, size = {}, align = {})", P, S, A)
+#define _UTL_LOGF_ALLOC(S, A)                                                  \
+    utl_log("utl::function allocates: (size = {}, align = {})", S, A)
+#define _UTL_LOGF_DEALLOC(P, S, A)                                             \
+    utl_log("utl::function deallocates: (p = {}, size = {}, align = {})", P,   \
+            S, A)
 #else // UTL_ANNOTATE_UTL_FUNCTION_ALLOCATION
 #define _UTL_LOGF_ALLOC(...)
 #define _UTL_LOGF_DEALLOC(...)
@@ -49,13 +52,15 @@ using FunctionInvokePtr = typename FunctionInvokePtrImpl<Sig>::type;
 
 namespace utl {
 
-template <typename F, typename Sig = typename __strip_signature<decltype(&F::operator())>::type>
+template <typename F, typename Sig = typename __strip_signature<
+                          decltype(&F::operator())>::type>
 function(F) -> function<Sig>;
 
 template <typename R, typename... Args>
 function(R (*)(Args...)) -> function<R(Args...)>;
 
-template <typename F, typename Sig = typename __strip_signature<decltype(&F::operator())>::type>
+template <typename F, typename Sig = typename __strip_signature<
+                          decltype(&F::operator())>::type>
 unique_function(F) -> unique_function<Sig>;
 
 template <typename R, typename... Args>
@@ -88,20 +93,22 @@ public:
 public:
     // MARK: constructors
     using _base::_base;
-    function() noexcept                 = default;
-    function(function const& other)     = default;
+    function() noexcept = default;
+    function(function const& other) = default;
     function(function&& other) noexcept = default;
     template <invocable_r<R, Args...> F>
-    requires(!std::same_as<utl::remove_cvref_t<F>, function>) && std::copy_constructible<F> function(F&& f):
-        _base(UTL_FORWARD(f)) {}
+    requires(!std::same_as<utl::remove_cvref_t<F>, function>) &&
+            std::copy_constructible<F>
+    function(F&& f): _base(UTL_FORWARD(f)) {}
 
     // MARK: operator=
     using _base::operator=;
-    function& operator=(function const& other)     = default;
+    function& operator=(function const& other) = default;
     function& operator=(function&& other) noexcept = default;
 
     template <invocable_r<R, Args...> F>
-    requires std::copy_constructible<F> function& operator=(std::reference_wrapper<F> f) noexcept {
+    requires std::copy_constructible<F>
+    function& operator=(std::reference_wrapper<F> f) noexcept {
         function(f).swap(*this);
     }
 
@@ -115,8 +122,9 @@ class unique_function<R(Args...)> {
     friend class function<R(Args...)>;
 
 public:
-    using result_type                     = R;
-    static constexpr std::size_t sbo_size = _UTL_LOCAL_FUNCTION_SIZE_IN_WORDS * sizeof(void*);
+    using result_type = R;
+    static constexpr std::size_t sbo_size =
+        _UTL_LOCAL_FUNCTION_SIZE_IN_WORDS * sizeof(void*);
 
 public:
     // MARK: constructors
@@ -124,19 +132,22 @@ public:
     unique_function(nullfunction_t) noexcept: unique_function() {}
     unique_function(std::nullptr_t) noexcept: unique_function(nullfunction) {}
 
-private: // prohibit copies, but still allow them for derived friend class 'function<>'
+private: // prohibit copies, but still allow them for derived friend class
+         // 'function<>'
     unique_function(unique_function const& other) noexcept = default;
 
 public:
     unique_function(unique_function&& other) noexcept = default;
 
     template <invocable_r<R, Args...> F>
-    requires(!std::same_as<utl::remove_cvref_t<F>, unique_function>) unique_function(F&& f): storage(UTL_FORWARD(f)) {}
+    requires(!std::same_as<utl::remove_cvref_t<F>, unique_function>)
+    unique_function(F&& f): storage(UTL_FORWARD(f)) {}
 
     unique_function(R (*f)(Args...)): storage(f) {}
 
     // MARK: operator=
-private: // prohibit copies, but still allow them for derived friend class 'function<>'
+private: // prohibit copies, but still allow them for derived friend class
+         // 'function<>'
     unique_function& operator=(unique_function const& other) noexcept = default;
 
 public:
@@ -153,9 +164,12 @@ public:
         storage = nullfunction;
         return *this;
     }
-    unique_function& operator=(std::nullptr_t) noexcept { return *this = nullfunction; }
+    unique_function& operator=(std::nullptr_t) noexcept {
+        return *this = nullfunction;
+    }
     template <invocable_r<R, Args...> F>
-    requires(!std::same_as<utl::remove_cvref_t<F>, unique_function>) unique_function& operator=(F&& f) {
+    requires(!std::same_as<utl::remove_cvref_t<F>, unique_function>)
+    unique_function& operator=(F&& f) {
         storage = UTL_FORWARD(f);
         return *this;
     }
@@ -173,10 +187,14 @@ public:
     void swap(unique_function& other) noexcept { storage.swap(other.storage); }
 
     // MARK: operator bool
-    explicit operator bool() const noexcept { return !storage.isNullFunction(); }
+    explicit operator bool() const noexcept {
+        return !storage.isNullFunction();
+    }
 
     // MARK: operator()
-    R operator()(Args... args) const { return storage.invoke(std::forward<Args>(args)...); }
+    R operator()(Args... args) const {
+        return storage.invoke(std::forward<Args>(args)...);
+    }
 
     // MARK: private
 private:
@@ -214,30 +232,35 @@ inline constexpr auto ptrSize = sizeof(void*);
 static_assert(ptrSize == sizeof(nullptr));
 
 inline constexpr auto ptrAlign = alignof(void*);
-// static_assert(ptrAlign == alignof(std::nullptr_t)); // alignof(std::nullptr_t) == 1 in VC++
+// static_assert(ptrAlign == alignof(std::nullptr_t)); //
+// alignof(std::nullptr_t) == 1 in VC++
 
 inline constexpr std::size_t LocalFunctionStoragePtrCount = 4;
 
-inline constexpr std::size_t MaxLocalFunctionSize  = ptrSize * _UTL_LOCAL_FUNCTION_SIZE_IN_WORDS;
+inline constexpr std::size_t MaxLocalFunctionSize =
+    ptrSize * _UTL_LOCAL_FUNCTION_SIZE_IN_WORDS;
 inline constexpr std::size_t MaxLocalFunctionAlign = alignof(std::max_align_t);
 
 //	template <typename F>
-//	static constexpr bool localFunctionMaxOffset = (alignof(F) > ptrAlign) ? (alignof(F) - ptrAlign) : 0;
+//	static constexpr bool localFunctionMaxOffset = (alignof(F) > ptrAlign) ?
+//(alignof(F) - ptrAlign) : 0;
 
-template <typename F, bool isPtr = std::is_function<std::remove_reference_t<F>>::value>
-static constexpr bool fitsInLocalFunction = sizeof(F) <= MaxLocalFunctionSize && alignof(F) <= MaxLocalFunctionAlign;
+template <typename F,
+          bool isPtr = std::is_function<std::remove_reference_t<F>>::value>
+static constexpr bool fitsInLocalFunction =
+    sizeof(F) <= MaxLocalFunctionSize && alignof(F) <= MaxLocalFunctionAlign;
 
 template <typename F>
 static constexpr bool fitsInLocalFunction<F, true> = true;
 
 // MARK: - VTable
 struct FunctionVTable {
-    virtual void copyConstruct(void* to, void const* from) const     = 0;
-    virtual void moveConstruct(void* to, void* from) const noexcept  = 0;
-    virtual void destroy(void*) const noexcept                       = 0;
+    virtual void copyConstruct(void* to, void const* from) const = 0;
+    virtual void moveConstruct(void* to, void* from) const noexcept = 0;
+    virtual void destroy(void*) const noexcept = 0;
     virtual void deallocate(void*, void* deallocator) const noexcept = 0;
-    virtual std::size_t size() const noexcept                        = 0;
-    virtual std::size_t align() const noexcept                       = 0;
+    virtual std::size_t size() const noexcept = 0;
+    virtual std::size_t align() const noexcept = 0;
 
 private:
     virtual void* invokePtr() const noexcept = 0;
@@ -245,8 +268,9 @@ private:
 public:
     template <typename R, typename... Args, typename... U>
     R invoke(void const* _storage, U&&... u) const {
-        auto invokePtr = reinterpret_cast<R (*)(void*, Args...)>(this->invokePtr());
-        void* storage  = const_cast<void*>(_storage);
+        auto invokePtr =
+            reinterpret_cast<R (*)(void*, Args...)>(this->invokePtr());
+        void* storage = const_cast<void*>(_storage);
         return invokePtr(storage, std::forward<U>(u)...);
     }
 };
@@ -260,7 +284,9 @@ struct FunctionVTableStorage {
     //		static auto constexpr _size  =  sizeof(FunctionVTable);
     //		static auto constexpr _align = alignof(FunctionVTable);
     FunctionVTableStorage() = default;
-    FunctionVTableStorage(FunctionVTableStorage const& rhs) { std::memcpy(&this->data, &rhs.data, sizeof(void*)); }
+    FunctionVTableStorage(FunctionVTableStorage const& rhs) {
+        std::memcpy(&this->data, &rhs.data, sizeof(void*));
+    }
 
     void* data;
 };
@@ -282,9 +308,13 @@ struct FunctionVTableImpl<F, R(Args...), Deallocator>: FunctionVTable {
         }
     }
 
-    void moveConstruct(void* to, void* from) const noexcept final { new (to) F(std::move(*static_cast<F*>(from))); }
+    void moveConstruct(void* to, void* from) const noexcept final {
+        new (to) F(std::move(*static_cast<F*>(from)));
+    }
 
-    void destroy(void* obj) const noexcept final { static_cast<F*>(obj)->F::~F(); }
+    void destroy(void* obj) const noexcept final {
+        static_cast<F*>(obj)->F::~F();
+    }
 
     void deallocate(void* p, void* deallocatorContext) const noexcept final {
         if constexpr (!std::is_same_v<Deallocator, void>) {
@@ -303,7 +333,9 @@ struct FunctionVTableImpl<F, R(Args...), Deallocator>: FunctionVTable {
         return objPtr->operator()(static_cast<Args>(args)...);
     }
 
-    void* invokePtr() const noexcept final { return reinterpret_cast<void*>(_staticInvokePtr); }
+    void* invokePtr() const noexcept final {
+        return reinterpret_cast<void*>(_staticInvokePtr);
+    }
 };
 
 // MARK: - LocalFunctionObjectStorage
@@ -317,17 +349,22 @@ public:
 
     // constructor from function pointer
     template <typename F>
-    requires(std::is_function<std::remove_reference_t<F>>::value) LocalFunctionObjectStorage(F&& f):
-        LocalFunctionObjectStorage([f](auto&&... args) { return f(UTL_FORWARD(args)...); }) {}
+    requires(std::is_function<std::remove_reference_t<F>>::value)
+    LocalFunctionObjectStorage(F&& f):
+        LocalFunctionObjectStorage(
+            [f](auto&&... args) { return f(UTL_FORWARD(args)...); }) {}
     template <typename F>
-    requires(std::is_pointer<std::remove_reference_t<F>>::value) LocalFunctionObjectStorage(F&& f):
-        LocalFunctionObjectStorage([f](auto&&... args) { return f(UTL_FORWARD(args)...); }) {}
+    requires(std::is_pointer<std::remove_reference_t<F>>::value)
+    LocalFunctionObjectStorage(F&& f):
+        LocalFunctionObjectStorage(
+            [f](auto&&... args) { return f(UTL_FORWARD(args)...); }) {}
 
     // constructor from callable
     template <typename F>
     requires(!std::is_pointer<std::remove_reference_t<F>>::value &&
-             !std::is_function<std::remove_reference_t<F>>::value) LocalFunctionObjectStorage(F&& f) {
-        using _F     = remove_cvref_t<F>;
+             !std::is_function<std::remove_reference_t<F>>::value)
+    LocalFunctionObjectStorage(F&& f) {
+        using _F = remove_cvref_t<F>;
         using VTable = FunctionVTableImpl<_F, R(Args...)>;
         static_assert(fitsInLocalFunction<_F>);
         static_assert(sizeof(VTable) == sizeof(vTableStorage));
@@ -336,12 +373,14 @@ public:
     }
 
     // copy constructor
-    LocalFunctionObjectStorage(LocalFunctionObjectStorage const& other): vTableStorage(other.vTableStorage) {
+    LocalFunctionObjectStorage(LocalFunctionObjectStorage const& other):
+        vTableStorage(other.vTableStorage) {
         vTable()->copyConstruct(storagePtr(), other.storagePtr());
     }
 
     // move constructor
-    LocalFunctionObjectStorage(LocalFunctionObjectStorage&& other) noexcept: vTableStorage(other.vTableStorage) {
+    LocalFunctionObjectStorage(LocalFunctionObjectStorage&& other) noexcept:
+        vTableStorage(other.vTableStorage) {
         vTable()->moveConstruct(storagePtr(), other.storagePtr());
     }
 
@@ -353,22 +392,29 @@ public:
     // invoke
     template <typename... U>
     R invoke(U&&... u) const {
-        return vTable()->template invoke<R, Args...>(storagePtr(), UTL_FORWARD(u)...);
+        return vTable()->template invoke<R, Args...>(storagePtr(),
+                                                     UTL_FORWARD(u)...);
     }
 
 private:
-    FunctionVTable const* vTable() const noexcept { return reinterpret_cast<FunctionVTable const*>(&vTableStorage); }
+    FunctionVTable const* vTable() const noexcept {
+        return reinterpret_cast<FunctionVTable const*>(&vTableStorage);
+    }
 
-    void* storagePtr() noexcept { return const_cast<void*>(utl::as_const(*this).storagePtr()); }
+    void* storagePtr() noexcept {
+        return const_cast<void*>(utl::as_const(*this).storagePtr());
+    }
 
     void const* storagePtr() const noexcept { return _functionStorage; }
 
 private: // data
-    char /* aligned by enclosing class */ _functionStorage[MaxLocalFunctionSize];
+    char /* aligned by enclosing class */
+        _functionStorage[MaxLocalFunctionSize];
     FunctionVTableStorage vTableStorage;
 };
 
-//	static_assert(sizeof(LocalFunctionObjectStorage<void(), true>) == MaxLocalFunctionSize + ptrSize * 2);
+//	static_assert(sizeof(LocalFunctionObjectStorage<void(), true>) ==
+// MaxLocalFunctionSize + ptrSize * 2);
 
 // MARK: - HeapFunctionObjectStorage
 template <typename>
@@ -381,23 +427,29 @@ public:
 
     // constructor from function pointer
     template <typename F>
-    requires(std::is_function<std::remove_reference_t<F>>::value) HeapFunctionObjectStorage(F&& f):
-        HeapFunctionObjectStorage([f](auto&&... args) { return f(UTL_FORWARD(args)...); }) {}
+    requires(std::is_function<std::remove_reference_t<F>>::value)
+    HeapFunctionObjectStorage(F&& f):
+        HeapFunctionObjectStorage(
+            [f](auto&&... args) { return f(UTL_FORWARD(args)...); }) {}
     template <typename F>
-    requires(std::is_pointer<std::remove_reference_t<F>>::value) HeapFunctionObjectStorage(F&& f):
-        HeapFunctionObjectStorage([f](auto&&... args) { return f(UTL_FORWARD(args)...); }) {}
+    requires(std::is_pointer<std::remove_reference_t<F>>::value)
+    HeapFunctionObjectStorage(F&& f):
+        HeapFunctionObjectStorage(
+            [f](auto&&... args) { return f(UTL_FORWARD(args)...); }) {}
 
     // constructor from callable
     template <typename F>
     requires(!std::is_pointer<std::remove_reference_t<F>>::value &&
-             !std::is_function<std::remove_reference_t<F>>::value) HeapFunctionObjectStorage(F&& f) {
+             !std::is_function<std::remove_reference_t<F>>::value)
+    HeapFunctionObjectStorage(F&& f) {
         using _F = std::remove_cvref_t<F>;
 
         auto constexpr _dealloc = [](void* p, void* obj) {
-            static_cast<HeapFunctionObjectStorage*>(obj)->deallocate(p, sizeof(_F), alignof(_F));
+            static_cast<HeapFunctionObjectStorage*>(obj)
+                ->deallocate(p, sizeof(_F), alignof(_F));
         };
         using Deallocator = decltype(_dealloc);
-        using VTable      = FunctionVTableImpl<_F, R(Args...), Deallocator>;
+        using VTable = FunctionVTableImpl<_F, R(Args...), Deallocator>;
         static_assert(!fitsInLocalFunction<_F>);
         static_assert(sizeof(VTable) == sizeof(vTableStorage));
         new (&vTableStorage) VTable();
@@ -406,13 +458,15 @@ public:
     }
 
     // copy constructor
-    HeapFunctionObjectStorage(HeapFunctionObjectStorage const& other): vTableStorage(other.vTableStorage) {
+    HeapFunctionObjectStorage(HeapFunctionObjectStorage const& other):
+        vTableStorage(other.vTableStorage) {
         this->functionStorage = allocate(vTable()->size(), vTable()->align());
         vTable()->copyConstruct(storagePtr(), other.storagePtr());
     }
 
     // move constructor
-    HeapFunctionObjectStorage(HeapFunctionObjectStorage&& other) noexcept: vTableStorage(other.vTableStorage) {
+    HeapFunctionObjectStorage(HeapFunctionObjectStorage&& other) noexcept:
+        vTableStorage(other.vTableStorage) {
         this->functionStorage = other.functionStorage;
         other.functionStorage = nullptr;
     }
@@ -430,15 +484,20 @@ public:
     // invoke
     template <typename... U>
     R invoke(U&&... u) const {
-        return vTable()->template invoke<R, Args...>(storagePtr(), UTL_FORWARD(u)...);
+        return vTable()->template invoke<R, Args...>(storagePtr(),
+                                                     UTL_FORWARD(u)...);
     }
 
 private:
-    FunctionVTable const* vTable() const noexcept { return reinterpret_cast<FunctionVTable const*>(&vTableStorage); }
+    FunctionVTable const* vTable() const noexcept {
+        return reinterpret_cast<FunctionVTable const*>(&vTableStorage);
+    }
 
     template <typename F>
     static R staticInvokePtr(void const* obj, Args... args) {
-        return static_cast<F*>(as_mutable(obj))->operator()(std::forward<Args>(args)...);
+        return static_cast<F*>(as_mutable(obj))
+            ->
+            operator()(std::forward<Args>(args)...);
     };
 
     template <typename = void>
@@ -465,7 +524,8 @@ private: // data
     FunctionVTableStorage vTableStorage;
     void* functionStorage;
     char _placeholder[(_UTL_LOCAL_FUNCTION_SIZE_IN_WORDS - 2) * sizeof(void*)];
-    std::nullptr_t _heapIndicator{}; // this is always null if this is of type HeapFunctionObjectStorage
+    std::nullptr_t _heapIndicator{}; // this is always null if this is of type
+                                     // HeapFunctionObjectStorage
 };
 
 // MARK: - NullFunctionStorage
@@ -484,7 +544,9 @@ union FunctionStorage<R(Args...)> {
 private:
     template <std::size_t Offset, std::size_t Size>
     bool thisIsNull() const noexcept {
-        std::aligned_storage_t<MaxLocalFunctionSize + sizeof(void*), MaxLocalFunctionAlign> null{};
+        std::aligned_storage_t<MaxLocalFunctionSize + sizeof(void*),
+                               MaxLocalFunctionAlign>
+            null{};
         return std::memcmp(((char*)this) + Offset, &null, Size) == 0;
     }
 
@@ -500,12 +562,17 @@ public:
      *     // ...
      * }
      */
-    bool isLocalFunctionObject() const noexcept { return !thisIsNull<MaxLocalFunctionSize, sizeof(void*)>(); }
-    bool isHeapFunctionObject() const noexcept { return !thisIsNull<0, sizeof(void*)>(); }
+    bool isLocalFunctionObject() const noexcept {
+        return !thisIsNull<MaxLocalFunctionSize, sizeof(void*)>();
+    }
+    bool isHeapFunctionObject() const noexcept {
+        return !thisIsNull<0, sizeof(void*)>();
+    }
 
     // this can be called on its own
     bool isNullFunction() const noexcept {
-        static constexpr std::size_t localSize          = (_UTL_LOCAL_FUNCTION_SIZE_IN_WORDS + 1) * sizeof(void*);
+        static constexpr std::size_t localSize =
+            (_UTL_LOCAL_FUNCTION_SIZE_IN_WORDS + 1) * sizeof(void*);
         static constexpr std::nullptr_t null[localSize] = {};
         return std::memcmp(this, null, localSize) == 0;
     }
@@ -513,17 +580,21 @@ public:
     FunctionStorage(): nullFunction{} {}
 
     template <typename F>
-    requires(fitsInLocalFunction<F>) FunctionStorage(F&& f): localFunction(std::forward<F>(f)) {}
+    requires(fitsInLocalFunction<F>)
+    FunctionStorage(F&& f): localFunction(std::forward<F>(f)) {}
 
     template <typename F>
-    requires(!fitsInLocalFunction<F>) FunctionStorage(F&& f): heapFunction(std::forward<F>(f)) {}
+    requires(!fitsInLocalFunction<F>)
+    FunctionStorage(F&& f): heapFunction(std::forward<F>(f)) {}
 
     FunctionStorage(FunctionStorage const& other) {
         if (other.isLocalFunctionObject()) {
-            new (&this->localFunction) LocalFunctionObjectStorage<Signature>(other.localFunction);
+            new (&this->localFunction)
+                LocalFunctionObjectStorage<Signature>(other.localFunction);
         }
         else if (other.isHeapFunctionObject()) {
-            new (&this->heapFunction) HeapFunctionObjectStorage<Signature>(other.heapFunction);
+            new (&this->heapFunction)
+                HeapFunctionObjectStorage<Signature>(other.heapFunction);
         }
         else {
             new (&this->nullFunction) NullFunctionStorage();
@@ -532,12 +603,14 @@ public:
 
     FunctionStorage(FunctionStorage&& other) noexcept {
         if (other.isLocalFunctionObject()) {
-            new (&this->localFunction) LocalFunctionObjectStorage<Signature>(std::move(other.localFunction));
+            new (&this->localFunction) LocalFunctionObjectStorage<Signature>(
+                std::move(other.localFunction));
             other.localFunction.destroy();
             new (&other.nullFunction) NullFunctionStorage();
         }
         else if (other.isHeapFunctionObject()) {
-            new (&this->heapFunction) HeapFunctionObjectStorage<Signature>(std::move(other.heapFunction));
+            new (&this->heapFunction) HeapFunctionObjectStorage<Signature>(
+                std::move(other.heapFunction));
             other.heapFunction.destroy();
             new (&other.nullFunction) NullFunctionStorage();
         }
@@ -585,7 +658,8 @@ public:
 
     template <typename... U>
     R invoke(U&&... u) const {
-        __utl_expect(!this->isNullFunction(), "trying to invoke a nullfunction");
+        __utl_expect(!this->isNullFunction(),
+                     "trying to invoke a nullfunction");
         if (this->isLocalFunctionObject()) {
             return this->localFunction.invoke(std::forward<U>(u)...);
         }
@@ -597,43 +671,7 @@ public:
 
     void destroy() noexcept { this->~FunctionStorage(); }
 
-    void swap(FunctionStorage& other) noexcept {
-#if 0 /* following code is untested */
-			if (this->isLocalFunctionObject()) {
-				if (other.isLocalFunctionObject()) {
-					std::swap(this->localFunction, other.localFunction);
-					return;
-				}
-				else {
-					/* do nothing */
-				}
-			}
-			else if (this->isHeapFunctionObject()) {
-				if (other.isLocalFunctionObject()) {
-					/* do nothing */
-				}
-				else if (other.isHeapFunctionObject()) {
-					std::swap(this->heapFunction, other.heapFunction);
-					return;
-				}
-				else {
-					/* do nothing */
-				}
-			}
-			else {
-				if (other.isLocalFunctionObject()) {
-					/* do nothing */
-				}
-				else if (other.isHeapFunctionObject()) {
-					/* do nothing */
-				}
-				else {
-					return;
-				}
-			}
-#endif
-        std::swap(*this, other);
-    }
+    void swap(FunctionStorage& other) noexcept { std::swap(*this, other); }
 
     LocalFunctionObjectStorage<R(Args...)> localFunction;
     HeapFunctionObjectStorage<R(Args...)> heapFunction;
@@ -648,4 +686,5 @@ struct FunctionInvokePtrImpl<R(Args...)> {
 };
 } // namespace utl::_private::functionDetails
 
-static_assert(sizeof(utl::function<void()>) == (_UTL_LOCAL_FUNCTION_SIZE_IN_WORDS + 1) * sizeof(void*));
+static_assert(sizeof(utl::function<void()>) ==
+              (_UTL_LOCAL_FUNCTION_SIZE_IN_WORDS + 1) * sizeof(void*));

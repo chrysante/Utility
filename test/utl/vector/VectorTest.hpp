@@ -1,6 +1,8 @@
-#include "utl/LifetimeCounter.hpp"
-
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 #include <utl/vector.hpp>
+
+#include "utl/LifetimeCounter.hpp"
 
 namespace utl_test {
 

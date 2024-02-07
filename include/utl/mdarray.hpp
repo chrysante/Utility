@@ -13,15 +13,16 @@ _UTL_SYSTEM_HEADER_
 
 namespace utl {
 
-template <typename Container, std::size_t Dimensions, typename = make_type_sequence<std::size_t, Dimensions>>
+template <typename Container, std::size_t Dimensions,
+          typename = make_type_sequence<std::size_t, Dimensions>>
 class mdarray;
 
 template <typename Container, std::size_t Dimensions, typename... SizeT>
 class mdarray<Container, Dimensions, type_sequence<SizeT...>> {
 public:
-    using container_type             = Container;
-    using value_type                 = typename Container::value_type;
-    using size_type                  = mtl::vector<std::size_t, Dimensions>;
+    using container_type = Container;
+    using value_type = typename Container::value_type;
+    using size_type = mtl::vector<std::size_t, Dimensions>;
     static constexpr auto dimensions = Dimensions;
 
 public:
@@ -35,14 +36,26 @@ public:
         __utl_expect(mtl::map(index, __size, utl::less).fold(utl::logical_and));
         return (*this)[__expand_index(index)];
     }
-    value_type& operator()(size_type index) & { return utl::as_mutable(utl::as_const(*this)(index)); }
-    value_type const& operator()(SizeT... index) const& { return (*this)({ index... }); }
-    value_type& operator()(SizeT... index) & { return utl::as_mutable(utl::as_const(*this)(index...)); }
+    value_type& operator()(size_type index) & {
+        return utl::as_mutable(utl::as_const(*this)(index));
+    }
+    value_type const& operator()(SizeT... index) const& {
+        return (*this)({ index... });
+    }
+    value_type& operator()(SizeT... index) & {
+        return utl::as_mutable(utl::as_const(*this)(index...));
+    }
 
-    value_type const& operator[](std::size_t index) const& { return __cont[index]; }
-    value_type& operator[](std::size_t index) & { return utl::as_mutable(utl::as_const(*this)[index]); }
+    value_type const& operator[](std::size_t index) const& {
+        return __cont[index];
+    }
+    value_type& operator[](std::size_t index) & {
+        return utl::as_mutable(utl::as_const(*this)[index]);
+    }
 
-    value_type const& operator[](size_type index) const& { return (*this)(index); }
+    value_type const& operator[](size_type index) const& {
+        return (*this)(index);
+    }
     value_type& operator[](size_type index) & { return (*this)(index); }
 
     void resize(size_type new_size) {

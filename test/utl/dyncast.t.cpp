@@ -1,11 +1,10 @@
 #define UTL_DC_ENABLE_DEBUGGING
 
+#include <catch2/catch_test_macros.hpp>
 #include <utl/dyncast.hpp>
-
-#include <catch/catch2.hpp>
 #include <utl/overload.hpp>
 
-#include "TypeCompare.h"
+#include "utl/TypeCompare.h"
 
 namespace utl::dc {
 

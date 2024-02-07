@@ -12,9 +12,9 @@ namespace utl {
 template <typename Clock = std::chrono::high_resolution_clock>
 class stopwatch {
 public:
-    using clock      = Clock;
+    using clock = Clock;
     using time_point = typename clock::time_point;
-    using duration   = typename clock::duration;
+    using duration = typename clock::duration;
 
     void pause() {
         if (_paused) {
@@ -30,8 +30,8 @@ public:
             return;
         }
         auto const now = _now();
-        _start_point   = now;
-        _paused        = false;
+        _start_point = now;
+        _paused = false;
     }
 
     void reset() {
@@ -40,13 +40,15 @@ public:
         }
         auto const now = _now();
         _prev_duration = {};
-        _start_point   = now;
+        _start_point = now;
     }
 
-    template <typename Units = typename Clock::duration, typename Rep = typename Clock::duration::rep>
+    template <typename Units = typename Clock::duration,
+              typename Rep = typename Clock::duration::rep>
     Rep elapsed_time() const {
-        auto const now        = _now();
-        auto const dur        = _paused ? _prev_duration : _prev_duration + (now - _start_point);
+        auto const now = _now();
+        auto const dur =
+            _paused ? _prev_duration : _prev_duration + (now - _start_point);
         auto const time_count = std::chrono::duration_cast<Units>(dur).count();
 
         return static_cast<Rep>(time_count);
@@ -62,12 +64,12 @@ private:
 
 private:
     typename Clock::duration _prev_duration{};
-    bool _paused                            = false;
+    bool _paused = false;
     typename Clock::time_point _start_point = Clock::now();
 };
 
 using precise_stopwatch = stopwatch<>;
-using system_stopwatch  = stopwatch<std::chrono::system_clock>;
-using steady_stopwatch  = stopwatch<std::chrono::steady_clock>;
+using system_stopwatch = stopwatch<std::chrono::system_clock>;
+using steady_stopwatch = stopwatch<std::chrono::steady_clock>;
 
 } // namespace utl

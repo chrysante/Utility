@@ -14,9 +14,10 @@ namespace utl {
 template <std::size_t NumItr = 1>
 inline float fast_inv_sqrt(float number) {
     float const x2 = number * 0.5F;
-    std::int32_t i = utl::bit_cast<std::int32_t>(number); // evil floating point bit level hacking
-    i              = 0x5f3759df - (i >> 1);               // what the fuck?
-    float y        = utl::bit_cast<float>(i);
+    std::int32_t i = utl::bit_cast<std::int32_t>(
+        number);               // evil floating point bit level hacking
+    i = 0x5f3759df - (i >> 1); // what the fuck?
+    float y = utl::bit_cast<float>(i);
     for (int j = 0; j < NumItr; ++j) {
         y *= 1.5f - (x2 * y * y);
     }
@@ -65,8 +66,9 @@ template <std::unsigned_integral T>
 constexpr T fast_mod_pow_two(T x, T y) {
     __utl_expect(y >= 0);
     __utl_expect(std::popcount(y) == 1);
-    int const e  = utl::log2(y);
-    T const mask = ~(std::numeric_limits<T>::max() << e); /* eg. for uint8 with e = 3: 00000111  */
+    int const e = utl::log2(y);
+    T const mask = ~(std::numeric_limits<T>::max()
+                     << e); /* eg. for uint8 with e = 3: 00000111  */
     return mask & x;
 }
 template <std::integral T, std::integral U>
@@ -81,7 +83,8 @@ __utl_nodiscard constexpr T mix(T const& t, T const& u, A const& alpha) {
     return t * (1 - alpha) + u * alpha;
 }
 
-constexpr auto __round_up_impl(auto x, auto multiple_of, auto&& modfn) noexcept {
+constexpr auto __round_up_impl(auto x, auto multiple_of,
+                               auto&& modfn) noexcept {
     auto const remainder = modfn(x, multiple_of);
     return remainder == 0 ? x : x + multiple_of - remainder;
 }
@@ -101,10 +104,13 @@ constexpr auto round_up_pow_two(T x, U multiple_of) {
     __utl_expect(multiple_of >= 0);
     return __round_up_impl(static_cast<std::make_unsigned_t<T>>(x),
                            static_cast<std::make_unsigned_t<U>>(multiple_of),
-                           [](auto x, auto y) { return fast_mod_pow_two(x, y); });
+                           [](auto x, auto y) {
+        return fast_mod_pow_two(x, y);
+    });
 }
 
-constexpr auto __round_down_impl(auto x, auto multiple_of, auto&& modfn) noexcept {
+constexpr auto __round_down_impl(auto x, auto multiple_of,
+                                 auto&& modfn) noexcept {
     auto const remainder = modfn(x, multiple_of);
     return x - remainder;
 }
@@ -124,14 +130,16 @@ constexpr auto round_down_pow_two(T x, U multiple_of) {
     __utl_expect(multiple_of >= 0);
     return __round_down_impl(static_cast<std::make_unsigned_t<T>>(x),
                              static_cast<std::make_unsigned_t<U>>(multiple_of),
-                             [](auto x, auto y) { return fast_mod_pow_two(x, y); });
+                             [](auto x, auto y) {
+        return fast_mod_pow_two(x, y);
+    });
 }
 
 template <typename T>
 requires requires(T&& t) {
     {
         t* t
-        } -> std::convertible_to<T>;
+    } -> std::convertible_to<T>;
 }
 constexpr T ipow(T base, int exp) {
     __utl_expect(exp >= 0);

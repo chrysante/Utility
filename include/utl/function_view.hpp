@@ -15,29 +15,30 @@ class function_view;
 
 template <bool IsNoexcept, typename R, typename... Args>
 class __function_view_impl {
-    using __sig = std::conditional_t<IsNoexcept, R(Args...) noexcept, R(Args...)>;
-    
+    using __sig =
+        std::conditional_t<IsNoexcept, R(Args...) noexcept, R(Args...)>;
+
 public:
     __function_view_impl() = default;
-    
+
     template <typename F>
     requires __all<std::is_invocable_r<R, F, Args...>,
-                   __any_t<std::bool_constant<!IsNoexcept>, std::is_nothrow_invocable_r<R, F, Args...>>,
-                   std::negation<std::is_same<function_view<__sig>, std::remove_cvref_t<F>>>>
+                   __any_t<std::bool_constant<!IsNoexcept>,
+                           std::is_nothrow_invocable_r<R, F, Args...>>,
+                   std::negation<std::is_same<function_view<__sig>,
+                                              std::remove_cvref_t<F>>>>
     constexpr __function_view_impl(F&& f) noexcept:
         __invoke_ptr(&__static_invoke<std::remove_reference_t<F>>),
-        __state_ptr(const_cast<void*>(reinterpret_cast<void const volatile*>(&f)))
-    {}
-    
+        __state_ptr(
+            const_cast<void*>(reinterpret_cast<void const volatile*>(&f))) {}
+
     constexpr R operator()(Args... args) const noexcept(IsNoexcept) {
         __utl_expect(__invoke_ptr);
         return __invoke_ptr(__state_ptr, std::forward<Args>(args)...);
     }
-    
-    explicit constexpr operator bool() const {
-        return __invoke_ptr != nullptr;
-    }
-    
+
+    explicit constexpr operator bool() const { return __invoke_ptr != nullptr; }
+
 private:
     template <typename F>
     constexpr static R __static_invoke(void const* state, Args... args) {
@@ -49,25 +50,27 @@ private:
             return static_cast<R>(std::invoke(f, std::forward<Args>(args)...));
         }
     }
-    
-    using __invoke_ptr_type = R(*)(void const*, Args...);
+
+    using __invoke_ptr_type = R (*)(void const*, Args...);
     __invoke_ptr_type __invoke_ptr = nullptr;
     void const* __state_ptr = nullptr;
 };
 
 template <typename R, typename... Args>
-class function_view<R(Args...)>: public __function_view_impl<false, R, Args...> {
+class function_view<R(Args...)>:
+    public __function_view_impl<false, R, Args...> {
     using __base = __function_view_impl<false, R, Args...>;
-    
+
 public:
     using __base::__base;
     using __base::operator();
 };
 
 template <typename R, typename... Args>
-class function_view<R(Args...) noexcept>: public __function_view_impl<true, R, Args...> {
+class function_view<R(Args...) noexcept>:
+    public __function_view_impl<true, R, Args...> {
     using __base = __function_view_impl<true, R, Args...>;
-    
+
 public:
     using __base::__base;
     using __base::operator();

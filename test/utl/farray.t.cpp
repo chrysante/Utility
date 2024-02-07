@@ -1,31 +1,30 @@
-#include <catch/catch2.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <utl/__farray.hpp>
 #include <utl/overload.hpp>
 
-#include "TypeCompare.h"
+#include "utl/TypeCompare.h"
 
 namespace {
 
-struct Base {
+struct Base {};
 
-};
-
-struct Derived: Base {
-
-};
+struct Derived: Base {};
 
 } // namespace
 
 TEST_CASE("__farray", "[common]") {
     using namespace utl;
-    auto f     = overload{ 
+    auto f = overload{
         [&](Base, Base) { return 1; },
-        [&](Derived, Base){ return 2; },
+        [&](Derived, Base) { return 2; },
         [&](Base, Derived) { return 3; },
         [&](Derived, Derived) { return 4; },
     };
-    using FArray = __farray</* R = */ int, decltype((f)), type_sequence<Base&&, Base&&>, std::integer_sequence<std::size_t, 2, 2>>;
-    FArray myFArray([]<std::size_t I>(std::integral_constant<std::size_t, I>, Base&& x) -> auto&& { 
+    using FArray =
+        __farray</* R = */ int, decltype((f)), type_sequence<Base&&, Base&&>,
+                 std::integer_sequence<std::size_t, 2, 2>>;
+    FArray myFArray([]<std::size_t I>(std::integral_constant<std::size_t, I>,
+                                      Base&& x) -> auto&& {
         if constexpr (I == 0) {
             return std::move(x);
         }
