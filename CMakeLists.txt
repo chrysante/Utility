@@ -29,7 +29,7 @@ generate_export_header(utility
 )
 
 target_include_directories(utility
-    PUBLIC
+    INTERFACE
         ${CMAKE_CURRENT_BINARY_DIR}/include
         include
 )
