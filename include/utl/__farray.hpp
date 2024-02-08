@@ -47,7 +47,7 @@ struct __farray_base_impl<std::integer_sequence<std::size_t, AxisSizes...>,
 
     static constexpr std::size_t
     __flatten_index(std::array<std::size_t, __dim> index) {
-        ((DimI, __utl_assert(index[DimI] < __axis_sizes[DimI])), ...);
+        (((void)DimI, __utl_assert(index[DimI] < __axis_sizes[DimI])), ...);
         std::size_t result = 0;
         (
             [&] {

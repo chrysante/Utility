@@ -100,8 +100,6 @@ public:
     void __allocate_new_chunk(std::size_t size_requirement,
                               std::size_t alignment_requirement) {
         alignment_requirement = std::max(alignment_requirement, __chunk_align);
-
-        __utl_log("available size: {}", _head_buffer->available_size());
         std::size_t new_chunk_size =
             __calculate_next_buffer_size(__head_buffer->available_size(),
                                          size_requirement,
@@ -111,8 +109,6 @@ public:
         /// to construct the Header in the buffer and still allocate required
         /// `size / alignment`.
         new_chunk_size += alignment_requirement;
-        __utl_log("allocating new chunk of size {}", new_chunk_size);
-
         std::byte* const new_chunk =
             (std::byte*)upstream_resource()
                 ->allocate(new_chunk_size,

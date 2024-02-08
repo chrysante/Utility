@@ -4,12 +4,11 @@
 #include <exception>
 #include <new>
 
-#include "__base.hpp"
-_UTL_SYSTEM_HEADER_
-
-#include "__debug.hpp"
-#include "concepts.hpp"
-#include "type_traits.hpp"
+#include <utl/__base.hpp>
+#include <utl/__debug.hpp>
+#include <utl/api.hpp>
+#include <utl/concepts.hpp>
+#include <utl/type_traits.hpp>
 
 namespace utl::pmr {
 
@@ -229,60 +228,12 @@ make_unique(memory_resource* resource, Args&&... args) {
     }
 }
 
-/// MARK: - new_delete_resource
-class __utl_new_delete_resource: public memory_resource {
-    void* do_allocate(std::size_t size, std::size_t alignment) final {
-        return ::operator new(size, static_cast<std::align_val_t>(alignment));
-    }
+UTL_API memory_resource* new_delete_resource() noexcept;
 
-    void do_deallocate(void* memory, std::size_t size,
-                       std::size_t alignment) final {
-        ::operator delete(memory, size,
-                          static_cast<std::align_val_t>(alignment));
-    }
+UTL_API memory_resource* null_memory_resource() noexcept;
 
-    bool do_is_equal(memory_resource const& rhs) const noexcept final {
-        return this == &rhs;
-    }
-};
+UTL_API memory_resource* get_default_resource();
 
-__utl_new_delete_resource* __utl_get_new_delete_resource() noexcept;
-
-inline memory_resource* new_delete_resource() noexcept {
-    return __utl_get_new_delete_resource();
-}
-
-/// MARK: - null_memory_resource
-class __utl_null_memory_resource: public memory_resource {
-    void* do_allocate(std::size_t size, std::size_t alignment) final {
-        throw std::bad_alloc{};
-    }
-
-    void do_deallocate(void* memory, std::size_t size,
-                       std::size_t alignment) final {
-        __utl_debugbreak("must not be called since this resource never handed "
-                         "out any memory");
-    }
-
-    bool do_is_equal(memory_resource const& rhs) const noexcept final {
-        return this == &rhs;
-    }
-};
-__utl_null_memory_resource* __utl_get_null_memory_resource() noexcept;
-
-inline memory_resource* null_memory_resource() noexcept {
-    return __utl_get_null_memory_resource();
-}
-
-// MARK: - get_default_resource
-memory_resource*& __utl_get_default_resource() noexcept;
-
-inline memory_resource* get_default_resource() {
-    return __utl_get_default_resource();
-}
-
-inline void set_default_resource(memory_resource* r) {
-    __utl_get_default_resource() = r;
-}
+UTL_API void set_default_resource(memory_resource* resource);
 
 } // namespace utl::pmr

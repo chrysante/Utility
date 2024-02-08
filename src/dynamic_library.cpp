@@ -12,7 +12,7 @@
 #error Unsupported system
 #endif
 
-namespace utl {
+using namespace utl;
 
 static bool operator!(dynamic_load_mode mode) {
     return !static_cast<int>(mode);
@@ -123,5 +123,3 @@ void dynamic_library::destroy() noexcept {
 void dynamic_library::clear_errors() const {
     dlerror();
 }
-
-} // namespace utl

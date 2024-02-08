@@ -17,7 +17,16 @@ project(
   DESCRIPTION ""
   LANGUAGES CXX)
 
+set(CMAKE_CXX_VISIBILITY_PRESET     hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+
 add_library(utility SHARED)
+
+include(GenerateExportHeader)
+generate_export_header(utility
+  EXPORT_MACRO_NAME UTL_API
+  EXPORT_FILE_NAME utl/api.hpp
+)
 
 target_include_directories(utility
     PUBLIC

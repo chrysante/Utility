@@ -18,28 +18,13 @@
 #error Unsupported Language
 #endif
 
-/// MARK: Detect Compiler
-#if defined(__GNUC__) || defined(__clang__)
-#define UTL_GCC 1
-#elif defined(_MSC_VER)
-#define UTL_MSVC 1
-#else
-#error Unsupported Compiler
-#endif
-
 /// MARK: Systems
 #if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
 #define UTL_POSIX 1
 #endif
 
 /// MARK: System Header
-#if UTL_GCC
-#define _UTL_SYSTEM_HEADER_ _Pragma("GCC system_header")
-#else
 #define _UTL_SYSTEM_HEADER_
-#endif
-
-_UTL_SYSTEM_HEADER_
 
 /// MARK: UTL_DEBUG_LEVEL
 #ifndef UTL_DEBUG_LEVEL
@@ -59,7 +44,7 @@ _UTL_SYSTEM_HEADER_
  if UTL_LIKELY (x == 0) { ... }
  if UTL_UNLIKELY (x == 1) { ... }
  */
-#if UTL_GCC
+#if defined(__GNUC__)
 #define UTL_LIKELY(...)   (__builtin_expect(bool(__VA_ARGS__), 1))
 #define UTL_UNLIKELY(...) (__builtin_expect(bool(__VA_ARGS__), 0))
 #else
@@ -67,7 +52,7 @@ _UTL_SYSTEM_HEADER_
 #define UTL_UNLIKELY(...) (__VA_ARGS__)
 #endif
 
-#if UTL_GCC
+#if defined(__GNUC__)
 
 #define __utl_pure      __attribute__((const))
 #define __utl_nodiscard [[nodiscard]]
@@ -82,7 +67,7 @@ _UTL_SYSTEM_HEADER_
 #define __utl_interface_export __attribute__((nodebug))
 #endif // UTL_DEBUG_LEVEL > 1
 
-#else // UTL_GCC
+#else // !defined(__GNUC__)
 
 #define __utl_pure
 #define __utl_nodiscard
@@ -100,13 +85,13 @@ _UTL_SYSTEM_HEADER_
 #define __utl_interface_export
 #endif // UTL_DEBUG_LEVEL > 1
 
-#endif // UTL_GCC
+#endif // !defined(__GNUC__)
 
 /// MARK: Sanitizers
-#if UTL_GCC
+#if defined(__GNUC__)
 #define _UTL_DISABLE_UBSAN_INTEGER __attribute__((no_sanitize("integer")))
-#else // UTL_GCC
+#else
 #define _UTL_DISABLE_UBSAN_INTEGER
-#endif // UTL_GCC
+#endif
 
 #endif // UTL_CPP

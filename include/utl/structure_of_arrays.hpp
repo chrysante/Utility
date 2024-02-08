@@ -70,21 +70,8 @@
 //
 //
 
-#pragma once
-
-#ifndef __UTL_STRUCTURE_OF_ARRAYS_INCLUDED__
-#define __UTL_STRUCTURE_OF_ARRAYS_INCLUDED__
-
-#include "__base.hpp"
-_UTL_SYSTEM_HEADER_
-
-#include "__debug.hpp"
-#include "__function_objects.hpp"
-#include "__memory_resource_base.hpp" /* only for utl::pmr::structure_of_array typedef */
-#include "__soa_generated.hpp"
-#include "common.hpp"
-#include "concepts.hpp"
-#include "math.hpp"
+#ifndef UTL_STRUCTUREOFARRAYS_HPP_
+#define UTL_STRUCTUREOFARRAYS_HPP_
 
 #include <algorithm>
 #include <compare>
@@ -92,6 +79,15 @@ _UTL_SYSTEM_HEADER_
 #include <memory>
 #include <span>
 #include <tuple>
+
+#include <utl/__base.hpp>
+#include <utl/__debug.hpp>
+#include <utl/__function_objects.hpp>
+#include <utl/__memory_resource_base.hpp> // for utl::pmr::structure_of_array typedef
+#include <utl/__soa_generated.hpp>
+#include <utl/common.hpp>
+#include <utl/concepts.hpp>
+#include <utl/math.hpp>
 
 namespace utl {
 
@@ -1650,4 +1646,4 @@ void swap(structure_of_arrays<ST, Allocator>& a,
 
 } // namespace utl
 
-#endif __UTL_STRUCTURE_OF_ARRAYS_INCLUDED__
+#endif // UTL_STRUCTUREOFARRAYS_HPP_
