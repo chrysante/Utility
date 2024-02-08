@@ -25,12 +25,12 @@ add_library(utility SHARED)
 include(GenerateExportHeader)
 generate_export_header(utility
   EXPORT_MACRO_NAME UTL_API
-  EXPORT_FILE_NAME utl/api.hpp
+  EXPORT_FILE_NAME include/utl/api.hpp
 )
 
 target_include_directories(utility
     PUBLIC
-        ${CMAKE_BINARY_DIR}
+        ${CMAKE_BINARY_DIR}/include
         include
 )
 
