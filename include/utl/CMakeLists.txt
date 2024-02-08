@@ -1,6 +1,6 @@
 
 target_sources(utility
-  PUBLIC
+  PRIVATE
     __base.hpp
     __debug.hpp
     __farray.hpp
