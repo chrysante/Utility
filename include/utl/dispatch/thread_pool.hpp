@@ -6,19 +6,20 @@
 #include <future>
 #include <thread>
 
-#include "../__base.hpp"
-#include "../__debug.hpp"
-#include "../concepts.hpp"
-#include "../functional.hpp"
-#include "../hashmap.hpp"
-#include "../type_traits.hpp"
-#include "../vector.hpp"
+#include <utl/__base.hpp>
+#include <utl/__debug.hpp>
+#include <utl/api.hpp>
+#include <utl/concepts.hpp>
+#include <utl/functional.hpp>
+#include <utl/hashmap.hpp>
+#include <utl/type_traits.hpp>
+#include <utl/vector.hpp>
 
 _UTL_SYSTEM_HEADER_
 
 namespace utl {
 
-class dispatch_item {
+class UTL_API dispatch_item {
 public:
     using cancel_handler_type = void (*)(void*);
 
@@ -50,7 +51,7 @@ private:
 /// \brief Maintains a pool of threads and thus allows submission of tasks to be
 /// executed asynchronously. \details Submitted work items are executed in FIFO
 /// order.
-class thread_pool {
+class UTL_API thread_pool {
 public:
     /// \brief Constructs a `thread_pool` with
     /// `std::thread::hardware_concurrency()` threads.

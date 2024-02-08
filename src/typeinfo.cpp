@@ -2,7 +2,7 @@
 
 #include <utl/__debug.hpp>
 
-#if UTL_GCC
+#if defined(__GNUC__)
 
 #include <cxxabi.h>
 

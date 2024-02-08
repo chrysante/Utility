@@ -30,17 +30,6 @@ class unique_function; // undefined
 
 #define _UTL_LOCAL_FUNCTION_SIZE_IN_WORDS 3
 
-#if UTL_ANNOTATE_UTL_FUNCTION_ALLOCATION
-#define _UTL_LOGF_ALLOC(S, A)                                                  \
-    utl_log("utl::function allocates: (size = {}, align = {})", S, A)
-#define _UTL_LOGF_DEALLOC(P, S, A)                                             \
-    utl_log("utl::function deallocates: (p = {}, size = {}, align = {})", P,   \
-            S, A)
-#else // UTL_ANNOTATE_UTL_FUNCTION_ALLOCATION
-#define _UTL_LOGF_ALLOC(...)
-#define _UTL_LOGF_DEALLOC(...)
-#endif // UTL_ANNOTATE_UTL_FUNCTION_ALLOCATION
-
 namespace utl::_private::functionDetails {
 template <typename>
 union FunctionStorage;
@@ -511,11 +500,9 @@ private:
     }
 
     [[nodiscard]] void* allocate(std::size_t size, std::size_t align) {
-        _UTL_LOGF_ALLOC(size, align);
         return ::operator new(size, static_cast<std::align_val_t>(align));
     }
     void deallocate(void* p, std::size_t size, std::size_t align) noexcept {
-        _UTL_LOGF_DEALLOC(p, size, align);
         ::operator delete(p, size, static_cast<std::align_val_t>(align));
     }
 
@@ -558,7 +545,7 @@ public:
      * else if (isHeapFunctionObject()) {
      *     // ...
      * }
-     * else /*  is nullFunction * / {
+     * else { // is nullFunction
      *     // ...
      * }
      */

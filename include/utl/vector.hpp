@@ -1077,7 +1077,7 @@ struct vector {
         }
     }
 
-    __utl_noinline void __throw_out_of_range_error(size_type pos) const {
+    __utl_noinline void __throw_out_of_range_error(std::size_t pos) const {
         throw std::out_of_range("utl::vector out of range");
     }
 

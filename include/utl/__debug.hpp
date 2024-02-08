@@ -4,13 +4,6 @@
 _UTL_SYSTEM_HEADER_
 
 #include "common.hpp"
-#include <string>
-
-#if defined(__GNUC__) || defined(__clang__)
-#define __utl_noreturn __attribute__((analyzer_noreturn))
-#else
-#define __utl_noreturn
-#endif
 
 #if !defined(UTL_DEBUG_LEVEL)
 #if defined(NDEBUG)
@@ -45,13 +38,6 @@ _UTL_SYSTEM_HEADER_
 #define __utl_bounds_check(index, lower, upper)                                \
     (__utl_expect(index >= lower), __utl_expect(index < upper))
 
-// utl_debug
-#if UTL_DEBUG_LEVEL > 0
-#define __utl_debug(...) __VA_ARGS__
-#else // UTL_DEBUG_LEVEL > 0
-#define __utl_debug(...)
-#endif // UTL_DEBUG_LEVEL > 0
-
 // __utl_debugbreak
 #if __clang__
 #define __utl_debugbreak(...) __builtin_debugtrap()
@@ -79,25 +65,4 @@ _UTL_SYSTEM_HEADER_
 #define __utl_unreachable(...) __debugbreak()
 #else
 #error Unknown compiler
-#endif
-
-// utl_static_assert
-#if UTL_CPP
-#define utl_static_assert(...) static_assert(__VA_ARGS__)
-#else // UTL(CPP)
-#define utl_static_assert(...)
-#endif // UTL(CPP)
-
-namespace utl {
-void __utl_debug_print(std::string_view);
-}
-
-#if UTL_CPP
-#ifdef UTL_LOG
-#include "format.hpp"
-#define __utl_log(FORMAT, ...)                                                 \
-    utl::__utl_debug_print(utl::format(FORMAT __VA_OPT__(, ) __VA_ARGS__))
-#else
-#define __utl_log(FORMAT, ...) (void)0
-#endif
 #endif

@@ -6,7 +6,8 @@
 #include <string_view>
 #include <type_traits>
 
-#include "__base.hpp"
+#include <utl/__base.hpp>
+#include <utl/api.hpp>
 
 namespace utl {
 
@@ -41,7 +42,7 @@ inline dynamic_load_mode operator&(dynamic_load_mode a, dynamic_load_mode b) {
 }
 
 /// Wraps a native shared libary handle
-class dynamic_library {
+class UTL_API dynamic_library {
 public:
     /// Construct an empty library
     dynamic_library() = default;

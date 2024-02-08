@@ -7,9 +7,8 @@
 #include <utl/hashset.hpp>
 #include <utl/hashtable.hpp>
 #include <utl/stack.hpp>
+#include <utl/utility.hpp>
 #include <utl/vector.hpp>
-
-_UTL_SYSTEM_HEADER_
 
 namespace utl {
 
@@ -73,9 +72,9 @@ struct __tscca_context {
     void strong_connect(auto v) {
         auto& v_data = vertex_data[v];
         /// Set the depth index for `v` to the smallest unused index
-        v_data.index = index;
+        v_data.index = utl::narrow_cast<decltype(v_data.index)>(index);
         v_data.defined = true;
-        v_data.lowlink = index;
+        v_data.lowlink = utl::narrow_cast<decltype(v_data.lowlink)>(index);
         ++index;
         stack.push(v);
         v_data.on_stack = true;

@@ -1,5 +1,7 @@
 #include <utl/dispatch/thread_pool.hpp>
 
+using namespace utl;
+
 utl::thread_pool::thread_pool():
     thread_pool(std::thread::hardware_concurrency()) {}
 

@@ -1,21 +1,22 @@
-#pragma once
+#ifndef UTL_UUID_HPP_
+#define UTL_UUID_HPP_
 
-#include "__base.hpp"
-_UTL_SYSTEM_HEADER_
-
-#include "bit.hpp"
-#include "hash.hpp"
 #include <array>
 #include <cstddef>
 #include <functional>
 #include <iosfwd>
 #include <string>
 
+#include <utl/__base.hpp>
+#include <utl/api.hpp>
+#include <utl/bit.hpp>
+#include <utl/hash.hpp>
+
 namespace utl {
 
 class uuid;
 
-class uuid {
+class UTL_API uuid {
 public:
 #if defined(UTL_128_BIT_ARITHMETIC)
     using value_type = utl::uint128_t;
@@ -50,7 +51,7 @@ inline bool is_null(uuid const& id) {
     return id == uuid{};
 }
 
-std::ostream& operator<<(std::ostream& str, uuid id);
+UTL_API std::ostream& operator<<(std::ostream& str, uuid id);
 
 } // namespace utl
 
@@ -66,3 +67,5 @@ struct std::hash<utl::uuid> {
         return utl::hash_combine(begin, b);
     }
 };
+
+#endif // UTL_UUID_HPP_

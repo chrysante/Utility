@@ -5,11 +5,9 @@
 #include <random>
 #include <sstream>
 
-#include <sstream>
-
 #include <utl/bit.hpp>
 
-namespace utl {
+using namespace utl;
 
 static uuid::value_type generate_id() {
     std::mt19937_64 rng(std::random_device{}());
@@ -54,8 +52,6 @@ std::string uuid::to_string() const {
     return std::move(sstr).str();
 }
 
-std::ostream& operator<<(std::ostream& str, uuid id) {
+std::ostream& utl::operator<<(std::ostream& str, uuid id) {
     return str << id.to_string();
 }
-
-} // namespace utl

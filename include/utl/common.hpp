@@ -306,7 +306,7 @@ struct ctprint; /* undefined so instanciating it will give a compiler error like
     ::utl::ctprint<__VA_ARGS__> UTL_ANONYMOUS_VARIABLE(_UTL_CTPRINT)
 
 /// MARK: UTL_STATIC_INIT
-#if UTL_GCC
+#ifdef __GNUC__
 #define UTL_STATIC_INIT                                                        \
     __attribute__((constructor)) static void UTL_ANONYMOUS_VARIABLE(           \
         __utl_static_init_)()
