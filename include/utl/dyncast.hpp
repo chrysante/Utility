@@ -84,7 +84,11 @@ struct CTVP;
 #endif
 
 /// We define `UTL_DC_NODEBUG` only conditionally so we can disable it in our
-/// test and debug code
+/// test and debug code.
+/// The purpose of the `UTL_DC_NODEBUG` attribute is to make the call stacks
+/// displayed be debuggers easier to read. Without it there would be five or
+/// more layers of library functions between each call to `visit` and the
+/// actually invoked overload.
 #if defined(UTL_DC_ENABLE_DEBUGGING)
 #define UTL_DC_NODEBUG
 #else
@@ -216,8 +220,34 @@ constexpr Array IndexSequenceToArray = IndexSequenceToArrayImpl<IdxSeq>::value;
 /// 'class' of abstractness and concreteness.
 enum class Corporeality { Abstract, Concrete };
 
+/// Meta function to determine the number of cases in an enum.
+///
+/// This requires coorperation of the enum author in form of case named `COUNT`
+/// with value `<last-case-value> + 1` _or_ of a case named `LAST` with value
+/// `<last-case-value>`.
+/// It is unfortunate to require this coorperation by the user but as commonly
+/// known it is impossible to determine the number of cases in an enum without
+/// it.
+///
+/// Note this only works for "sane" enums without holes or arbitrary start
+/// values.
+///
+/// Example:
+///
+///     enum class Animal {
+///         Horse, Duck, Lizard, Blowfish, COUNT
+///     };
+///
+///     enum class Integer {
+///         Zero, One, Two, Three, LAST = Three
+///     };
+///
 template <typename IDType>
-struct DetermineCount;
+struct DetermineCount {
+    static_assert(
+        std::is_same_v<IDType, void>,
+        "The enum IDType is missing a COUNT or LAST case to indicate the number of cases in the enum");
+};
 
 template <typename IDType>
 requires requires { IDType::COUNT; }
@@ -234,18 +264,22 @@ struct DetermineCount<IDType> {
 /// Common traits of an ID type
 template <typename IDType>
 struct IDTraits {
-    static constexpr size_t count = DetermineCount<IDType>::value;
+    static constexpr size_t Count = DetermineCount<IDType>::value;
 
-    static constexpr IDType first = IDType{ 0 };
-    static constexpr IDType last = IDType(count);
+    static constexpr IDType First = IDType{ 0 };
+    static constexpr IDType Last = IDType(Count);
 };
 
 /// MARK: - Maps
 
-/// Maps \p T from the type domain to the identifier domain
+/// Maps \p T from the type domain to the identifier domain.
+/// This variable is specialized by the user using the `UTL_DYNCAST_DEFINE`
+/// macro.
+/// Only the default specialization is of type `InvalidTypeID`
 template <typename T>
 constexpr InvalidTypeID TypeToID{};
 
+/// This class is specialized by the user using the `UTL_DYNCAST_DEFINE` macro.
 template <auto>
 struct IDToTypeImpl {
     using type = void;
@@ -255,6 +289,7 @@ struct IDToTypeImpl {
 template <auto ID>
 using IDToType = typename IDToTypeImpl<ID>::type;
 
+/// This class is specialized by the user using the `UTL_DYNCAST_DEFINE` macro.
 template <typename>
 struct TypeToParentImpl;
 
@@ -266,9 +301,9 @@ using TypeToParent = typename TypeToParentImpl<T>::type;
 template <typename IDType>
 constexpr IDType IDToParent(IDType ID) {
     constexpr Array ParentArray = []<size_t... I>(std::index_sequence<I...>) {
-        return Array{ ValueOr<IDTraits<IDType>::last>(
+        return Array{ ValueOr<IDTraits<IDType>::Last>(
             TypeToID<TypeToParent<IDToType<IDType{ I }>>>)... };
-    }(std::make_index_sequence<IDTraits<IDType>::count>{});
+    }(std::make_index_sequence<IDTraits<IDType>::Count>{});
     return ParentArray[(size_t)ID];
 }
 
@@ -278,8 +313,10 @@ using TypeToIDType = decltype(TypeToID<std::decay_t<T>>);
 
 /// Maps \p T to the number of types in its class hierarchy
 template <typename T>
-constexpr size_t TypeToBound = IDTraits<TypeToIDType<T>>::count;
+constexpr size_t TypeToBound = IDTraits<TypeToIDType<T>>::Count;
 
+/// Maps \p T... to an array containing the number of types in the class
+/// hierarchy of each of the \p T...
 template <typename... T>
 constexpr Array TypesToBounds = { TypeToBound<T>... };
 
@@ -346,7 +383,7 @@ static constexpr bool ctIsaImpl(IDType TestID, IDType ActualID) {
         UTL_DC_CTPrintVal(TestID);
         UTL_DC_CTPrintVal(ActualID);
     }
-    if (ActualID == IDTraits<IDType>::last) {
+    if (ActualID == IDTraits<IDType>::Last) {
         return false;
     }
     if (ActualID == TestID) {
@@ -360,7 +397,7 @@ static constexpr auto makeIsaDispatchArray() {
     using IDType = decltype(TypeToID<TestType>);
     return []<size_t... Actual>(std::index_sequence<Actual...>) {
         return Array{ ctIsaImpl(TypeToID<TestType>, IDType{ Actual })... };
-    }(std::make_index_sequence<IDTraits<IDType>::count>{});
+    }(std::make_index_sequence<IDTraits<IDType>::Count>{});
 }
 
 template <typename TestType>
@@ -546,8 +583,8 @@ struct InvocableIndicesImpl<ID, IDType, Last, Last, InvocableIndices...> {
 template <typename T>
 using ComputeInvocableIndices = typename InvocableIndicesImpl<
     TypeToID<std::decay_t<T>>, TypeToIDType<T>,
-    (size_t)IDTraits<TypeToIDType<T>>::first,
-    (size_t)IDTraits<TypeToIDType<T>>::last>::Indices;
+    (size_t)IDTraits<TypeToIDType<T>>::First,
+    (size_t)IDTraits<TypeToIDType<T>>::Last>::Indices;
 
 /// Implementation of `MakeStructuredIndex`
 template <size_t FlatInvokeIndex, typename... InvocableIndices>
