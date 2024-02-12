@@ -605,7 +605,9 @@ static void convertToInvalidDerived(Cetacea& c) {
 namespace Bad {
 
 enum class BadID {
-    One, Two, Three
+    One,
+    Two,
+    Three
     // No COUNT or LAST case
 };
 
@@ -615,8 +617,8 @@ struct Three;
 
 } // namespace Bad
 
-UTL_DYNCAST_DEFINE(Bad::One,   Bad::BadID::One,   void,     Abstract);
-UTL_DYNCAST_DEFINE(Bad::Two,   Bad::BadID::Two,   Bad::One, Abstract);
+UTL_DYNCAST_DEFINE(Bad::One, Bad::BadID::One, void, Abstract);
+UTL_DYNCAST_DEFINE(Bad::Two, Bad::BadID::Two, Bad::One, Abstract);
 UTL_DYNCAST_DEFINE(Bad::Three, Bad::BadID::Three, Bad::Two, Concrete);
 
 static void visitBadHierarchy(Bad::One const& one) {
