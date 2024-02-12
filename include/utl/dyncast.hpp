@@ -109,25 +109,31 @@ template <
     typename = std::enable_if_t<(std::is_same_v<First, Rest> && ...), void>>
 Array(First, Rest...) -> Array<First, sizeof...(Rest) + 1>;
 
-/// Compile time `Min` and `Max` implementations to avoid `<algorithm>`
+/// Constexpr `min` and `max` implementations to avoid `<algorithm>`
 /// dependency
-template <size_t...>
-inline constexpr auto Min = nullptr;
+constexpr size_t min(size_t n) {
+    return n;
+}
 
-template <size_t N, size_t M>
-inline constexpr size_t Min<N, M> = N < M ? N : M;
+constexpr size_t min(size_t n, size_t m) {
+    return n <= m ? n : m;
+}
 
-template <size_t N, size_t... M>
-inline constexpr size_t Min<N, M...> = Min<N, Min<M...>>;
+constexpr size_t min(size_t n, auto... m) {
+    return min(n, min(m...));
+}
 
-template <size_t...>
-inline constexpr auto Max = nullptr;
+constexpr size_t max(size_t n) {
+    return n;
+}
 
-template <size_t N, size_t M>
-inline constexpr size_t Max<N, M> = N > M ? N : M;
+constexpr size_t max(size_t n, size_t m) {
+    return n >= m ? n : m;
+}
 
-template <size_t N, size_t... M>
-inline constexpr size_t Max<N, M...> = Max<N, Max<M...>>;
+constexpr size_t max(size_t n, auto... m) {
+    return max(n, max(m...));
+}
 
 /// https://stackoverflow.com/a/31173086/21285803
 template <typename T, typename U>
@@ -741,7 +747,7 @@ using DeduceReturnType =
 
 template <size_t... Indices>
 requires(sizeof...(Indices) > 0)
-inline constexpr size_t IndexRangeSize = Max<Indices...> - Min<Indices...> + 1;
+inline constexpr size_t IndexRangeSize = max(Indices...) - min(Indices...) + 1;
 
 template <typename ReturnType, typename CaseTypeList,
           typename FlatCaseIndexList>
@@ -757,7 +763,7 @@ struct InvokeVisitorCases;
 template <typename ReturnType, typename... Cases, size_t... FlatCaseIndices>
 struct InvokeVisitorCases<ReturnType, TypeList<Cases...>,
                           std::index_sequence<FlatCaseIndices...>> {
-    static constexpr size_t FirstFlatInvokeIndex = Min<FlatCaseIndices...>;
+    static constexpr size_t FirstFlatInvokeIndex = min(FlatCaseIndices...);
 
     static constexpr size_t NumFlatCaseIndices = sizeof...(FlatCaseIndices);
 

@@ -580,6 +580,12 @@ TEST_CASE("toFunction", "[dyncast]") {
     CHECK(g(t, 0) == 42);
 }
 
+TEST_CASE("Single case", "[dyncast]") {
+    Leopard l;
+    CHECK(utl::visit(l, l, [](Leopard const&, Leopard const&) { return 42; }) ==
+          42);
+}
+
 #ifndef UTL_DYNCAST_TEST_COMPILER_ERRORS
 #define UTL_DYNCAST_TEST_COMPILER_ERRORS 0
 #endif
