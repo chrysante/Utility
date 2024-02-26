@@ -7,7 +7,7 @@ static constexpr auto* LibName = "libtest-lib.dylib";
 #error Unsupported system
 #endif
 
-TEST_CASE("dynamic_library") {
+TEST_CASE("Dynamic library", "[dynamic_library]") {
     utl::dynamic_library lib(LibName);
     SECTION("Resolve function") {
         auto* fn = lib.resolve_as<int()>("test_function");
@@ -20,13 +20,24 @@ TEST_CASE("dynamic_library") {
         CHECK(handle == nullptr);
         CHECK(!err.empty());
     }
-    SECTION("Close and load") {
-        lib.close();
-        lib.load(LibName);
-        CHECK_NOTHROW(lib.resolve("test_function"));
-    }
 }
 
-TEST_CASE("dynamic_library non-existing lib") {
+#if defined(__GNUC__)
+__attribute__((visibility("default")))
+#else
+#error
+#endif
+extern "C" int
+local_test_function(int i) {
+    return 2 * i;
+}
+
+TEST_CASE("Parent executable", "[dynamic_library]") {
+    auto lib = utl::dynamic_library::global();
+    auto* fn = lib.resolve_as<int(int)>("local_test_function");
+    CHECK(fn(21) == 42);
+}
+
+TEST_CASE("Non-existing lib", "[dynamic_library]") {
     CHECK_THROWS(utl::dynamic_library("does_not_exist"));
 }

@@ -1,10 +1,10 @@
 #include <utl/dynamic_library.hpp>
 
+#include <sstream>
 #include <stdexcept>
 
 #include <utl/__debug.hpp>
 #include <utl/scope_guard.hpp>
-#include <utl/strcat.hpp>
 
 #if defined(__unix__) || defined(__APPLE__)
 #include <dlfcn.h>
@@ -21,7 +21,7 @@ static bool operator!(dynamic_load_mode mode) {
 dynamic_library::dynamic_library(std::filesystem::path libpath,
                                  dynamic_load_mode mode):
     _path(std::move(libpath)), _handle(nullptr), _mode(mode) {
-    load_impl();
+    _handle = load_impl(_path.c_str(), mode);
 }
 
 dynamic_library::dynamic_library(dynamic_library&& rhs) noexcept:
@@ -45,19 +45,11 @@ dynamic_library& dynamic_library::operator=(dynamic_library&& rhs) & noexcept {
     return *this;
 }
 
-void dynamic_library::reload() {
-    reload(_mode);
-}
-
-void dynamic_library::reload(dynamic_load_mode mode) {
-    destroy();
-    _mode = mode;
-    load_impl();
-}
-
-void dynamic_library::load(std::filesystem::path new_path) {
-    _path = std::move(new_path);
-    reload();
+dynamic_library dynamic_library::global(dynamic_load_mode mode) {
+    dynamic_library lib;
+    lib._mode = mode;
+    lib._handle = load_impl(nullptr, mode);
+    return lib;
 }
 
 void* dynamic_library::resolve(std::string_view name) const {
@@ -100,16 +92,20 @@ static int translateMode(dynamic_load_mode mode) {
     return result;
 }
 
-void dynamic_library::load_impl() {
-    __utl_assert(!_path.empty(),
-                 "path must be set before calling this function");
+void* dynamic_library::load_impl(char const* path, dynamic_load_mode mode) {
     clear_errors();
-    _handle = dlopen(_path.c_str(), translateMode(_mode));
-    if (char const* native = dlerror()) {
-        _handle = nullptr;
-        throw std::runtime_error(utl::strcat("Failed to load library ", _path,
-                                             ". Native Error: ", native, "\n"));
+    void* handle = dlopen(path, translateMode(mode));
+    char const* errorStr = dlerror();
+    if (!errorStr) {
+        return handle;
     }
+    std::stringstream err;
+    err << "Failed to load library";
+    if (path) {
+        err << " " << path;
+    }
+    err << ". Native Error: " << errorStr;
+    throw std::runtime_error(err.str());
 }
 
 void dynamic_library::destroy() noexcept {
@@ -120,6 +116,6 @@ void dynamic_library::destroy() noexcept {
     _handle = nullptr;
 }
 
-void dynamic_library::clear_errors() const {
+void dynamic_library::clear_errors() {
     dlerror();
 }

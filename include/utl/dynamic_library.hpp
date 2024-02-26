@@ -50,7 +50,7 @@ public:
     /// Construct and load the shared library at \p libpath with open mode
     /// \p mode
     explicit dynamic_library(std::filesystem::path libpath,
-                             dynamic_load_mode mode = dynamic_load_mode::now);
+                             dynamic_load_mode mode = dynamic_load_mode::lazy);
 
     /// Lifetime functions @{
     dynamic_library(dynamic_library const& other) = delete;
@@ -60,20 +60,19 @@ public:
     dynamic_library& operator=(dynamic_library&&) & noexcept;
     /// @}
 
-    /// Close and reopen the currently loaded library
-    void reload();
-
-    /// Close and reopen the currently loaded library with load mode \p mode
-    void reload(dynamic_load_mode mode);
-
-    /// Close the currently loaded library and Load the library at \p libpath
-    void load(std::filesystem::path libpath);
+    /// \Returns a library containing the symbols of the currently running
+    /// executable
+    static dynamic_library
+    global(dynamic_load_mode mode = dynamic_load_mode::lazy);
 
     /// Close the currently loaded library
     void close() { destroy(); }
 
     /// \Returns `true` if a library is currently loaded
     bool is_open() const noexcept { return !!native_handle(); }
+
+    /// \Returns `is_open()`
+    explicit operator bool() const { return is_open(); }
 
     /// Access the symbol \p name from the shared library
     /// Throws if the symbol cannot be resolved
@@ -104,18 +103,21 @@ public:
     void const* native_handle() const noexcept { return _handle; }
 
     /// \Returns the filepath of the currently loaded library
+    /// The return value is a default constructed path if this library was
+    /// constructed by a call to `dynamic_library::global()`
     std::filesystem::path const& current_path() const noexcept { return _path; }
 
 private:
-    void load_impl();
+    static void* load_impl(char const* path, dynamic_load_mode mode);
     void destroy() noexcept;
-    void clear_errors() const;
+    static void clear_errors();
     void handle_error(std::string_view) const;
 
 private:
     std::filesystem::path _path;
     void* _handle = nullptr;
-    dynamic_load_mode _mode = dynamic_load_mode::now | dynamic_load_mode::local;
+    dynamic_load_mode _mode =
+        dynamic_load_mode::lazy | dynamic_load_mode::local;
 };
 
 } // namespace utl
