@@ -20,7 +20,11 @@ project(
 set(CMAKE_CXX_VISIBILITY_PRESET     hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 
-add_library(utility SHARED)
+if(utility_SHARED)
+  add_library(utility SHARED)
+else()
+  add_library(utility STATIC)
+endif()
 
 include(GenerateExportHeader)
 generate_export_header(utility

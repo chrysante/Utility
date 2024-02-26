@@ -60,7 +60,3 @@ target_sources(utility
     variant.hpp
     vector.hpp
 )
-
-
-
-
