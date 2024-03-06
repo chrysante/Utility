@@ -110,6 +110,9 @@ Array(First, Rest...) -> Array<First, sizeof...(Rest) + 1>;
 template <size_t...>
 inline constexpr auto Min = nullptr;
 
+template <size_t N>
+inline constexpr size_t Min<N> = N;
+
 template <size_t N, size_t M>
 inline constexpr size_t Min<N, M> = N < M ? N : M;
 
@@ -118,6 +121,9 @@ inline constexpr size_t Min<N, M...> = Min<N, Min<M...>>;
 
 template <size_t...>
 inline constexpr auto Max = nullptr;
+
+template <size_t N>
+inline constexpr size_t Max<N> = N;
 
 template <size_t N, size_t M>
 inline constexpr size_t Max<N, M> = N > M ? N : M;

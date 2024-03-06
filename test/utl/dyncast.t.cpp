@@ -543,6 +543,45 @@ TEST_CASE("isa and dyncast", "[common][dyncast]") {
     CHECK_NOTHROW(utl::dyncast<RDerived const&>(*base));
 }
 
+/// MARK: Hierarchy with two classes
+
+namespace {
+
+enum class SHType { SHBase, SHDerived, COUNT };
+
+struct SHBase {
+protected:
+    constexpr SHBase(SHType type): type(type) {}
+
+private:
+    constexpr friend SHType dyncast_get_type(SHBase const& base) {
+        return base.type;
+    }
+
+    SHType type;
+};
+
+struct SHDerived: SHBase {
+    SHDerived(): SHBase{ SHType::SHDerived } {}
+};
+
+} // namespace
+
+UTL_DYNCAST_DEFINE(SHBase, SHType::SHBase, void, Abstract);
+UTL_DYNCAST_DEFINE(SHDerived, SHType::SHDerived, SHBase, Concrete);
+
+TEST_CASE("Small hierarchy", "[common][dyncast]") {
+    SHDerived d;
+    // clang-format off
+    int result = utl::visit((SHBase&)d, utl::overload{
+        [](SHBase const&) { return 0; },
+        [](SHDerived const&) { return 1; },
+    }); // clang-format on
+    CHECK(result == 1);
+}
+
+/// MARK: Error tests
+
 template <typename X, typename Int>
 static void errorTestDynConcept() {
     static_assert(!utl::dc::Dynamic<int>);
