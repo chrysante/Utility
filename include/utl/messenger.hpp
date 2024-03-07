@@ -106,20 +106,20 @@ private:
 };
 
 /// Convinience Classes
-/// MARK: reciever
+/// MARK: receiver
 template <typename Messenger>
-class reciever {
+class receiver {
     static_assert(std::is_same_v<Messenger, messenger> ||
                   std::is_same_v<Messenger, buffered_messenger>);
 
 public:
-    reciever() = default;
-    explicit reciever(std::weak_ptr<Messenger> m): m(std::move(m)) {}
-    reciever(reciever const&) = delete;
-    reciever(reciever&&) = default;
-    reciever& operator=(reciever const&) = delete;
-    reciever& operator=(reciever&&) = default;
-    ~reciever() { unlisten_all(); }
+    receiver() = default;
+    explicit receiver(std::weak_ptr<Messenger> m): m(std::move(m)) {}
+    receiver(receiver const&) = delete;
+    receiver(receiver&&) = default;
+    receiver& operator=(receiver const&) = delete;
+    receiver& operator=(receiver&&) = default;
+    ~receiver() { unlisten_all(); }
 
     void set_messenger(std::weak_ptr<Messenger> m) {
         unlisten_all();

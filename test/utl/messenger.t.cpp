@@ -64,11 +64,11 @@ TEST_CASE("buffered_messenger") {
     CHECK(testValue == -1);
 }
 
-TEST_CASE("emitter/reciever") {
+TEST_CASE("emitter/receiver") {
     auto m = std::make_shared<utl::buffered_messenger>();
 
     utl::emitter<utl::buffered_messenger> e(m);
-    utl::reciever<utl::buffered_messenger> r(m);
+    utl::receiver<utl::buffered_messenger> r(m);
 
     int value = 0;
 
