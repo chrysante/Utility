@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <cstddef>
+#include <memory> // for std::allocator_traits
 #include <type_traits>
 #include <typeinfo> // For std::bad_cast
 #include <utility>
@@ -656,14 +657,14 @@ struct MakeVisitorCasesImpl<R, F, TypeList<T...>,
         /// Debug code to print the computed values
         constexpr size_t TestInvokeIndex = 3;
         using StructuredIndex =
-            MakeStructuredIndex<TestInvokeIndex, InvocableIndices...>;
+        MakeStructuredIndex<TestInvokeIndex, InvocableIndices...>;
         UTL_DC_CTPrintType(StructuredIndex);
         constexpr size_t FlatIndex =
-            flattenIndex(IndexSequenceToArray<StructuredIndex>,
-                         TypesToBounds<T...>);
+        flattenIndex(IndexSequenceToArray<StructuredIndex>,
+                     TypesToBounds<T...>);
         UTL_DC_CTPrintVal(FlatIndex);
         constexpr Array RestructuredIndex =
-            expandIndex<sizeof...(T)>(FlatIndex, { TypeToBound<T>... });
+        expandIndex<sizeof...(T)>(FlatIndex, { TypeToBound<T>... });
         UTL_DC_CTPrintVal(RestructuredIndex);
 #endif
         return std::index_sequence<
@@ -841,6 +842,28 @@ visit(T0&& t0, T1&& t1, T2&& t2, T3&& t3, T4&& t4, T5&& t5, F&& fn) {
     return dc::visitImpl<R>((F&&)fn, (T0&&)t0, (T1&&)t1, (T2&&)t2, (T3&&)t3,
                             (T4&&)t4, (T5&&)t5);
 }
+
+/// MARK: - Dynamic deleter
+
+struct dyn_destructor {
+    constexpr void operator()(dc::Dynamic auto* object) const {
+        assert(object && "object must not be null");
+        visit(*object, [](auto& derived) { std::destroy_at(&derived); });
+    }
+};
+
+/// Calls `std::destroy_at` on the most derived type
+inline constexpr dyn_destructor dyn_destroy{};
+
+struct dyn_deleter {
+    constexpr void operator()(dc::Dynamic auto* object) const {
+        assert(object && "object must not be null");
+        visit(*object, [](auto& derived) { delete &derived; });
+    }
+};
+
+/// Calls `delete` on the most derived type
+inline constexpr dyn_deleter dyn_delete{};
 
 } // namespace utl
 

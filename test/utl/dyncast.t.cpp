@@ -1,5 +1,7 @@
 #define UTL_DC_ENABLE_DEBUGGING
 
+#include <functional>
+
 #include <catch2/catch_test_macros.hpp>
 #include <utl/dyncast.hpp>
 #include <utl/overload.hpp>
@@ -578,6 +580,46 @@ TEST_CASE("Small hierarchy", "[common][dyncast]") {
         [](SHDerived const&) { return 1; },
     }); // clang-format on
     CHECK(result == 1);
+}
+
+namespace {
+
+enum class ScopeGuardType { Base, Derived, COUNT };
+
+struct ScopeGuardBase {
+protected:
+    constexpr ScopeGuardBase(ScopeGuardType type): type(type) {}
+
+private:
+    constexpr friend ScopeGuardType
+    dyncast_get_type(ScopeGuardBase const& base) {
+        return base.type;
+    }
+
+    ScopeGuardType type;
+};
+
+struct ScopeGuardDerived: ScopeGuardBase {
+    ScopeGuardDerived(std::function<void()> f):
+        ScopeGuardBase{ ScopeGuardType::Derived }, f(f) {}
+
+    ~ScopeGuardDerived() { f(); }
+
+    std::function<void()> f;
+};
+
+} // namespace
+
+UTL_DYNCAST_DEFINE(ScopeGuardBase, ScopeGuardType::Base, void, Abstract);
+UTL_DYNCAST_DEFINE(ScopeGuardDerived, ScopeGuardType::Derived, ScopeGuardBase,
+                   Concrete);
+
+TEST_CASE("dyn_delete", "[common][dyncast]") {
+    bool destroyed = false;
+    std::unique_ptr<ScopeGuardBase, utl::dyn_deleter> p(
+        new ScopeGuardDerived([&] { destroyed = true; }));
+    p.reset();
+    CHECK(destroyed);
 }
 
 /// MARK: Error tests
