@@ -20,7 +20,7 @@ public:
         if (_paused) {
             return;
         }
-        auto const now = _now();
+        auto now = _now();
         _prev_duration += now - _start_point;
         _paused = true;
     }
@@ -29,35 +29,30 @@ public:
         if (!_paused) {
             return;
         }
-        auto const now = _now();
+        auto now = _now();
         _start_point = now;
         _paused = false;
     }
 
     void reset() {
-        if (_paused) {
-            return;
-        }
-        auto const now = _now();
+        _paused = false;
+        auto now = _now();
         _prev_duration = {};
         _start_point = now;
     }
 
-    template <typename Units = typename Clock::duration,
-              typename Rep = typename Clock::duration::rep>
+    template <typename Duration = typename Clock::duration>
     Rep elapsed_time() const {
-        auto const now = _now();
-        auto const dur =
-            _paused ? _prev_duration : _prev_duration + (now - _start_point);
-        auto const time_count = std::chrono::duration_cast<Units>(dur).count();
-
-        return static_cast<Rep>(time_count);
+        auto now = _now();
+        auto dur = _paused ? _prev_duration :
+                             _prev_duration + (now - _start_point);
+        return std::chrono::duration_cast<Duration>(dur).count();
     }
 
 private:
     static typename Clock::time_point _now() {
         std::atomic_thread_fence(std::memory_order_relaxed);
-        auto const result = Clock::now();
+        auto result = Clock::now();
         std::atomic_thread_fence(std::memory_order_relaxed);
         return result;
     }
