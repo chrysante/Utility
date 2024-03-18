@@ -3,7 +3,7 @@
 
 #include <cassert>
 #include <cstddef>
-#include <memory> // for std::allocator_traits
+#include <memory> // For std::destroy_at
 #include <type_traits>
 #include <typeinfo> // For std::bad_cast
 #include <utility>
@@ -373,12 +373,17 @@ static constexpr auto makeIsaDispatchArray() {
 template <typename TestType>
 static constexpr Array IsaDispatchArray = makeIsaDispatchArray<TestType>();
 
+template <typename Test>
+constexpr bool isaIDImpl(auto ID) {
+    return dc::IsaDispatchArray<Test>[(size_t)ID];
+}
+
 template <typename Test, typename Known>
 constexpr bool isaImpl(Known* obj) {
     if (!obj) {
         return false;
     }
-    return dc::IsaDispatchArray<Test>[(size_t)dyncast_get_type(*obj)];
+    return isaIDImpl<Test>(dyncast_get_type(*obj));
 }
 
 template <typename Test, typename Known>
@@ -391,14 +396,20 @@ requires dc::Dynamic<Test>
 struct IsaFn {
     template <typename Known>
     requires std::is_class_v<Test> && SharesTypeHierarchyWith<Known, Test>
-    UTL_DC_NODEBUG constexpr bool operator()(Known* obj) const {
+    UTL_DC_NODEBUG constexpr bool operator()(Known const* obj) const {
         return isaImpl<Test>(obj);
     }
 
     template <typename Known>
     requires std::is_class_v<Test> && SharesTypeHierarchyWith<Known, Test>
-    UTL_DC_NODEBUG constexpr bool operator()(Known& obj) const {
+    UTL_DC_NODEBUG constexpr bool operator()(Known const& obj) const {
         return isaImpl<Test>(obj);
+    }
+
+    UTL_DC_NODEBUG constexpr bool operator()(TypeToIDType<Test> ID) const
+    requires std::is_class_v<Test>
+    {
+        return isaIDImpl<Test>(ID);
     }
 };
 

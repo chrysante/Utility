@@ -154,6 +154,13 @@ TEST_CASE("isa and dyncast", "[dyncast]") {
     static_assert(!utl::isa<Leopard>(*animal));
     static_assert(!utl::isa<Dolphin>(*animal));
 
+    /// IDs
+    static_assert(utl::isa<Animal>(ID::Whale));
+    static_assert(utl::isa<Cetacea>(ID::Whale));
+    static_assert(utl::isa<Whale>(ID::Whale));
+    static_assert(!utl::isa<Leopard>(ID::Whale));
+    static_assert(!utl::isa<Dolphin>(ID::Whale));
+
     /// Dyncast for good measure
     static_assert(utl::dyncast<Animal const*>(animal));
     static_assert(utl::dyncast<Cetacea const*>(animal));
