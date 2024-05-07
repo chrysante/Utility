@@ -177,6 +177,7 @@ struct Dolphin: Cetacea {
 
 struct Leopard: Animal {
     constexpr Leopard(): Animal(ID::Leopard) {}
+    constexpr ~Leopard() {}
 };
 
 } // namespace

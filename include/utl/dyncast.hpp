@@ -915,6 +915,7 @@ namespace dc {
 template <typename Head, typename... Tail>
 union UnionImpl {
     constexpr UnionImpl() {}
+    constexpr ~UnionImpl() {}
 
     Head head;
     UnionImpl<Tail...> tail;
@@ -923,6 +924,7 @@ union UnionImpl {
 template <typename Head>
 union UnionImpl<Head> {
     constexpr UnionImpl() {}
+    constexpr ~UnionImpl() {}
 
     Head head;
 };
