@@ -6,7 +6,7 @@
 #include <memory> // For std::destroy_at
 #include <type_traits>
 #include <typeinfo> // For std::bad_cast
-#include <utility>
+#include <utility> // For std::index_sequence TODO: Consider reimplementing this
 
 /// Declares a mapping of \p type to its identifier \p ID
 #define UTL_DYNCAST_IMPL_MAP(Type, ID)                                         \
@@ -134,7 +134,7 @@ inline constexpr size_t Max<N, M...> = Max<N, Max<M...>>;
 
 /// https://stackoverflow.com/a/31173086/21285803
 template <typename T, typename U>
-struct copy_cv_reference {
+struct copy_cvref {
 private:
     using R = std::remove_reference_t<T>;
     using U1 =
@@ -150,8 +150,9 @@ public:
     using type = U4;
 };
 
+/// Applies the cv and reference qualifiers of `T` to `U`
 template <typename T, typename U>
-using copy_cv_reference_t = typename copy_cv_reference<T, U>::type;
+using copy_cvref_t = typename copy_cvref<T, U>::type;
 
 template <typename T>
 struct remove_ref_ptr_cv {
@@ -186,6 +187,27 @@ constexpr decltype(Fallback) ValueOr(InvalidTypeID) {
     return Fallback;
 }
 
+template <typename... T>
+struct TypeList;
+
+template <template <class> class Pred, typename...>
+struct TLFilterImpl;
+
+template <template <class> class Pred, typename Head, typename... Tail>
+struct TLFilterImpl<Pred, Head, Tail...>: TLFilterImpl<Pred, Tail...> {};
+
+template <template <class> class Pred, typename Head, typename... Tail>
+requires Pred<Head>::value
+struct TLFilterImpl<Pred, Head, Tail...> {
+    using type =
+        typename TLFilterImpl<Pred, Tail...>::type::template Prepend<Head>;
+};
+
+template <template <class> class Pred>
+struct TLFilterImpl<Pred> {
+    using type = TypeList<>;
+};
+
 /// Variadic type list useful for template meta programming
 template <typename... T>
 struct TypeList {
@@ -193,6 +215,15 @@ struct TypeList {
     constexpr TypeList(T...)
     requires(sizeof...(T) > 0)
     {}
+
+    template <typename U>
+    using Append = TypeList<T..., U>;
+
+    template <typename U>
+    using Prepend = TypeList<U, T...>;
+
+    template <template <class> class Pred>
+    using Filter = typename TLFilterImpl<Pred, T...>::type;
 };
 
 template <typename T, typename...>
@@ -600,7 +631,7 @@ struct VisitorCase;
 /// Evaluates to the type at index \p I in the class hierarchy of \p U with
 /// the same cv-qualifications as \p U
 template <typename U, size_t I>
-using DerivedAt = copy_cv_reference_t<U&&, IDToType<(TypeToIDType<U>)I>>;
+using DerivedAt = copy_cvref_t<U&&, IDToType<(TypeToIDType<U>)I>>;
 
 /// We use a macro here to not repeat ourselves and we don't wrap the
 /// expression in a lambda to avoid one unnecessary runtime indirection
@@ -875,6 +906,210 @@ struct dyn_deleter {
 
 /// Calls `delete` on the most derived type
 inline constexpr dyn_deleter dyn_delete{};
+
+/// MARK: Union
+
+namespace dc {
+
+/// Generic union
+template <typename Head, typename... Tail>
+union UnionImpl {
+    constexpr UnionImpl() {}
+
+    Head head;
+    UnionImpl<Tail...> tail;
+};
+
+template <typename Head>
+union UnionImpl<Head> {
+    constexpr UnionImpl() {}
+
+    Head head;
+};
+
+/// Recursively traverses the `UnionImpl` \p u and returns the first member
+/// whose type satisfies the predicate \p Pred
+template <template <class> class Pred, typename U>
+constexpr decltype(auto) unionFind(U&& u) {
+    using R = copy_cvref_t<U, decltype(u.head)>;
+    constexpr bool Found = Pred<R>::value;
+    if constexpr (Found) {
+        return (R)u.head;
+    }
+    else {
+        return unionFind<Pred>(((U&&)u).tail);
+    }
+}
+
+/// Defines concrete instances of `unionFind` for different predicates. This is
+/// a class because otherwise clang has a hard time accepting the predicate
+/// template template parameters
+template <typename T>
+struct UnionFindHelper {
+    template <typename Derived>
+    struct DerivedFromFilter:
+        std::is_base_of<T, std::remove_cvref_t<Derived>> {};
+
+    template <typename U>
+    static constexpr decltype(auto) derivedFrom(U&& u) {
+        return unionFind<DerivedFromFilter>((U&&)u);
+    }
+
+    template <typename U>
+    struct SameAsFilter: std::is_same<T, std::remove_cvref_t<U>> {};
+
+    template <typename U>
+    static constexpr decltype(auto) sameAs(U&& u) {
+        return unionFind<SameAsFilter>((U&&)u);
+    }
+};
+
+/// \Returns the member of \p u of type \p T
+template <typename T, typename U>
+constexpr decltype(auto) unionGet(U&& u) {
+    return UnionFindHelper<T>::sameAs((U&&)u);
+}
+
+/// `MakeTypeListAll<T>::type` denotes a `TypeList` of all types in the
+/// hierarchy of `T`
+template <typename T, typename I = std::make_index_sequence<TypeToBound<T>>>
+struct MakeTypeListAll;
+
+template <typename T, size_t... I>
+struct MakeTypeListAll<T, std::index_sequence<I...>> {
+    using type = TypeList<IDToType<(TypeToIDType<T>)I>...>;
+};
+
+/// `MakeTypeListDerivedConcrete<T>::type` denotes a `TypeList` of all concrete
+/// types derived from `Base`
+template <typename Base>
+struct MakeTypeListDerivedConcrete {
+    template <typename T>
+    struct IsConcrete: std::bool_constant<IDIsConcrete<TypeToID<T>>> {};
+    template <typename T>
+    struct Pred: std::conjunction<IsConcrete<T>, std::is_base_of<Base, T>> {};
+
+    using type = typename MakeTypeListAll<Base>::type::template Filter<Pred>;
+};
+
+template <typename Base,
+          typename Args = typename MakeTypeListDerivedConcrete<Base>::type>
+struct DynUnion;
+
+template <typename Base, typename... Args>
+struct DynUnion<Base, TypeList<Args...>> {
+    template <typename, typename>
+    friend struct DynUnion;
+
+    template <typename T, typename Impl>
+    static copy_cvref_t<Impl, T> getImpl(Impl&& impl) {
+        // TODO: static assert that all of Args... that are derived from T have
+        // the same offset to T
+        using R = copy_cvref_t<Impl&&, T>;
+        R result = UnionFindHelper<T>::derivedFrom((Impl&&)impl);
+        assert(isa<T>(result));
+        return (R)result;
+    }
+
+    UnionImpl<Args...> impl;
+};
+
+struct UnionNoInit {};
+
+} // namespace dc
+
+/// Typesafe union of types derived from `Base`
+///
+/// `Base` does not have to be the base of the entire class hierarchy. The union
+/// can contain subsets of the hierarchy
+template <dc::Dynamic Base>
+class dyn_union: dc::DynUnion<Base> {
+public:
+    /// \Returns `utl::visit(FWD(*this), FWD(f))`
+    /// @{
+    template <typename F>
+    constexpr decltype(auto) visit(F&& f) & {
+        return utl::visit(base(), (F&&)f);
+    }
+    template <typename F>
+    constexpr decltype(auto) visit(F&& f) const& {
+        return utl::visit(base(), (F&&)f);
+    }
+    template <typename F>
+    constexpr decltype(auto) visit(F&& f) && {
+        return utl::visit(base(), (F&&)f);
+    }
+    template <typename F>
+    constexpr decltype(auto) visit(F&& f) const&& {
+        return utl::visit(base(), (F&&)f);
+    }
+    /// @}
+
+    /// Constructs the union with the value of derived type \p T
+    template <std::derived_from<Base> T>
+    constexpr dyn_union(T&& t): dyn_union(dc::UnionNoInit{}) {
+        std::construct_at(&dc::unionGet<T>(this->impl), (T&&)t);
+    }
+
+    /// Lifetime operations @{
+    constexpr dyn_union(dyn_union const& rhs): dyn_union(dc::UnionNoInit{}) {
+        rhs.visit([this]<typename T>(T const& rhs) -> void {
+            std::construct_at(&dc::unionGet<T>(this->impl), rhs);
+        });
+    }
+    dyn_union& operator=(dyn_union const& rhs) {
+        if (this == &rhs) {
+            return;
+        }
+        std::destroy_at(this);
+        std::construct_at(this, rhs);
+        return *this;
+    }
+    constexpr dyn_union(dyn_union&& rhs): dyn_union(dc::UnionNoInit{}) {
+        rhs.visit([this]<typename T>(T& rhs) -> void {
+            std::construct_at(&dc::unionGet<T>(this->impl), std::move(rhs));
+        });
+    }
+    dyn_union& operator=(dyn_union&& rhs) {
+        if (this == &rhs) {
+            return;
+        }
+        std::destroy_at(this);
+        std::construct_at(this, std::move(rhs));
+        return *this;
+    }
+    constexpr ~dyn_union() {
+        visit([](auto& This) { std::destroy_at(&This); });
+    }
+    /// @}
+
+    Base& base() & { return get<Base>(); }
+    Base const& base() const& { return get<Base>(); }
+    Base&& base() && { return std::move(*this).template get<Base>(); }
+    Base const&& base() const&& {
+        return std::move(*this).template get<Base>();
+    }
+
+    template <std::derived_from<Base> T>
+    T& get() & {
+        return dc::DynUnion<Base>::template getImpl<T>(this->impl);
+    }
+    template <std::derived_from<Base> T>
+    T const& get() const& {
+        return dc::DynUnion<Base>::template getImpl<T>(this->impl);
+    }
+    template <std::derived_from<Base> T>
+    T&& get() && {
+        return dc::DynUnion<Base>::template getImpl<T>(std::move(this->impl));
+    }
+    template <std::derived_from<Base> T>
+    T const&& get() const&& {
+        return dc::DynUnion<Base>::template getImpl<T>(std::move(this->impl));
+    }
+
+private:
+    dyn_union(dc::UnionNoInit) {}
+};
 
 } // namespace utl
 

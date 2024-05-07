@@ -257,10 +257,10 @@ static constexpr int constexprVisitationMultipleArguments() {
     Dolphin d;
     Leopard l;
     return utl::visit((Cetacea&)d, (Animal const&)l,
-                      utl::overload{
-                          [&](Cetacea const&, Leopard const&) { return 1; },
-                          [&](Cetacea const&, Animal const&) { return '\0'; },
-                          [&](Animal const&, Animal const&) {
+                      utl::overload{ [&](Cetacea const&, Leopard const&) {
+        return 1;
+    }, [&](Cetacea const&, Animal const&) { return '\0'; },
+                                     [&](Animal const&, Animal const&) {
         return (unsigned short)0;
     } }); // clang-format on
 }
@@ -684,3 +684,30 @@ static void convertToInvalidDerived(Cetacea& c) {
 }
 
 #endif // UTL_DYNCAST_TEST_COMPILER_ERRORS
+
+/// MARK: Union
+
+TEST_CASE("Union", "[dyncast]") {
+    utl::dyn_union<Animal> animal = Leopard();
+    // clang-format off
+    int result = animal.visit(utl::overload{
+        [](Animal const&) { return 0; },
+        [](Leopard const&) { return 1; },
+    }); // clang-format on
+    CHECK(result == 1);
+    auto a2 = animal;
+    CHECK(dyncast_get_type(a2.base()) == ID::Leopard);
+    auto a3 = std::move(a2);
+    CHECK(dyncast_get_type(a3.base()) == ID::Leopard);
+}
+
+TEST_CASE("Partial union", "[dyncast]") {
+    utl::dyn_union<Cetacea> c = Whale();
+    // clang-format off
+    int result = c.visit(utl::overload{
+        [](Cetacea const&) { return 0; },
+        [](Whale const&) { return 1; },
+    }); // clang-format on
+    CHECK(dyncast_get_type(c.get<Cetacea>()) == ID::Whale);
+    CHECK(result == 1);
+}
