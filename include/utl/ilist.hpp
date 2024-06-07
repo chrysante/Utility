@@ -217,11 +217,6 @@ public:
         insert(begin(), first, last);
     }
 
-    // (5a)
-    template <input_range_for<value_type> Range>
-    ilist(Range&& range, allocator_type const& alloc = allocator_type()):
-        ilist(__utl_begin(range), __utl_end(range), alloc) {}
-
     // (6)
     ilist(ilist const& rhs)
     requires std::is_default_constructible_v<allocator_type>
