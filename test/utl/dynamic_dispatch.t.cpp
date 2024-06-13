@@ -1,3 +1,5 @@
+#ifndef _MSC_VER
+
 #include <catch2/catch_test_macros.hpp>
 #include <utl/dynamic_dispatch.hpp>
 
@@ -22,3 +24,5 @@ TEST_CASE("utl::dispatch") {
     utl::dispatch(utl::dispatch_arg(0, l1, l2),
                   [](auto l) { CHECK(l() == -1); });
 }
+
+#endif

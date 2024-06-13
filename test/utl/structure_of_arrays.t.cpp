@@ -1,3 +1,5 @@
+#if !defined(_MSC_VER) // Have weird bugs when compiling with MSVC
+
 #include <algorithm>
 #include <iostream>
 #include <numeric>
@@ -11,8 +13,6 @@
 #include "utl/LifetimeCounter.hpp"
 
 using namespace utl_test;
-
-#if !defined(_MSC_VER) // Have weird bugs when compiling with MSVC
 
 namespace {
 

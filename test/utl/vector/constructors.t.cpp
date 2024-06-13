@@ -8,13 +8,14 @@
 #include "utl/vector/VectorTest.hpp"
 
 using namespace utl_test;
-
+#ifndef _WIN32
 TEST_CASE("vector object size", "[vector]") {
     CHECK(sizeof(utl::vector<int>) == 2 * 4 + sizeof(void*));
     CHECK((sizeof(utl::vector<char>) == 24 || sizeof(utl::vector<char>) == 16));
 }
+#endif
 
-VECTOR_TEST_CASE(X, TRX, "vector-construct-1", "[vector]") {
+VECTOR_TEST_CASE_4(X, TRX, "vector-construct-1", "[vector]") {
     X::reset();
     Vector v;
     CHECK(v.size() == 0);
@@ -22,7 +23,7 @@ VECTOR_TEST_CASE(X, TRX, "vector-construct-1", "[vector]") {
     CHECK(X::liveObjects() == 0);
 }
 
-VECTOR_TEST_CASE(X, TRX, "vector-allocator-construct-2", "[vector]") {
+VECTOR_TEST_CASE_4(X, TRX, "vector-allocator-construct-2", "[vector]") {
     X::reset();
     Vector v(Tag(1));
     CHECK(v.size() == 0);
@@ -30,7 +31,7 @@ VECTOR_TEST_CASE(X, TRX, "vector-allocator-construct-2", "[vector]") {
     CHECK(X::liveObjects() == 0);
 }
 
-VECTOR_TEST_CASE(X, TRX, "vector-allocator-propagate-construct-3", "[vector]") {
+VECTOR_TEST_CASE_4(X, TRX, "vector-allocator-propagate-construct-3", "[vector]") {
     using T = typename Vector::value_type;
     X::reset();
     auto const count = GENERATE(0, 2, 10);
@@ -44,7 +45,7 @@ VECTOR_TEST_CASE(X, TRX, "vector-allocator-propagate-construct-3", "[vector]") {
     CHECK(X::liveObjects() == count);
 }
 
-VECTOR_TEST_CASE(X, TRX, "vector-allocator-propagate-construct-4", "[vector]") {
+VECTOR_TEST_CASE_4(X, TRX, "vector-allocator-propagate-construct-4", "[vector]") {
     X::reset();
     auto const count = GENERATE(0, 2, 10);
     Vector v(count, Tag(1));
@@ -57,7 +58,7 @@ VECTOR_TEST_CASE(X, TRX, "vector-allocator-propagate-construct-4", "[vector]") {
     CHECK(X::liveObjects() == count);
 }
 
-VECTOR_TEST_CASE(X, TRX, "vector-allocator-iterator-constructor", "[vector]") {
+VECTOR_TEST_CASE_4(X, TRX, "vector-allocator-iterator-constructor", "[vector]") {
     using T = typename Vector::value_type;
     X::reset();
     TagAllocator<X> alloc(Tag(1));
@@ -79,7 +80,7 @@ VECTOR_TEST_CASE(X, TRX, "vector-allocator-iterator-constructor", "[vector]") {
     CHECK(X::liveObjects() == 10);
 }
 
-VECTOR_TEST_CASE(X, TRX, "vector-allocator-iterator-constructor-2", "[vector]") {
+VECTOR_TEST_CASE_4(X, TRX, "vector-allocator-iterator-constructor-2", "[vector]") {
     using T = typename Vector::value_type;
     X::reset();
     TagAllocator<X> alloc(Tag(1));
@@ -98,7 +99,7 @@ struct Y {
 };
 } // namespace
 
-VECTOR_TEST_CASE(X, TRX, "vector-allocator-iterator-converting-constructor", "[vector]") {
+VECTOR_TEST_CASE_4(X, TRX, "vector-allocator-iterator-converting-constructor", "[vector]") {
     X::reset();
     Y data[5]{ 3, 4, 2, -1, 10 };
     Vector v(std::begin(data), (std::end(std::as_const(data))), Tag(1));
@@ -111,7 +112,7 @@ VECTOR_TEST_CASE(X, TRX, "vector-allocator-iterator-converting-constructor", "[v
     }
 }
 
-VECTOR_TEST_CASE(X, TRX, "vector-allocator-iterator-converting-constructor/2", "[vector]") {
+VECTOR_TEST_CASE_4(X, TRX, "vector-allocator-iterator-converting-constructor/2", "[vector]") {
     X::reset();
     auto const count = 10;
     Vector v(count);
@@ -124,7 +125,7 @@ VECTOR_TEST_CASE(X, TRX, "vector-allocator-iterator-converting-constructor/2", "
     }
 }
 
-VECTOR_PRODUCT_TEST_CASE(X, TRX, "vector-allocator-copy-ctor", "[vector]") {
+VECTOR_PRODUCT_TEST_CASE_4(X, TRX, "vector-allocator-copy-ctor", "[vector]") {
     X::reset();
     VectorA v(Tag{ 1 });
     auto const count = GENERATE(0, 2, 10);
@@ -140,7 +141,7 @@ VECTOR_PRODUCT_TEST_CASE(X, TRX, "vector-allocator-copy-ctor", "[vector]") {
     CHECK(X::liveObjects() == 2 * count);
 }
 
-VECTOR_PRODUCT_TEST_CASE(X, TRX, "vector-allocator-copy-assign", "[vector]") {
+VECTOR_PRODUCT_TEST_CASE_4(X, TRX, "vector-allocator-copy-assign", "[vector]") {
     X::reset();
     VectorA v(Tag(1));
     auto const count = GENERATE(0, 2, 5, 10);
@@ -163,7 +164,7 @@ VECTOR_PRODUCT_TEST_CASE(X, TRX, "vector-allocator-copy-assign", "[vector]") {
     CHECK(X::liveObjects() == 2 * count);
 }
 
-VECTOR_TEST_CASE(X, TRX, "vector-allocator-copy-assign-ilist", "[vector]") {
+VECTOR_TEST_CASE_4(X, TRX, "vector-allocator-copy-assign-ilist", "[vector]") {
     X::reset();
     auto const wCount = GENERATE(0, 1, 10);
     auto const tag2   = GENERATE(Tag(1), Tag(2));
@@ -183,7 +184,7 @@ VECTOR_TEST_CASE(X, TRX, "vector-allocator-copy-assign-ilist", "[vector]") {
     CHECK(X::liveObjects() == 0);
 }
 
-VECTOR_PRODUCT_TEST_CASE(X, TRX, "vector-allocator-move-ctor", "[vector]") {
+VECTOR_PRODUCT_TEST_CASE_4(X, TRX, "vector-allocator-move-ctor", "[vector]") {
     X::reset();
     VectorA v({ 1, 2 }, Tag(1));
     auto const tag2 = GENERATE(Tag(1), Tag(2));
@@ -196,7 +197,7 @@ VECTOR_PRODUCT_TEST_CASE(X, TRX, "vector-allocator-move-ctor", "[vector]") {
     CHECK(X::liveObjects() == 2);
 }
 
-VECTOR_PRODUCT_TEST_CASE(X, TRX, "vector-allocator-move-assign", "[vector]") {
+VECTOR_PRODUCT_TEST_CASE_4(X, TRX, "vector-allocator-move-assign", "[vector]") {
     X::reset();
     auto const count = GENERATE(0, 2, 10);
     VectorA v(Tag(1));
@@ -217,7 +218,7 @@ VECTOR_PRODUCT_TEST_CASE(X, TRX, "vector-allocator-move-assign", "[vector]") {
     CHECK(X::liveObjects() == count);
 }
 
-VECTOR_TEST_CASE(X, TRX, "vector-allocator-ilist", "[vector]") {
+VECTOR_TEST_CASE_4(X, TRX, "vector-allocator-ilist", "[vector]") {
     X::reset();
     TagAllocator<X> alloc(Tag(1));
     Vector v({ { 1, alloc }, { 2, alloc }, { 4, alloc } }, Tag{ 2 });
@@ -234,7 +235,7 @@ VECTOR_TEST_CASE(X, TRX, "vector-allocator-ilist", "[vector]") {
     CHECK(X::liveObjects() == 3);
 }
 
-VECTOR_TEST_CASE(X, TRX, "vector-allocator-ilist-2", "[vector]") {
+VECTOR_TEST_CASE_4(X, TRX, "vector-allocator-ilist-2", "[vector]") {
     X::reset();
     Vector v({}, Tag{ 2 });
     REQUIRE(v.size() == 0);

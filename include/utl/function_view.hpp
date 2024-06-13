@@ -42,12 +42,21 @@ public:
 private:
     template <typename F>
     constexpr static R __static_invoke(void const* state, Args... args) {
-        F& f = *(F*)state;
         if constexpr (std::is_same_v<R, std::invoke_result_t<F, Args...>>) {
-            return std::invoke(f, std::forward<Args>(args)...);
+            if constexpr (std::is_function_v<F>) {
+                return std::invoke((F*)state, std::forward<Args>(args)...);            
+            }
+            else {
+                return std::invoke(*(F*)state, std::forward<Args>(args)...);
+            }
         }
         else {
-            return static_cast<R>(std::invoke(f, std::forward<Args>(args)...));
+            if constexpr (std::is_function_v<F>) {
+                return static_cast<R>(std::invoke((F*)state, std::forward<Args>(args)...));
+            }
+            else {
+                return static_cast<R>(std::invoke(*(F*)state, std::forward<Args>(args)...));
+            }
         }
     }
 

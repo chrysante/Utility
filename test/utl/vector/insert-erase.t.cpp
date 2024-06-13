@@ -13,7 +13,7 @@ static void reserveAdditional(auto& v, std::size_t count) {
     v.reserve(v.size() + count * m);
 }
 
-VECTOR_TEST_CASE(X, TRX, "vector-allocator-insert-1-2", "[vector]") {
+VECTOR_TEST_CASE_4(X, TRX, "vector-allocator-insert-1-2", "[vector]") {
     using T = typename Vector::value_type;
     X::reset();
     Vector v({ 0, 1, 2, 3 }, Tag(1));
@@ -45,7 +45,7 @@ VECTOR_TEST_CASE(X, TRX, "vector-allocator-insert-1-2", "[vector]") {
     }
 }
 
-VECTOR_TEST_CASE(X, TRX, "vector-allocator-insert-3", "[vector]") {
+VECTOR_TEST_CASE_4(X, TRX, "vector-allocator-insert-3", "[vector]") {
     using T = typename Vector::value_type;
     X::reset();
     Vector v({ 0, 1, 2, 3 }, Tag(1));
@@ -169,7 +169,7 @@ VECTOR_TEST_CASE(X, TRX, "vector-allocator-insert-3", "[vector]") {
     }
 }
 
-VECTOR_TEST_CASE(X, TRX, "vector-allocator-insert-4", "[vector]") {
+VECTOR_TEST_CASE_4(X, TRX, "vector-allocator-insert-4", "[vector]") {
     using T = typename Vector::value_type;
     X::reset();
     std::size_t const count = GENERATE(0, 3, 10);
@@ -220,7 +220,7 @@ VECTOR_TEST_CASE(X, TRX, "vector-allocator-insert-4", "[vector]") {
     }
 }
 
-VECTOR_TEST_CASE(X, TRX, "vector-allocator-insert-5", "[vector]") {
+VECTOR_TEST_CASE_4(X, TRX, "vector-allocator-insert-5", "[vector]") {
     using T = typename Vector::value_type;
     X::reset();
     Vector v({ 0, 1, 2, 3 }, Tag(1));
@@ -275,14 +275,14 @@ VECTOR_TEST_CASE(X, TRX, "vector-allocator-insert-5", "[vector]") {
     }
 }
 
-VECTOR_TEST_CASE(X, TRX, "vector insert empty range into empty vector", "[vector]") {
+VECTOR_TEST_CASE_4(X, TRX, "vector insert empty range into empty vector", "[vector]") {
     X::reset();
     Vector v(Tag(1));
     v.insert(v.begin(), std::span<int>{});
     CHECK(v.empty());
 }
 
-VECTOR_TEST_CASE(X, TRX, "vector-erase", "[vector]") {
+VECTOR_TEST_CASE_4(X, TRX, "vector-erase", "[vector]") {
     X::reset();
     Vector v = { 0, 1, 2, 3, 4, 5 };
     REQUIRE(X::liveObjects() == 6);

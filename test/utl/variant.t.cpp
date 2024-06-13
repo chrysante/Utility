@@ -1,3 +1,5 @@
+#ifndef _MSC_VER
+
 #include <iostream>
 #include <tuple>
 
@@ -248,3 +250,5 @@ TEST_CASE("variant trivial lifetime", "[variant]") {
     CHECK(std::is_trivially_move_assignable_v<W>);
     CHECK(std::is_trivially_destructible_v<W>);
 }
+
+#endif

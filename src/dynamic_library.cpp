@@ -7,10 +7,8 @@
 #include <utl/scope_guard.hpp>
 
 #if defined(__unix__) || defined(__APPLE__)
+
 #include <dlfcn.h>
-#else
-#error Unsupported system
-#endif
 
 using namespace utl;
 
@@ -119,3 +117,5 @@ void dynamic_library::destroy() noexcept {
 void dynamic_library::clear_errors() {
     dlerror();
 }
+
+#endif

@@ -1,11 +1,9 @@
+#ifdef __APPLE__
+
 #include <catch2/catch_test_macros.hpp>
 #include <utl/dynamic_library.hpp>
 
-#ifdef __APPLE__
 static constexpr auto* LibName = "libtest-lib.dylib";
-#else
-#error Unsupported system
-#endif
 
 TEST_CASE("Dynamic library", "[dynamic_library]") {
     utl::dynamic_library lib(LibName);
@@ -41,3 +39,5 @@ TEST_CASE("Parent executable", "[dynamic_library]") {
 TEST_CASE("Non-existing lib", "[dynamic_library]") {
     CHECK_THROWS(utl::dynamic_library("does_not_exist"));
 }
+
+#endif

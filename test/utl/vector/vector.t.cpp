@@ -6,7 +6,7 @@
 
 using namespace utl_test;
 
-VECTOR_TEST_CASE(X, TRX, "vector-allocator-propagate-emplace", "[vector]") {
+VECTOR_TEST_CASE_4(X, TRX, "vector-allocator-propagate-emplace", "[vector]") {
     X::reset();
     Vector v(Tag(1));
     v.emplace_back();
@@ -21,7 +21,7 @@ VECTOR_TEST_CASE(X, TRX, "vector-allocator-propagate-emplace", "[vector]") {
     CHECK(X::liveObjects() == 2);
 }
 
-VECTOR_TEST_CASE(X, TRX, "vector-allocator-reserve", "[vector]") {
+VECTOR_TEST_CASE_4(X, TRX, "vector-allocator-reserve", "[vector]") {
     X::reset();
     auto const size = GENERATE(0, 5, 50);
     Vector v(size, Tag(1));
@@ -33,7 +33,7 @@ VECTOR_TEST_CASE(X, TRX, "vector-allocator-reserve", "[vector]") {
     CHECK(X::liveObjects() == size);
 }
 
-VECTOR_TEST_CASE(X, TRX, "vector-allocator-resize", "[vector]") {
+VECTOR_TEST_CASE_4(X, TRX, "vector-allocator-resize", "[vector]") {
     X::reset();
     auto const size = GENERATE(0, 5, 50);
     Vector v(size, Tag(1));
@@ -45,7 +45,7 @@ VECTOR_TEST_CASE(X, TRX, "vector-allocator-resize", "[vector]") {
     CHECK(v.capacity() >= newSize);
 }
 
-VECTOR_PRODUCT_TEST_CASE(X, TRX, "vector-move-construct", "[vector]") {
+VECTOR_PRODUCT_TEST_CASE_4(X, TRX, "vector-move-construct", "[vector]") {
     X::reset();
     VectorA v;
     auto const count = GENERATE(0, 1, 54, 64, 139);
@@ -63,7 +63,7 @@ VECTOR_PRODUCT_TEST_CASE(X, TRX, "vector-move-construct", "[vector]") {
     CHECK(X::liveObjects() == 0);
 }
 
-VECTOR_PRODUCT_TEST_CASE(X, TRX, "vector-move-assign", "[vector]") {
+VECTOR_PRODUCT_TEST_CASE_4(X, TRX, "vector-move-assign", "[vector]") {
     X::reset();
     VectorA v;
     auto const count = GENERATE(0, 1, 54, 64, 139);
@@ -84,7 +84,7 @@ VECTOR_PRODUCT_TEST_CASE(X, TRX, "vector-move-assign", "[vector]") {
     CHECK(X::liveObjects() == 0);
 }
 
-VECTOR_PRODUCT_TEST_CASE(X, TRX, "vector-copy-construct", "[vector]") {
+VECTOR_PRODUCT_TEST_CASE_4(X, TRX, "vector-copy-construct", "[vector]") {
     X::reset();
     VectorA v;
     auto const count = GENERATE(0, 1, 54, 64, 139);
@@ -99,7 +99,7 @@ VECTOR_PRODUCT_TEST_CASE(X, TRX, "vector-copy-construct", "[vector]") {
     CHECK(X::liveObjects() == count);
 }
 
-VECTOR_PRODUCT_TEST_CASE(X, TRX, "vector-copy-assign", "[vector]") {
+VECTOR_PRODUCT_TEST_CASE_4(X, TRX, "vector-copy-assign", "[vector]") {
     X::reset();
     VectorA v;
     auto const count = GENERATE(0, 1, 54, 64, 139);
@@ -120,7 +120,7 @@ VECTOR_PRODUCT_TEST_CASE(X, TRX, "vector-copy-assign", "[vector]") {
 
 
 
-VECTOR_TEST_CASE(X, TRX, "vector-at", "[vector]") {
+VECTOR_TEST_CASE_4(X, TRX, "vector-at", "[vector]") {
     Vector v = { 0, 1, 2, 3 };
     CHECK(v.at(3) == 3);
     CHECK_THROWS_AS(v.at(4), std::out_of_range);
@@ -132,7 +132,7 @@ static MoveOnly makeMoveOnly(X x) {
     return std::make_unique<X>(std::move(x));
 }
 
-VECTOR_PRODUCT_TEST_CASE(MoveOnly, "vector-move-only", "[vector]") {
+VECTOR_PRODUCT_TEST_CASE_3(MoveOnly, "vector-move-only", "[vector]") {
     X::reset();
     VectorA v(Tag(1));
     v.push_back(MoveOnly());
@@ -155,7 +155,7 @@ VECTOR_PRODUCT_TEST_CASE(MoveOnly, "vector-move-only", "[vector]") {
     CHECK(X::liveObjects() == count);
 }
 
-VECTOR_TEST_CASE(X, TRX, "vector-iterate", "[vector]") {
+VECTOR_TEST_CASE_4(X, TRX, "vector-iterate", "[vector]") {
     Vector v = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19 };
     for (int i = 0; auto& x : v) {
         CHECK(x == X(i++));

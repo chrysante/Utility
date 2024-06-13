@@ -20,6 +20,10 @@ project(
 set(CMAKE_CXX_VISIBILITY_PRESET     hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 
+if(WIN32)
+  add_compile_options("/MP")
+endif()
+
 if(utility_SHARED)
   add_library(utility SHARED)
 else()
@@ -64,7 +68,6 @@ target_include_directories(test
 )
 
 target_link_libraries(test utility)
-target_link_libraries(test test-lib)
 target_link_libraries(test Catch2::Catch2)
 target_link_libraries(test Catch2::Catch2WithMain)
 add_subdirectory(test/utl)
