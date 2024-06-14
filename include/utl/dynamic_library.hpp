@@ -49,6 +49,9 @@ public:
 
     /// Construct and load the shared library at \p libpath with open mode
     /// \p mode
+    /// \Note \p libpath must be a null terminated utf8 string on both Windows 
+    /// and Unix so we pass by `std::string`
+    /// \p mode is ignored on Windows
     explicit dynamic_library(std::string libpath,
                              dynamic_load_mode mode = dynamic_load_mode::lazy);
 
@@ -76,7 +79,7 @@ public:
 
     /// Access the symbol \p name from the shared library
     /// Throws if the symbol cannot be resolved
-    /// FIXME: The OS apis requires zero terminated string
+    /// FIXME: The OS APIs require a zero terminated string here
     void* resolve(std::string_view name) const;
 
     /// \overload
