@@ -24,6 +24,7 @@ target_sources(
     ilist.t.cpp
     ipp.t.cpp
     lazy.t.cpp
+    macros.t.cpp
     math.t.cpp
     memory_resource.t.cpp
     messenger.t.cpp
