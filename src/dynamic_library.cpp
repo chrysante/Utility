@@ -46,8 +46,6 @@ dynamic_library dynamic_library::global(dynamic_load_mode mode) {
     return lib;
 }
 
-#
-
 void* dynamic_library::resolve(std::string_view name) const {
     std::string err;
     void* sym = resolve(name, &err);
@@ -57,21 +55,22 @@ void* dynamic_library::resolve(std::string_view name) const {
     return sym;
 }
 
-
 #if defined(__unix__) || defined(__APPLE__)
 #include <dlfcn.h>
 
 void* dynamic_library::resolve(std::string_view name,
-                               std::string_view* error) const {
+                               std::string* error) const {
     clear_errors();
-    auto* const result = dlsym(_handle, name.data());
-    if (char const* native = dlerror()) {
-        if (error) {
-            *error = native;
-        }
-        return nullptr;
+    auto* result = dlsym(_handle, name.data());
+    if (result) {
+        return result;
     }
-    return result;
+    if (char const* native = dlerror();
+        native && error) 
+    {
+        *error = native;
+    }
+    return nullptr;
 }
 
 static int translateMode(dynamic_load_mode mode) {

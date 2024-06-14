@@ -96,7 +96,7 @@ public:
     /// \overload
     template <typename T>
     std::add_pointer_t<T> resolve_as(std::string_view name,
-                                     std::string_view* error) const {
+                                     std::string* error) const {
         return reinterpret_cast<std::add_pointer_t<T>>(resolve(name, error));
     }
 
