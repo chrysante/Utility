@@ -34,16 +34,15 @@ _UTL_SYSTEM_HEADER_
 #ifdef _MSC_VER
 
 #define _UTL_MSVC_CALL(X, Y)  X Y
-#define _UTL_MSVC_EXPAND(...)  __VA_ARGS__
-#define _UTL_NARG_I(...) \
-    _UTL_MSVC_EXPAND(                                                          \
-        _UTL_ARG_N(__VA_ARGS__, 63, 62, 61, 60, 59, 58, 57, 56,   \
+#define _UTL_MSVC_EXPAND(...) __VA_ARGS__
+#define _UTL_NARG_I(...)                                                       \
+    _UTL_MSVC_EXPAND(_UTL_ARG_N(__VA_ARGS__, 63, 62, 61, 60, 59, 58, 57, 56,   \
                                 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45,    \
                                 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34,    \
                                 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23,    \
                                 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12,    \
-                                11, 10, 9,  8,  7,  6,  5,  4,  3,  2,  1, 0))
-#define _UTL_NARG(...) _UTL_MSVC_CALL(_UTL_NARG_I, (__VA_OPT__(,) __VA_ARGS__))
+                                11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0))
+#define _UTL_NARG(...) _UTL_MSVC_CALL(_UTL_NARG_I, (__VA_OPT__(, ) __VA_ARGS__))
 
 #else
 
