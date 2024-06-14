@@ -1,5 +1,5 @@
-#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_template_test_macros.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <utl/vector.hpp>
 
 #include "utl/LifetimeCounter.hpp"
@@ -14,7 +14,9 @@ struct TagAllocator {
 
     template <typename... Args>
     void construct(T* ptr, Args&&... args) {
-        if constexpr (std::is_constructible_v<T, std::allocator_arg_t, TagAllocator, Args...>) {
+        if constexpr (std::is_constructible_v<T, std::allocator_arg_t,
+                                              TagAllocator, Args...>)
+        {
             std::construct_at(ptr, *this, std::forward<Args>(args)...);
         }
         else if constexpr (std::is_constructible_v<T, Args..., TagAllocator>) {
@@ -44,7 +46,8 @@ struct X: utl_test::LifetimeCounter {
     X(TagAllocator<X> alloc = {}): alloc(alloc) {}
     X(int value, TagAllocator<X> alloc = {}): alloc(alloc), value(value) {}
 
-    X(X const& rhs, TagAllocator<X> alloc = {}): alloc(alloc), value(rhs.value) {}
+    X(X const& rhs, TagAllocator<X> alloc = {}):
+        alloc(alloc), value(rhs.value) {}
     X(X&& rhs, TagAllocator<X> alloc = {}): alloc(alloc), value(rhs.value) {}
 
     X& operator=(X const& rhs) {
@@ -61,7 +64,9 @@ struct X: utl_test::LifetimeCounter {
     TagAllocator<X> alloc;
     int value = 0;
 
-    friend std::ostream& operator<<(std::ostream& str, X const& x) { return str << "{ " << x.value << " }"; }
+    friend std::ostream& operator<<(std::ostream& str, X const& x) {
+        return str << "{ " << x.value << " }";
+    }
 };
 
 struct TRX: X {
@@ -94,7 +99,8 @@ std::size_t constexpr inlineCapacity<utl::small_vector<T, N, A>> = N;
 template <typename T>
 using TaVector = utl::vector<T, TagAllocator<T>>;
 
-template <typename T, size_t Size = utl::default_inline_capacity<T, TagAllocator<T>>>
+template <typename T,
+          size_t Size = utl::default_inline_capacity<T, TagAllocator<T>>>
 using TaSmallVector = utl::small_vector<T, Size, TagAllocator<T>>;
 
 } // namespace utl_test
@@ -102,45 +108,55 @@ using TaSmallVector = utl::small_vector<T, Size, TagAllocator<T>>;
 template <>
 struct utl::is_trivially_relocatable<utl_test::TRX>: std::true_type {};
 
-#define TEST_ARG_LIST(T)                                                                                               \
-    (utl_test::TaVector<T>, false), (utl_test::TaSmallVector<T>, true), (utl_test::TaSmallVector<T, 23>, true)
+#define TEST_ARG_LIST(T)                                                       \
+    (utl_test::TaVector<T>, false), (utl_test::TaSmallVector<T>, true),        \
+        (utl_test::TaSmallVector<T, 23>, true)
 
-#define PRODUCT_TEST_ARG_LIST(T)                                                                                       \
-    (utl_test::TaVector<T>, utl_test::TaVector<T>, false, false),                                                      \
-        (utl_test::TaVector<T>, utl_test::TaSmallVector<T, 0>, false, true),                                           \
-        (utl_test::TaVector<T>, utl_test::TaSmallVector<T>, false, true),                                              \
-        (utl_test::TaVector<T>, utl_test::TaSmallVector<T, 23>, false, true),                                          \
-        (utl_test::TaSmallVector<T>, utl_test::TaVector<T>, true, false),                                              \
-        (utl_test::TaSmallVector<T>, utl_test::TaSmallVector<T, 0>, true, true),                                       \
-        (utl_test::TaSmallVector<T>, utl_test::TaSmallVector<T>, true, true),                                          \
-        (utl_test::TaSmallVector<T>, utl_test::TaSmallVector<T, 23>, true, true),                                      \
-        (utl_test::TaSmallVector<T, 23>, utl_test::TaVector<T>, true, false),                                          \
-        (utl_test::TaSmallVector<T, 23>, utl_test::TaSmallVector<T, 0>, true, true),                                   \
-        (utl_test::TaSmallVector<T, 23>, utl_test::TaSmallVector<T>, true, true),                                      \
-        (utl_test::TaSmallVector<T, 23>, utl_test::TaSmallVector<T, 23>, true, true),                                  \
-        (utl_test::TaSmallVector<T, 0>, utl_test::TaVector<T>, true, false),                                           \
-        (utl_test::TaSmallVector<T, 0>, utl_test::TaSmallVector<T, 0>, true, true),                                    \
-        (utl_test::TaSmallVector<T, 0>, utl_test::TaSmallVector<T>, true, true),                                       \
-        (utl_test::TaSmallVector<T, 0>, utl_test::TaSmallVector<T, 23>, true, true)
+#define PRODUCT_TEST_ARG_LIST(T)                                               \
+    (utl_test::TaVector<T>, utl_test::TaVector<T>, false, false),              \
+        (utl_test::TaVector<T>, utl_test::TaSmallVector<T, 0>, false, true),   \
+        (utl_test::TaVector<T>, utl_test::TaSmallVector<T>, false, true),      \
+        (utl_test::TaVector<T>, utl_test::TaSmallVector<T, 23>, false, true),  \
+        (utl_test::TaSmallVector<T>, utl_test::TaVector<T>, true, false),      \
+        (utl_test::TaSmallVector<T>, utl_test::TaSmallVector<T, 0>, true,      \
+         true),                                                                \
+        (utl_test::TaSmallVector<T>, utl_test::TaSmallVector<T>, true, true),  \
+        (utl_test::TaSmallVector<T>, utl_test::TaSmallVector<T, 23>, true,     \
+         true),                                                                \
+        (utl_test::TaSmallVector<T, 23>, utl_test::TaVector<T>, true, false),  \
+        (utl_test::TaSmallVector<T, 23>, utl_test::TaSmallVector<T, 0>, true,  \
+         true),                                                                \
+        (utl_test::TaSmallVector<T, 23>, utl_test::TaSmallVector<T>, true,     \
+         true),                                                                \
+        (utl_test::TaSmallVector<T, 23>, utl_test::TaSmallVector<T, 23>, true, \
+         true),                                                                \
+        (utl_test::TaSmallVector<T, 0>, utl_test::TaVector<T>, true, false),   \
+        (utl_test::TaSmallVector<T, 0>, utl_test::TaSmallVector<T, 0>, true,   \
+         true),                                                                \
+        (utl_test::TaSmallVector<T, 0>, utl_test::TaSmallVector<T>, true,      \
+         true),                                                                \
+        (utl_test::TaSmallVector<T, 0>, utl_test::TaSmallVector<T, 23>, true,  \
+         true)
 
-#define VECTOR_TEST_CASE(...)                UTL_VFUNC(VECTOR_TEST_CASE_, __VA_ARGS__)
-#define VECTOR_TEST_CASE_3(T, NAME, TAGS)    VECTOR_TEST_CASE_IMPL(NAME, TAGS, TEST_ARG_LIST(T))
-#define VECTOR_TEST_CASE_4(T, U, NAME, TAGS) VECTOR_TEST_CASE_IMPL(NAME, TAGS, TEST_ARG_LIST(T), TEST_ARG_LIST(U))
+#define VECTOR_TEST_CASE(T, NAME, TAGS)                                        \
+    VECTOR_TEST_CASE_IMPL(NAME, TAGS, TEST_ARG_LIST(T))
+#define VECTOR_TEST_CASE2(T, U, NAME, TAGS)                                    \
+    VECTOR_TEST_CASE_IMPL(NAME, TAGS, TEST_ARG_LIST(T), TEST_ARG_LIST(U))
 
-#define VECTOR_PRODUCT_TEST_CASE(...)             UTL_VFUNC(VECTOR_PRODUCT_TEST_CASE_, __VA_ARGS__)
-#define VECTOR_PRODUCT_TEST_CASE_3(T, NAME, TAGS) VECTOR_PRODUCT_TEST_CASE_IMPL(NAME, TAGS, PRODUCT_TEST_ARG_LIST(T))
-#define VECTOR_PRODUCT_TEST_CASE_4(T, U, NAME, TAGS)                                                                   \
-    VECTOR_PRODUCT_TEST_CASE_IMPL(NAME, TAGS, PRODUCT_TEST_ARG_LIST(T), PRODUCT_TEST_ARG_LIST(U))
+#define VECTOR_PRODUCT_TEST_CASE(T, NAME, TAGS)                                \
+    VECTOR_PRODUCT_TEST_CASE_IMPL(NAME, TAGS, PRODUCT_TEST_ARG_LIST(T))
+#define VECTOR_PRODUCT_TEST_CASE2(T, U, NAME, TAGS)                            \
+    VECTOR_PRODUCT_TEST_CASE_IMPL(NAME, TAGS, PRODUCT_TEST_ARG_LIST(T),        \
+                                  PRODUCT_TEST_ARG_LIST(U))
 
-#define VECTOR_TEST_CASE_IMPL(NAME, TAGS, ...)                                                                         \
-    TEMPLATE_TEST_CASE_SIG(NAME, TAGS, ((typename Vector, bool Small), Vector, Small), __VA_ARGS__)
+#define VECTOR_TEST_CASE_IMPL(NAME, TAGS, ...)                                 \
+    TEMPLATE_TEST_CASE_SIG(NAME, TAGS,                                         \
+                           ((typename Vector, bool Small), Vector, Small),     \
+                           __VA_ARGS__)
 
-#define VECTOR_PRODUCT_TEST_CASE_IMPL(NAME, TAGS, ...)                                                                 \
-    TEMPLATE_TEST_CASE_SIG(NAME,                                                                                       \
-                           TAGS,                                                                                       \
-                           ((typename VectorA, typename VectorB, bool SmallA, bool SmallB),                            \
-                            VectorA,                                                                                   \
-                            VectorB,                                                                                   \
-                            SmallA,                                                                                    \
-                            SmallB),                                                                                   \
+#define VECTOR_PRODUCT_TEST_CASE_IMPL(NAME, TAGS, ...)                         \
+    TEMPLATE_TEST_CASE_SIG(NAME, TAGS,                                         \
+                           ((typename VectorA, typename VectorB, bool SmallA,  \
+                             bool SmallB),                                     \
+                            VectorA, VectorB, SmallA, SmallB),                 \
                            __VA_ARGS__)
