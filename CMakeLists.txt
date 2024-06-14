@@ -70,6 +70,7 @@ target_include_directories(test
 target_link_libraries(test utility)
 target_link_libraries(test Catch2::Catch2)
 target_link_libraries(test Catch2::Catch2WithMain)
+add_dependencies(test test-lib)
 add_subdirectory(test/utl)
 source_group(utl REGULAR_EXPRESSION "test/utl/*")
 source_group(utl/graph REGULAR_EXPRESSION "test/utl/graph/*")

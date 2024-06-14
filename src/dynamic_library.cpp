@@ -6,20 +6,16 @@
 #include <utl/__debug.hpp>
 #include <utl/scope_guard.hpp>
 
-#if defined(__unix__) || defined(__APPLE__)
-
-#include <dlfcn.h>
-
 using namespace utl;
 
 static bool operator!(dynamic_load_mode mode) {
     return !static_cast<int>(mode);
 }
 
-dynamic_library::dynamic_library(std::filesystem::path libpath,
+dynamic_library::dynamic_library(std::string libpath,
                                  dynamic_load_mode mode):
-    _path(std::move(libpath)), _handle(nullptr), _mode(mode) {
-    _handle = load_impl(_path.c_str(), mode);
+    _path(libpath), _handle(nullptr), _mode(mode) {
+    _handle = load_impl(libpath.c_str(), mode);
 }
 
 dynamic_library::dynamic_library(dynamic_library&& rhs) noexcept:
@@ -50,14 +46,20 @@ dynamic_library dynamic_library::global(dynamic_load_mode mode) {
     return lib;
 }
 
+#
+
 void* dynamic_library::resolve(std::string_view name) const {
-    std::string_view err;
+    std::string err;
     void* sym = resolve(name, &err);
     if (!sym) {
-        throw std::runtime_error(std::string(err));
+        throw std::runtime_error(std::move(err));
     }
     return sym;
 }
+
+
+#if defined(__unix__) || defined(__APPLE__)
+#include <dlfcn.h>
 
 void* dynamic_library::resolve(std::string_view name,
                                std::string_view* error) const {
@@ -117,5 +119,75 @@ void dynamic_library::destroy() noexcept {
 void dynamic_library::clear_errors() {
     dlerror();
 }
+
+#elif defined(_MSC_VER)
+
+#include <span>
+
+#include <windows.h>
+
+static void getErrorMessage(std::span<char> buffer) {
+    DWORD error = GetLastError();
+    FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, nullptr, error,
+        0, buffer.data(), buffer.size(),
+                   nullptr);
+}
+
+void* dynamic_library::resolve(std::string_view name,
+                               std::string* error) const {
+    auto* addr = GetProcAddress((HMODULE)_handle, TEXT( name.data()));
+    if (addr) {
+        return addr;
+    }
+    char message[256] = {};
+    getErrorMessage(message);
+    if (error) {
+        *error = message;
+    }
+    return nullptr;
+}
+
+static HMODULE GetCurrentModule() {
+    HMODULE hModule = NULL;
+    GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+                      (LPCTSTR)GetCurrentModule, &hModule);
+
+    return hModule;
+}
+
+void* dynamic_library::load_impl(char const* path, dynamic_load_mode mode) {
+    if (!path) {
+        return GetCurrentModule();
+    }
+    void* handle = LoadLibraryA(TEXT(path));
+    if (handle) {
+        return handle;
+    }
+    char message[256] = {};
+    getErrorMessage(message);
+    std::stringstream err;
+    err << "Failed to load library";
+    if (path) {
+        err << " " << path;
+    }
+    if (message) {
+        err << ". Native Error: " << message;
+    }
+    throw std::runtime_error(err.str());
+}
+
+void dynamic_library::destroy() noexcept {
+    if (!_handle) {
+        return;
+    }
+    FreeLibrary((HMODULE)_handle);
+    _handle = nullptr;
+}
+
+void dynamic_library::clear_errors() {}
+
+#else 
+
+#error Unsupported compiler
 
 #endif

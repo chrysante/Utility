@@ -49,7 +49,7 @@ public:
 
     /// Construct and load the shared library at \p libpath with open mode
     /// \p mode
-    explicit dynamic_library(std::filesystem::path libpath,
+    explicit dynamic_library(std::string libpath,
                              dynamic_load_mode mode = dynamic_load_mode::lazy);
 
     /// Lifetime functions @{
@@ -76,12 +76,13 @@ public:
 
     /// Access the symbol \p name from the shared library
     /// Throws if the symbol cannot be resolved
+    /// FIXME: The OS apis requires zero terminated string
     void* resolve(std::string_view name) const;
 
     /// \overload
     /// If the symbol can not be resolved a human readable error string is
     /// written into \p error if it is non-null
-    void* resolve(std::string_view name, std::string_view* error) const;
+    void* resolve(std::string_view name, std::string* error) const;
 
     /// \Returns `reinterpret_cast<std::add_pointer_t<T>>(resolve(name))`
     template <typename T>
