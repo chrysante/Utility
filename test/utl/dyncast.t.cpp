@@ -164,16 +164,9 @@ UTL_DYNCAST_DEFINE(Leopard, ID::Leopard, Animal, Concrete);
 
 namespace {
 
-struct Animal {
+struct Animal: utl::dyn_base_helper<Animal> {
 protected:
-    constexpr Animal(ID id): id(id) {}
-
-private:
-    constexpr friend ID dyncast_get_type(Animal const& animal) {
-        return animal.id;
-    }
-
-    ID id;
+    constexpr Animal(ID id): dyn_base_helper(id) {}
 };
 
 struct Cetacea: Animal {
@@ -765,3 +758,5 @@ TEST_CASE("Partial union", "[dyncast]") {
     CHECK(dyncast_get_type(c.get<Cetacea>()) == ID::Whale);
     CHECK(result == 1);
 }
+
+/// # New definition macros

@@ -9,6 +9,12 @@
 #include <typeinfo> // For std::bad_cast
 #include <utility> // For std::index_sequence TODO: Consider reimplementing this
 
+/// User facing macro that declares all mappings defined below
+#define UTL_DYNCAST_DEFINE(Type, ID, ParentType, Corporeality)                 \
+    UTL_DYNCAST_IMPL_MAP(Type, ID)                                             \
+    UTL_DYNCAST_IMPL_PARENT(Type, ParentType)                                  \
+    UTL_DYNCAST_IMPL_ABSTRACT(Type, Corporeality)
+
 /// Declares a mapping of \p type to its identifier \p ID
 #define UTL_DYNCAST_IMPL_MAP(Type, ID)                                         \
     template <>                                                                \
@@ -32,12 +38,6 @@
     [[maybe_unused]] inline constexpr utl::dc::Corporeality                    \
         utl::dc::TypeToCorporeality<Type> =                                    \
             utl::dc::Corporeality::CorporealityKind;
-
-/// User facing macro that declares all mappings defined above
-#define UTL_DYNCAST_DEFINE(Type, ID, ParentType, Corporeality)                 \
-    UTL_DYNCAST_IMPL_MAP(Type, ID)                                             \
-    UTL_DYNCAST_IMPL_PARENT(Type, ParentType)                                  \
-    UTL_DYNCAST_IMPL_ABSTRACT(Type, Corporeality)
 
 namespace utl {
 
@@ -1159,6 +1159,22 @@ public:
 
 private:
     dyn_union(dc::UnionNoInit) {}
+};
+
+/// #
+
+template <typename Base>
+struct dyn_base_helper {
+    using IDType = dc::TypeToIDType<Base>;
+
+    constexpr dyn_base_helper(IDType ID): _id(ID) {}
+
+private:
+    friend constexpr IDType dyncast_get_type(dyn_base_helper const& This) {
+        return This._id;
+    }
+
+    IDType _id;
 };
 
 } // namespace utl
