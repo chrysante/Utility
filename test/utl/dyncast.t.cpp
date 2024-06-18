@@ -8,6 +8,66 @@
 
 #include "utl/TypeCompare.h"
 
+/// # Enum reflection tests
+
+namespace {
+
+enum class TestEnum { A, B, C };
+
+namespace XY {
+
+enum class TestEnumNegative { A = -3, B, C };
+
+}
+
+enum Unscoped { A, B, C };
+
+template <auto V>
+struct StrangeScope {
+    enum E { A, B, C };
+};
+
+} // namespace
+
+static_assert(!utl::dc::enumIsValid<TestEnum, -2>());
+static_assert(!utl::dc::enumIsValid<TestEnum, -1>());
+static_assert(utl::dc::enumIsValid<TestEnum, TestEnum::A>());
+static_assert(utl::dc::enumIsValid<TestEnum, TestEnum::B>());
+static_assert(utl::dc::enumIsValid<TestEnum, TestEnum::C>());
+static_assert(!utl::dc::enumIsValid<TestEnum, 3>());
+static_assert(!utl::dc::enumIsValid<TestEnum, 4>());
+
+static_assert(utl::dc::enumRangeFirst<TestEnum>() == 0);
+static_assert(utl::dc::enumRangeLast<TestEnum>() == 3);
+static_assert(utl::dc::enumCount<TestEnum>() == 3);
+
+static_assert(!utl::dc::enumIsValid<XY::TestEnumNegative, -5>());
+static_assert(!utl::dc::enumIsValid<XY::TestEnumNegative, -4>());
+static_assert(
+    utl::dc::enumIsValid<XY::TestEnumNegative, XY::TestEnumNegative::A>());
+static_assert(
+    utl::dc::enumIsValid<XY::TestEnumNegative, XY::TestEnumNegative::B>());
+static_assert(
+    utl::dc::enumIsValid<XY::TestEnumNegative, XY::TestEnumNegative::C>());
+static_assert(!utl::dc::enumIsValid<XY::TestEnumNegative, 0>());
+static_assert(!utl::dc::enumIsValid<XY::TestEnumNegative, 1>());
+
+static_assert(utl::dc::enumRangeFirst<XY::TestEnumNegative, -128>() == -3);
+static_assert(utl::dc::enumRangeLast<XY::TestEnumNegative, -128>() == 0);
+static_assert(utl::dc::enumCount<XY::TestEnumNegative>() == 3);
+
+static_assert(utl::dc::enumRangeFirst<Unscoped>() == 0);
+static_assert(utl::dc::enumRangeLast<Unscoped>() == 3);
+static_assert(utl::dc::enumCount<Unscoped>() == 3);
+
+static_assert(utl::dc::enumRangeFirst<StrangeScope<[]<size_t I>() {}>::E>() ==
+              0);
+static_assert(utl::dc::enumRangeLast<StrangeScope<[]<size_t I>() {}>::E>() ==
+              3);
+static_assert(utl::dc::enumCount<StrangeScope<[]<size_t I>() {}>::E>() == 3);
+
+/// # Index expansion tests
+
 namespace utl::dc {
 
 template <typename T, size_t N>
@@ -85,14 +145,7 @@ TEST_CASE("dyncast internals", "[dyncast]") {
 
 namespace {
 
-enum class ID {
-    Animal = 0,
-    Cetacea = 1,
-    Whale = 2,
-    Dolphin = 3,
-    Leopard = 4,
-    COUNT
-};
+enum class ID { Animal = 0, Cetacea = 1, Whale = 2, Dolphin = 3, Leopard = 4 };
 
 struct Animal;
 struct Cetacea;
@@ -557,7 +610,7 @@ TEST_CASE("isa and dyncast", "[common][dyncast]") {
 
 namespace {
 
-enum class SHType { SHBase, SHDerived, COUNT };
+enum class SHType { SHBase, SHDerived };
 
 struct SHBase {
 protected:
@@ -592,7 +645,7 @@ TEST_CASE("Small hierarchy", "[common][dyncast]") {
 
 namespace {
 
-enum class ScopeGuardType { Base, Derived, COUNT };
+enum class ScopeGuardType { Base, Derived };
 
 struct ScopeGuardBase {
 protected:
