@@ -64,7 +64,7 @@
 #if UTL_DEBUG_LEVEL > 1
 #define __utl_interface_export
 #else // UTL_DEBUG_LEVEL > 1
-#define __utl_interface_export __attribute__((nodebug))
+#define __utl_interface_export
 #endif // UTL_DEBUG_LEVEL > 1
 
 #else // !defined(__GNUC__)

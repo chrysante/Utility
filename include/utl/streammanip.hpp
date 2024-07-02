@@ -36,9 +36,7 @@ struct streammanip {
 
     template <typename... Args>
     [[nodiscard]] constexpr auto operator()(Args&&... args) const
-    requires requires(F& f, std::ostream& ostream) {
-        std::invoke(f, ostream, args...);
-    }
+    requires std::invocable<F&, std::ostream&, Args...>
     {
         return utl::streammanip([args = std::tuple{ __strmanip_objwrapper{
                                      std::forward<Args>(args) }... },
