@@ -24,10 +24,10 @@ target_sources(
     ilist.t.cpp
     ipp.t.cpp
     lazy.t.cpp
-    macros.t.cpp
     math.t.cpp
     memory_resource.t.cpp
     messenger.t.cpp
+    metric_table.t.cpp
     monotonic_buffer_resource.t.cpp
     pimpl.t.cpp
     pool_resource.t.cpp
@@ -39,6 +39,7 @@ target_sources(
     structure_of_arrays.t.cpp
     terminates.hpp
     thread_pool.t.cpp
+    tinyptrset.t.cpp
     type_traits.t.cpp
     utility.t.cpp
     uuid.t.cpp

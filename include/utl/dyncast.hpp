@@ -1,12 +1,19 @@
 #ifndef UTL_DYNCAST_HPP_
 #define UTL_DYNCAST_HPP_
 
+#include <bit> // For std::bit_cast
 #include <cassert>
 #include <cstddef>
 #include <memory> // For std::destroy_at
 #include <type_traits>
 #include <typeinfo> // For std::bad_cast
 #include <utility> // For std::index_sequence TODO: Consider reimplementing this
+
+/// User facing macro that declares all mappings defined below
+#define UTL_DYNCAST_DEFINE(Type, ID, ParentType, Corporeality)                 \
+    UTL_DYNCAST_IMPL_MAP(Type, ID)                                             \
+    UTL_DYNCAST_IMPL_PARENT(Type, ParentType)                                  \
+    UTL_DYNCAST_IMPL_ABSTRACT(Type, Corporeality)
 
 /// Declares a mapping of \p type to its identifier \p ID
 #define UTL_DYNCAST_IMPL_MAP(Type, ID)                                         \
@@ -32,17 +39,73 @@
         utl::dc::TypeToCorporeality<Type> =                                    \
             utl::dc::Corporeality::CorporealityKind;
 
-/// User facing macro that declares all mappings defined above
-#define UTL_DYNCAST_DEFINE(Type, ID, ParentType, Corporeality)                 \
-    UTL_DYNCAST_IMPL_MAP(Type, ID)                                             \
-    UTL_DYNCAST_IMPL_PARENT(Type, ParentType)                                  \
-    UTL_DYNCAST_IMPL_ABSTRACT(Type, Corporeality)
-
 namespace utl {
 
 namespace dc {
 
 using std::size_t;
+
+/// # Enum reflection machinery
+
+/// Starting value for scanning enum ranges
+#ifndef UTL_DC_ENUM_RANGE_MIN
+#define UTL_DC_ENUM_RANGE_MIN -128
+#endif
+
+/// End value for scanning enum ranges
+#ifndef UTL_DC_ENUM_RANGE_MAX
+#define UTL_DC_ENUM_RANGE_MAX 128
+#endif
+
+#ifdef __GNUC__
+
+template <auto E>
+constexpr bool enumIsValidImpl() {
+    for (size_t I = sizeof(__PRETTY_FUNCTION__) - 2; I >= 0; --I) {
+        if (__PRETTY_FUNCTION__[I] == ')')
+            return false;
+        if (__PRETTY_FUNCTION__[I] == ':')
+            return true;
+    }
+    assert(false);
+}
+
+template <typename E, auto Value>
+constexpr bool enumIsValid() {
+    using U = std::underlying_type_t<E>;
+    return enumIsValidImpl<std::bit_cast<E>(static_cast<U>(Value))>();
+}
+
+#else
+#error Unsupported compiler
+#endif
+
+template <typename E, long long I, long long End, long long Inc>
+constexpr long long enumRangeBound() {
+    if constexpr (I == End || enumIsValid<E, I>()) {
+        return I;
+    }
+    else {
+        return enumRangeBound<E, I + Inc, End, Inc>();
+    }
+}
+
+template <typename E, long long Min = UTL_DC_ENUM_RANGE_MIN,
+          long long Max = UTL_DC_ENUM_RANGE_MAX>
+constexpr long long enumRangeFirst() {
+    return enumRangeBound<E, Min, Max, 1>();
+}
+
+template <typename E, long long Min = UTL_DC_ENUM_RANGE_MIN,
+          long long Max = UTL_DC_ENUM_RANGE_MAX>
+constexpr long long enumRangeLast() {
+    return enumRangeBound<E, Max, Min, -1>() + 1;
+}
+
+template <typename E>
+constexpr std::size_t enumCount() {
+    return static_cast<std::size_t>(enumRangeLast<E>() - enumRangeFirst<E>());
+}
 
 /// MARK: - TMP debug utilities
 
@@ -254,28 +317,13 @@ constexpr Array IndexSequenceToArray = IndexSequenceToArrayImpl<IdxSeq>::value;
 /// 'class' of abstractness and concreteness.
 enum class Corporeality { Abstract, Concrete };
 
-template <typename IDType>
-struct DetermineCount;
-
-template <typename IDType>
-requires requires { IDType::COUNT; }
-struct DetermineCount<IDType> {
-    static constexpr size_t value = (size_t)IDType::COUNT;
-};
-
-template <typename IDType>
-requires(!requires { IDType::COUNT; }) && requires { IDType::LAST; }
-struct DetermineCount<IDType> {
-    static constexpr size_t value = (size_t)IDType::LAST + 1;
-};
-
 /// Common traits of an ID type
 template <typename IDType>
 struct IDTraits {
-    static constexpr size_t count = DetermineCount<IDType>::value;
+    static constexpr size_t count = enumCount<IDType>();
 
-    static constexpr IDType first = IDType{ 0 };
-    static constexpr IDType last = IDType(count);
+    static constexpr IDType first = IDType{ enumRangeFirst<IDType>() };
+    static constexpr IDType last = IDType(enumRangeLast<IDType>());
 };
 
 /// MARK: - Maps
@@ -1111,6 +1159,22 @@ public:
 
 private:
     dyn_union(dc::UnionNoInit) {}
+};
+
+/// #
+
+template <typename Base>
+struct dyn_base_helper {
+    using IDType = dc::TypeToIDType<Base>;
+
+    constexpr dyn_base_helper(IDType ID): _id(ID) {}
+
+private:
+    friend constexpr IDType dyncast_get_type(dyn_base_helper const& This) {
+        return This._id;
+    }
+
+    IDType _id;
 };
 
 } // namespace utl

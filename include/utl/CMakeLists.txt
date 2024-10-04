@@ -42,6 +42,7 @@ target_sources(utility
     mdarray.hpp
     memory_resource.hpp
     messenger.hpp
+    metric_table.hpp
     overload.hpp
     pimpl.hpp
     queue.hpp
@@ -53,6 +54,7 @@ target_sources(utility
     strcat.hpp
     streammanip.hpp
     structure_of_arrays.hpp
+    tinyptrset.hpp
     type_traits.hpp
     typeinfo.hpp
     utility.hpp
