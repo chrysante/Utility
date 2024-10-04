@@ -39,6 +39,7 @@ target_sources(
     structure_of_arrays.t.cpp
     terminates.hpp
     thread_pool.t.cpp
+    tinyptrset.t.cpp
     type_traits.t.cpp
     utility.t.cpp
     uuid.t.cpp

@@ -54,6 +54,7 @@ target_sources(utility
     strcat.hpp
     streammanip.hpp
     structure_of_arrays.hpp
+    tinyptrset.hpp
     type_traits.hpp
     typeinfo.hpp
     utility.hpp
