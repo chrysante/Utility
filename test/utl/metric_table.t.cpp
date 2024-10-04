@@ -87,11 +87,7 @@ TEST_CASE("metric_map 2", "[metric_map]") {
     CHECK(results[0]->key() == "apple");
 
     // Test 5: Insert with merging values (same name)
-    auto insertResult =
-        map.insert("apple", 2); // Merging with the existing "apple"
-    if (!insertResult) {
-        insertResult->value() += 2;
-    }
+    map["apple"] += 2; // Merging with the existing "apple"
     results = map.lookup("apple", 0);
     REQUIRE(results.size() == 1);
     CHECK(results[0]->key() == "apple");
@@ -109,10 +105,7 @@ TEST_CASE("metric_map 2", "[metric_map]") {
     CHECK(results[0]->key() == "apples");
 
     // Test 8: Check merging on a different word with the same distance
-    insertResult = map.insert("cherry", 2); // Should merge with "cherry"
-    if (!insertResult) {
-        insertResult->value() += 2;
-    }
+    map["cherry"] += 2; // Should merge with "cherry"
     results = map.lookup("chery", 1);
     REQUIRE(results.size() == 1);
     CHECK(results[0]->key() == "cherry");

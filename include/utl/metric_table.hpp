@@ -466,6 +466,11 @@ public:
         return this->template insert_impl<true>(std::forward<K_>(key),
                                                 std::forward<VFn>(vfn));
     }
+
+    template <std::convertible_to<key_type> K_ = K const&>
+    value_type& operator[](K_&& key) {
+        return insert(std::forward<K_>(key), [] { return V(); })->value();
+    }
 };
 
 } // namespace utl
