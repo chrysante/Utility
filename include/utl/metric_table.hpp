@@ -407,7 +407,8 @@ public:
     using typename impl::iterator;
     using typename impl::node;
 
-    template <std::convertible_to<key_type> K_ = K const&>
+    template <typename K_ = K const&>
+    requires std::constructible_from<K, K_>
     insert_result insert(K_&& key) {
         return this->template insert_impl<false>(std::forward<K_>(key), [] {
             return internal::Empty{};
@@ -437,37 +438,42 @@ public:
     using typename impl::iterator;
     using typename impl::node;
 
-    template <std::convertible_to<key_type> K_ = K const&,
+    template <typename K_ = K const&,
               std::convertible_to<value_type> V_ = V const&>
+    requires std::constructible_from<K, K_>
     insert_result insert(K_&& key, V_&& value) {
         return this->template insert_impl<false>(std::forward<K_>(key), [&] {
             return std::forward<V_>(value);
         });
     }
 
-    template <std::convertible_to<key_type> K_ = K const&, std::invocable VFn>
-    requires std::same_as<std::invoke_result_t<VFn&&>, V>
+    template <typename K_ = K const&, std::invocable VFn>
+    requires std::same_as<std::invoke_result_t<VFn&&>, V> &&
+             std::constructible_from<K, K_>
     insert_result insert(K_&& key, VFn&& vfn) {
         return this->template insert_impl<false>(std::forward<K_>(key),
                                                  std::forward<VFn>(vfn));
     }
 
-    template <std::convertible_to<key_type> K_ = K const&,
+    template <typename K_ = K const&,
               std::convertible_to<value_type> V_ = V const&>
+    requires std::constructible_from<K, K_>
     insert_result update(K_&& key, V_&& value) {
         return this->template insert_impl<true>(std::forward<K_>(key), [&] {
             return std::forward<V_>(value);
         });
     }
 
-    template <std::convertible_to<key_type> K_ = K const&, std::invocable VFn>
-    requires std::same_as<std::invoke_result_t<VFn&&>, V>
+    template <typename K_ = K const&, std::invocable VFn>
+    requires std::same_as<std::invoke_result_t<VFn&&>, V> &&
+             std::constructible_from<K, K_>
     insert_result update(K_&& key, VFn&& vfn) {
         return this->template insert_impl<true>(std::forward<K_>(key),
                                                 std::forward<VFn>(vfn));
     }
 
-    template <std::convertible_to<key_type> K_ = K const&>
+    template <typename K_ = K const&>
+    requires std::constructible_from<K, K_>
     value_type& operator[](K_&& key) {
         return insert(std::forward<K_>(key), [] { return V(); })->value();
     }

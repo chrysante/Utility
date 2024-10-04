@@ -105,7 +105,7 @@ TEST_CASE("metric_map 2", "[metric_map]") {
     CHECK(results[0]->key() == "apples");
 
     // Test 8: Check merging on a different word with the same distance
-    map["cherry"] += 2; // Should merge with "cherry"
+    map[std::string_view("cherry")] += 2; // Should merge with "cherry"
     results = map.lookup("chery", 1);
     REQUIRE(results.size() == 1);
     CHECK(results[0]->key() == "cherry");
