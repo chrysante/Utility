@@ -2,6 +2,8 @@
 #define UTL_METRICTABLE_HPP_
 
 #include <algorithm>
+#include <alloca.h>
+#include <cstdlib>
 #include <initializer_list>
 #include <numeric>
 #include <ranges>
@@ -20,6 +22,25 @@ inline constexpr bool IsArray =
                  ValueType> &&
     std::is_array_v<std::remove_cvref_t<R>>;
 }
+
+template <typename T>
+constexpr size_t arraySize(size_t count) {
+    return count * sizeof(T);
+}
+
+#define UTL_IMPL_STACK_ALLOC_THRESHOLD 2048 // 2 KB threshold
+
+// Allocate memory on stack (with alloca) or heap (with malloc)
+#define UTL_IMPL_STACK_ALLOC(type, count)                                      \
+    ((sizeof(type) * (count)) <= UTL_IMPL_STACK_ALLOC_THRESHOLD ?              \
+         (type*)alloca(sizeof(type) * (count)) :                               \
+         (type*)std::malloc(sizeof(type) * (count)))
+
+// Free memory only if it was allocated with malloc
+#define UTL_IMPL_STACK_FREE(ptr, type, count)                                  \
+    (((sizeof(type) * (count)) > UTL_IMPL_STACK_ALLOC_THRESHOLD) ?             \
+         (std::free(ptr), (void)0) :                                           \
+         (void)0)
 
 /// https://en.wikipedia.org/wiki/Levenshtein_distance
 template <std::ranges::sized_range R1, std::ranges::sized_range R2,
@@ -42,15 +63,15 @@ size_t levenshtein_distance(R1&& r1, R2&& r2, Cmp cmp = {}) {
             return numColumns - 1;
         if (numColumns == 1)
             return numRows - 1;
-        size_t* prevRow = (size_t*)alloca(numColumns * sizeof(size_t));
-        size_t* currRow = (size_t*)alloca(numColumns * sizeof(size_t));
+        auto* prevRow = UTL_IMPL_STACK_ALLOC(std::uint32_t, 2 * numColumns);
+        auto* currRow = prevRow + numColumns;
         std::iota(prevRow, prevRow + numColumns, size_t{});
         auto itr = std::ranges::begin(r1);
-        for (size_t i = 1; i < numRows; ++i, ++itr) {
+        for (std::uint32_t i = 1; i < numRows; ++i, ++itr) {
             currRow[0] = i;
             auto jtr = std::ranges::begin(r2);
             for (size_t j = 1; j < numColumns; ++j, ++jtr) {
-                size_t cost = *itr == *jtr ? 0 : 1;
+                std::uint32_t cost = *itr == *jtr ? 0 : 1;
                 currRow[j] = std::min({
                     currRow[j - 1] + 1,   // Insertion
                     prevRow[j] + 1,       // Deletion
@@ -59,6 +80,7 @@ size_t levenshtein_distance(R1&& r1, R2&& r2, Cmp cmp = {}) {
             }
             std::swap(prevRow, currRow);
         }
+        UTL_IMPL_STACK_FREE(prevRow, std::uint32_t, 2 * numColumns);
         return prevRow[numColumns - 1];
     }
 }
