@@ -122,12 +122,13 @@ struct bktree;
 
 template <typename K, typename V>
 struct bktree_node_pair {
-    template <typename K_, typename V_>
+    template <typename K_ = K, typename V_ = V>
     bktree_node_pair(K_&& key, V_&& value):
         _key(std::forward<K_>(key)), _value(std::forward<V_>(value)) {}
 
     K const& key() const { return _key; }
 
+    V& value() { return _value; }
     V const& value() const { return _value; }
 
 private:
@@ -140,7 +141,7 @@ private:
 
 template <typename K>
 struct bktree_node_pair<K, Empty> {
-    template <typename K_>
+    template <typename K_ = K>
     bktree_node_pair(K_&& key, Empty): _key(std::forward<K_>(key)) {}
 
     K const& key() const { return _key; }
@@ -160,6 +161,63 @@ struct bktree: Traits {
     using node = bktree_node_pair<K, V>;
     using ValueType = std::conditional_t<IsMap, node, K>;
 
+    struct node_impl: node {
+        using node::node;
+        utl::small_vector<std::pair<std::uint32_t, std::uint32_t>, 3> children;
+    };
+
+    template <typename Node, typename Base>
+    class iter_impl {
+        friend class bktree;
+        using _base = Base;
+        Base _it;
+
+        iter_impl(Base it): _it(it) {}
+
+    public:
+        Node& operator*() const { return *_it; }
+
+        Node* operator->() const { return std::to_address(_it); }
+
+        iter_impl& operator++() {
+            ++_it;
+            return *this;
+        }
+
+        iter_impl operator++(int) {
+            auto tmp = *this;
+            ++*this;
+            return tmp;
+        }
+
+        bool operator==(iter_impl const&) const = default;
+    };
+
+    using iterator = iter_impl<node, typename utl::vector<node_impl>::iterator>;
+    using const_iterator =
+        iter_impl<node const, typename utl::vector<node_impl>::const_iterator>;
+
+    class insert_result {
+        friend class bktree;
+
+        bool _success;
+        bktree::iterator itr;
+
+        insert_result(bool success, bktree::iterator itr):
+            _success(success), itr(itr) {}
+
+    public:
+        bool success() const { return _success; }
+
+        explicit operator bool() const { return success(); }
+
+        node* operator->() const { return itr.operator->(); }
+
+        node& operator*() const { return *itr; }
+
+        bktree::iterator iterator() const { return itr; }
+    };
+
     bktree() = default;
 
     explicit bktree(Traits traits): Traits(std::move(traits)) {}
@@ -177,56 +235,60 @@ struct bktree: Traits {
     bktree(std::initializer_list<ValueType> ilist):
         bktree(ilist.begin(), ilist.end()) {}
 
-    struct node_impl: node {
-        using node::node;
-        utl::small_vector<std::pair<std::uint32_t, std::uint32_t>, 3> children;
-    };
-
-    template <typename K_, typename V_>
-    node const* insert_impl(K_&& key, V_&& value) {
+    template <bool Assign, typename K_, typename VFn>
+    insert_result insert_impl(K_&& key, VFn&& vfn) {
         if (_nodes.empty()) {
-            return &_nodes.emplace_back(std::forward<K_>(key),
-                                        std::forward<V_>(value));
+            _nodes.emplace_back(std::forward<K_>(key),
+                                std::invoke(std::forward<VFn>(vfn)));
+            return { true, _nodes.end() - 1 };
         }
-        auto* node = &_nodes.front();
+        auto node = _nodes.begin();
         while (true) {
             size_t dist = Traits::distance(key, node->key());
             if (dist == 0) {
-                if constexpr (IsMap) {
-                    Traits::update(node->_value, std::forward<V_>(value));
+                if constexpr (IsMap && Assign) {
+                    node->_value = std::invoke(std::forward<VFn>(vfn));
                 }
-                return node;
+                return { false, node };
             }
             auto [itr, success] =
                 internal::map_insert(node->children, dist, _nodes.size());
             if (success) {
-                return &_nodes.emplace_back(std::forward<K_>(key),
-                                            std::forward<V_>(value));
+                _nodes.emplace_back(std::forward<K_>(key),
+                                    std::invoke(std::forward<VFn>(vfn)));
+                return { true, _nodes.end() - 1 };
             }
             node = &_nodes[itr->second];
         }
     }
 
     template <std::convertible_to<ValueType> VT>
-    node const* insert_impl(VT&& value) {
+    insert_result insert_impl(VT&& value) {
         if constexpr (IsSet) {
-            return insert_impl(std::forward<VT>(value), Empty{});
+            return insert_impl<false>(std::forward<VT>(value),
+                                      [] { return Empty{}; });
         }
         else {
-            return insert_impl(std::forward<VT>(value).key(),
-                               std::forward<VT>(value).value());
+            return insert_impl<false>(std::forward<VT>(value).key(), [&] {
+                return std::forward<VT>(value).value();
+            });
         }
     }
 
-    template <lookup_compatible_with<K, Traits> K_, typename OutItr>
-    void lookup(K_&& key, std::size_t threshold, OutItr outItr) const {
-        if (_nodes.empty()) {
+    // Lookup
+    // Axes: { outItr, vector } x { const, mutable } => 4 overloads
+
+    template <typename Itr, typename Self, typename K_, typename OutItr>
+    static void lookup_impl(Self&& This, K_&& key, std::size_t threshold,
+                            OutItr outItr) {
+        if (This._nodes.empty()) {
             return;
         }
-        auto dfs = [&](auto& dfs, node_impl const* n) -> void {
+        using ItrImpl = typename Itr::_base;
+        auto dfs = [&](auto& dfs, ItrImpl n) -> void {
             size_t dist = Traits::distance(n->key(), key);
             if (dist <= threshold) {
-                *outItr++ = static_cast<node const*>(n);
+                *outItr++ = Itr(n);
             }
             size_t min = (dist > threshold) ? (dist - threshold) : 0;
             size_t max = dist + threshold;
@@ -237,27 +299,38 @@ struct bktree: Traits {
                 std::partition_point(begin, n->children.end(),
                                      [&](auto& p) { return !(max < p.first); });
             std::for_each(begin, end,
-                          [&](auto& p) { dfs(dfs, &_nodes[p.second]); });
+                          [&](auto& p) { dfs(dfs, &This._nodes[p.second]); });
         };
-        dfs(dfs, &_nodes.front());
+        dfs(dfs, This._nodes.begin());
     }
 
-    template <typename OutItr>
-    void lookup(K const& key, std::size_t threshold, OutItr outItr) const {
-        lookup<K const&, OutItr>(key, threshold, outItr);
+    template <lookup_compatible_with<K, Traits> K_ = K const&,
+              std::output_iterator<iterator> OutItr>
+    void lookup(K_&& key, std::size_t threshold, OutItr outItr) const {
+        lookup_impl<const_iterator>(*this, std::forward<K_>(key), threshold,
+                                    outItr);
     }
 
-    template <internal::lookup_compatible_with<K, Traits> K_,
-              typename ResultType = small_vector<node const*>>
+    template <lookup_compatible_with<K, Traits> K_ = K const&,
+              std::output_iterator<iterator> OutItr>
+    void lookup(K_&& key, std::size_t threshold, OutItr outItr) {
+        lookup_impl<iterator>(*this, std::forward<K_>(key), threshold, outItr);
+    }
+
+    template <typename ResultType = small_vector<const_iterator>,
+              lookup_compatible_with<K, Traits> K_ = K const&>
     ResultType lookup(K_&& key, std::size_t threshold) const {
         ResultType result;
         lookup(std::forward<K_>(key), threshold, std::back_inserter(result));
         return result;
     }
 
-    template <typename ResultType = small_vector<node const*>>
-    ResultType lookup(K const& key, std::size_t threshold) const {
-        return lookup<K const&, ResultType>(key, threshold);
+    template <typename ResultType = small_vector<iterator>,
+              lookup_compatible_with<K, Traits> K_ = K const&>
+    ResultType lookup(K_&& key, std::size_t threshold) {
+        ResultType result;
+        lookup(std::forward<K_>(key), threshold, std::back_inserter(result));
+        return result;
     }
 
     size_t size() const { return _nodes.size(); }
@@ -265,6 +338,11 @@ struct bktree: Traits {
     bool empty() const { return _nodes.empty(); }
 
     void clear() { _nodes.clear(); }
+
+    iterator begin() { return _nodes.begin(); }
+    const_iterator begin() const { return _nodes.begin(); }
+    iterator end() { return _nodes.end(); }
+    const_iterator end() const { return _nodes.end(); }
 
     utl::vector<node_impl> _nodes;
 };
@@ -284,10 +362,7 @@ struct metric_set_traits {
 
 /// Default implementation for the traits customization point of `metric_map`
 template <typename K, typename V>
-struct metric_map_traits: metric_set_traits<K> {
-    /// Called on the value when inserting an existing key into the map
-    static void update(V&, auto&&) {}
-};
+struct metric_map_traits: metric_set_traits<K> {};
 
 ///
 template <typename K, typename Traits = metric_set_traits<K>>
@@ -298,16 +373,23 @@ public:
     using key_type = K;
     using traits_type = Traits;
 
+    using impl::begin;
     using impl::clear;
     using impl::empty;
+    using impl::end;
     using impl::impl;
     using impl::lookup;
     using impl::size;
+    using typename impl::const_iterator;
+    using typename impl::insert_result;
+    using typename impl::iterator;
     using typename impl::node;
 
-    template <std::convertible_to<key_type> K_ = K>
-    node const* insert(K_&& key) {
-        return this->insert_impl(std::forward<K_>(key), internal::Empty{});
+    template <std::convertible_to<key_type> K_ = K const&>
+    insert_result insert(K_&& key) {
+        return this->template insert_impl<false>(std::forward<K_>(key), [] {
+            return internal::Empty{};
+        });
     }
 };
 
@@ -321,18 +403,46 @@ public:
     using value_type = V;
     using traits_type = Traits;
 
+    using impl::begin;
     using impl::clear;
     using impl::empty;
+    using impl::end;
     using impl::impl;
     using impl::lookup;
     using impl::size;
+    using typename impl::const_iterator;
+    using typename impl::insert_result;
+    using typename impl::iterator;
     using typename impl::node;
 
-    template <std::convertible_to<key_type> K_ = K,
-              std::convertible_to<value_type> V_ = V>
-    node const* insert(K_&& key, V_&& value) {
-        return this->insert_impl(std::forward<K_>(key),
-                                 std::forward<V_>(value));
+    template <std::convertible_to<key_type> K_ = K const&,
+              std::convertible_to<value_type> V_ = V const&>
+    insert_result insert(K_&& key, V_&& value) {
+        return this->template insert_impl<false>(std::forward<K_>(key), [&] {
+            return std::forward<V_>(value);
+        });
+    }
+
+    template <std::convertible_to<key_type> K_ = K const&, std::invocable VFn>
+    requires std::same_as<std::invoke_result_t<VFn&&>, V>
+    insert_result insert(K_&& key, VFn&& vfn) {
+        return this->template insert_impl<false>(std::forward<K_>(key),
+                                                 std::forward<VFn>(vfn));
+    }
+
+    template <std::convertible_to<key_type> K_ = K const&,
+              std::convertible_to<value_type> V_ = V const&>
+    insert_result update(K_&& key, V_&& value) {
+        return this->template insert_impl<true>(std::forward<K_>(key), [&] {
+            return std::forward<V_>(value);
+        });
+    }
+
+    template <std::convertible_to<key_type> K_ = K const&, std::invocable VFn>
+    requires std::same_as<std::invoke_result_t<VFn&&>, V>
+    insert_result update(K_&& key, VFn&& vfn) {
+        return this->template insert_impl<true>(std::forward<K_>(key),
+                                                std::forward<VFn>(vfn));
     }
 };
 
