@@ -47,19 +47,19 @@ TEST_CASE("metric_map 1", "[metric_map]") {
     // Test 5: Check distance threshold
     tree.insert("grapefruit");
     results = tree.lookup("grapefruyd",
-                          2); // Should return "grape" within distance of 2
+                          2); // Should return "grapefruit" within distance of 2
     REQUIRE(results.size() == 1);
     CHECK(results[0]->key() == "grapefruit");
 
     // Test 6: Verify that lookup returns correct nodes with varying thresholds
     tree.insert("mango");
     results =
-        tree.lookup("mango", 1); // Looking for "mango" with a threshold of 1
+        tree.lookup("manga", 1); // Looking for "manga" with a threshold of 1
     REQUIRE(results.size() == 1);
     CHECK(results[0]->key() == "mango");
 
     // Test 7: Lookup with a higher threshold to include more nodes
-    results = tree.lookup("mang", 1); // Should return "mango"
+    results = tree.lookup("man", 2); // Should return "mango"
     REQUIRE(results.size() == 1);
     CHECK(results[0]->key() == "mango");
 }
