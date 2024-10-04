@@ -27,7 +27,7 @@ TEST_CASE("ipp aggregate init") {
 
 TEST_CASE("ipp") {
     SECTION("int") {
-        utl::ipp<int*, unsigned, 2> p = 3;
+        utl::ipp<int*, unsigned, 2> p(3);
         CHECK(p.pointer() == nullptr);
         CHECK(p.integer() == 3);
         p.set_integer(1);
@@ -40,7 +40,7 @@ TEST_CASE("ipp") {
     }
     SECTION("pointer constructor") {
         Object<8> obj;
-        utl::ipp<Object<8>*, unsigned, 3> p = &obj;
+        utl::ipp<Object<8>*, unsigned, 3> p(&obj);
         CHECK(p.pointer() == &obj);
         CHECK(p.integer() == 0);
     }

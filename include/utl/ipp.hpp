@@ -60,10 +60,10 @@ public:
     }
 
     /// Construct from a pointer and set the integer value to zero
-    constexpr ipp(pointer_type ptr): ipp(ptr, int_type{}) {}
+    constexpr explicit ipp(pointer_type ptr): ipp(ptr, int_type{}) {}
 
     /// Construct from an integer and set the pointer to null
-    constexpr ipp(int_type value): ipp(nullptr, value) {}
+    constexpr explicit ipp(int_type value): ipp(nullptr, value) {}
 
     /// Access the integer stored in the pair
     constexpr int_type integer() const {
