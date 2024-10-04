@@ -17,6 +17,7 @@ target_sources(utility
     __soa_generated.hpp
     __third_party/ankerl/unordered_dense.h
     __union.hpp
+    bktree.hpp
     bit.hpp
     common.hpp
     concepts.hpp
