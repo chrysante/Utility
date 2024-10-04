@@ -6,7 +6,6 @@ target_sources(
     LifetimeCounter.hpp
     TypeCompare.h
     __prime.t.cpp
-    bktree.t.cpp
     common.t.cpp
     concurrent_dispatch_queue.t.cpp
     dynamic_dispatch.t.cpp
@@ -28,6 +27,7 @@ target_sources(
     math.t.cpp
     memory_resource.t.cpp
     messenger.t.cpp
+    metric_table.t.cpp
     monotonic_buffer_resource.t.cpp
     pimpl.t.cpp
     pool_resource.t.cpp

@@ -17,7 +17,6 @@ target_sources(utility
     __soa_generated.hpp
     __third_party/ankerl/unordered_dense.h
     __union.hpp
-    bktree.hpp
     bit.hpp
     common.hpp
     concepts.hpp
@@ -43,6 +42,7 @@ target_sources(utility
     mdarray.hpp
     memory_resource.hpp
     messenger.hpp
+    metric_table.hpp
     overload.hpp
     pimpl.hpp
     queue.hpp
