@@ -41,9 +41,9 @@ struct streammanip {
         return utl::streammanip([args = std::tuple{ __strmanip_objwrapper{
                                      std::forward<Args>(args) }... },
                                  f = __f](std::ostream& ostream) {
-            std::apply(
-                [&](auto&... args) { std::invoke(f, ostream, args.obj...); },
-                args);
+            std::apply([&](auto&... args) {
+                std::invoke(f, ostream, args.obj...);
+            }, args);
         });
     }
 
@@ -66,6 +66,10 @@ struct vstreammanip: streammanip<std::function<void(std::ostream&, Args...)>> {
 
     template <typename F>
     vstreammanip(F&& f): __base(std::forward<F>(f)) {}
+
+    operator std::function<void(std::ostream&, Args...)> const&() const& {
+        return this->__f;
+    }
 };
 
 } // namespace utl
