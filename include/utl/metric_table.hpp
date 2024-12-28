@@ -327,7 +327,7 @@ struct bktree: Traits {
     }
 
     template <lookup_compatible_with<K, Traits> K_ = K const&,
-              std::output_iterator<iterator> OutItr>
+              std::output_iterator<const_iterator> OutItr>
     void lookup(K_&& key, std::size_t threshold, OutItr outItr) const {
         lookup_impl<const_iterator>(*this, std::forward<K_>(key), threshold,
                                     outItr);
@@ -347,7 +347,7 @@ struct bktree: Traits {
         return result;
     }
 
-    template <typename ResultType = small_vector<iterator>,
+    template <typename ResultType = small_vector<const_iterator>,
               lookup_compatible_with<K, Traits> K_ = K const&>
     ResultType lookup(K_&& key, std::size_t threshold) {
         ResultType result;
