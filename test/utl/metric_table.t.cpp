@@ -33,9 +33,10 @@ TEST_CASE("metric_map 1", "[metric_map]") {
 
     // Test 2: Insert another element and verify
     set.insert("banana");
-    results = set.lookup("banana", 0);
-    REQUIRE(results.size() == 1);
-    CHECK(*results[0] == "banana");
+    // Test const overload as well
+    auto const_results = std::as_const(set).lookup("banana", 0);
+    REQUIRE(const_results.size() == 1);
+    CHECK(*const_results[0] == "banana");
 
     // Test 3: Insert multiple elements with similar names
     set.insert("apply");

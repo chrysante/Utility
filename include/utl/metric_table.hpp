@@ -230,8 +230,9 @@ public:
 };
 
 /// `bktree` iterator for sets
-template <typename K, typename Node, typename Base>
-class bktree_iter<K, bktree_set_value_type, Node, Base>:
+template <typename K, typename V, typename Node, typename Base>
+requires std::same_as<std::remove_const_t<V>, bktree_set_value_type>
+class bktree_iter<K, V, Node, Base>:
     bktree_iter_base<bktree_iter<K, bktree_set_value_type, Node, Base>, Base> {
     template <typename, typename, typename>
     friend struct bktree;
@@ -267,13 +268,13 @@ struct bktree: Traits {
     using iterator =
         bktree_iter<K, V, node, typename utl::vector<node_impl>::iterator>;
     using const_iterator =
-        bktree_iter<node const, K const, V const,
+        bktree_iter<K const, V const, node const,
                     typename utl::vector<node_impl>::const_iterator>;
     using reverse_iterator =
         bktree_iter<K, V, node,
                     typename utl::vector<node_impl>::reverse_iterator>;
     using const_reverse_iterator =
-        bktree_iter<node const, K const, V const,
+        bktree_iter<K const, V const, node const,
                     typename utl::vector<node_impl>::const_reverse_iterator>;
 
     /// Wrapper around an iterator and a bool. `std::map`/`std::map` would use a
@@ -412,7 +413,7 @@ struct bktree: Traits {
         return result;
     }
 
-    template <typename ResultType = small_vector<const_iterator>,
+    template <typename ResultType = small_vector<iterator>,
               lookup_compatible_with<K, Traits> K_ = K const&>
     ResultType lookup(K_&& key, std::size_t threshold) {
         ResultType result;
