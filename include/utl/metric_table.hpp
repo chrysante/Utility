@@ -42,6 +42,8 @@ constexpr size_t arraySize(size_t count) {
          (std::free(ptr), (void)0) :                                           \
          (void)0)
 
+/// Computes the Levenshtein distance between two ranges.
+/// Useful for approximate string comparison.
 /// https://en.wikipedia.org/wiki/Levenshtein_distance
 template <std::ranges::sized_range R1, std::ranges::sized_range R2,
           typename Cmp = std::equal_to<>>
@@ -84,6 +86,10 @@ size_t levenshtein_distance(R1&& r1, R2&& r2, Cmp cmp = {}) {
         return prevRow[numColumns - 1];
     }
 }
+
+#undef UTL_IMPL_STACK_ALLOC_THRESHOLD
+#undef UTL_IMPL_STACK_ALLOC
+#undef UTL_IMPL_STACK_FREE
 
 template <typename CharT, std::ranges::sized_range R,
           typename Cmp = std::equal_to<>>
@@ -137,15 +143,17 @@ concept lookup_compatible_with =
     lookup_compatible_with_impl<Key1, Key2, Traits> &&
     lookup_compatible_with_impl<Key2, Key1, Traits>;
 
-struct Empty {};
+/// Empty tag type to specialize templates for sets
+struct bktree_set_value_type {};
 
 template <typename, typename, typename>
 struct bktree;
 
+/// `bktree` node for maps
 template <typename K, typename V>
-struct bktree_node_pair {
+struct bktree_node {
     template <typename K_ = K, typename V_ = V>
-    bktree_node_pair(K_&& key, V_&& value):
+    bktree_node(K_&& key, V_&& value):
         _key(std::forward<K_>(key)), _value(std::forward<V_>(value)) {}
 
     K const& key() const { return _key; }
@@ -161,10 +169,11 @@ private:
     V _value;
 };
 
+/// `bktree` node for sets
 template <typename K>
-struct bktree_node_pair<K, Empty> {
+struct bktree_node<K, bktree_set_value_type> {
     template <typename K_ = K>
-    bktree_node_pair(K_&& key, Empty): _key(std::forward<K_>(key)) {}
+    bktree_node(K_&& key, bktree_set_value_type): _key(std::forward<K_>(key)) {}
 
     K const& key() const { return _key; }
 
@@ -172,15 +181,82 @@ private:
     template <typename, typename, typename>
     friend struct bktree;
 
+    template <typename, typename, typename, typename>
+    friend class bktree_iter;
+
     K _key;
 };
 
+/// Common behaviour of `bktree` iterator
+template <typename Derived, typename Base>
+struct bktree_iter_base {
+    using _base = Base;
+
+    Base _it;
+
+    bktree_iter_base(Base it): _it(it) {}
+
+    Derived& operator++() {
+        ++_it;
+        return static_cast<Derived&>(*this);
+    }
+
+    Derived operator++(int) {
+        auto tmp = static_cast<Derived const&>(*this);
+        ++*this;
+        return tmp;
+    }
+
+    bool operator==(bktree_iter_base const&) const = default;
+};
+
+/// `bktree` iterator for maps
+template <typename K, typename V, typename Node, typename Base>
+class bktree_iter: bktree_iter_base<bktree_iter<K, V, Node, Base>, Base> {
+    template <typename, typename, typename>
+    friend struct bktree;
+
+    using base_class = bktree_iter_base<bktree_iter<K, V, Node, Base>, Base>;
+
+    using base_class::base_class;
+
+public:
+    Node& operator*() const { return *this->_it; }
+
+    Node* operator->() const { return std::to_address(this->_it); }
+
+    using base_class::operator++;
+    bool operator==(bktree_iter const&) const = default;
+};
+
+/// `bktree` iterator for sets
+template <typename K, typename Node, typename Base>
+class bktree_iter<K, bktree_set_value_type, Node, Base>:
+    bktree_iter_base<bktree_iter<K, bktree_set_value_type, Node, Base>, Base> {
+    template <typename, typename, typename>
+    friend struct bktree;
+
+    using base_class =
+        bktree_iter_base<bktree_iter<K, bktree_set_value_type, Node, Base>,
+                         Base>;
+    using base_class::base_class;
+
+public:
+    K& operator*() const { return this->_it->_key; }
+
+    K* operator->() const { return &this->_it->_key; }
+
+    using base_class::operator++;
+    bool operator==(bktree_iter const&) const = default;
+};
+
+/// Implementation of both `metric_map` and `metric_set`
 template <typename K, typename V, typename Traits>
 struct bktree: Traits {
-    static constexpr bool IsSet = std::is_same_v<V, Empty>;
+    static constexpr bool IsSet = std::is_same_v<V, bktree_set_value_type>;
     static constexpr bool IsMap = !IsSet;
 
-    using node = bktree_node_pair<K, V>;
+    using node = bktree_node<K, V>;
     using ValueType = std::conditional_t<IsMap, node, K>;
 
     struct node_impl: node {
@@ -188,37 +264,21 @@ struct bktree: Traits {
         utl::small_vector<std::pair<std::uint32_t, std::uint32_t>, 3> children;
     };
 
-    template <typename Node, typename Base>
-    class iter_impl {
-        friend class bktree;
-        using _base = Base;
-        Base _it;
-
-        iter_impl(Base it): _it(it) {}
-
-    public:
-        Node& operator*() const { return *_it; }
-
-        Node* operator->() const { return std::to_address(_it); }
-
-        iter_impl& operator++() {
-            ++_it;
-            return *this;
-        }
-
-        iter_impl operator++(int) {
-            auto tmp = *this;
-            ++*this;
-            return tmp;
-        }
-
-        bool operator==(iter_impl const&) const = default;
-    };
-
-    using iterator = iter_impl<node, typename utl::vector<node_impl>::iterator>;
+    using iterator =
+        bktree_iter<K, V, node, typename utl::vector<node_impl>::iterator>;
     using const_iterator =
-        iter_impl<node const, typename utl::vector<node_impl>::const_iterator>;
+        bktree_iter<node const, K const, V const,
+                    typename utl::vector<node_impl>::const_iterator>;
+    using reverse_iterator =
+        bktree_iter<K, V, node,
+                    typename utl::vector<node_impl>::reverse_iterator>;
+    using const_reverse_iterator =
+        bktree_iter<node const, K const, V const,
+                    typename utl::vector<node_impl>::const_reverse_iterator>;
 
+    /// Wrapper around an iterator and a bool. `std::map`/`std::map` would use a
+    /// `std::pair<iterator, bool>` for this, for user convenience we provide a
+    /// class with a pretty interface
     class insert_result {
         friend class bktree;
 
@@ -229,14 +289,19 @@ struct bktree: Traits {
             _success(success), itr(itr) {}
 
     public:
+        /// \Returns true if the insertion was successful
         bool success() const { return _success; }
 
+        /// \Returns `success()`
         explicit operator bool() const { return success(); }
 
+        /// Dereferences the underlying iterator
         node* operator->() const { return itr.operator->(); }
 
+        /// Dereferences the underlying iterator
         node& operator*() const { return *itr; }
 
+        /// \Returns the underlying iterator
         bktree::iterator iterator() const { return itr; }
     };
 
@@ -288,7 +353,7 @@ struct bktree: Traits {
     insert_result insert_impl(VT&& value) {
         if constexpr (IsSet) {
             return insert_impl<false>(std::forward<VT>(value),
-                                      [] { return Empty{}; });
+                                      [] { return bktree_set_value_type{}; });
         }
         else {
             return insert_impl<false>(std::forward<VT>(value).key(), [&] {
@@ -363,8 +428,19 @@ struct bktree: Traits {
 
     iterator begin() { return _nodes.begin(); }
     const_iterator begin() const { return _nodes.begin(); }
+    const_iterator cbegin() const { return _nodes.cbegin(); }
+
     iterator end() { return _nodes.end(); }
     const_iterator end() const { return _nodes.end(); }
+    const_iterator cend() const { return _nodes.cend(); }
+
+    reverse_iterator rbegin() { return _nodes.rbegin(); }
+    const_reverse_iterator rbegin() const { return _nodes.rbegin(); }
+    const_reverse_iterator crbegin() const { return _nodes.crbegin(); }
+
+    reverse_iterator rend() { return _nodes.rend(); }
+    const_reverse_iterator rend() const { return _nodes.rend(); }
+    const_reverse_iterator crend() const { return _nodes.crend(); }
 
     utl::vector<node_impl> _nodes;
 };
@@ -388,30 +464,38 @@ struct metric_map_traits: metric_set_traits<K> {};
 
 ///
 template <typename K, typename Traits = metric_set_traits<K>>
-class metric_set: private internal::bktree<K, internal::Empty, Traits> {
-    using impl = internal::bktree<K, internal::Empty, Traits>;
+class metric_set:
+    private internal::bktree<K, internal::bktree_set_value_type, Traits> {
+    using impl = internal::bktree<K, internal::bktree_set_value_type, Traits>;
 
 public:
     using key_type = K;
+    using value_type = K;
     using traits_type = Traits;
 
     using impl::begin;
     using impl::clear;
+    using impl::crbegin;
+    using impl::crend;
     using impl::empty;
     using impl::end;
     using impl::impl;
     using impl::lookup;
+    using impl::rbegin;
+    using impl::rend;
     using impl::size;
     using typename impl::const_iterator;
+    using typename impl::const_reverse_iterator;
     using typename impl::insert_result;
     using typename impl::iterator;
     using typename impl::node;
+    using typename impl::reverse_iterator;
 
     template <typename K_ = K const&>
     requires std::constructible_from<K, K_>
     insert_result insert(K_&& key) {
         return this->template insert_impl<false>(std::forward<K_>(key), [] {
-            return internal::Empty{};
+            return internal::bktree_set_value_type{};
         });
     }
 };
@@ -424,30 +508,37 @@ class metric_map: private internal::bktree<K, V, Traits> {
 public:
     using key_type = K;
     using value_type = V;
+
     using traits_type = Traits;
 
     using impl::begin;
+    using impl::cbegin;
     using impl::clear;
+    using impl::crbegin;
+    using impl::crend;
     using impl::empty;
     using impl::end;
     using impl::impl;
     using impl::lookup;
+    using impl::rend;
     using impl::size;
     using typename impl::const_iterator;
+    using typename impl::const_reverse_iterator;
     using typename impl::insert_result;
     using typename impl::iterator;
     using typename impl::node;
+    using typename impl::reverse_iterator;
 
-    template <typename K_ = K const&,
-              std::convertible_to<value_type> V_ = V const&>
+    template <typename K_ = K&&, std::convertible_to<value_type> V_ = V &&>
     requires std::constructible_from<K, K_>
     insert_result insert(K_&& key, V_&& value) {
-        return this->template insert_impl<false>(std::forward<K_>(key), [&] {
+        return this->template insert_impl<false>(std::forward<K_>(key),
+                                                 [&]() -> decltype(auto) {
             return std::forward<V_>(value);
         });
     }
 
-    template <typename K_ = K const&, std::invocable VFn>
+    template <typename K_ = K&&, std::invocable VFn>
     requires std::same_as<std::invoke_result_t<VFn&&>, V> &&
              std::constructible_from<K, K_>
     insert_result insert(K_&& key, VFn&& vfn) {
@@ -455,11 +546,11 @@ public:
                                                  std::forward<VFn>(vfn));
     }
 
-    template <typename K_ = K const&,
-              std::convertible_to<value_type> V_ = V const&>
+    template <typename K_ = K&&, std::convertible_to<value_type> V_ = V &&>
     requires std::constructible_from<K, K_>
     insert_result update(K_&& key, V_&& value) {
-        return this->template insert_impl<true>(std::forward<K_>(key), [&] {
+        return this->template insert_impl<true>(std::forward<K_>(key),
+                                                [&]() -> decltype(auto) {
             return std::forward<V_>(value);
         });
     }
@@ -472,7 +563,7 @@ public:
                                                 std::forward<VFn>(vfn));
     }
 
-    template <typename K_ = K const&>
+    template <typename K_ = K&&>
     requires std::constructible_from<K, K_>
     value_type& operator[](K_&& key) {
         return insert(std::forward<K_>(key), [] { return V(); })->value();

@@ -1,5 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 
+#include <unordered_set>
+
+#include <utl/callback_iterator.hpp>
 #include <utl/metric_table.hpp>
 
 TEST_CASE("Levenshtein distance", "[metric_map]") {
@@ -26,13 +29,13 @@ TEST_CASE("metric_map 1", "[metric_map]") {
     set.insert("apple");
     auto results = set.lookup((char const*)"apple", 0);
     REQUIRE(results.size() == 1);
-    CHECK(results[0]->key() == "apple");
+    CHECK(*results[0] == "apple");
 
     // Test 2: Insert another element and verify
     set.insert("banana");
     results = set.lookup("banana", 0);
     REQUIRE(results.size() == 1);
-    CHECK(results[0]->key() == "banana");
+    CHECK(*results[0] == "banana");
 
     // Test 3: Insert multiple elements with similar names
     set.insert("apply");
@@ -49,19 +52,19 @@ TEST_CASE("metric_map 1", "[metric_map]") {
     results = set.lookup("grapefruyd",
                          2); // Should return "grapefruit" within distance of 2
     REQUIRE(results.size() == 1);
-    CHECK(results[0]->key() == "grapefruit");
+    CHECK(*results[0] == "grapefruit");
 
     // Test 6: Verify that lookup returns correct nodes with varying thresholds
     set.insert("mango");
     results =
         set.lookup("manga", 1); // Looking for "manga" with a threshold of 1
     REQUIRE(results.size() == 1);
-    CHECK(results[0]->key() == "mango");
+    CHECK(*results[0] == "mango");
 
     // Test 7: Lookup with a higher threshold to include more nodes
     results = set.lookup("man", 2); // Should return "mango"
     REQUIRE(results.size() == 1);
-    CHECK(results[0]->key() == "mango");
+    CHECK(*results[0] == "mango");
 }
 
 TEST_CASE("metric_map 2", "[metric_map]") {
@@ -158,11 +161,11 @@ TEST_CASE("BK-tree Hamming Distance Metric Set - Insert and Lookup",
         // Exact match for 3
         auto result = set.lookup(3, 0);
         REQUIRE(result.size() == 1);
-        CHECK(result[0]->key() == 3);
+        CHECK(*result[0] == 3);
         // Exact match for 15
         result = set.lookup(15, 0);
         REQUIRE(result.size() == 1);
-        CHECK(result[0]->key() == 15);
+        CHECK(*result[0] == 15);
     }
     SECTION("Hamming distance within threshold") {
         // Numbers with at most 2 bit difference
@@ -245,11 +248,11 @@ TEST_CASE("BK-tree Manhattan Distance Metric Set - Insert and Lookup",
         // Exact match for (0,0)
         auto result = set.lookup({ 0, 0 }, 0);
         REQUIRE(result.size() == 1);
-        REQUIRE(result[0]->key() == std::make_pair(0, 0));
+        REQUIRE(*result[0] == std::make_pair(0, 0));
         // Exact match for (5,5)
         result = set.lookup({ 5, 5 }, 0);
         REQUIRE(result.size() == 1);
-        REQUIRE(result[0]->key() == std::make_pair(5, 5));
+        REQUIRE(*result[0] == std::make_pair(5, 5));
     }
     SECTION("Manhattan distance within threshold") {
         // Points within Manhattan distance of 5 from (0,0)
@@ -319,8 +322,23 @@ TEST_CASE("BKTree lookup extreme", "[bktree]") {
     // Check with zero threshold (should find only the exact match)
     auto exact_match = set.lookup("best", 0);
     REQUIRE(exact_match.size() == 1);
-    CHECK(exact_match.front()->key() == "best");
+    CHECK(*exact_match.front() == "best");
     // Check with threshold of one (should find everything)
     auto all_matches = set.lookup("best", 1);
     CHECK(all_matches.size() == 4); // All strings should be found
+}
+
+TEST_CASE("lookup - callback_iterator", "[metric_map]") {
+    utl::metric_set<std::string> map;
+
+    map.insert("apple");
+    map.insert("aple");
+    map.insert("maple");
+
+    std::unordered_set<std::string_view> results;
+    map.lookup("apple", 1,
+               utl::callback_iterator([&](auto itr) { results.insert(*itr); }));
+    REQUIRE(results.size() == 2);
+    CHECK(results.contains("apple"));
+    CHECK(results.contains("aple"));
 }
