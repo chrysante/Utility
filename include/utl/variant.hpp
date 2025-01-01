@@ -582,7 +582,8 @@ public:
 
     constexpr void
     swap(variant& rhs) noexcept(((std::is_nothrow_move_constructible_v<Types> &&
-                                  std::is_nothrow_swappable_v<Types>)&&...)) {
+                                  std::is_nothrow_swappable_v<Types>) &&
+                                 ...)) {
         if (__index == rhs.__index) {
             __visit_with_index(__index,
                                [&]<std::size_t I>(
@@ -591,15 +592,13 @@ public:
             });
         }
         else {
-            utl::visit(
-                []<typename T, typename U>(T& lhs, U& rhs) {
+            utl::visit([]<typename T, typename U>(T& lhs, U& rhs) {
                 auto tmp = std::move(lhs);
                 std::destroy_at(&lhs);
                 std::construct_at(reinterpret_cast<U*>(&lhs), std::move(rhs));
                 std::destroy_at(&rhs);
                 std::construct_at(reinterpret_cast<T*>(&rhs), std::move(tmp));
-            },
-                *this, rhs);
+            }, *this, rhs);
             std::swap(__index, rhs.__index);
         }
     }
@@ -728,13 +727,11 @@ public:
             });
         }
         else {
-            utl::visit(
-                [&]<typename Rhs>(auto& value, Rhs&& r) {
+            utl::visit([&]<typename Rhs>(auto& value, Rhs&& r) {
                 std::destroy_at(&value);
                 std::construct_at(reinterpret_cast<std::decay_t<Rhs>*>(&value),
                                   std::forward<Rhs>(r));
-            },
-                *this, std::forward<V>(rhs));
+            }, *this, std::forward<V>(rhs));
             __index = rhs.__index;
         }
         return *this;
@@ -756,10 +753,9 @@ public:
                   offsets[self.__index]));
         }(std::make_index_sequence<__count>{});
 #else  // UTL_HAS_COMPILE_TIME_BASE_OFFSET
-        return utl::
-            visit([]<typename T>(T&& value)
-                      -> decltype(auto) { return static_cast<Base>(value); },
-                  std::forward<Self>(self));
+        return utl::visit([]<typename T>(T&& value) -> decltype(auto) {
+            return static_cast<Base>(value);
+        }, std::forward<Self>(self));
 #endif // UTL_HAS_COMPILE_TIME_BASE_OFFSET
     }
 
@@ -772,8 +768,8 @@ public:
             UTL_WITH_INDEX_SEQUENCE((I, __count), {
                 return (
                     (compile_time_base_offset<raw_base, __type_at_index<0>> ==
-                     compile_time_base_offset<raw_base,
-                                              __type_at_index<I>>)&&...);
+                     compile_time_base_offset<raw_base, __type_at_index<I>>) &&
+                    ...);
             });
         if constexpr (all_offsets_equal) {
             constexpr std::size_t offset =
@@ -823,16 +819,14 @@ constexpr bool operator==(variant<T...> const& lhs, variant<T...> const& rhs) {
     if (lhs.index() != rhs.index()) {
         return false;
     }
-    return visit(
-        [](auto const& l, auto const& r) -> bool {
+    return visit([](auto const& l, auto const& r) -> bool {
         if constexpr (std::is_same_v<decltype(l), decltype(r)>) {
             return l == r;
         }
         else {
             __utl_unreachable();
         }
-    },
-        lhs, rhs);
+    }, lhs, rhs);
 }
 
 template <typename Base, typename... Types>

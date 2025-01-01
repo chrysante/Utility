@@ -336,9 +336,9 @@ public:
 
     // (1)
     void assign(size_type count, value_type const& value) {
-        __assign_element_wise_f([&, i = size_type(
-                                        0)]() mutable { return i != count; },
-                                [&]() -> decltype(auto) { return value; });
+        auto While = [&, i = size_type(0)]() mutable { return i != count; };
+        auto value_fn = [&]() -> decltype(auto) { return value; };
+        __assign_element_wise_f(While, value_fn);
     }
 
     // (2)
@@ -669,15 +669,15 @@ public:
 
     iterator __insert_impl(const_iterator cpos, size_type count,
                            std::invocable auto&& get_nodes) {
-        return __insert_impl(
-            cpos, [&, i = size_type(0)]() mutable { return i++ < count; },
-            UTL_FORWARD(get_nodes));
+        return __insert_impl(cpos, [&, i = size_type(0)]() mutable {
+            return i++ < count;
+        }, UTL_FORWARD(get_nodes));
     }
 
     iterator __insert_impl_itr(const_iterator cpos, auto first, auto last) {
-        return __insert_impl(
-            cpos, [&] { return first != last; },
-            [&] { return __construct(__allocate(), *first++); });
+        return __insert_impl(cpos, [&] { return first != last; }, [&] {
+            return __construct(__allocate(), *first++);
+        });
     }
 
     iterator __insert_impl(const_iterator cpos,

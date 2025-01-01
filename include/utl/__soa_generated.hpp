@@ -9,7 +9,7 @@ _UTL_SYSTEM_HEADER_
 
 namespace utl {
 auto constexpr __soa_identity = [](auto&& x) -> decltype(auto) { return x; };
-}
+} // namespace utl
 
 #define _UTL_SOA_MEMBER_TYPE_IMPL(a, b) a
 #define _UTL_SOA_MEMBER_NAME_IMPL(a, b) b

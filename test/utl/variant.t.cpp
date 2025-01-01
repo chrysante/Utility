@@ -106,11 +106,9 @@ TEST_CASE("variant visit helper", "[variant]") {
           T<utl::variant<char, std::nullptr_t>>);
     CHECK(VisitHelper::__variant_count == 3);
     UTL_WITH_INDEX_SEQUENCE((I, 24), {
-        (
-            [&] {
+        ([&] {
             CHECK(T<VisitHelper::__deduced_return_type_at<I>> == T<int const&>);
-        }(),
-            ...);
+        }(), ...);
     });
     CHECK(T<VisitHelper::__common_return_type> == T<int const&>);
     auto const size = VisitHelper::__variant_sizes;
@@ -136,24 +134,23 @@ TEST_CASE("variant visit", "[variant]") {
     utl::variant<int, char> v(std::in_place_type<int>, 1);
     utl::variant<float, std::nullptr_t> w(std::in_place_type<std::nullptr_t>,
                                           nullptr);
-    auto result = utl::visit(utl::overload{ [&](auto...) { return 0; },
-                                            [&](tag<2>, int, std::nullptr_t) {
-        return 1;
-    } },
+    auto result = utl::visit(utl::overload{ [&](auto...) {
+        return 0;
+    }, [&](tag<2>, int, std::nullptr_t) { return 1; } },
                              u, v, w);
     CHECK(std::same_as<decltype(result), int>);
     CHECK(result == 1);
     // Test instantiation of visitation with visitor with different but similar
     // return types
-    auto d = utl::visit(utl::overload{
-                            [&](auto...) { return 0.0; },
-                            [&](tag<2>, int, std::nullptr_t) { return 1; } },
+    auto d = utl::visit(utl::overload{ [&](auto...) {
+        return 0.0;
+    }, [&](tag<2>, int, std::nullptr_t) { return 1; } },
                         u, v, w);
     CHECK(std::same_as<decltype(d), double>);
     // Test instantiation of void visitation with non void visitor
-    utl::visit<void>(utl::overload{
-                         [&](auto...) { return 0; },
-                         [&](tag<2>, int, std::nullptr_t) { return 1; } },
+    utl::visit<void>(utl::overload{ [&](auto...) {
+        return 0;
+    }, [&](tag<2>, int, std::nullptr_t) { return 1; } },
                      u, v, w);
 }
 

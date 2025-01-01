@@ -44,8 +44,8 @@ public:
     template <typename Duration = typename Clock::duration>
     typename Duration::rep elapsed_time() const {
         auto now = _now();
-        auto dur = _paused ? _prev_duration :
-                             _prev_duration + (now - _start_point);
+        auto dur =
+            _paused ? _prev_duration : _prev_duration + (now - _start_point);
         return std::chrono::duration_cast<Duration>(dur).count();
     }
 

@@ -49,14 +49,12 @@ struct __farray_base_impl<std::integer_sequence<std::size_t, AxisSizes...>,
     __flatten_index(std::array<std::size_t, __dim> index) {
         (((void)DimI, __utl_assert(index[DimI] < __axis_sizes[DimI])), ...);
         std::size_t result = 0;
-        (
-            [&] {
+        ([&] {
             result += index[DimI];
             if constexpr (DimI < __dim - 1) {
                 result *= __axis_sizes[DimI + 1];
             }
-        }(),
-            ...);
+        }(), ...);
         return result;
     }
 
@@ -64,8 +62,7 @@ struct __farray_base_impl<std::integer_sequence<std::size_t, AxisSizes...>,
     __expand_index(std::size_t flat_index) {
         __utl_assert(flat_index < (1 * ... * __axis_sizes[DimI]));
         std::array<std::size_t, __dim> result{};
-        (
-            [&] {
+        ([&] {
             std::size_t const m =
                 [&]<std::size_t... J>(std::index_sequence<J...>) {
                 std::size_t const I = DimI;
@@ -73,8 +70,7 @@ struct __farray_base_impl<std::integer_sequence<std::size_t, AxisSizes...>,
             }(std::make_index_sequence<__dim - 1 - DimI>{});
             result[DimI] = flat_index / m;
             flat_index -= result[DimI] * m;
-        }(),
-            ...);
+        }(), ...);
         return result;
     }
 

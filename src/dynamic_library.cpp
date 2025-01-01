@@ -12,8 +12,7 @@ static bool operator!(dynamic_load_mode mode) {
     return !static_cast<int>(mode);
 }
 
-dynamic_library::dynamic_library(std::string libpath,
-                                 dynamic_load_mode mode):
+dynamic_library::dynamic_library(std::string libpath, dynamic_load_mode mode):
     _path(libpath), _handle(nullptr), _mode(mode) {
     _handle = load_impl(libpath.c_str(), mode);
 }
@@ -65,9 +64,7 @@ void* dynamic_library::resolve(std::string_view name,
     if (result) {
         return result;
     }
-    if (char const* native = dlerror();
-        native && error) 
-    {
+    if (char const* native = dlerror(); native && error) {
         *error = native;
     }
     return nullptr;
@@ -127,14 +124,13 @@ void dynamic_library::clear_errors() {
 
 static void getErrorMessage(std::span<char> buffer) {
     DWORD error = GetLastError();
-    FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, nullptr, error,
-        0, buffer.data(), buffer.size(),
-                   nullptr);
+    FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, nullptr, error, 0, buffer.data(),
+                   buffer.size(), nullptr);
 }
 
 void* dynamic_library::resolve(std::string_view name,
                                std::string* error) const {
-    auto* addr = GetProcAddress((HMODULE)_handle, TEXT( name.data()));
+    auto* addr = GetProcAddress((HMODULE)_handle, TEXT(name.data()));
     if (addr) {
         return addr;
     }
@@ -185,7 +181,7 @@ void dynamic_library::destroy() noexcept {
 
 void dynamic_library::clear_errors() {}
 
-#else 
+#else
 
 #error Unsupported compiler
 

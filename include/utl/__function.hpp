@@ -485,8 +485,7 @@ private:
     template <typename F>
     static R staticInvokePtr(void const* obj, Args... args) {
         return static_cast<F*>(as_mutable(obj))
-            ->
-            operator()(std::forward<Args>(args)...);
+            ->operator()(std::forward<Args>(args)...);
     };
 
     template <typename = void>

@@ -27,7 +27,7 @@ TEST_CASE("Dynamic library", "[dynamic_library]") {
 #if defined(__GNUC__)
 __attribute__((visibility("default"))) extern "C" int
 #elif defined(_MSC_VER)
-extern "C" int __declspec(dllexport) __stdcall 
+extern "C" int __declspec(dllexport) __stdcall
 #else
 #error
 #endif

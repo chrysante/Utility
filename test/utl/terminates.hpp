@@ -34,9 +34,7 @@ bool terminates(std::chrono::duration<R, P> timeout,
     } context{ test_fn, false, false };
 
     pthread_t thread;
-    pthread_create(
-        &thread, nullptr,
-        [](void* ctx_ptr) -> void* {
+    pthread_create(&thread, nullptr, [](void* ctx_ptr) -> void* {
         Context& context = *(Context*)ctx_ptr;
 
         context.began = true;
@@ -46,8 +44,7 @@ bool terminates(std::chrono::duration<R, P> timeout,
         context.done = true;
 
         return nullptr;
-    },
-        &context);
+    }, &context);
 
     // wait for the thread to start to get more acurate behaviour for short
     // timeout durations

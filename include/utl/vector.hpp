@@ -158,9 +158,8 @@ struct vector {
     __utl_interface_export constexpr vector(
         std::size_t count, utl::invocable_r<value_type> auto&& f,
         allocator_type const& alloc = allocator_type()):
-        vector(
-            count, [this, &f](value_type* p) { __construct_at(p, f()); },
-            alloc) {}
+        vector(count, [this, &f](value_type* p) { __construct_at(p, f()); },
+               alloc) {}
 
     /// (1)
     __utl_interface_export constexpr vector() noexcept(
@@ -175,24 +174,20 @@ struct vector {
     __utl_interface_export constexpr vector(
         std::size_t count, value_type const& value,
         allocator_type const& alloc = allocator_type()):
-        vector(
-            count, [this, &value]() -> value_type const& { return value; },
-            alloc) {}
+        vector(count, [this, &value]() -> value_type const& { return value; },
+               alloc) {}
 
     /// (4)
     __utl_interface_export constexpr explicit vector(
         std::size_t count, allocator_type const& alloc = allocator_type()):
-        vector(
-            count, [this](value_type* p) { __construct_at(p); }, alloc) {}
+        vector(count, [this](value_type* p) { __construct_at(p); }, alloc) {}
 
     /// (4a)
     __utl_interface_export constexpr explicit vector(
         std::size_t count, utl::no_init_t,
         allocator_type const& alloc = allocator_type())
     requires(std::is_trivial_v<value_type>)
-        :
-        vector(
-            count, [](value_type*) {}, alloc) {}
+        : vector(count, [](value_type*) {}, alloc) {}
 
     /// (5)
     template <input_iterator_for<value_type> InputIt,
@@ -200,10 +195,9 @@ struct vector {
     __utl_interface_export __utl_always_inline constexpr vector(
         InputIt first, Sentinel last,
         allocator_type const& alloc = allocator_type()):
-        vector(
-            distance(first, last),
-            [this, first]() mutable -> decltype(auto) { return *first++; },
-            alloc) {}
+        vector(distance(first, last),
+               [this, first]() mutable -> decltype(auto) { return *first++; },
+               alloc) {}
 
     /// (6)
     __utl_interface_export constexpr vector(vector const& rhs)
@@ -216,12 +210,10 @@ struct vector {
                                             allocator_type const& alloc)
     requires(std::is_copy_constructible_v<value_type>)
         :
-        vector(
-            rhs.size(),
-            [this, i = rhs.begin()]() mutable -> value_type const& {
-        return *i++;
-    },
-            alloc) {}
+        vector(rhs.size(),
+               [this, i = rhs.begin()]() mutable -> value_type const& {
+                   return *i++;
+               }, alloc) {}
 
     /// (8)
     __utl_interface_export constexpr vector(vector&& rhs) noexcept(
@@ -259,12 +251,10 @@ struct vector {
         std::initializer_list<value_type> ilist, allocator_type const& alloc)
     requires(std::is_copy_constructible_v<value_type>)
         :
-        vector(
-            ilist.size(),
-            [this, i = ilist.begin()]() mutable -> value_type const& {
-        return *i++;
-    },
-            alloc) {}
+        vector(ilist.size(),
+               [this, i = ilist.begin()]() mutable -> value_type const& {
+                   return *i++;
+               }, alloc) {}
 
     /// (10a)
     __utl_interface_export constexpr vector(

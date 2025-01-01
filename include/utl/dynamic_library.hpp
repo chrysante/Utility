@@ -49,7 +49,7 @@ public:
 
     /// Construct and load the shared library at \p libpath with open mode
     /// \p mode
-    /// \Note \p libpath must be a null terminated utf8 string on both Windows 
+    /// \Note \p libpath must be a null terminated utf8 string on both Windows
     /// and Unix so we pass by `std::string`
     /// \p mode is ignored on Windows
     explicit dynamic_library(std::string libpath,

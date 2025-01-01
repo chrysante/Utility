@@ -183,7 +183,7 @@ TEST_CASE("Insert and erase", "[tinyptrset]") {
     auto movedSet = std::move(ptrSet); // Move
     // Should have retained the elements
     CHECK(movedSet.size() == copiedSet.size());
-    CHECK(ptrSet.empty());   // Original should be empty
+    CHECK(ptrSet.empty()); // Original should be empty
 }
 
 TEST_CASE("Assignment operators", "[tinyptrset]") {

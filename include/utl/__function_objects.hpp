@@ -70,14 +70,11 @@ struct minus_t {
     }
 } inline constexpr minus{};
 
-_UTL_FUNCTION_OBJECT_DEF(
-    logical_not, (auto const& x) const { return !x; });
+_UTL_FUNCTION_OBJECT_DEF(logical_not, (auto const& x) const { return !x; });
 
-_UTL_FUNCTION_OBJECT_DEF(
-    bitwise_not, (auto const& x) const { return ~x; });
+_UTL_FUNCTION_OBJECT_DEF(bitwise_not, (auto const& x) const { return ~x; });
 
-_UTL_FUNCTION_OBJECT_DEF(
-    negate, (auto const& x) const { return -x; });
+_UTL_FUNCTION_OBJECT_DEF(negate, (auto const& x) const { return -x; });
 
 _UTL_BIN_FUNCTION_OBJECT_DEF(multiplies, multiply, *, true);
 _UTL_BIN_FUNCTION_OBJECT_DEF(divides, divide, /, false);
@@ -144,117 +141,102 @@ __utl_nodiscard constexpr auto mod(std::floating_point auto f,
 }
 } // namespace __utl_function_objects_impl
 
-_UTL_FUNCTION_OBJECT_DEF(
-    abs, (auto const& x) const {
-        using ::std::abs;
-        return abs(x);
-    });
+_UTL_FUNCTION_OBJECT_DEF(abs, (auto const& x) const {
+    using ::std::abs;
+    return abs(x);
+});
 
-_UTL_FUNCTION_OBJECT_DEF(
-    sqrt, (auto const& x) const {
-        using ::std::sqrt;
-        return sqrt(x);
-    });
+_UTL_FUNCTION_OBJECT_DEF(sqrt, (auto const& x) const {
+    using ::std::sqrt;
+    return sqrt(x);
+});
 
-_UTL_FUNCTION_OBJECT_DEF(
-    signed_sqrt, (auto const& x) const {
-        using __utl_function_objects_impl::signed_sqrt;
-        return signed_sqrt(x);
-    });
+_UTL_FUNCTION_OBJECT_DEF(signed_sqrt, (auto const& x) const {
+    using __utl_function_objects_impl::signed_sqrt;
+    return signed_sqrt(x);
+});
 
-_UTL_FUNCTION_OBJECT_DEF(
-    signed_pow, (auto const& x, auto const& y) const {
-        using __utl_function_objects_impl::signed_pow;
-        return signed_pow(x, y);
-    });
+_UTL_FUNCTION_OBJECT_DEF(signed_pow, (auto const& x, auto const& y) const {
+    using __utl_function_objects_impl::signed_pow;
+    return signed_pow(x, y);
+});
 
-_UTL_FUNCTION_OBJECT_DEF(
-    exp, (auto const& x) const {
-        using ::std::exp;
-        return exp(x);
-    });
+_UTL_FUNCTION_OBJECT_DEF(exp, (auto const& x) const {
+    using ::std::exp;
+    return exp(x);
+});
 
-_UTL_FUNCTION_OBJECT_DEF(
-    min, (auto const& x, auto const& y) const {
-        using ::std::min;
-        return min(x, y);
-    });
-_UTL_FUNCTION_OBJECT_DEF(
-    max, (auto const& x, auto const& y) const {
-        using ::std::max;
-        return max(x, y);
-    });
+_UTL_FUNCTION_OBJECT_DEF(min, (auto const& x, auto const& y) const {
+    using ::std::min;
+    return min(x, y);
+});
+_UTL_FUNCTION_OBJECT_DEF(max, (auto const& x, auto const& y) const {
+    using ::std::max;
+    return max(x, y);
+});
 
-_UTL_FUNCTION_OBJECT_DEF(
-    screen_blend,
-    (auto const& x, auto const& y) const { return 1 - (1 - x) * (1 - y); });
+_UTL_FUNCTION_OBJECT_DEF(screen_blend, (auto const& x, auto const& y) const {
+    return 1 - (1 - x) * (1 - y);
+});
 
-_UTL_FUNCTION_OBJECT_DEF(
-    one_minus, (auto const& x) const { return 1 - x; });
+_UTL_FUNCTION_OBJECT_DEF(one_minus, (auto const& x) const { return 1 - x; });
 
-_UTL_FUNCTION_OBJECT_DEF(
-    ceil_divide, (auto const& x, auto const& y) const {
-        using __utl_function_objects_impl::ceil_divide;
-        return ceil_divide(x, y);
-    });
+_UTL_FUNCTION_OBJECT_DEF(ceil_divide, (auto const& x, auto const& y) const {
+    using __utl_function_objects_impl::ceil_divide;
+    return ceil_divide(x, y);
+});
 
-_UTL_FUNCTION_OBJECT_DEF(
-    ceil_divide_pow_two, (auto const& x, auto const& y) const {
-        using __utl_function_objects_impl::ceil_divide_pow_two;
-        return ceil_divide_pow_two(x, y);
-    });
+_UTL_FUNCTION_OBJECT_DEF(ceil_divide_pow_two, (auto const& x,
+                                               auto const& y) const {
+    using __utl_function_objects_impl::ceil_divide_pow_two;
+    return ceil_divide_pow_two(x, y);
+});
 
-_UTL_FUNCTION_OBJECT_DEF(
-    floor, (auto const& x) const {
-        using std::floor;
-        return floor(x);
-    });
+_UTL_FUNCTION_OBJECT_DEF(floor, (auto const& x) const {
+    using std::floor;
+    return floor(x);
+});
 
-_UTL_FUNCTION_OBJECT_DEF(
-    ceil, (auto const& x) const {
-        using std::ceil;
-        return ceil(x);
-    });
+_UTL_FUNCTION_OBJECT_DEF(ceil, (auto const& x) const {
+    using std::ceil;
+    return ceil(x);
+});
 
-_UTL_FUNCTION_OBJECT_DEF(
-    fract, (auto const& x) const {
-        using __utl_function_objects_impl::fract;
-        return fract(x);
-    });
+_UTL_FUNCTION_OBJECT_DEF(fract, (auto const& x) const {
+    using __utl_function_objects_impl::fract;
+    return fract(x);
+});
 
-_UTL_FUNCTION_OBJECT_DEF(
-    mod, (auto const& x, auto const& y) const {
-        using __utl_function_objects_impl::mod;
-        return mod(x, y);
-    });
+_UTL_FUNCTION_OBJECT_DEF(mod, (auto const& x, auto const& y) const {
+    using __utl_function_objects_impl::mod;
+    return mod(x, y);
+});
 
-_UTL_FUNCTION_OBJECT_DEF(
-    arithmetic_leftshift,
-    (auto const& x, auto const& y) const { return x << y; });
+_UTL_FUNCTION_OBJECT_DEF(arithmetic_leftshift, (auto const& x, auto const& y)
+                                                   const { return x << y; });
 
-_UTL_FUNCTION_OBJECT_DEF(
-    arithmetic_rightshift, (auto const& x, auto const& y) const {
-        using S = std::make_signed_t<std::remove_cvref_t<decltype(x)>>;
-        if (S(x) < 0 && y > 0)
-            return S(x) >> y | ~(~S(0) >> y);
-        else
-            return S(x) >> y;
-    });
+_UTL_FUNCTION_OBJECT_DEF(arithmetic_rightshift, (auto const& x,
+                                                 auto const& y) const {
+    using S = std::make_signed_t<std::remove_cvref_t<decltype(x)>>;
+    if (S(x) < 0 && y > 0)
+        return S(x) >> y | ~(~S(0) >> y);
+    else
+        return S(x) >> y;
+});
 
-_UTL_FUNCTION_OBJECT_DEF(
-    is_positive, (auto const& x) const { return x > 0; });
-_UTL_FUNCTION_OBJECT_DEF(
-    is_non_positive, (auto const& x) const { return x <= 0; });
-_UTL_FUNCTION_OBJECT_DEF(
-    is_negative, (auto const& x) const { return x < 0; });
-_UTL_FUNCTION_OBJECT_DEF(
-    is_non_negative, (auto const& x) const { return x >= 0; });
+_UTL_FUNCTION_OBJECT_DEF(is_positive, (auto const& x) const { return x > 0; });
+_UTL_FUNCTION_OBJECT_DEF(is_non_positive,
+                         (auto const& x) const { return x <= 0; });
+_UTL_FUNCTION_OBJECT_DEF(is_negative, (auto const& x) const { return x < 0; });
+_UTL_FUNCTION_OBJECT_DEF(is_non_negative,
+                         (auto const& x) const { return x >= 0; });
 
-_UTL_FUNCTION_OBJECT_DEF(
-    identity, (auto&& x) const->decltype(auto) { return UTL_FORWARD(x); });
+_UTL_FUNCTION_OBJECT_DEF(identity, (auto&& x) const->decltype(auto) {
+    return UTL_FORWARD(x);
+});
 
-_UTL_FUNCTION_OBJECT_DEF(
-    deref, (auto&& x) const->decltype(auto) { return *x; });
+_UTL_FUNCTION_OBJECT_DEF(deref,
+                         (auto&& x) const->decltype(auto) { return *x; });
 
 _UTL_FUNCTION_OBJECT_DEF(noop, (auto&&...) const {
 

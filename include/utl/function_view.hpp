@@ -44,7 +44,7 @@ private:
     constexpr static R __static_invoke(void const* state, Args... args) {
         if constexpr (std::is_same_v<R, std::invoke_result_t<F, Args...>>) {
             if constexpr (std::is_function_v<F>) {
-                return std::invoke((F*)state, std::forward<Args>(args)...);            
+                return std::invoke((F*)state, std::forward<Args>(args)...);
             }
             else {
                 return std::invoke(*(F*)state, std::forward<Args>(args)...);
@@ -52,10 +52,12 @@ private:
         }
         else {
             if constexpr (std::is_function_v<F>) {
-                return static_cast<R>(std::invoke((F*)state, std::forward<Args>(args)...));
+                return static_cast<R>(
+                    std::invoke((F*)state, std::forward<Args>(args)...));
             }
             else {
-                return static_cast<R>(std::invoke(*(F*)state, std::forward<Args>(args)...));
+                return static_cast<R>(
+                    std::invoke(*(F*)state, std::forward<Args>(args)...));
             }
         }
     }

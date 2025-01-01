@@ -413,8 +413,7 @@ public:
         return 1;
     }
 
-    void shrink_to_fit() { /* no-op */
-    }
+    void shrink_to_fit() { /* no-op */ }
 
     /// # Modifiers
 
