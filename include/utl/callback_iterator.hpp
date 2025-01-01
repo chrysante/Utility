@@ -4,6 +4,7 @@
 
 namespace utl {
 
+/// Output iterator that calls a function with the assigned value on assignment.
 template <typename F>
 class callback_iterator {
 public:
@@ -32,6 +33,8 @@ public:
     callback_iterator(callback_iterator const&) = default;
     callback_iterator(callback_iterator&&) = default;
 
+    // Workaround for the fact, that capturing lambdas are not assignable. We
+    // simply destroy and reconstruct non-assignable callback types
     callback_iterator& operator=(callback_iterator const&)
     requires std::is_copy_assignable_v<F>
     = default;
