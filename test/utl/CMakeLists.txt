@@ -6,6 +6,7 @@ target_sources(
     LifetimeCounter.hpp
     TypeCompare.h
     __prime.t.cpp
+    callback_iterator.t.cpp
     common.t.cpp
     concurrent_dispatch_queue.t.cpp
     dynamic_dispatch.t.cpp

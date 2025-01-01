@@ -18,6 +18,7 @@ target_sources(utility
     __third_party/ankerl/unordered_dense.h
     __union.hpp
     bit.hpp
+    callback_iterator.hpp
     common.hpp
     concepts.hpp
     dispatch/concurrent_dispatch_queue.hpp
