@@ -21,51 +21,68 @@ struct derived_tag_t {
 template <typename T>
 constexpr derived_tag_t<T> derived_tag = derived_tag_t<T>{};
 
+/// Pimpl without memory indirection. \p Size and \p Alignment must be specified
+/// manually because this class is meant to be instantiated with an incomplete
+/// \p Impl type.
+/// The canonical use case is a class like `Insulated` below,
+/// where the special member functions are defined out-of-line after definition
+/// of `Insulated::Impl`.
+///  The insulation doesn't allow to use `requires` clauses
+/// in the special member functions of `local_pimpl`, because they are checked
+/// on instantiation of the class, before instantiation of the special member
+/// functions themselves. That's why the checks are implemented as
+/// `static_assert`'s.
+///
+///     struct Insulated {
+///         Insulated();
+///         Insulated(Insulated const&);
+///         Insulated& operator=(Insulated const&);
+///         ~Insulated();
+///
+///         struct Impl;
+///         utl::local_pimpl<Impl> impl;
+///     };
+///
+/// \Note For move-only types the copy operations have to be explicitly deleted.
 template <typename Impl, std::size_t Size,
           std::size_t Alignment = alignof(std::max_align_t)>
 class local_pimpl {
 public:
-    local_pimpl()
-    requires(std::is_default_constructible_v<Impl>)
-    {
+    local_pimpl() {
+        static_assert(std::is_default_constructible_v<Impl>);
         _construct();
     }
 
     template <typename... Args>
-    local_pimpl(Args&&... args)
-    requires(std::is_constructible_v<Impl, Args...>)
-    {
+    local_pimpl(Args&&... args) {
+        static_assert(std::is_constructible_v<Impl, Args...>);
         _construct(UTL_FORWARD(args)...);
     }
 
     template <std::derived_from<Impl> Derived, typename... Args>
-    requires(std::is_constructible_v<Derived, Args...>)
     local_pimpl(derived_tag_t<Derived>, Args&&... args) {
+        static_assert(std::is_constructible_v<Derived, Args...>);
         _construct<Derived>(UTL_FORWARD(args)...);
     }
 
-    local_pimpl(local_pimpl const& rhs)
-    requires(std::is_copy_constructible_v<Impl>)
-    {
+    local_pimpl(local_pimpl const& rhs) {
+        static_assert(std::is_copy_constructible_v<Impl>);
         _construct(*rhs);
     }
 
-    local_pimpl(local_pimpl&& rhs) noexcept
-    requires(std::is_move_constructible_v<Impl>)
-    {
+    local_pimpl(local_pimpl&& rhs) noexcept {
+        static_assert(std::is_move_constructible_v<Impl>);
         _construct(std::move(*rhs));
     }
 
-    local_pimpl& operator=(local_pimpl const& rhs)
-    requires(std::is_copy_assignable_v<Impl>)
-    {
+    local_pimpl& operator=(local_pimpl const& rhs) {
+        static_assert(std::is_copy_assignable_v<Impl>);
         pointer()->operator=(*rhs);
         return *this;
     }
 
-    local_pimpl& operator=(local_pimpl&& rhs) noexcept
-    requires(std::is_move_assignable_v<Impl>)
-    {
+    local_pimpl& operator=(local_pimpl&& rhs) noexcept {
+        static_assert(std::is_move_assignable_v<Impl>);
         pointer()->operator=(std::move(*rhs));
         return *this;
     }
@@ -74,14 +91,6 @@ public:
         static_assert(sizeof(Impl) <= Size);
         static_assert(alignof(Impl) <= Alignment);
         std::destroy_at(pointer());
-    }
-
-    local_pimpl(no_init_t) noexcept {}
-
-    template <std::derived_from<Impl> Derived = Impl, typename... Args>
-    requires(std::is_constructible_v<Derived, Args...>)
-    void construct(Args&&... args) {
-        _construct<Derived>(UTL_FORWARD(args)...);
     }
 
     Impl* pointer() noexcept {

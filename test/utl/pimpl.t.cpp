@@ -24,3 +24,32 @@ TEST_CASE("local_pimpl") {
     p->f(i);
     CHECK(i == 1);
 }
+
+namespace {
+
+// We declare these classes here and leave them undefined to test that
+// `local_pimpl` can be instantiated with an incomplete type
+
+struct TestMove {
+    TestMove();
+    TestMove(TestMove const&) = delete;
+    TestMove(TestMove&&);
+    TestMove& operator=(TestMove const&) = delete;
+    TestMove& operator=(TestMove&&);
+    ~TestMove();
+
+    struct Impl;
+    utl::local_pimpl<Impl, 16> impl;
+};
+
+struct TestCopy {
+    TestCopy();
+    TestCopy(TestCopy const&);
+    TestCopy& operator=(TestCopy const&);
+    ~TestCopy();
+
+    struct Impl;
+    utl::local_pimpl<Impl, 16> impl;
+};
+
+} // namespace
