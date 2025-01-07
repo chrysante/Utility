@@ -2,20 +2,20 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
-#include <utl/small_ptr_vector.hpp>
+#include <utl/tiny_ptr_vector.hpp>
 
 static int gInt;
 static int* gPtr = &gInt;
 
-TEST_CASE("small_ptr_vector") {
+TEST_CASE("tiny_ptr_vector") {
     SECTION("default") {
-        utl::small_ptr_vector<int*> v;
+        utl::tiny_ptr_vector<int*> v;
         CHECK(v.empty());
         CHECK(v.size() == 0);
     }
     SECTION("count value") {
         size_t count = GENERATE(0, 1, 2, 5);
-        utl::small_ptr_vector<int*> v(count);
+        utl::tiny_ptr_vector<int*> v(count);
         CHECK(v.empty() == (count == 0));
         CHECK(v.size() == count);
         SECTION("copy ctor") {
@@ -31,14 +31,14 @@ TEST_CASE("small_ptr_vector") {
         }
         SECTION("copy assign") {
             size_t other_count = GENERATE(0, 1, 2, 5);
-            utl::small_ptr_vector<int*> w(other_count);
+            utl::tiny_ptr_vector<int*> w(other_count);
             w = v;
             CHECK(v.empty() == w.empty());
             CHECK(v.size() == w.size());
         }
         SECTION("move assign") {
             size_t other_count = GENERATE(0, 1, 2, 5);
-            utl::small_ptr_vector<int*> w(other_count);
+            utl::tiny_ptr_vector<int*> w(other_count);
             w = std::move(v);
             CHECK(w.empty() == (count == 0));
             CHECK(w.size() == count);
@@ -143,23 +143,23 @@ TEST_CASE("small_ptr_vector") {
         }
         SECTION("swap") {
             size_t other_count = GENERATE(0, 1, 5, 10);
-            utl::small_ptr_vector<int*> w(other_count);
+            utl::tiny_ptr_vector<int*> w(other_count);
             v.swap(w);
             CHECK(v.size() == other_count);
             CHECK(w.size() == count);
         }
     }
     SECTION("init list empty") {
-        utl::small_ptr_vector<int*> v = {};
+        utl::tiny_ptr_vector<int*> v = {};
         CHECK(v.empty());
     }
     SECTION("init list one") {
-        utl::small_ptr_vector<int*> v = { gPtr };
+        utl::tiny_ptr_vector<int*> v = { gPtr };
         CHECK(v.size() == 1);
         CHECK(v.front() == gPtr);
     }
     SECTION("init list three") {
-        utl::small_ptr_vector<int*> v = { gPtr, gPtr + 1, gPtr + 2 };
+        utl::tiny_ptr_vector<int*> v = { gPtr, gPtr + 1, gPtr + 2 };
         CHECK(v.size() == 3);
         CHECK(v[0] == gPtr);
         CHECK(v.front() == gPtr);
@@ -174,18 +174,18 @@ TEST_CASE("small_ptr_vector") {
         CHECK(index == 3);
     }
     SECTION("reserve") {
-        utl::small_ptr_vector<int*> v;
+        utl::tiny_ptr_vector<int*> v;
         v.reserve(100);
         CHECK(v.capacity() >= 100);
         CHECK(v.empty());
         CHECK(v.size() == 0);
     }
     SECTION("operator==, operator<=>") {
-        CHECK(utl::small_ptr_vector{ gPtr, gPtr + 1 } ==
-              utl::small_ptr_vector{ gPtr, gPtr + 1 });
-        CHECK(utl::small_ptr_vector{ gPtr, gPtr + 1 } !=
-              utl::small_ptr_vector{ gPtr, gPtr + 2 });
-        CHECK(utl::small_ptr_vector{ gPtr, gPtr + 1 } !=
-              utl::small_ptr_vector{ gPtr });
+        CHECK(utl::tiny_ptr_vector{ gPtr, gPtr + 1 } ==
+              utl::tiny_ptr_vector{ gPtr, gPtr + 1 });
+        CHECK(utl::tiny_ptr_vector{ gPtr, gPtr + 1 } !=
+              utl::tiny_ptr_vector{ gPtr, gPtr + 2 });
+        CHECK(utl::tiny_ptr_vector{ gPtr, gPtr + 1 } !=
+              utl::tiny_ptr_vector{ gPtr });
     }
 }

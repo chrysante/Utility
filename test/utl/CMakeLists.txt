@@ -34,12 +34,12 @@ target_sources(
     pool_resource.t.cpp
     queue.t.cpp
     scope_guard.t.cpp
-    small_ptr_vector.t.cpp
     stack.t.cpp
     streammanip.t.cpp
     structure_of_arrays.t.cpp
     terminates.hpp
     thread_pool.t.cpp
+    tiny_ptr_vector.t.cpp
     tinyptrset.t.cpp
     type_traits.t.cpp
     utility.t.cpp
