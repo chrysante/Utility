@@ -31,6 +31,7 @@ target_sources(
     metric_table.t.cpp
     monotonic_buffer_resource.t.cpp
     pimpl.t.cpp
+    ptr_union.t.cpp
     pool_resource.t.cpp
     queue.t.cpp
     scope_guard.t.cpp

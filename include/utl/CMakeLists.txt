@@ -46,6 +46,7 @@ target_sources(utility
     metric_table.hpp
     overload.hpp
     pimpl.hpp
+    ptr_union.hpp
     queue.hpp
     scope_guard.hpp
     small_ptr_vector.hpp
