@@ -173,22 +173,22 @@ public:
         m = std::move(m);
     }
 
-    void send(std::any&& message) {
+    void send(std::any&& message) const {
         __utl_expect(m);
         m->send(std::move(message));
     }
 
-    void send(std::any const& message) {
+    void send(std::any const& message) const {
         __utl_expect(m);
         m->send(message);
     }
 
-    void send_now(std::any&& message) {
+    void send_now(std::any&& message) const {
         __utl_expect(m);
         m->send_now(std::move(message));
     }
 
-    void send_now(std::any const& message) {
+    void send_now(std::any const& message) const {
         __utl_expect(m);
         m->send_now(message);
     }
