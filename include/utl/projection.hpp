@@ -56,6 +56,8 @@ struct projection_equal_to;
 
 template <typename T, auto MemAcc>
 struct projection_equal_to<T, MemAcc> {
+    using is_transparent = void;
+
     using mem_type = __proj::mem_type<T, MemAcc>;
 
     bool operator()(T const& lhs, T const& rhs) const {
@@ -77,6 +79,8 @@ struct projection_equal_to<T, MemAcc> {
 template <typename T, auto... MemAcc>
 requires(sizeof...(MemAcc) > 1)
 struct projection_equal_to<T, MemAcc...> {
+    using is_transparent = void;
+
     bool operator()(T const& lhs, T const& rhs) const {
         return ((std::invoke(MemAcc, lhs) == std::invoke(MemAcc, rhs)) && ...);
     }
