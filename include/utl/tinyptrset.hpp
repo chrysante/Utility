@@ -123,11 +123,10 @@ public:
 
     tinyptrset(tinyptrset const& other, allocator_type const& alloc):
         SetAllocator(alloc) {
-        using enum State;
         switch (other._state()) {
-        case Empty: _ptr = {}; return;
-        case Small: _ptr = other._ptr; return;
-        case Large: {
+        case State::Empty: _ptr = {}; return;
+        case State::Small: _ptr = other._ptr; return;
+        case State::Large: {
             auto* setPtr = _allocateSet(*other._getSet());
             _assignSet(setPtr);
             return;
@@ -141,11 +140,10 @@ public:
 
     tinyptrset(tinyptrset&& other, allocator_type const& alloc):
         SetAllocator(alloc) {
-        using enum State;
         switch (other._state()) {
-        case Empty: _ptr = {}; return;
-        case Small: _ptr = other._ptr; return;
-        case Large:
+        case State::Empty: _ptr = {}; return;
+        case State::Small: _ptr = other._ptr; return;
+        case State::Large:
             _assignSet(other._getSet());
             other._ptr = {};
             return;
@@ -160,11 +158,10 @@ public:
             return *this;
         }
         _deallocateIfLarge();
-        using enum State;
         switch (other._state()) {
-        case Empty: _ptr = { nullptr, State::Empty }; break;
-        case Small: _ptr = other._ptr; break;
-        case Large: {
+        case State::Empty: _ptr = { nullptr, State::Empty }; break;
+        case State::Small: _ptr = other._ptr; break;
+        case State::Large: {
             auto* setPtr = _allocateSet(*other._getSet());
             _assignSet(setPtr);
             break;
@@ -178,11 +175,10 @@ public:
             return;
         }
         _deallocateIfLarge();
-        using enum State;
         switch (other._state()) {
-        case Empty: _ptr = { nullptr, State::Empty }; break;
-        case Small: _ptr = other._ptr; break;
-        case Large:
+        case State::Empty: _ptr = { nullptr, State::Empty }; break;
+        case State::Small: _ptr = other._ptr; break;
+        case State::Large:
             // Can't be bothered to implement this
             __utl_assert((SetAllocator&)*this == (SetAllocator&)other);
             _assignSet(other._getSet());
@@ -197,10 +193,9 @@ public:
     }
 
     std::pair<iterator, bool> insert(value_type p) {
-        using enum State;
         switch (_state()) {
-        case Empty: _ptr = { p, State::Small }; return { begin(), true };
-        case Small: {
+        case State::Empty: _ptr = { p, State::Small }; return { begin(), true };
+        case State::Small: {
             if (_ptr.pointer() == p) {
                 return { begin(), false };
             }
@@ -211,7 +206,7 @@ public:
             __utl_assert(inserted);
             return { iterator(itr), true };
         }
-        case Large: {
+        case State::Large: {
             auto [itr, inserted] = _getSet()->insert(p);
             return { iterator(itr), inserted };
         }
@@ -220,26 +215,24 @@ public:
     }
 
     bool contains(value_type p) const {
-        using enum State;
         switch (_state()) {
-        case Empty: return false;
-        case Small: return _ptr.pointer() == p;
-        case Large: return _getSet()->contains(p);
+        case State::Empty: return false;
+        case State::Small: return _ptr.pointer() == p;
+        case State::Large: return _getSet()->contains(p);
         }
         __utl_unreachable();
     }
 
     bool erase(value_type p) {
-        using enum State;
         switch (_state()) {
-        case Empty: return false;
-        case Small:
+        case State::Empty: return false;
+        case State::Small:
             if (_ptr.pointer() == p) {
                 _ptr = {};
                 return true;
             }
             return false;
-        case Large: {
+        case State::Large: {
             auto* set = _getSet();
             bool result = set->erase(p) == 1;
             if (set->size() == 1) {
@@ -253,11 +246,10 @@ public:
     }
 
     size_t size() const {
-        using enum State;
         switch (_state()) {
-        case Empty: return 0;
-        case Small: return 1;
-        case Large: return _getSet()->size();
+        case State::Empty: return 0;
+        case State::Small: return 1;
+        case State::Large: return _getSet()->size();
         }
         __utl_unreachable();
     }
@@ -265,21 +257,19 @@ public:
     bool empty() const { return _isEmpty(); }
 
     iterator begin() const {
-        using enum State;
         switch (_state()) {
-        case Empty: return iterator();
-        case Small: return iterator(_ptr.pointer());
-        case Large: return iterator(_getSet()->cbegin());
+        case State::Empty: return iterator();
+        case State::Small: return iterator(_ptr.pointer());
+        case State::Large: return iterator(_getSet()->cbegin());
         }
         __utl_unreachable();
     }
 
     iterator end() const {
-        using enum State;
         switch (_state()) {
-        case Empty: [[fallthrough]];
-        case Small: return iterator();
-        case Large: return iterator(_getSet()->cend());
+        case State::Empty: [[fallthrough]];
+        case State::Small: return iterator();
+        case State::Large: return iterator(_getSet()->cend());
         }
         __utl_unreachable();
     }
