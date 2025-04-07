@@ -22,6 +22,7 @@ target_sources(
     graph/greedy_color.t.cpp
     graph/scc.t.cpp
     graph/topsort.t.cpp
+    hashtable.t.cpp
     ilist.t.cpp
     ipp.t.cpp
     lazy.t.cpp

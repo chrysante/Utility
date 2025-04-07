@@ -28,7 +28,7 @@ using node_hashset = std::unordered_set<Key, Hash, KeyEqual, Allocator>;
 
 template <typename Key, typename T, typename Hash = utl::hash<Key>,
           typename KeyEqual = std::equal_to<>,
-          typename Allocator = std::allocator<std::pair<Key, T>>>
+          typename Allocator = std::allocator<std::pair<Key const, T>>>
 using node_hashmap = std::unordered_map<Key, T, Hash, KeyEqual, Allocator>;
 
 } // namespace utl
