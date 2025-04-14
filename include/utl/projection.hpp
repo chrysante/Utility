@@ -21,11 +21,10 @@ template <typename T, auto... MemAcc>
 struct projection_hash;
 
 template <typename T, auto MemAcc>
-struct projection_hash<T, MemAcc>:
-    std::hash<__proj::mem_type_no_cvref<T, MemAcc>> {
+struct projection_hash<T, MemAcc>: hash<__proj::mem_type_no_cvref<T, MemAcc>> {
     using is_transparent = void;
 
-    using base = std::hash<__proj::mem_type_no_cvref<T, MemAcc>>;
+    using base = hash<__proj::mem_type_no_cvref<T, MemAcc>>;
 
     using base::operator();
 
