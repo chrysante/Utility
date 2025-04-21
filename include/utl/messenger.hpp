@@ -14,6 +14,33 @@
 
 namespace utl {
 
+///
+template <typename T>
+concept messenger_type =
+    requires(T msgn, std::any msg, T::listener_id_type id) {
+        // `send()` overloads
+        msgn.send(std::move(msg));
+        msgn.send(msg);
+
+        // `listen()` with type explicit
+        {
+            msgn.template listen<int>([](int) {})
+        } -> std::convertible_to<typename T::listener_id_type>;
+
+        // `listen()` with argument type deduction
+        {
+            msgn.listen([](int) {})
+        } -> std::convertible_to<typename T::listener_id_type>;
+
+        // `unlisten()` single argument
+        msgn.unlisten(id);
+
+        // `unlisten()` range
+        requires requires(std::vector<typename T::listener_id_type> vec) {
+            msgn.unlisten(vec.begin(), vec.end());
+        };
+    };
+
 /// \brief Represents a unique ID used to identify and remove a registered
 /// listener.
 struct listener_id {
@@ -27,6 +54,8 @@ struct listener_id {
 /// \warning Do not call `unlisten()` from within a listener callback.
 class messenger {
 public:
+    using listener_id_type = listener_id;
+
     /// \brief Immediately invokes all listeners for the message's type.
     void send(std::any&& message) {
         std::lock_guard lock(_listener_mutex);
@@ -122,6 +151,7 @@ private:
 class buffered_messenger: private messenger {
 public:
     using messenger::listen;
+    using messenger::listener_id_type;
     using messenger::unlisten;
 
     /// \brief Queues a message to be sent on next flush.
@@ -168,11 +198,8 @@ private:
 /// Automatically unregisters all listeners on destruction.
 /// \note Not thread-safe. Must not be accessed from multiple threads
 /// concurrently.
-template <typename Messenger>
+template <messenger_type Messenger>
 class receiver {
-    static_assert(std::is_same_v<Messenger, messenger> ||
-                  std::is_same_v<Messenger, buffered_messenger>);
-
 public:
     receiver() = default;
     explicit receiver(std::weak_ptr<Messenger> m): m(std::move(m)) {}
@@ -223,11 +250,8 @@ private:
 };
 
 /// \brief Wrapper for sending messages to a `messenger`.
-template <typename Messenger>
+template <messenger_type Messenger>
 class emitter {
-    static_assert(std::is_same_v<Messenger, messenger> ||
-                  std::is_same_v<Messenger, buffered_messenger>);
-
 public:
     emitter() = default;
 
@@ -275,7 +299,7 @@ private:
 /// \brief Combines `receiver` and `emitter` for bidirectional messaging.
 /// \note `receiver`-interface not thread-safe. Must not be accessed from
 /// multiple threads concurrently.
-template <typename Messenger>
+template <messenger_type Messenger>
 class transceiver: public receiver<Messenger>, public emitter<Messenger> {
 public:
     transceiver() = default;
