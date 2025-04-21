@@ -57,6 +57,7 @@ target_sources(utility
     strcat.hpp
     streammanip.hpp
     structure_of_arrays.hpp
+    thread.hpp
     tinyptrset.hpp
     tiny_ptr_vector.hpp
     type_traits.hpp
