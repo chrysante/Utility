@@ -15,30 +15,38 @@
 namespace utl {
 
 ///
-template <typename T>
-concept messenger_type =
-    requires(T msgn, std::any msg, T::listener_id_type id) {
-        // `send()` overloads
-        msgn.send(std::move(msg));
-        msgn.send(msg);
+template <typename Messenger>
+concept messenger_type = requires(Messenger msgn, std::any msg,
+                                  Messenger::listener_id_type id) {
+    // `send_now()` overloads
+    msgn.send_now(std::move(msg));
+    msgn.send_now(msg);
 
-        // `listen()` with type explicit
-        {
-            msgn.template listen<int>([](int) {})
-        } -> std::convertible_to<typename T::listener_id_type>;
+    // `listen()` with type explicit
+    {
+        msgn.template listen<int>([](int) {})
+    } -> std::convertible_to<typename Messenger::listener_id_type>;
 
-        // `listen()` with argument type deduction
-        {
-            msgn.listen([](int) {})
-        } -> std::convertible_to<typename T::listener_id_type>;
+    // `listen()` with argument type deduction
+    {
+        msgn.listen([](int) {})
+    } -> std::convertible_to<typename Messenger::listener_id_type>;
 
-        // `unlisten()` single argument
-        msgn.unlisten(id);
+    // `unlisten()` single argument
+    msgn.unlisten(id);
 
-        // `unlisten()` range
-        requires requires(std::vector<typename T::listener_id_type> vec) {
-            msgn.unlisten(vec.begin(), vec.end());
-        };
+    // `unlisten()` range
+    requires requires(std::vector<typename Messenger::listener_id_type> vec) {
+        msgn.unlisten(vec.begin(), vec.end());
+    };
+};
+
+template <typename Messenger>
+concept buffered_messenger_type =
+    messenger_type<Messenger> && requires(Messenger msgn, std::any msg) {
+        // `send_buffered()` overloads
+        msgn.send_buffered(std::move(msg));
+        msgn.send_buffered(msg);
     };
 
 /// \brief Represents a unique ID used to identify and remove a registered
@@ -57,13 +65,13 @@ public:
     using listener_id_type = listener_id;
 
     /// \brief Immediately invokes all listeners for the message's type.
-    void send(std::any&& message) {
+    void send_now(std::any&& message) {
         std::lock_guard lock(_listener_mutex);
         send_impl_unsynchronized(std::move(message));
     }
 
     /// \overload
-    void send(std::any const& message) {
+    void send_now(std::any const& message) {
         std::lock_guard lock(_listener_mutex);
         send_impl_unsynchronized(message);
     }
@@ -152,25 +160,20 @@ class buffered_messenger: private messenger {
 public:
     using messenger::listen;
     using messenger::listener_id_type;
+    using messenger::send_now;
     using messenger::unlisten;
 
     /// \brief Queues a message to be sent on next flush.
-    void send(std::any const& message) {
+    void send_buffered(std::any const& message) {
         std::lock_guard lock(_message_queue_mutex);
         _messages.push_back(message);
     }
 
     /// \overload
-    void send(std::any&& message) {
+    void send_buffered(std::any&& message) {
         std::lock_guard lock(_message_queue_mutex);
         _messages.push_back(std::move(message));
     }
-
-    /// \brief Immediately invokes all listeners for the message.
-    void send_now(std::any const& message) { messenger::send(message); }
-
-    /// \overload
-    void send_now(std::any&& message) { messenger::send(std::move(message)); }
 
     /// \brief Dispatches all buffered messages in FIFO order.
     /// \note Reentrant-safe: returns immediately if another thread is already
@@ -263,36 +266,29 @@ public:
         m = std::move(m);
     }
 
-    /// \brief Sends a message (buffered or immediate depending on messenger).
-    void send(std::any&& message) const {
-        __utl_expect(m);
-        m->send(std::move(message));
-    }
-
-    /// \overload
-    void send(std::any const& message) const {
-        __utl_expect(m);
-        m->send(message);
-    }
-
     /// \brief Immediately dispatches a message, bypassing the buffer.
-    void send_now(std::any&& message) const {
-        send_now_impl(std::move(message));
+    void send_now(std::any&& message) const { m->send_now(std::move(message)); }
+
+    /// \overload
+    void send_now(std::any const& message) const { m->send_now(message); }
+
+    /// \brief Sends a message
+    void send_buffered(std::any&& message) const
+    requires buffered_messenger_type<Messenger>
+    {
+        __utl_expect(m);
+        m->send_buffered(std::move(message));
     }
 
     /// \overload
-    void send_now(std::any const& message) const { send_now_impl(message); }
+    void send_buffered(std::any const& message) const
+    requires buffered_messenger_type<Messenger>
+    {
+        __utl_expect(m);
+        m->send_buffered(message);
+    }
 
 private:
-    template <typename T>
-    void send_now_impl(T&& message) const {
-        __utl_expect(m);
-        if constexpr (std::same_as<Messenger, buffered_messenger>)
-            m->send_now(std::forward<T>(message));
-        else
-            m->send(std::forward<T>(message));
-    }
-
     std::shared_ptr<Messenger> m;
 };
 

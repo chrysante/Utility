@@ -13,7 +13,7 @@ TEST_CASE("test messenger", "[messenger]") {
         ++reciever_count;
     });
     reference = 1;
-    m.send(1);
+    m.send_now(1);
     auto l2 = m.listen([&](int i) {
         CHECK(i == reference);
         ++reciever_count;
@@ -21,17 +21,17 @@ TEST_CASE("test messenger", "[messenger]") {
     CHECK(reciever_count == 1);
     reciever_count = 0;
     reference = 2;
-    m.send(2);
+    m.send_now(2);
     CHECK(reciever_count == 2);
     reciever_count = 0;
     m.unlisten(l2);
     reference = 3;
-    m.send(3);
+    m.send_now(3);
     CHECK(reciever_count == 1);
     reciever_count = 0;
     m.unlisten(l1);
     reference = 4;
-    m.send(4);
+    m.send_now(4);
     CHECK(reciever_count == 0);
     reciever_count = 0;
 }
@@ -40,12 +40,12 @@ TEST_CASE("test buffered_messenger", "[messenger]") {
     utl::buffered_messenger m;
     int testValue = 0;
     auto l = m.listen([&](int msg) { testValue = msg; });
-    m.send(-1);
+    m.send_buffered(-1);
     CHECK(testValue == 0);
     m.flush();
     CHECK(testValue == -1);
     m.unlisten(l);
-    m.send(-2);
+    m.send_buffered(-2);
     m.flush();
     CHECK(testValue == -1);
 }
@@ -56,7 +56,7 @@ TEST_CASE("test emitter/receiver", "[messenger]") {
     utl::receiver<utl::buffered_messenger> r(m);
     int value = 0;
     r.listen([&](int i) { value = i; });
-    e.send(-1);
+    e.send_buffered(-1);
     CHECK(value == 0);
     m->flush();
     CHECK(value == -1);
@@ -68,11 +68,11 @@ TEST_CASE("recursive send", "[messenger]") {
     enum Message { First, Second };
     auto id = m.listen([&](Message msg) {
         if (msg == First)
-            m.send(Second);
+            m.send_now(Second);
         else if (msg == Second)
             second_called = true;
     });
-    m.send(First);
+    m.send_now(First);
     CHECK(second_called);
 }
 
@@ -83,7 +83,7 @@ TEST_CASE("concurrent access", "[messenger]") {
     enum Message { Ping };
     std::thread sender([&] {
         while (running) {
-            m.send(Ping);
+            m.send_now(Ping);
             std::this_thread::yield();
         }
     });
@@ -108,8 +108,8 @@ TEST_CASE("parallel flush", "[messenger]") {
     utl::receiver<utl::buffered_messenger> r(m);
     enum class Message : int;
     r.listen([&](Message) { ++count; });
-    m->send(Message{});
-    m->send(Message{});
+    m->send_buffered(Message{});
+    m->send_buffered(Message{});
     std::thread flush1([&] { m->flush(); });
     std::thread flush2([&] { m->flush(); });
     flush1.join();
@@ -124,12 +124,12 @@ TEST_CASE("send from buffered message", "[messenger]") {
     int count = 0;
     r.listen([&](Message msg) {
         if (msg == First)
-            m->send(Second);
+            m->send_buffered(Second);
         if (msg == Second)
             m->send_now(Third);
     });
     r.listen([&](Message msg) { ++count; });
-    m->send(First);
+    m->send_buffered(First);
     CHECK(count == 0);
     m->flush();
     CHECK(count == 1);
