@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_CONCEPTS_HPP_
+#define UTL_CONCEPTS_HPP_
 
 #include <concepts>
 #include <utility>
@@ -19,3 +20,5 @@ concept input_iterator_for =
     std::input_iterator<I> && std::convertible_to<std::iter_value_t<I>, T>;
 
 } // namespace utl
+
+#endif // UTL_CONCEPTS_HPP_

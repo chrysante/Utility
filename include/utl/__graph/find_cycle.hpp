@@ -1,5 +1,5 @@
-#ifndef UTL_GRAPH_FINDCYCLE_HPP
-#define UTL_GRAPH_FINDCYCLE_HPP
+#ifndef UTL___GRAPH_FIND_CYCLE_HPP_
+#define UTL___GRAPH_FIND_CYCLE_HPP_
 
 #include <iterator>
 
@@ -74,4 +74,4 @@ small_vector<Vertex> find_cycle(Itr begin, S end, E edges) {
 
 } // namespace utl
 
-#endif // UTL_GRAPH_FINDCYCLE_HPP
+#endif // UTL___GRAPH_FIND_CYCLE_HPP_

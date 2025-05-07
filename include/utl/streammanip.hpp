@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_STREAMMANIP_HPP_
+#define UTL_STREAMMANIP_HPP_
 
 #include <concepts>
 #include <functional>
@@ -71,3 +72,5 @@ struct vstreammanip: streammanip<std::function<void(std::ostream&, Args...)>> {
 };
 
 } // namespace utl
+
+#endif // UTL_STREAMMANIP_HPP_

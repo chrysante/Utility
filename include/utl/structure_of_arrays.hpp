@@ -70,8 +70,8 @@
 //
 //
 
-#ifndef UTL_STRUCTUREOFARRAYS_HPP_
-#define UTL_STRUCTUREOFARRAYS_HPP_
+#ifndef UTL_STRUCTURE_OF_ARRAYS_HPP_
+#define UTL_STRUCTURE_OF_ARRAYS_HPP_
 
 #include <algorithm>
 #include <compare>
@@ -1642,4 +1642,4 @@ void swap(structure_of_arrays<ST, Allocator>& a,
 
 } // namespace utl
 
-#endif // UTL_STRUCTUREOFARRAYS_HPP_
+#endif // UTL_STRUCTURE_OF_ARRAYS_HPP_

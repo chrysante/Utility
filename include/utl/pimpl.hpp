@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_PIMPL_HPP_
+#define UTL_PIMPL_HPP_
 
 #include <concepts>
 #include <cstddef>
@@ -116,3 +117,5 @@ private:
 };
 
 } // namespace utl
+
+#endif // UTL_PIMPL_HPP_

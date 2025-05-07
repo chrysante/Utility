@@ -28,8 +28,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef ANKERL_UNORDERED_DENSE_H
-#define ANKERL_UNORDERED_DENSE_H
+#ifndef UTL___THIRD_PARTY_ANKERL_UNORDERED_DENSE_H_
+#define UTL___THIRD_PARTY_ANKERL_UNORDERED_DENSE_H_
 
 // see https://semver.org/spec/v2.0.0.html
 #define ANKERL_UNORDERED_DENSE_VERSION_MAJOR 3 // NOLINT(cppcoreguidelines-macro-usage) incompatible API changes
@@ -1668,4 +1668,4 @@ auto erase_if(ankerl::unordered_dense::detail::table<
 } // namespace std
 
 #endif
-#endif
+#endif // UTL___THIRD_PARTY_ANKERL_UNORDERED_DENSE_H_

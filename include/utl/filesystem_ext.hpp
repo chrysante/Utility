@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_FILESYSTEM_EXT_HPP_
+#define UTL_FILESYSTEM_EXT_HPP_
 
 #include <filesystem>
 
@@ -12,3 +13,5 @@ inline bool is_hidden(std::filesystem::path const& p) {
 }
 
 } // namespace utl
+
+#endif // UTL_FILESYSTEM_EXT_HPP_

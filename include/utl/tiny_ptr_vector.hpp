@@ -1,5 +1,5 @@
-#ifndef UTL_TINY_PTR_VECTOR_H_
-#define UTL_TINY_PTR_VECTOR_H_
+#ifndef UTL_TINY_PTR_VECTOR_HPP_
+#define UTL_TINY_PTR_VECTOR_HPP_
 
 #include <algorithm>
 #include <cassert>
@@ -690,4 +690,4 @@ bool operator==(tiny_ptr_vector<T, Allocator> const& lhs,
 
 } // namespace utl
 
-#endif // UTL_TINY_PTR_VECTOR_H_
+#endif // UTL_TINY_PTR_VECTOR_HPP_

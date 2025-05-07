@@ -1,4 +1,6 @@
-#pragma once
+#ifndef UTL_EXPECTED_HPP_
+#define UTL_EXPECTED_HPP_
+
 ///
 // expected - An implementation of std::expected with extensions
 // Written in 2017 by Simon Brand (simonrbrand@gmail.com, @TartanLlama)
@@ -2444,3 +2446,5 @@ void swap(expected<T, E>& lhs,
 } // namespace TL_NAMESPACE_NAME
 
 #endif
+
+#endif // UTL_EXPECTED_HPP_

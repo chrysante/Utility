@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_PROJECTION_HPP_
+#define UTL_PROJECTION_HPP_
 
 #include <utl/__base.hpp>
 #include <utl/hash.hpp>
@@ -92,3 +93,5 @@ template <typename Class, typename Elem, Elem (Class::*member)()>
 struct member_equal_to<member>: projection_equal_to<Class, member> {};
 
 } // namespace utl
+
+#endif // UTL_PROJECTION_HPP_

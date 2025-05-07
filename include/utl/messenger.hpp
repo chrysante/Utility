@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_MESSENGER_HPP_
+#define UTL_MESSENGER_HPP_
 
 #include <any>
 #include <atomic>
@@ -310,3 +311,5 @@ public:
 };
 
 } // namespace utl
+
+#endif // UTL_MESSENGER_HPP_

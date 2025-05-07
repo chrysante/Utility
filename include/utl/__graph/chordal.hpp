@@ -1,5 +1,5 @@
-#ifndef UTL_GRAPH_CHORDAL_HPP
-#define UTL_GRAPH_CHORDAL_HPP
+#ifndef UTL___GRAPH_CHORDAL_HPP_
+#define UTL___GRAPH_CHORDAL_HPP_
 
 #include <iterator>
 #include <optional>
@@ -191,4 +191,4 @@ bool utl::is_chordal(Itr begin, S end, Neighbours neighbours) {
     return ctx.run();
 }
 
-#endif // UTL_GRAPH_CHORDAL_HPP
+#endif // UTL___GRAPH_CHORDAL_HPP_

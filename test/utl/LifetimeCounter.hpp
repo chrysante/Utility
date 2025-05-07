@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_LIFETIMECOUNTER_HPP_
+#define UTL_LIFETIMECOUNTER_HPP_
 
 namespace utl_test {
 
@@ -45,3 +46,5 @@ private:
 };
 
 } // namespace utl_test
+
+#endif // UTL_LIFETIMECOUNTER_HPP_

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_SCOPE_GUARD_HPP_
+#define UTL_SCOPE_GUARD_HPP_
 
 #include <exception>
 
@@ -109,3 +110,5 @@ _UTL_SCOPE_GUARD_SPECIALIZATION(armed_scope_guard_failure, true, failure);
         __utl_scope_guard_state_) = [&]() -> void
 
 #endif // UTL_DEFER_MACROS
+
+#endif // UTL_SCOPE_GUARD_HPP_

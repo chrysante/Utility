@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_TYPE_TRAITS_HPP_
+#define UTL_TYPE_TRAITS_HPP_
 
 #include <iterator>
 #include <type_traits>
@@ -531,3 +532,5 @@ inline constexpr std::size_t compile_time_base_offset =
 #endif
 
 } // namespace utl
+
+#endif // UTL_TYPE_TRAITS_HPP_

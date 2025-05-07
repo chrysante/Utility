@@ -1,3 +1,6 @@
+#ifndef UTL_GRAPH_VERTEX_HPP_
+#define UTL_GRAPH_VERTEX_HPP_
+
 #include <utl/concepts.hpp>
 #include <utl/vector.hpp>
 
@@ -26,3 +29,5 @@ inline bool findDownstream(auto const& graph, std::size_t start,
 }
 
 } // namespace utl_test
+
+#endif // UTL_GRAPH_VERTEX_HPP_

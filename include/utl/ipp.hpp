@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_IPP_HPP_
+#define UTL_IPP_HPP_
 
 #include <bit>
 #include <concepts>
@@ -121,3 +122,5 @@ template <typename Pointer, typename IntType, size_t NumBits>
 struct std::tuple_element<1, utl::ipp<Pointer, IntType, NumBits>>:
     std::type_identity<
         typename utl::ipp<Pointer, IntType, NumBits>::pointer_type> {};
+
+#endif // UTL_IPP_HPP_

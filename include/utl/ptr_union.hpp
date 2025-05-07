@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_PTR_UNION_HPP_
+#define UTL_PTR_UNION_HPP_
 
 #include <array>
 #include <bit>
@@ -318,3 +319,5 @@ struct std::hash<utl::ptr_union<Types...>> {
         return std::hash<std::uintptr_t>{}(std::bit_cast<std::uintptr_t>(u));
     }
 };
+
+#endif // UTL_PTR_UNION_HPP_

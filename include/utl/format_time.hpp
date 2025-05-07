@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_FORMAT_TIME_HPP_
+#define UTL_FORMAT_TIME_HPP_
 
 #include <array>
 #include <chrono>
@@ -108,3 +109,5 @@ std::string format_duration(std::chrono::duration<Rep, Period> dur) {
 }
 
 } // namespace utl
+
+#endif // UTL_FORMAT_TIME_HPP_

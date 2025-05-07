@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_COMMON_HPP_
+#define UTL_COMMON_HPP_
 
 #include <concepts>
 #include <memory>
@@ -314,3 +315,5 @@ concept __alloc_constructible =
 } // namespace utl
 
 #endif // UTL_CPP
+
+#endif // UTL_COMMON_HPP_

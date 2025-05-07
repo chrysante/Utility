@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_TYPECOMPARE_H_
+#define UTL_TYPECOMPARE_H_
 
 #include <iosfwd>
 
@@ -23,3 +24,5 @@ template <typename U>
 inline constexpr TagType<U> T;
 
 } // namespace utl_test
+
+#endif // UTL_TYPECOMPARE_H_

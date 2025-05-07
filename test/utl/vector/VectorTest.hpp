@@ -1,3 +1,6 @@
+#ifndef UTL_VECTOR_VECTORTEST_HPP_
+#define UTL_VECTOR_VECTORTEST_HPP_
+
 #include <catch2/catch_template_test_macros.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <utl/vector.hpp>
@@ -160,3 +163,5 @@ struct utl::is_trivially_relocatable<utl_test::TRX>: std::true_type {};
                              bool SmallB),                                     \
                             VectorA, VectorB, SmallA, SmallB),                 \
                            __VA_ARGS__)
+
+#endif // UTL_VECTOR_VECTORTEST_HPP_

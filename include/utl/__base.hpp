@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL___BASE_HPP_
+#define UTL___BASE_HPP_
 
 /// MARK: Detect Language
 #if defined(__METAL_VERSION__)
@@ -39,3 +40,5 @@
 #define UTL_DEPRECATED(Reason)
 
 #endif // UTL_CPP
+
+#endif // UTL___BASE_HPP_

@@ -1,5 +1,5 @@
-#ifndef UTL_TINYPTRSET_HPP
-#define UTL_TINYPTRSET_HPP
+#ifndef UTL_TINYPTRSET_HPP_
+#define UTL_TINYPTRSET_HPP_
 
 #include <memory>
 #include <set>
@@ -319,4 +319,4 @@ private:
 
 } // namespace utl
 
-#endif // UTL_TINYPTRSET_HPP
+#endif // UTL_TINYPTRSET_HPP_

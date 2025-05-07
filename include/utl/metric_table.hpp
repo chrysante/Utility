@@ -1,5 +1,5 @@
-#ifndef UTL_METRICTABLE_HPP_
-#define UTL_METRICTABLE_HPP_
+#ifndef UTL_METRIC_TABLE_HPP_
+#define UTL_METRIC_TABLE_HPP_
 
 #include <algorithm>
 #include <alloca.h>
@@ -573,4 +573,4 @@ public:
 
 } // namespace utl
 
-#endif // UTL_METRICTABLE_HPP_
+#endif // UTL_METRIC_TABLE_HPP_

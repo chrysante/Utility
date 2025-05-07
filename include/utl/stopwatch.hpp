@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_STOPWATCH_HPP_
+#define UTL_STOPWATCH_HPP_
 
 #include <atomic>
 #include <chrono>
@@ -66,3 +67,5 @@ using system_stopwatch = stopwatch<std::chrono::system_clock>;
 using steady_stopwatch = stopwatch<std::chrono::steady_clock>;
 
 } // namespace utl
+
+#endif // UTL_STOPWATCH_HPP_

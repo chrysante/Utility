@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_STATIC_STRING_HPP_
+#define UTL_STATIC_STRING_HPP_
 
 #include <cstddef>
 #include <iosfwd>
@@ -82,3 +83,5 @@ constexpr bool operator==(basic_static_string<N> const& a,
 }
 
 } // namespace utl
+
+#endif // UTL_STATIC_STRING_HPP_

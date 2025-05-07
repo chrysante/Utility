@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_STACK_HPP_
+#define UTL_STACK_HPP_
 
 #include <concepts>
 #include <initializer_list>
@@ -74,3 +75,5 @@ public:
 };
 
 } // namespace utl
+
+#endif // UTL_STACK_HPP_

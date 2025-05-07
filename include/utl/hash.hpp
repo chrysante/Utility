@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_HASH_HPP_
+#define UTL_HASH_HPP_
 
 #include <string_view>
 #include <utility>
@@ -84,3 +85,5 @@ constexpr std::size_t hash_string(std::string_view str) {
 }
 
 } // namespace utl
+
+#endif // UTL_HASH_HPP_

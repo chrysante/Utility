@@ -1,3 +1,6 @@
+#ifndef UTL_CALLBACK_ITERATOR_HPP_
+#define UTL_CALLBACK_ITERATOR_HPP_
+
 #include <iterator>
 #include <memory>
 #include <utility>
@@ -67,3 +70,5 @@ template <typename F>
 callback_iterator(F) -> callback_iterator<F>;
 
 } // namespace utl
+
+#endif // UTL_CALLBACK_ITERATOR_HPP_

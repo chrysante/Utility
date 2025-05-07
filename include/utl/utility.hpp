@@ -1,5 +1,5 @@
-#ifndef UTL_UTILITY_HPP
-#define UTL_UTILITY_HPP
+#ifndef UTL_UTILITY_HPP_
+#define UTL_UTILITY_HPP_
 
 #include <bit>
 #include <chrono>
@@ -183,4 +183,4 @@ __enum_map(std::pair<E, T>...)
 
 } // namespace utl
 
-#endif // UTL_UTILITY_HPP
+#endif // UTL_UTILITY_HPP_

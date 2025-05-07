@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_HASHTABLE_HPP_
+#define UTL_HASHTABLE_HPP_
 
 #include <unordered_map>
 #include <unordered_set>
@@ -30,3 +31,5 @@ template <typename Key, typename T, typename Hash = utl::hash<Key>,
 using node_hashmap = std::unordered_map<Key, T, Hash, KeyEqual, Allocator>;
 
 } // namespace utl
+
+#endif // UTL_HASHTABLE_HPP_

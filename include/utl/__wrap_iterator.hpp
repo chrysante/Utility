@@ -1,5 +1,5 @@
-#ifndef UTL_RANGES_BASE_HPP
-#define UTL_RANGES_BASE_HPP
+#ifndef UTL___WRAP_ITERATOR_HPP_
+#define UTL___WRAP_ITERATOR_HPP_
 
 #include <iterator>
 
@@ -197,4 +197,4 @@ public:
 
 } // namespace utl
 
-#endif // UTL_RANGES_BASE_HPP
+#endif // UTL___WRAP_ITERATOR_HPP_

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL___FUNCTION_HPP_
+#define UTL___FUNCTION_HPP_
 
 #include <cstddef>
 
@@ -673,3 +674,5 @@ struct FunctionInvokePtrImpl<R(Args...)> {
 
 static_assert(sizeof(utl::function<void()>) ==
               (_UTL_LOCAL_FUNCTION_SIZE_IN_WORDS + 1) * sizeof(void*));
+
+#endif // UTL___FUNCTION_HPP_

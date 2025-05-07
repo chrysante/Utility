@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_FUNCTION_VIEW_HPP_
+#define UTL_FUNCTION_VIEW_HPP_
 
 #include <functional>
 
@@ -86,3 +87,5 @@ public:
 };
 
 } // namespace utl
+
+#endif // UTL_FUNCTION_VIEW_HPP_

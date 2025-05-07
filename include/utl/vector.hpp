@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_VECTOR_HPP_
+#define UTL_VECTOR_HPP_
 
 #include <algorithm>
 #include <bit>
@@ -1351,3 +1352,5 @@ constexpr std::size_t __small_vector_default_inline_capacity() {
 }
 
 } // namespace utl
+
+#endif // UTL_VECTOR_HPP_

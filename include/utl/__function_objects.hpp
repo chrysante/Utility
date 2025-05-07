@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL___FUNCTION_OBJECTS_HPP_
+#define UTL___FUNCTION_OBJECTS_HPP_
 
 #include <algorithm>
 #include <cmath>
@@ -244,3 +245,5 @@ _UTL_FUNCTION_OBJECT_DEF(noop, (auto&&...) const {
                                });
 
 } // namespace utl
+
+#endif // UTL___FUNCTION_OBJECTS_HPP_

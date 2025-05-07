@@ -1,5 +1,5 @@
-#ifndef UTL_GRAPH_TOPSORT_HPP
-#define UTL_GRAPH_TOPSORT_HPP
+#ifndef UTL___GRAPH_TOPSORT_HPP_
+#define UTL___GRAPH_TOPSORT_HPP_
 
 #include <iterator>
 
@@ -79,4 +79,4 @@ void topsort(Itr begin, S end, E edges) {
 
 } // namespace utl
 
-#endif // UTL_GRAPH_TOPSORT_HPP
+#endif // UTL___GRAPH_TOPSORT_HPP_

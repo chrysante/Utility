@@ -1,5 +1,5 @@
-#ifndef UTL_DISPATCH_THREADPOOL_HPP
-#define UTL_DISPATCH_THREADPOOL_HPP
+#ifndef UTL_DISPATCH_THREAD_POOL_HPP_
+#define UTL_DISPATCH_THREAD_POOL_HPP_
 
 #include <atomic>
 #include <deque>
@@ -100,4 +100,4 @@ private:
 
 } // namespace utl
 
-#endif // UTL_DISPATCH_THREADPOOL_HPP
+#endif // UTL_DISPATCH_THREAD_POOL_HPP_

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_ILIST_HPP_
+#define UTL_ILIST_HPP_
 
 #include <iosfwd>
 #include <iterator>
@@ -765,3 +766,5 @@ operator<<(std::basic_ostream<CharT, Traits>& ostream, ilist<T, A> const& l) {
 }
 
 } // namespace utl
+
+#endif // UTL_ILIST_HPP_

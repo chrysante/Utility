@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL___DEBUG_HPP_
+#define UTL___DEBUG_HPP_
 
 #include <cassert>
 
@@ -32,3 +33,5 @@ namespace utl {
 }
 
 } // namespace utl
+
+#endif // UTL___DEBUG_HPP_

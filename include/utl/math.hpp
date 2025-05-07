@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_MATH_HPP_
+#define UTL_MATH_HPP_
 
 #include <bit>
 
@@ -135,3 +136,5 @@ constexpr T ipow(T base, int exp) {
 }
 
 } // namespace utl
+
+#endif // UTL_MATH_HPP_

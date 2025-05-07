@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_STRCAT_HPP_
+#define UTL_STRCAT_HPP_
 
 #include <sstream>
 #include <string>
@@ -20,3 +21,5 @@ concept __utl_printable = requires(std::ostream& s, T&& t) { s << t; };
 }
 
 } // namespace utl
+
+#endif // UTL_STRCAT_HPP_

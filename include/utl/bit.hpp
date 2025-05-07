@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_BIT_HPP_
+#define UTL_BIT_HPP_
 
 #include <bit>
 #include <cstring>
@@ -51,3 +52,5 @@ constexpr inline std::int64_t byte_swap(std::int64_t val) {
 }
 
 } // namespace utl
+
+#endif // UTL_BIT_HPP_

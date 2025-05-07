@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTL_LAZY_HPP_
+#define UTL_LAZY_HPP_
 
 #include <utl/__base.hpp>
 #include <utl/concepts.hpp>
@@ -28,3 +29,5 @@ template <typename T>
 using any_lazy = lazy<utl::function<T>>;
 
 } // namespace utl
+
+#endif // UTL_LAZY_HPP_

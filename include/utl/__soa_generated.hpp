@@ -1,7 +1,5 @@
-#pragma once
-
-#ifndef __UTL_SOA_GENERATED_INCLUDED__
-#define __UTL_SOA_GENERATED_INCLUDED__
+#ifndef UTL___SOA_GENERATED_HPP_
+#define UTL___SOA_GENERATED_HPP_
 
 #include <utl/__base.hpp>
 #include <utl/common.hpp>
@@ -19432,4 +19430,4 @@ auto constexpr __soa_identity = [](auto&& x) -> decltype(auto) { return x; };
                Id(a.get<23>()) == Id(b.get<23>());                             \
     }
 
-#endif // __UTL_SOA_GENERATED_INCLUDED__
+#endif // UTL___SOA_GENERATED_HPP_

@@ -1,5 +1,5 @@
-#ifndef UTL_GRAPH_SCC_HPP
-#define UTL_GRAPH_SCC_HPP
+#ifndef UTL___GRAPH_SCC_HPP_
+#define UTL___GRAPH_SCC_HPP_
 
 #include <iterator>
 
@@ -132,4 +132,4 @@ void utl::compute_sccs(Itr vertex_begin, S vertex_end, E successors,
     ctx.compute();
 }
 
-#endif // UTL_GRAPH_SCC_HPP
+#endif // UTL___GRAPH_SCC_HPP_

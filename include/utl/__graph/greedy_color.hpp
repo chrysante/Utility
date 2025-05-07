@@ -1,5 +1,5 @@
-#ifndef UTL_GRAPH_GREEDY_COLOR
-#define UTL_GRAPH_GREEDY_COLOR
+#ifndef UTL___GRAPH_GREEDY_COLOR_HPP_
+#define UTL___GRAPH_GREEDY_COLOR_HPP_
 
 #include <iterator>
 #include <optional>
@@ -58,4 +58,4 @@ size_t greedy_color(Itr begin, S end, Neighbours neighbours, Assign assign) {
 
 } // namespace utl
 
-#endif // UTL_GRAPH_GREEDY_COLOR
+#endif // UTL___GRAPH_GREEDY_COLOR_HPP_
