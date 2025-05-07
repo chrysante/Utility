@@ -36,7 +36,6 @@ target_include_directories(utility
 set(utility_headers
   include/utl/__base.hpp
   include/utl/__debug.hpp
-  include/utl/__farray.hpp
   include/utl/__function_objects.hpp
   include/utl/__function.hpp
   include/utl/__graph/chordal.hpp
@@ -44,7 +43,6 @@ set(utility_headers
   include/utl/__graph/greedy_color.hpp
   include/utl/__graph/scc.hpp
   include/utl/__graph/topsort.hpp
-  include/utl/__memory_resource_base.hpp
   include/utl/__prime.hpp
   include/utl/__ranges_base.hpp
   include/utl/__soa_generated.hpp
@@ -73,8 +71,6 @@ set(utility_headers
   include/utl/ipp.hpp
   include/utl/lazy.hpp
   include/utl/math.hpp
-  include/utl/mdarray.hpp
-  include/utl/memory_resource.hpp
   include/utl/messenger.hpp
   include/utl/metric_table.hpp
   include/utl/overload.hpp
@@ -97,13 +93,11 @@ set(utility_headers
   include/utl/typeinfo.hpp
   include/utl/utility.hpp
   include/utl/uuid.hpp
-  include/utl/variant.hpp
   include/utl/vector.hpp
 ) 
 
 set(utility_sources
   src/dynamic_library.cpp
-  src/memory_resource.cpp
   src/thread.cpp
   src/thread_pool.cpp
   src/typeinfo.cpp
@@ -145,7 +139,6 @@ target_link_libraries(test Catch2::Catch2WithMain)
 add_dependencies(test test-lib)
 
 set(utility_test_sources
-  test/utl/DebugMemoryResource.hpp
   test/utl/LifetimeCounter.cpp
   test/utl/LifetimeCounter.hpp
   test/utl/TypeCompare.h
@@ -156,7 +149,6 @@ set(utility_test_sources
   test/utl/dynamic_dispatch.t.cpp
   test/utl/dynamic_library.t.cpp
   test/utl/dyncast.t.cpp
-  test/utl/farray.t.cpp
   test/utl/format_time.t.cpp
   test/utl/function.t.cpp
   test/utl/function_view.t.cpp
@@ -171,14 +163,11 @@ set(utility_test_sources
   test/utl/ipp.t.cpp
   test/utl/lazy.t.cpp
   test/utl/math.t.cpp
-  test/utl/memory_resource.t.cpp
   test/utl/messenger.t.cpp
   test/utl/metric_table.t.cpp
-  test/utl/monotonic_buffer_resource.t.cpp
   test/utl/pimpl.t.cpp
   test/utl/projection.t.cpp
   test/utl/ptr_union.t.cpp
-  test/utl/pool_resource.t.cpp
   test/utl/queue.t.cpp
   test/utl/scope_guard.t.cpp
   test/utl/stack.t.cpp
@@ -191,7 +180,6 @@ set(utility_test_sources
   test/utl/type_traits.t.cpp
   test/utl/utility.t.cpp
   test/utl/uuid.t.cpp
-  test/utl/variant.t.cpp
   test/utl/vector/VectorTest.hpp
   test/utl/vector/constructors.t.cpp
   test/utl/vector/insert-erase.t.cpp

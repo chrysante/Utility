@@ -83,7 +83,6 @@
 #include <utl/__base.hpp>
 #include <utl/__debug.hpp>
 #include <utl/__function_objects.hpp>
-#include <utl/__memory_resource_base.hpp> // for utl::pmr::structure_of_array typedef
 #include <utl/__soa_generated.hpp>
 #include <utl/common.hpp>
 #include <utl/concepts.hpp>
@@ -101,12 +100,6 @@ struct __utl_soa_options {
 /// MARK: - Declarations
 template <__soa_type ST, typename Allocator = std::allocator<ST>>
 class structure_of_arrays;
-
-namespace pmr {
-template <__soa_type ST>
-using structure_of_arrays =
-    utl::structure_of_arrays<ST, polymorphic_allocator<ST>>;
-}
 
 template <__soa_type, typename... Members>
 class soa_view;

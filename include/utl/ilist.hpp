@@ -4,7 +4,6 @@
 #include <iterator>
 
 #include "__base.hpp"
-#include "__memory_resource_base.hpp"
 #include "__ranges_base.hpp"
 #include "type_traits.hpp"
 

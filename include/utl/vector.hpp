@@ -11,7 +11,6 @@
 #include <type_traits>
 
 #include "__base.hpp"
-#include "__memory_resource_base.hpp"
 #include "__ranges_base.hpp"
 #include "common.hpp"
 #include "concepts.hpp"
@@ -50,15 +49,6 @@ _UTL_SYSTEM_HEADER_
 ///     template <typename T, typename A>
 ///     constexpr std::size_t default_inline_capacity;
 ///
-///     namespace pmr {
-///         template <typename T>
-///         using vector = utl::vector<T, polymorphic_allocator<T>>;
-///         template <typename T>
-///         using small_vector = utl::vector<
-///             T, default_inline_capacity<T, polymorphic_allocator<T>>,
-///             polymorphic_allocator<T>>;
-///     }
-///
 /// }
 /// ```
 // clang-format on
@@ -93,14 +83,6 @@ template <typename T,
           std::size_t N = default_inline_capacity<T, std::allocator<T>>,
           typename Allocator = std::allocator<T>>
 struct small_vector;
-
-namespace pmr {
-template <typename T>
-using vector = utl::vector<T, polymorphic_allocator<T>>;
-template <typename T,
-          std::size_t N = default_inline_capacity<T, polymorphic_allocator<T>>>
-using small_vector = utl::small_vector<T, N, polymorphic_allocator<T>>;
-} // namespace pmr
 
 // MARK: - vector
 template <typename T, typename Allocator>

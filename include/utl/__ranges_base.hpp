@@ -2,6 +2,7 @@
 #define UTL_RANGES_BASE_HPP
 
 #include "__base.hpp"
+#include "__debug.hpp"
 #include "concepts.hpp"
 
 _UTL_SYSTEM_HEADER_

@@ -71,17 +71,12 @@ TEST_CASE("structure_of_arrays::push_back") {
     testPushBack(s);
 }
 
-TEST_CASE("pmr::structure_of_arrays::push_back") {
-    utl::pmr::structure_of_arrays<Particle> s;
-    testPushBack(s);
-}
-
-TEST_CASE("pmr::structure_of_arrays copy construct (resource equal)") {
-    utl::pmr::structure_of_arrays<Particle> s;
+TEST_CASE("structure_of_arrays copy construct (resource equal)") {
+    utl::structure_of_arrays<Particle> s;
     s.push_back({ .id = 0 });
     s.push_back({ .id = 1 });
 
-    utl::pmr::structure_of_arrays<Particle> t = s;
+    utl::structure_of_arrays<Particle> t = s;
 
     CHECK(s.size() == 2);
     CHECK(s.capacity() >= 2);
@@ -94,12 +89,12 @@ TEST_CASE("pmr::structure_of_arrays copy construct (resource equal)") {
     CHECK(t[1].id == 1);
 }
 
-TEST_CASE("pmr::structure_of_arrays move construct (resource equal)") {
-    utl::pmr::structure_of_arrays<Particle> s;
+TEST_CASE("structure_of_arrays move construct (resource equal)") {
+    utl::structure_of_arrays<Particle> s;
     s.push_back({ .id = 0 });
     s.push_back({ .id = 1 });
 
-    utl::pmr::structure_of_arrays<Particle> t = std::move(s);
+    utl::structure_of_arrays<Particle> t = std::move(s);
     CHECK(s.size() == 0);
     CHECK(s.capacity() == 0);
     CHECK(t.size() == 2);
@@ -107,12 +102,12 @@ TEST_CASE("pmr::structure_of_arrays move construct (resource equal)") {
     CHECK(t[1].id == 1);
 }
 
-TEST_CASE("pmr::structure_of_arrays move assign (resource equal)") {
-    utl::pmr::structure_of_arrays<Particle> s;
+TEST_CASE("structure_of_arrays move assign (resource equal)") {
+    utl::structure_of_arrays<Particle> s;
     s.push_back({ .id = 0 });
     s.push_back({ .id = 1 });
 
-    utl::pmr::structure_of_arrays<Particle> t;
+    utl::structure_of_arrays<Particle> t;
     SECTION("empty") {}
     SECTION("non-empty") {
         t.push_back({});
