@@ -275,17 +275,10 @@ struct vector {
     }
 
     /// (2)
-    template <typename It>
-    requires requires(It it) {
-        {
-            *it
-        } -> std::convertible_to<value_type>;
-        {
-            ++it
-        } -> std::same_as<It&>;
-    }
-    constexpr void assign(It first, It last) {
-        __assign_impl(distance(first, last),
+    template <std::input_iterator It, std::sentinel_for<It> S>
+    requires std::convertible_to<std::iter_value_t<It>, value_type>
+    constexpr void assign(It first, S last) {
+        __assign_impl(std::ranges::distance(first, last),
                       [i = first]() mutable -> decltype(auto) { return *i++; });
     }
 
@@ -526,7 +519,7 @@ struct vector {
             __utl_expect(last < __begin() || last >= __end(),
                          "inserted range may not overlap *this");
         }
-        return __insert_impl(index, distance(first, last),
+        return __insert_impl(index, std::ranges::distance(first, last),
                              [first]() mutable -> decltype(auto) {
             return *first++;
         });
