@@ -2,12 +2,10 @@
 
 #include <bit>
 
-#include "__base.hpp"
-#include "__debug.hpp"
-#include "bit.hpp"
-#include "concepts.hpp"
-
-_UTL_SYSTEM_HEADER_
+#include <utl/__base.hpp>
+#include <utl/__debug.hpp>
+#include <utl/bit.hpp>
+#include <utl/concepts.hpp>
 
 namespace utl {
 
@@ -150,5 +148,3 @@ constexpr T ipow(T base, int exp) {
 }
 
 } // namespace utl
-
-#include "utility.hpp"

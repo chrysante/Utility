@@ -2,8 +2,11 @@
 
 #include <cstddef>
 
-#include "__base.hpp"
-_UTL_SYSTEM_HEADER_
+#include <utl/__base.hpp>
+#include <utl/__debug.hpp>
+#include <utl/bit.hpp>
+#include <utl/concepts.hpp>
+#include <utl/type_traits.hpp>
 
 namespace utl {
 
@@ -22,11 +25,6 @@ template <typename>
 class unique_function; // undefined
 
 } // namespace utl
-
-#include "__debug.hpp"
-#include "bit.hpp"
-#include "concepts.hpp"
-#include "type_traits.hpp"
 
 #define _UTL_LOCAL_FUNCTION_SIZE_IN_WORDS 3
 

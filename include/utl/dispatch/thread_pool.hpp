@@ -15,8 +15,6 @@
 #include <utl/type_traits.hpp>
 #include <utl/vector.hpp>
 
-_UTL_SYSTEM_HEADER_
-
 namespace utl {
 
 class UTL_API dispatch_item {

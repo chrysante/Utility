@@ -1,10 +1,9 @@
 #pragma once
 
-#include "__base.hpp"
-_UTL_SYSTEM_HEADER_
-
 #include <iterator>
 #include <type_traits>
+
+#include <utl/__base.hpp>
 
 namespace utl {
 

@@ -7,8 +7,6 @@
 #include <utl/hashset.hpp>
 #include <utl/vector.hpp>
 
-_UTL_SYSTEM_HEADER_
-
 namespace utl {
 
 /// \brief   Topologically sorts a directed acyclic graph.

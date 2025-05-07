@@ -8,8 +8,6 @@
 #include <utl/hashset.hpp>
 #include <utl/vector.hpp>
 
-_UTL_SYSTEM_HEADER_
-
 namespace utl {
 
 /// Finds a lexicographical ordering of the graph `([begin, end), neighbours)`

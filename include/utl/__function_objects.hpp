@@ -1,15 +1,13 @@
 #pragma once
 
-#include "__base.hpp"
-_UTL_SYSTEM_HEADER_
-
-#include "common.hpp"
-#include "concepts.hpp"
-#include "math.hpp"
-#include "type_traits.hpp"
-
 #include <algorithm>
 #include <cmath>
+
+#include <utl/__base.hpp>
+#include <utl/common.hpp>
+#include <utl/concepts.hpp>
+#include <utl/math.hpp>
+#include <utl/type_traits.hpp>
 
 #define _UTL_FUNCTION_OBJECT_DEF(obj_name, impl)                               \
     struct obj_name##_t {                                                      \

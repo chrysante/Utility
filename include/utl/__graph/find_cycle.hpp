@@ -4,8 +4,6 @@
 #include <utl/__base.hpp>
 #include <utl/vector.hpp>
 
-_UTL_SYSTEM_HEADER_
-
 namespace utl {
 
 /// \brief   Finds a cycle in a directed graph.

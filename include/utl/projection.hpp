@@ -1,9 +1,7 @@
 #pragma once
 
-#include "__base.hpp"
-#include "hash.hpp"
-
-_UTL_SYSTEM_HEADER_
+#include <utl/__base.hpp>
+#include <utl/hash.hpp>
 
 namespace utl {
 

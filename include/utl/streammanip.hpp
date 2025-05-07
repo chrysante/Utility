@@ -4,9 +4,7 @@
 #include <functional>
 #include <iosfwd>
 
-#include "__base.hpp"
-
-_UTL_SYSTEM_HEADER_
+#include <utl/__base.hpp>
 
 namespace utl {
 

@@ -1,15 +1,12 @@
 #pragma once
 
-#include "__base.hpp"
-
-_UTL_SYSTEM_HEADER_
-
-#include "common.hpp"
-
 #include <concepts>
 #include <cstddef>
 #include <new>
 #include <type_traits>
+
+#include <utl/__base.hpp>
+#include <utl/common.hpp>
 
 namespace utl {
 

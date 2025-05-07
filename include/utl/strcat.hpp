@@ -1,12 +1,10 @@
 #pragma once
 
-#include "__base.hpp"
-#include "common.hpp"
-
-_UTL_SYSTEM_HEADER_
-
 #include <sstream>
 #include <string>
+
+#include <utl/__base.hpp>
+#include <utl/common.hpp>
 
 namespace utl {
 

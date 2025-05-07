@@ -1,11 +1,8 @@
 #pragma once
 
-#include "__base.hpp"
-
-_UTL_SYSTEM_HEADER_
-
-#include "common.hpp"
-#include "type_traits.hpp"
+#include <utl/__base.hpp>
+#include <utl/common.hpp>
+#include <utl/type_traits.hpp>
 
 namespace utl {
 

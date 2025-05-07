@@ -3,9 +3,8 @@
 #ifndef __UTL_SOA_GENERATED_INCLUDED__
 #define __UTL_SOA_GENERATED_INCLUDED__
 
-#include "__base.hpp"
-_UTL_SYSTEM_HEADER_
-#include "common.hpp"
+#include <utl/__base.hpp>
+#include <utl/common.hpp>
 
 namespace utl {
 auto constexpr __soa_identity = [](auto&& x) -> decltype(auto) { return x; };

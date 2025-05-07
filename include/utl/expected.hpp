@@ -1,8 +1,4 @@
 #pragma once
-
-#include "__base.hpp"
-_UTL_SYSTEM_HEADER_
-
 ///
 // expected - An implementation of std::expected with extensions
 // Written in 2017 by Simon Brand (simonrbrand@gmail.com, @TartanLlama)

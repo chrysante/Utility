@@ -2,11 +2,9 @@
 
 #include <functional>
 
-#include "__base.hpp"
-#include "__debug.hpp"
-#include "type_traits.hpp"
-
-_UTL_SYSTEM_HEADER_
+#include <utl/__base.hpp>
+#include <utl/__debug.hpp>
+#include <utl/type_traits.hpp>
 
 namespace utl {
 

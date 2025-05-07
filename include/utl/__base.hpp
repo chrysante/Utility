@@ -23,9 +23,6 @@
 #define UTL_POSIX 1
 #endif
 
-/// MARK: System Header
-#define _UTL_SYSTEM_HEADER_
-
 /// MARK: UTL_DEBUG_LEVEL
 #ifndef UTL_DEBUG_LEVEL
 #ifdef NDEBUG

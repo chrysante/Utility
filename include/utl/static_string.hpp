@@ -1,12 +1,11 @@
 #pragma once
 
-#include "__base.hpp"
-_UTL_SYSTEM_HEADER_
-
-#include "common.hpp"
 #include <cstddef>
 #include <iosfwd>
 #include <string>
+
+#include <utl/__base.hpp>
+#include <utl/common.hpp>
 
 namespace utl {
 
