@@ -11,7 +11,7 @@ namespace {
 template <typename T>
 struct Set {
     Set(std::initializer_list<T> l): elems(l) {}
-    
+
     utl::small_vector<T> elems;
 };
 
@@ -20,8 +20,8 @@ bool operator==(Set<T> const& s, auto const& rng) {
     if (std::size(rng) != s.elems.size()) {
         return false;
     }
-    for (auto&& x: rng) {
-        for (auto&& y: s.elems) {
+    for (auto&& x : rng) {
+        for (auto&& y : s.elems) {
             if (x == y) {
                 goto endLoop;
             }
@@ -35,33 +35,24 @@ bool operator==(Set<T> const& s, auto const& rng) {
 
 } // namespace
 
-static utl::vector<utl::small_vector<uint16_t>> computeSCCs(
-    std::span<utl_test::Vertex const> vertices) {
+static utl::vector<utl::small_vector<uint16_t>>
+computeSCCs(std::span<utl_test::Vertex const> vertices) {
     utl::small_vector<std::uint16_t> indices(vertices.size());
     for (size_t index = 0; auto& i : indices) {
         i = static_cast<std::uint16_t>(index++);
     }
     utl::vector<utl::small_vector<uint16_t>> sccs;
-    utl::compute_sccs(indices.begin(),
-                      indices.end(),
+    utl::compute_sccs(indices.begin(), indices.end(),
                       [&](std::size_t index) -> auto& {
-                          return vertices[index].successors;
-                      },
-                      [&] { sccs.emplace_back(); },
+        return vertices[index].successors;
+    }, [&] { sccs.emplace_back(); },
                       [&](size_t index) { sccs.back().push_back(index); });
     return sccs;
 }
 
 TEST_CASE("scc - 1", "[graph]") {
     utl::vector<utl_test::Vertex> vertices = {
-        { 0 },
-        { 1 },
-        { 2 },
-        { 3 },
-        { 4 },
-        { 5 },
-        { 6 },
-        { 7 },
+        { 0 }, { 1 }, { 2 }, { 3 }, { 4 }, { 5 }, { 6 }, { 7 },
     };
     vertices[0].successors = { 1 };
     vertices[1].successors = { 2, 4 };

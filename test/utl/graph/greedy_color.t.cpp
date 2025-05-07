@@ -16,7 +16,7 @@ TEST_CASE("Greedy color - 1", "[graph]") {
     vertices[2].successors = { 1, 4 };
     vertices[3].successors = { 0, 4 };
     vertices[4].successors = { 0, 1, 2, 3 };
-    
+
     //  0 --- 1 --- 2
     //  |\    |    /
     //  | \   |   /
@@ -24,30 +24,31 @@ TEST_CASE("Greedy color - 1", "[graph]") {
     //  |   \ | /
     //  |    \|/
     //  3 --- 4
-    
+
     utl::small_vector<std::uint16_t> indices(vertices.size());
     for (size_t index = 0; auto& i : indices) {
         i = static_cast<std::uint16_t>(index++);
     }
-    auto neighbours = [&](size_t index) -> auto& { return vertices[index].successors; };
+    auto neighbours = [&](size_t index) -> auto& {
+        return vertices[index].successors;
+    };
     utl::small_vector<std::uint16_t> lexOrdering;
     lexOrdering.reserve(vertices.size());
-    utl::find_lex_ordering(indices.begin(),
-                           indices.end(),
-                           neighbours,
+    utl::find_lex_ordering(indices.begin(), indices.end(), neighbours,
                            std::back_inserter(lexOrdering));
-    bool const isChordal = utl::is_chordal(lexOrdering.begin(), lexOrdering.end(), neighbours);
+    bool const isChordal =
+        utl::is_chordal(lexOrdering.begin(), lexOrdering.end(), neighbours);
     REQUIRE(isChordal);
-    
+
     utl::vector<uint32_t> colors(vertices.size());
-    utl::greedy_color(lexOrdering.begin(), lexOrdering.end(), neighbours, [&](size_t index, uint32_t color) {
+    utl::greedy_color(lexOrdering.begin(), lexOrdering.end(), neighbours,
+                      [&](size_t index, uint32_t color) {
         colors[index] = color;
     });
     for (size_t i = 0; i < vertices.size(); ++i) {
         auto c = colors[i];
-        for (auto n: neighbours(i)) {
+        for (auto n : neighbours(i)) {
             CHECK(c != colors[n]);
         }
     }
 }
- 
