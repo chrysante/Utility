@@ -19,35 +19,23 @@ public:
 
 public:
     /// MARK: Constructors
-    __utl_interface_export stack() = default;
-    __utl_interface_export explicit stack(container_type const& cont):
-        container_type(cont) {}
-    __utl_interface_export explicit stack(container_type&& cont):
-        container_type(std::move(cont)) {}
+    stack() = default;
+    explicit stack(container_type const& cont): container_type(cont) {}
+    explicit stack(container_type&& cont): container_type(std::move(cont)) {}
     template <input_iterator_for<T> It, sentinel_for<It> S>
-    __utl_interface_export explicit stack(It first, S last):
-        container_type(first, last) {}
-    __utl_interface_export stack(std::initializer_list<T> ilist):
-        container_type(ilist) {}
+    explicit stack(It first, S last): container_type(first, last) {}
+    stack(std::initializer_list<T> ilist): container_type(ilist) {}
 
     /// MARK: Queries
     using container_type::empty;
     [[deprecated]] explicit operator bool() const { return !empty(); }
     using container_type::size;
-    __utl_nodiscard __utl_interface_export container_type const&
-    container() const& {
-        return *this;
-    }
-    __utl_nodiscard __utl_interface_export container_type& container() & {
-        return *this;
-    }
-    __utl_nodiscard __utl_interface_export container_type const&&
-    container() const&& {
+    [[nodiscard]] container_type const& container() const& { return *this; }
+    [[nodiscard]] container_type& container() & { return *this; }
+    [[nodiscard]] container_type const&& container() const&& {
         return std::move(*this);
     }
-    __utl_nodiscard __utl_interface_export container_type&& container() && {
-        return std::move(*this);
-    }
+    [[nodiscard]] container_type&& container() && { return std::move(*this); }
 
     /// MARK: Iterators
     using container_type::begin;
@@ -70,17 +58,17 @@ public:
 
     using container_type::clear;
 
-    __utl_interface_export T pop() {
+    T pop() {
         T result = top();
         this->pop_back();
         return result;
     }
 
-    __utl_interface_export T& top() { return this->back(); }
+    T& top() { return this->back(); }
 
-    __utl_interface_export T const& top() const { return this->back(); }
+    T const& top() const { return this->back(); }
 
-    __utl_interface_export void swap(stack& rhs) {
+    void swap(stack& rhs) {
         this->container_type::swap(static_cast<container_type&>(rhs));
     }
 };

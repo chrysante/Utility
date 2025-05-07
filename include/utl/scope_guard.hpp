@@ -43,13 +43,13 @@ public:
                 return;
         }
         if constexpr (Type == __scope_guard_type::success) {
-            if UTL_UNLIKELY (this->__uncaught_exceptions <
-                             std::uncaught_exceptions()) /// Failure
+            if (this->__uncaught_exceptions <
+                std::uncaught_exceptions()) /// Failure
                 return;
         }
         else if constexpr (Type == __scope_guard_type::failure) {
-            if UTL_LIKELY (this->__uncaught_exceptions ==
-                           std::uncaught_exceptions()) /// Success
+            if (this->__uncaught_exceptions ==
+                std::uncaught_exceptions()) /// Success
                 return;
         }
         __f();

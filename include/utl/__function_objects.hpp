@@ -11,7 +11,7 @@
 
 #define _UTL_FUNCTION_OBJECT_DEF(obj_name, impl)                               \
     struct obj_name##_t {                                                      \
-        __utl_nodiscard constexpr auto operator() impl                         \
+        [[nodiscard]] constexpr auto operator() impl                           \
     } inline constexpr obj_name {                                              \
     }
 
@@ -22,13 +22,13 @@
             UTL_FORWARD(a)                                                     \
             op UTL_FORWARD(b);                                                 \
         }                                                                      \
-        __utl_nodiscard constexpr auto operator()(T&& a, U&& b) const {        \
+        [[nodiscard]] constexpr auto operator()(T&& a, U&& b) const {          \
             return UTL_FORWARD(a) op UTL_FORWARD(b);                           \
         }                                                                      \
         template <class T, class U, class... V>                                \
         requires(extendDef)                                                    \
-        __utl_nodiscard constexpr auto operator()(T&& a, U&& b,                \
-                                                  V&&... c) const {            \
+        [[nodiscard]] constexpr auto operator()(T&& a, U&& b,                  \
+                                                V&&... c) const {              \
             auto result = (a op b);                                            \
             ((result = (result op c)), ...);                                   \
             return result;                                                     \
@@ -40,16 +40,16 @@ namespace utl {
 struct plus_t {
     template <typename T>
     requires requires(T&& t) { +t; }
-    __utl_nodiscard constexpr auto operator()(T&& a) const {
+    [[nodiscard]] constexpr auto operator()(T&& a) const {
         return +UTL_FORWARD(a);
     }
     template <typename T, typename U>
     requires requires(T&& t, U&& u) { t + u; }
-    __utl_nodiscard constexpr auto operator()(T&& a, U&& b) const {
+    [[nodiscard]] constexpr auto operator()(T&& a, U&& b) const {
         return UTL_FORWARD(a) + UTL_FORWARD(b);
     }
     template <class T, class U, class... V>
-    __utl_nodiscard constexpr auto operator()(T&& a, U&& b, V&&... c) const {
+    [[nodiscard]] constexpr auto operator()(T&& a, U&& b, V&&... c) const {
         auto result = (a + b);
         ((result = (result + c)), ...);
         return result;
@@ -58,12 +58,12 @@ struct plus_t {
 struct minus_t {
     template <typename T>
     requires requires(T&& t) { -t; }
-    __utl_nodiscard constexpr auto operator()(T&& a) const {
+    [[nodiscard]] constexpr auto operator()(T&& a) const {
         return -UTL_FORWARD(a);
     }
     template <typename T, typename U>
     requires requires(T&& t, U&& u) { t - u; }
-    __utl_nodiscard constexpr auto operator()(T&& a, U&& b) const {
+    [[nodiscard]] constexpr auto operator()(T&& a, U&& b) const {
         return UTL_FORWARD(a) - UTL_FORWARD(b);
     }
 } inline constexpr minus{};
@@ -94,7 +94,7 @@ _UTL_BIN_FUNCTION_OBJECT_DEF(bitwise_xor, bitwise_xor, ^, false);
 #undef _UTL_BIN_FUNCTION_OBJECT_DEF
 
 namespace __utl_function_objects_impl {
-__utl_nodiscard constexpr auto signed_sqrt(utl::arithmetic auto x) {
+[[nodiscard]] constexpr auto signed_sqrt(utl::arithmetic auto x) {
     if (std::signbit(x)) {
         return -std::sqrt(-x);
     }
@@ -103,8 +103,8 @@ __utl_nodiscard constexpr auto signed_sqrt(utl::arithmetic auto x) {
     }
 }
 
-__utl_nodiscard constexpr auto signed_pow(utl::arithmetic auto x,
-                                          utl::arithmetic auto y) {
+[[nodiscard]] constexpr auto signed_pow(utl::arithmetic auto x,
+                                        utl::arithmetic auto y) {
     if (std::signbit(x)) {
         return -std::pow(-x, y);
     }
@@ -113,28 +113,28 @@ __utl_nodiscard constexpr auto signed_pow(utl::arithmetic auto x,
     }
 }
 
-__utl_nodiscard constexpr auto ceil_divide(std::integral auto a,
-                                           std::integral auto b) {
+[[nodiscard]] constexpr auto ceil_divide(std::integral auto a,
+                                         std::integral auto b) {
     __utl_expect(a >= 0);
     __utl_expect(b >= 0);
     return (a / b) + !!(a % b);
 }
 
-__utl_nodiscard constexpr auto ceil_divide_pow_two(std::integral auto a,
-                                                   std::integral auto b) {
+[[nodiscard]] constexpr auto ceil_divide_pow_two(std::integral auto a,
+                                                 std::integral auto b) {
     __utl_expect(a >= 0);
     __utl_expect(b >= 0);
     return fast_div_pow_two(a, b) + !!fast_mod_pow_two(a, b);
 }
 
-__utl_nodiscard constexpr auto fract(std::floating_point auto f) {
+[[nodiscard]] constexpr auto fract(std::floating_point auto f) {
     decltype(f) i;
     auto const result = std::modf(f, &i);
     return (result < 0) + result;
 }
 
-__utl_nodiscard constexpr auto mod(std::floating_point auto f,
-                                   std::floating_point auto r) {
+[[nodiscard]] constexpr auto mod(std::floating_point auto f,
+                                 std::floating_point auto r) {
     return fract(f / r) * r;
 }
 } // namespace __utl_function_objects_impl

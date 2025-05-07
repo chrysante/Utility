@@ -77,7 +77,7 @@ constexpr std::common_type_t<T, U> fast_mod_pow_two(T x, U y) {
 }
 
 template <typename T, typename A>
-__utl_nodiscard constexpr T mix(T const& t, T const& u, A const& alpha) {
+[[nodiscard]] constexpr T mix(T const& t, T const& u, A const& alpha) {
     return t * (1 - alpha) + u * alpha;
 }
 

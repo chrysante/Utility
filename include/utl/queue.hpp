@@ -65,7 +65,7 @@ public:
         __index = 0;
     }
 
-    __utl_interface_export T pop() {
+    T pop() {
         __utl_expect(!empty());
         ++__index;
         return std::move(__cont[__index - 1]);
