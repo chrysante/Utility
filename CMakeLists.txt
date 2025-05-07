@@ -43,7 +43,7 @@ set(utility_headers
   include/utl/__graph/greedy_color.hpp
   include/utl/__graph/scc.hpp
   include/utl/__graph/topsort.hpp
-  include/utl/__ranges_base.hpp
+  include/utl/__wrap_iterator.hpp
   include/utl/__soa_generated.hpp
   include/utl/__third_party/ankerl/unordered_dense.h
   include/utl/bit.hpp

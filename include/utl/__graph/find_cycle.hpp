@@ -1,6 +1,8 @@
 #ifndef UTL_GRAPH_FINDCYCLE_HPP
 #define UTL_GRAPH_FINDCYCLE_HPP
 
+#include <iterator>
+
 #include <utl/__base.hpp>
 #include <utl/vector.hpp>
 
@@ -18,7 +20,7 @@ namespace utl {
 /// \param   edges Invocable retrieving a range of vertices from a vertex
 /// representing its edges. \returns The first encountered cycle in the graph as
 /// `utl::small_vector</*VertexType*/>`
-template <input_iterator Itr, sentinel_for<Itr> S, typename E,
+template <std::input_iterator Itr, std::sentinel_for<Itr> S, typename E,
           std::equality_comparable VertexType =
               std::decay_t<decltype(*std::declval<Itr>())>>
 small_vector<VertexType> find_cycle(Itr begin, S end, E edges);
@@ -50,7 +52,7 @@ struct __search_cycle_context {
     E edges;
 };
 
-template <input_iterator Itr, sentinel_for<Itr> S, typename E,
+template <std::input_iterator Itr, std::sentinel_for<Itr> S, typename E,
           std::equality_comparable Vertex>
 small_vector<Vertex> find_cycle(Itr begin, S end, E edges) {
     utl::small_vector<Vertex> result;

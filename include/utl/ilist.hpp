@@ -2,9 +2,11 @@
 
 #include <iosfwd>
 #include <iterator>
+#include <ranges>
 
 #include <utl/__base.hpp>
-#include <utl/__ranges_base.hpp>
+#include <utl/__debug.hpp>
+#include <utl/concepts.hpp>
 #include <utl/type_traits.hpp>
 
 namespace utl {
@@ -207,7 +209,7 @@ public:
 
     // (5)
     template <input_iterator_for<value_type> InputIt,
-              sentinel_for<InputIt> Sentinel>
+              std::sentinel_for<InputIt> Sentinel>
     ilist(InputIt first, Sentinel last,
           allocator_type const& alloc = allocator_type()):
         ilist(alloc) {
@@ -340,15 +342,16 @@ public:
 
     // (2)
     template <input_iterator_for<value_type> InputIt,
-              sentinel_for<InputIt> Sentinel>
+              std::sentinel_for<InputIt> Sentinel>
     void assign(InputIt first, Sentinel last) {
         __assign_element_wise(first, last);
     }
 
     // (2)
-    template <input_range_for<value_type> Range>
-    void assign(Range&& range) {
-        assign(__utl_begin(range), __utl_end(range));
+    template <std::ranges::input_range Range>
+    requires std::convertible_to<std::ranges::range_value_t<Range>, value_type>
+    void assign_range(Range&& range) {
+        assign(std::ranges::begin(range), std::ranges::end(range));
     }
 
     // (3)
@@ -425,7 +428,7 @@ public:
 
     // (4)
     template <input_iterator_for<value_type> InputIt,
-              sentinel_for<InputIt> Sentinel>
+              std::sentinel_for<InputIt> Sentinel>
     iterator insert(const_iterator pos, InputIt first, Sentinel last) {
         return __insert_impl_itr(pos, first, last);
     }
@@ -664,11 +667,12 @@ public:
         __move_assign_pointer_swap_s(__sentinel_, begin, end);
     }
 
+    template <typename F>
     iterator __insert_impl(const_iterator cpos, size_type count,
-                           std::invocable auto&& get_nodes) {
+                           F&& get_nodes) {
         return __insert_impl(cpos, [&, i = size_type(0)]() mutable {
             return i++ < count;
-        }, UTL_FORWARD(get_nodes));
+        }, std::forward<F>(get_nodes));
     }
 
     iterator __insert_impl_itr(const_iterator cpos, auto first, auto last) {

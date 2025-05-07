@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <iterator>
 #include <type_traits>
 
 #include <utl/__base.hpp>
@@ -66,14 +67,14 @@ public:
 
     /// (5)
     template <utl::input_iterator_for<value_type> InputIt,
-              utl::sentinel_for<InputIt> Sentinel>
+              std::sentinel_for<InputIt> Sentinel>
     tiny_ptr_vector(InputIt first, Sentinel last,
                     allocator_type const& alloc = allocator_type()):
         tiny_ptr_vector(alloc) {
         if (first == last) {
             return;
         }
-        if constexpr (utl::forward_iterator<InputIt>) {
+        if constexpr (std::forward_iterator<InputIt>) {
             impl_type impl(first, last, alloc);
             switch (impl.size()) {
             case 0: utl::unreachable(); break;
@@ -222,12 +223,12 @@ public:
 
     /// (2)
     template <utl::input_iterator_for<value_type> InputIt,
-              utl::sentinel_for<InputIt> Sentinel>
+              std::sentinel_for<InputIt> Sentinel>
     void assign(InputIt first, Sentinel last) {
         if (first == last) {
             clear();
         }
-        else if constexpr (utl::forward_iterator<InputIt>) {
+        else if constexpr (std::forward_iterator<InputIt>) {
             impl_type impl(first, last, alloc);
             switch (impl.size()) {
             case 1:
@@ -470,12 +471,12 @@ public:
 
     /// (4)
     template <utl::input_iterator_for<value_type> InputIt,
-              utl::sentinel_for<InputIt> Sentinel>
+              std::sentinel_for<InputIt> Sentinel>
     iterator insert(const_iterator pos, InputIt first, Sentinel last) {
         if (first == last) {
             return const_cast<iterator>(pos);
         }
-        if constexpr (!utl::forward_iterator<InputIt>) {
+        if constexpr (!std::forward_iterator<InputIt>) {
             impl_type impl(first, last);
             switch (impl.size()) {
             case 1: return insert(pos, impl.front());

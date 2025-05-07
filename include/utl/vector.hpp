@@ -6,12 +6,13 @@
 #include <exception>
 #include <iosfwd>
 #include <memory>
+#include <ranges>
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
 
 #include <utl/__base.hpp>
-#include <utl/__ranges_base.hpp>
+#include <utl/__wrap_iterator.hpp>
 #include <utl/common.hpp>
 #include <utl/concepts.hpp>
 #include <utl/ipp.hpp>
@@ -165,10 +166,10 @@ struct vector {
 
     /// (5)
     template <input_iterator_for<value_type> InputIt,
-              sentinel_for<InputIt> Sentinel>
+              std::sentinel_for<InputIt> Sentinel>
     constexpr vector(InputIt first, Sentinel last,
                      allocator_type const& alloc = allocator_type()):
-        vector(distance(first, last),
+        vector(std::ranges::distance(first, last),
                [this, first]() mutable -> decltype(auto) { return *first++; },
                alloc) {}
 
@@ -506,14 +507,15 @@ struct vector {
     template <typename It>
     constexpr iterator insert(const_iterator pos, It first, It last) {
         return __insert_impl(pos - begin(),
-                             static_cast<std::size_t>(distance(first, last)),
+                             static_cast<std::size_t>(
+                                 std::ranges::distance(first, last)),
                              [first]() mutable -> decltype(auto) {
             return *first++;
         });
     }
 
     /// (4a)
-    template <input_iterator_for<T> It, sentinel_for<It> S>
+    template <input_iterator_for<T> It, std::sentinel_for<It> S>
     constexpr iterator insert(std::size_t index, It first, S last) {
         if constexpr (std::is_same_v<It, iterator> ||
                       std::is_same_v<It, const_iterator>)
@@ -530,15 +532,18 @@ struct vector {
     }
 
     /// (4b)
-    template <input_range_for<T> Range>
-    constexpr iterator insert(const_iterator pos, Range&& range) {
-        return insert(pos, __utl_begin(range), __utl_end(range));
+    template <std::ranges::input_range Range>
+    requires std::convertible_to<std::ranges::range_value_t<Range>, T>
+    constexpr iterator insert_range(const_iterator pos, Range&& range) {
+        return insert(pos, std::ranges::begin(range), std::ranges::end(range));
     }
 
     /// (4c)
-    template <input_range_for<T> Range>
-    constexpr iterator insert(std::size_t index, Range&& range) {
-        return insert(index, __utl_begin(range), __utl_end(range));
+    template <std::ranges::input_range Range>
+    requires std::convertible_to<std::ranges::range_value_t<Range>, T>
+    constexpr iterator insert_range(std::size_t index, Range&& range) {
+        return insert(index, std::ranges::begin(range),
+                      std::ranges::end(range));
     }
 
     /// (5)
@@ -928,7 +933,7 @@ struct vector {
                               value_type* out) {
         if constexpr (is_trivially_relocatable<value_type>::value) {
             std::size_t const size =
-                utl::distance(begin, end) * sizeof(value_type);
+                std::ranges::distance(begin, end) * sizeof(value_type);
             __utl_assert(begin != nullptr || size == 0);
             /// We rely on undefined behaviour of `memcpy` here if `begin ==
             /// nullptr` It should however not be a problem since in that case
@@ -1153,13 +1158,13 @@ struct small_vector: vector<T, Allocator> {
 
     /// (5)
     template <input_iterator_for<value_type> InputIt,
-              sentinel_for<InputIt> Sentinel>
+              std::sentinel_for<InputIt> Sentinel>
     constexpr small_vector(
         InputIt first, Sentinel last,
         allocator_type const& alloc = allocator_type()) // clang-format off
         requires requires { { *first } -> std::convertible_to<value_type>; }: // clang-format on
         __utl_base(__private_tag{}, alloc, no_init) {
-        __count_constructor_prep(distance(first, last));
+        __count_constructor_prep(std::ranges::distance(first, last));
         this->__copy_uninit(first, last, this->__begin());
     }
 

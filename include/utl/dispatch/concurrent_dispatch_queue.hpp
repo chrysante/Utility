@@ -2,6 +2,7 @@
 #define UTL_DISPATCH_CONCURRENTDISPATCHQUEUE_HPP
 
 #include <future>
+#include <ranges>
 
 #include <utl/__base.hpp>
 #include <utl/concepts.hpp>
@@ -21,10 +22,10 @@ public:
     void async(utl::function<void()> fn) { m_pool.submit(std::move(fn)); }
 
     /// Run \p fn asynchronously on each item of \p range
-    template <input_range R, typename F>
+    template <std::ranges::input_range R, typename F>
     void async(R&& range, F&& fn)
     requires std::invocable<F> ||
-             std::invocable<F, decltype(*__utl_begin(range))>
+             std::invocable<F, std::ranges::range_value_t<R>>
     {
         for (auto&& elem : range) {
             m_pool.submit([f = UTL_FORWARD(fn), elem = UTL_FORWARD(elem)] {

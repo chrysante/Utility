@@ -5,7 +5,6 @@
 
 #include <utl/__base.hpp>
 #include <utl/common.hpp>
-#include <utl/concepts.hpp>
 #include <utl/math.hpp>
 #include <utl/type_traits.hpp>
 
@@ -94,7 +93,10 @@ _UTL_BIN_FUNCTION_OBJECT_DEF(bitwise_xor, bitwise_xor, ^, false);
 #undef _UTL_BIN_FUNCTION_OBJECT_DEF
 
 namespace __utl_function_objects_impl {
-[[nodiscard]] constexpr auto signed_sqrt(utl::arithmetic auto x) {
+
+template <typename T>
+requires std::is_arithmetic_v<T>
+[[nodiscard]] constexpr auto signed_sqrt(T x) {
     if (std::signbit(x)) {
         return -std::sqrt(-x);
     }
@@ -103,8 +105,9 @@ namespace __utl_function_objects_impl {
     }
 }
 
-[[nodiscard]] constexpr auto signed_pow(utl::arithmetic auto x,
-                                        utl::arithmetic auto y) {
+template <typename T, typename U>
+requires std::is_arithmetic_v<T> && std::is_arithmetic_v<U>
+[[nodiscard]] constexpr auto signed_pow(T x, U y) {
     if (std::signbit(x)) {
         return -std::pow(-x, y);
     }

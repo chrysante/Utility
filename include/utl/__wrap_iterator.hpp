@@ -1,56 +1,13 @@
 #ifndef UTL_RANGES_BASE_HPP
 #define UTL_RANGES_BASE_HPP
 
+#include <iterator>
+
 #include <utl/__base.hpp>
 #include <utl/__debug.hpp>
 #include <utl/concepts.hpp>
 
 namespace utl {
-
-/// MARK: distance
-
-auto __utl_distance(auto first, auto last, std::input_iterator_tag) {
-    typename std::iterator_traits<decltype(first)>::difference_type result = 0;
-    while (first != last) {
-        ++first;
-        ++result;
-    }
-    return result;
-}
-
-auto __utl_distance(auto first, auto last, std::random_access_iterator_tag) {
-    return last - first;
-}
-
-/// \brief Distance between two iterators.
-/// \details Same as \p std::distance except that it allows \p first and \p last
-/// to have different types.
-template <iterator Itr, sentinel_for<Itr> S>
-auto distance(Itr first, S last) {
-    using deduced_diff_t = typename std::iterator_traits<Itr>::difference_type;
-    auto const result =
-        __utl_distance(first, last,
-                       typename std::iterator_traits<Itr>::iterator_category());
-    if constexpr (std::is_integral_v<deduced_diff_t>) {
-        return result;
-    }
-    else {
-        return static_cast<std::ptrdiff_t>(result);
-    }
-}
-
-/// MARK: iterator_type_t etc.
-
-template <typename Range>
-using iterator_type_t = decltype(std::declval<Range>().begin());
-template <typename Range>
-using const_iterator_type_t =
-    decltype(std::declval<std::add_const_t<Range>>().begin());
-template <typename Range>
-using sentinel_type_t = decltype(std::declval<Range>().end());
-template <typename Range>
-using const_sentinel_type_t =
-    decltype(std::declval<std::add_const_t<Range>>().end());
 
 /// MARK: __wrap_iterator
 
@@ -84,7 +41,7 @@ public:
 
     friend constexpr __base operator+(std::same_as<__base> auto base,
                                       std::integral auto offset)
-    requires random_access_iterator<Itr>
+    requires std::random_access_iterator<Itr>
     {
         base.__itr += offset;
         return base;
@@ -92,14 +49,14 @@ public:
 
     friend constexpr __base operator+(std::integral auto offset,
                                       std::same_as<__base> auto base)
-    requires random_access_iterator<Itr>
+    requires std::random_access_iterator<Itr>
     {
         return base + offset;
     }
 
     friend constexpr __base operator-(std::same_as<__base> auto base,
                                       difference_type offset)
-    requires random_access_iterator<Itr>
+    requires std::random_access_iterator<Itr>
     {
         base.__itr -= offset;
         return base;
@@ -107,25 +64,25 @@ public:
 
     template <typename Jtr>
     constexpr difference_type operator-(__wrap_iterator<Jtr> const& rhs) const
-    requires random_access_iterator<Itr>
+    requires std::random_access_iterator<Itr>
     {
         return __itr - rhs.__itr;
     }
 
     constexpr difference_type operator-(__base const& rhs) const
-    requires random_access_iterator<Itr>
+    requires std::random_access_iterator<Itr>
     {
         return __itr - rhs.__itr;
     }
 
     constexpr __base& operator+=(difference_type offset)
-    requires random_access_iterator<Itr>
+    requires std::random_access_iterator<Itr>
     {
         return __as_base() = __as_base() + offset;
     }
 
     constexpr __base& operator-=(difference_type offset)
-    requires random_access_iterator<Itr>
+    requires std::random_access_iterator<Itr>
     {
         return __as_base() = __as_base() - offset;
     }
@@ -142,14 +99,14 @@ public:
     }
 
     constexpr __base& operator--()
-    requires bidirectional_iterator<Itr>
+    requires std::bidirectional_iterator<Itr>
     {
         --__itr;
         return __as_base();
     }
 
     constexpr __base operator--(int)
-    requires bidirectional_iterator<Itr>
+    requires std::bidirectional_iterator<Itr>
     {
         auto const result = static_cast<__base&>(*this);
         --__as_base();
@@ -157,7 +114,7 @@ public:
     }
 
     constexpr decltype(auto) operator[](difference_type index) const
-    requires random_access_iterator<Itr>
+    requires std::random_access_iterator<Itr>
     {
         return *(__as_base() + index);
     }

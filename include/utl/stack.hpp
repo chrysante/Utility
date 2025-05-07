@@ -22,7 +22,7 @@ public:
     stack() = default;
     explicit stack(container_type const& cont): container_type(cont) {}
     explicit stack(container_type&& cont): container_type(std::move(cont)) {}
-    template <input_iterator_for<T> It, sentinel_for<It> S>
+    template <input_iterator_for<T> It, std::sentinel_for<It> S>
     explicit stack(It first, S last): container_type(first, last) {}
     stack(std::initializer_list<T> ilist): container_type(ilist) {}
 

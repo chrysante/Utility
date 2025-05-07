@@ -23,7 +23,7 @@ public:
     queue() = default;
     explicit queue(container_type const& cont): __cont(cont) {}
     explicit queue(container_type&& cont): __cont(std::move(cont)) {}
-    template <input_iterator_for<T> It, sentinel_for<It> S>
+    template <input_iterator_for<T> It, std::sentinel_for<It> S>
     explicit queue(It first, S last): __cont(first, last) {}
     queue(std::initializer_list<T> ilist): __cont(ilist) {}
 

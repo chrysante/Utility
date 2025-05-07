@@ -282,7 +282,7 @@ VECTOR_TEST_CASE2(X, TRX, "vector insert empty range into empty vector",
                   "[vector]") {
     X::reset();
     Vector v(Tag(1));
-    v.insert(v.begin(), std::span<int>{});
+    v.insert_range(v.begin(), std::span<int>{});
     CHECK(v.empty());
 }
 
