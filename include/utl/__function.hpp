@@ -292,8 +292,8 @@ struct FunctionVTableImpl<F, R(Args...), Deallocator>: FunctionVTable {
             new (to) F(*static_cast<F const*>(from));
         }
         else {
-            __utl_debugbreak("this code must not be reachable."
-                             "F is is not copy constructible.");
+            // This code must not be reachable as F is is not copy constructible
+            utl::unreachable();
         }
     }
 
@@ -310,7 +310,8 @@ struct FunctionVTableImpl<F, R(Args...), Deallocator>: FunctionVTable {
             Deallocator{}(p, deallocatorContext);
         }
         else {
-            __utl_debugbreak("this must not be called with a void Deallocator");
+            // This must not be called with a void deallocator
+            utl::unreachable();
         }
     }
 

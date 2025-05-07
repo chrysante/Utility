@@ -52,6 +52,7 @@ std::string dynamic_nameof(T& value) {
     return demangle_name(typeid(value).name());
 }
 
+UTL_DEPRECATED("")
 UTL_API std::string qualified_function_name(std::string_view pretty);
 
 } // namespace utl

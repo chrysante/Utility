@@ -824,7 +824,7 @@ constexpr bool operator==(variant<T...> const& lhs, variant<T...> const& rhs) {
             return l == r;
         }
         else {
-            __utl_unreachable();
+            utl::unreachable();
         }
     }, lhs, rhs);
 }

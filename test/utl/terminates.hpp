@@ -68,7 +68,7 @@ bool terminates(std::chrono::duration<R, P> timeout,
     switch (state) {
     case utl::exit_state::success: return true;
     case utl::exit_state::timeout: return false;
-    default: __utl_debugbreak();
+    default: utl::unreachable();
     }
 }
 

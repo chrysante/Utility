@@ -34,9 +34,9 @@ memory_resource* utl::pmr::null_memory_resource() noexcept {
 
         void do_deallocate(void* memory, std::size_t size,
                            std::size_t alignment) final {
-            __utl_debugbreak(
-                "must not be called since this resource never handed "
-                "out any memory");
+            // null_memory_resource::do_deallocate() must not be called since
+            // this resource never allocated any memory
+            utl::unreachable();
         }
 
         bool do_is_equal(memory_resource const& rhs) const noexcept final {

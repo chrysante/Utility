@@ -76,7 +76,7 @@ public:
         if constexpr (utl::forward_iterator<InputIt>) {
             impl_type impl(first, last, alloc);
             switch (impl.size()) {
-            case 0: __utl_unreachable(); break;
+            case 0: utl::unreachable(); break;
             case 1: set_single_value(impl.front()); break;
             default: set_heap(new_heap(std::move(impl))); break;
             }

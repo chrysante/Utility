@@ -171,7 +171,7 @@ public:
 
         std::size_t total_size() const {
             std::ptrdiff_t result = end() - begin();
-            __utl_assert_audit(result >= 0);
+            __utl_assert(result >= 0);
             return result;
         }
 
@@ -238,10 +238,10 @@ private:
     /// not necessarily integral), and then allocates the return block from the
     /// newly allocated buffer.
     void* do_allocate(std::size_t size, std::size_t alignment) override {
-        __utl_assert_audit(__head_buffer != nullptr,
-                           "_head_buffer must always be valid. If"
-                           "we have not allocated yet it should point"
-                           "to _local_buffer which in turn is empty. ");
+        __utl_assert(__head_buffer != nullptr,
+                     "_head_buffer must always be valid. If"
+                     "we have not allocated yet it should point"
+                     "to _local_buffer which in turn is empty. ");
 
         if (std::byte* const result = __head_buffer->allocate(size, alignment))
         {

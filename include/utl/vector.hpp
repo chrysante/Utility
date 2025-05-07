@@ -863,7 +863,7 @@ struct vector {
     }
 
     __utl_always_inline void __reserve_bigger(std::size_t new_cap) {
-        __utl_assert_audit(new_cap > __cap());
+        __utl_assert(new_cap > __cap());
         pointer new_buffer = __allocate(new_cap);
         __relocate(__begin(), __end(), new_buffer);
         __deallocate_this();
@@ -1051,7 +1051,7 @@ struct vector {
             std::max(std::min(out_end, uninit_begin), out_begin);
         value_type* i = out_end;
         value_type* j = end;
-        __utl_assert_audit(out_assign_end >= out_begin, "");
+        __utl_assert(out_assign_end >= out_begin, "");
         for (; i > out_assign_end; --i, --j) {
             __construct_at(i - 1, std::move(*(j - 1)));
         }

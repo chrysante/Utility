@@ -132,7 +132,7 @@ public:
             return;
         }
         }
-        __utl_unreachable();
+        utl::unreachable();
     }
 
     tinyptrset(tinyptrset&& other):
@@ -148,7 +148,7 @@ public:
             other._ptr = {};
             return;
         }
-        __utl_unreachable();
+        utl::unreachable();
     }
 
     ~tinyptrset() { _deallocateIfLarge(); }
@@ -211,7 +211,7 @@ public:
             return { iterator(itr), inserted };
         }
         }
-        __utl_unreachable();
+        utl::unreachable();
     }
 
     bool contains(value_type p) const {
@@ -220,7 +220,7 @@ public:
         case State::Small: return _ptr.pointer() == p;
         case State::Large: return _getSet()->contains(p);
         }
-        __utl_unreachable();
+        utl::unreachable();
     }
 
     bool erase(value_type p) {
@@ -242,7 +242,7 @@ public:
             return result;
         }
         }
-        __utl_unreachable();
+        utl::unreachable();
     }
 
     size_t size() const {
@@ -251,7 +251,7 @@ public:
         case State::Small: return 1;
         case State::Large: return _getSet()->size();
         }
-        __utl_unreachable();
+        utl::unreachable();
     }
 
     bool empty() const { return _isEmpty(); }
@@ -262,7 +262,7 @@ public:
         case State::Small: return iterator(_ptr.pointer());
         case State::Large: return iterator(_getSet()->cbegin());
         }
-        __utl_unreachable();
+        utl::unreachable();
     }
 
     iterator end() const {
@@ -271,7 +271,7 @@ public:
         case State::Small: return iterator();
         case State::Large: return iterator(_getSet()->cend());
         }
-        __utl_unreachable();
+        utl::unreachable();
     }
 
 private:

@@ -94,4 +94,6 @@
 #define _UTL_DISABLE_UBSAN_INTEGER
 #endif
 
+#define UTL_DEPRECATED(Reason)
+
 #endif // UTL_CPP

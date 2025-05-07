@@ -595,8 +595,8 @@ struct __soa_iterator<SOAImpl, std::tuple<T...>, std::index_sequence<I...>,
     /// Comparison
     bool operator==(__soa_iterator const& rhs) const {
         bool const result = std::get<0>(_ptr) == std::get<0>(rhs._ptr);
-        (((void)I, __utl_assert_audit(
-                       result == (std::get<I>(_ptr) == std::get<I>(rhs._ptr)))),
+        (((void)I,
+          __utl_assert(result == (std::get<I>(_ptr) == std::get<I>(rhs._ptr)))),
          ...);
         return result;
     }
