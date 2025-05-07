@@ -73,7 +73,6 @@ set(utility_headers
   include/utl/ptr_union.hpp
   include/utl/queue.hpp
   include/utl/scope_guard.hpp
-  include/utl/small_ptr_vector.hpp
   include/utl/stack.hpp
   include/utl/static_string.hpp
   include/utl/stopwatch.hpp
