@@ -43,20 +43,16 @@ set(utility_headers
   include/utl/__graph/greedy_color.hpp
   include/utl/__graph/scc.hpp
   include/utl/__graph/topsort.hpp
-  include/utl/__prime.hpp
   include/utl/__ranges_base.hpp
   include/utl/__soa_generated.hpp
   include/utl/__third_party/ankerl/unordered_dense.h
-  include/utl/__union.hpp
   include/utl/bit.hpp
   include/utl/callback_iterator.hpp
   include/utl/common.hpp
   include/utl/concepts.hpp
   include/utl/dispatch/concurrent_dispatch_queue.hpp
   include/utl/dispatch/thread_pool.hpp
-  include/utl/dynamic_dispatch.hpp
   include/utl/dynamic_library.hpp
-  include/utl/dyncast.hpp
   include/utl/expected.hpp
   include/utl/filesystem_ext.hpp
   include/utl/format_time.hpp
@@ -64,8 +60,6 @@ set(utility_headers
   include/utl/functional.hpp
   include/utl/graph.hpp
   include/utl/hash.hpp
-  include/utl/hashmap.hpp
-  include/utl/hashset.hpp
   include/utl/hashtable.hpp
   include/utl/ilist.hpp
   include/utl/ipp.hpp
@@ -142,13 +136,10 @@ set(utility_test_sources
   test/utl/LifetimeCounter.cpp
   test/utl/LifetimeCounter.hpp
   test/utl/TypeCompare.h
-  test/utl/__prime.t.cpp
   test/utl/callback_iterator.t.cpp
   test/utl/common.t.cpp
   test/utl/concurrent_dispatch_queue.t.cpp
-  test/utl/dynamic_dispatch.t.cpp
   test/utl/dynamic_library.t.cpp
-  test/utl/dyncast.t.cpp
   test/utl/format_time.t.cpp
   test/utl/function.t.cpp
   test/utl/function_view.t.cpp
@@ -173,7 +164,6 @@ set(utility_test_sources
   test/utl/stack.t.cpp
   test/utl/streammanip.t.cpp
   test/utl/structure_of_arrays.t.cpp
-  test/utl/terminates.hpp
   test/utl/thread_pool.t.cpp
   test/utl/tiny_ptr_vector.t.cpp
   test/utl/tinyptrset.t.cpp

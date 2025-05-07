@@ -11,7 +11,7 @@
 #include <utl/api.hpp>
 #include <utl/concepts.hpp>
 #include <utl/functional.hpp>
-#include <utl/hashmap.hpp>
+#include <utl/hashtable.hpp>
 #include <utl/type_traits.hpp>
 #include <utl/vector.hpp>
 

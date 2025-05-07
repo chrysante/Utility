@@ -7,7 +7,7 @@
 #include <typeindex>
 
 #include <utl/functional.hpp>
-#include <utl/hashmap.hpp>
+#include <utl/hashtable.hpp>
 #include <utl/scope_guard.hpp>
 #include <utl/type_traits.hpp>
 #include <utl/vector.hpp>

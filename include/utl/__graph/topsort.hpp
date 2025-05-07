@@ -4,7 +4,7 @@
 #include <iterator>
 
 #include <utl/__base.hpp>
-#include <utl/hashset.hpp>
+#include <utl/hashtable.hpp>
 #include <utl/vector.hpp>
 
 namespace utl {
