@@ -26,7 +26,7 @@ constexpr auto __ctti_nameof_impl() {
 template <typename T>
 constexpr auto __ctti_nameof_impl() {
     constexpr utl::basic_static_string pretty = __FUNCSIG__;
-    auto constexpr prettySize = utl::strlen(pretty.data());
+    auto constexpr prettySize = utl::constexpr_strlen(pretty.data());
     auto constexpr beginSize =
         std::size("auto __cdecl utl::__ctti_nameof_impl");
 

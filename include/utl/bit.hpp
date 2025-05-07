@@ -9,29 +9,6 @@
 
 namespace utl {
 
-/// MARK: unsafe_bit_cast
-/// Same as bit_cast but not checking for trivial copyability. Simple call to
-/// memcpy
-template <typename To, typename From>
-requires(sizeof(To) == sizeof(From))
-To unsafe_bit_cast(From const& from) noexcept {
-    typename std::aligned_storage<sizeof(To), alignof(To)>::type storage;
-    std::memcpy(&storage, &from, sizeof(To));
-    return reinterpret_cast<To&>(storage);
-}
-
-/// MARK: bit_cast
-template <typename To, typename From>
-requires(sizeof(To) == sizeof(From) && std::is_trivially_copyable_v<To> &&
-         std::is_trivially_copyable<From>::value)
-constexpr To bit_cast(From const& from) noexcept {
-#if defined(__cpp_lib_bit_cast)
-    return std::bit_cast<To>(from);
-#else
-    return unsafe_bit_cast<To>(from);
-#endif
-}
-
 /// MARK: byte_swap
 _UTL_DISABLE_UBSAN_INTEGER
 constexpr inline std::uint16_t byte_swap(std::uint16_t val) {

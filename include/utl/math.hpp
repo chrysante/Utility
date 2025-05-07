@@ -9,19 +9,6 @@
 
 namespace utl {
 
-template <std::size_t NumItr = 1>
-inline float fast_inv_sqrt(float number) {
-    float const x2 = number * 0.5F;
-    std::int32_t i = utl::bit_cast<std::int32_t>(
-        number);               // evil floating point bit level hacking
-    i = 0x5f3759df - (i >> 1); // what the fuck?
-    float y = utl::bit_cast<float>(i);
-    for (int j = 0; j < NumItr; ++j) {
-        y *= 1.5f - (x2 * y * y);
-    }
-    return y;
-}
-
 template <std::integral T>
 constexpr int log2(T x) {
     if constexpr (std::signed_integral<T>) {

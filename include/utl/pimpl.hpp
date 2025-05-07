@@ -91,7 +91,7 @@ public:
     }
 
     Impl* pointer() noexcept {
-        return const_cast<Impl*>(utl::as_const(*this).pointer());
+        return const_cast<Impl*>(std::as_const(*this).pointer());
     }
     Impl const* pointer() const noexcept {
         return reinterpret_cast<Impl const*>(_buffer);

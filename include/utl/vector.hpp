@@ -305,7 +305,7 @@ struct vector {
     /// MARK: at
     [[nodiscard]]
     constexpr value_type& at(std::size_t pos) {
-        return as_mutable(utl::as_const(*this).at(pos));
+        return const_cast<value_type&>(std::as_const(*this).at(pos));
     }
     [[nodiscard]]
     constexpr value_type const& at(std::size_t pos) const {
@@ -317,7 +317,7 @@ struct vector {
     /// MARK: operator[]
     [[nodiscard]]
     constexpr value_type& operator[](std::size_t pos) {
-        return utl::as_mutable(utl::as_const(*this).operator[](pos));
+        return const_cast<value_type&>(std::as_const(*this).operator[](pos));
     }
     [[nodiscard]]
     constexpr value_type const& operator[](std::size_t pos) const {
@@ -328,7 +328,7 @@ struct vector {
     /// MARK: front
     [[nodiscard]]
     constexpr value_type& front() noexcept {
-        return as_mutable(utl::as_const(*this).front());
+        return const_cast<value_type&>(std::as_const(*this).front());
     }
     [[nodiscard]]
     constexpr value_type const& front() const noexcept {
@@ -339,7 +339,7 @@ struct vector {
     /// MARK: back
     [[nodiscard]]
     constexpr value_type& back() noexcept {
-        return as_mutable(utl::as_const(*this).back());
+        return const_cast<value_type&>(std::as_const(*this).back());
     }
     [[nodiscard]]
     constexpr value_type const& back() const noexcept {

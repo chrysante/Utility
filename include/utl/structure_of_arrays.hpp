@@ -90,6 +90,8 @@
 
 namespace utl {
 
+struct __soa_empty_type {};
+
 template <typename T>
 concept __soa_type = requires { typename T::__utl_soa_meta; };
 
@@ -346,7 +348,7 @@ struct __soa_partial_element<Meta, std::tuple<Members...>, Kind>:
     auto& get() const {
         using M = std::tuple_element_t<I, std::tuple<Members...>>;
         if constexpr (Kind == __soa_type_kind::value) {
-            return as_const(__member_base<M>::__get());
+            return std::as_const(__member_base<M>::__get());
         }
         else {
             return __member_base<M>::__get();
@@ -465,13 +467,14 @@ struct __soa_get_member_type {
 };
 
 template <__soa_type ST, typename... Members>
-using __soa_view_base = __soa_impl<
-    typename ST::__utl_soa_meta, /* Meta */
-    std::tuple<Members...>,
-    std::tuple<typename __soa_get_member_type<typename ST::__utl_soa_meta,
-                                              Members>::type...>,
-    std::make_index_sequence<sizeof...(Members)>, empty, /* Allocator */
-    __utl_soa_options{ .view = true }>;
+using __soa_view_base =
+    __soa_impl<typename ST::__utl_soa_meta, /* Meta */
+               std::tuple<Members...>,
+               std::tuple<typename __soa_get_member_type<
+                   typename ST::__utl_soa_meta, Members>::type...>,
+               std::make_index_sequence<sizeof...(Members)>,
+               __soa_empty_type, /* Allocator */
+               __utl_soa_options{ .view = true }>;
 
 template <__soa_type ST, typename... Members>
 class soa_view: public __soa_view_base<ST, Members...> {
@@ -622,8 +625,8 @@ struct __soa_rebind_allocator {
 };
 
 template <typename T>
-struct __soa_rebind_allocator<empty, T> {
-    using type = empty;
+struct __soa_rebind_allocator<__soa_empty_type, T> {
+    using type = __soa_empty_type;
 };
 
 template <bool IsView, typename... T>

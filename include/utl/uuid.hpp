@@ -2,6 +2,7 @@
 #define UTL_UUID_HPP_
 
 #include <array>
+#include <bit>
 #include <cstddef>
 #include <functional>
 #include <iosfwd>
@@ -9,7 +10,6 @@
 
 #include <utl/__base.hpp>
 #include <utl/api.hpp>
-#include <utl/bit.hpp>
 #include <utl/hash.hpp>
 
 namespace utl {
@@ -59,7 +59,7 @@ template <>
 struct std::hash<utl::uuid> {
     std::size_t operator()(utl::uuid id) const {
 #if defined(UTL_128_BIT_ARITHMETIC)
-        auto [a, b] = utl::bit_cast<std::array<std::uint64_t, 2>>(id.value());
+        auto [a, b] = std::bit_cast<std::array<std::uint64_t, 2>>(id.value());
 #else
         auto [a, b] = id.value();
 #endif

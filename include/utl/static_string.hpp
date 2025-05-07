@@ -27,7 +27,9 @@ public:
         return std::string_view(_data, size());
     }
 
-    constexpr std::size_t size() const noexcept { return utl::strlen(_data); }
+    constexpr std::size_t size() const noexcept {
+        return utl::constexpr_strlen(_data);
+    }
     constexpr static std::size_t max_size() noexcept { return Cap - 1; }
 
     constexpr char const* c_str() const noexcept { return _data; }

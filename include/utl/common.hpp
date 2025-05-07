@@ -15,11 +15,6 @@
 #define UTL_UNIQUE_NAME(name)        UTL_CONCAT(name, __LINE__)
 #define UTL_ANONYMOUS_VARIABLE(name) UTL_UNIQUE_NAME(name)
 
-/// MARK: - UTL_TO_STRING
-
-#define _UTL_TO_STRING_IMPL(x) #x
-#define UTL_TO_STRING(x)       _UTL_TO_STRING_IMPL(x)
-
 /// MARK: UTL_VFUNC
 
 #define _UTL_ARG_N(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13,     \
@@ -88,24 +83,24 @@
 #define _UTL_INDEX_SEQ_HELPER_FUNCTION_PARAMS(...)                             \
     UTL_VFUNC(_UTL_INDEX_SEQ_HELPER_FUNCTION_PARAMS, __VA_ARGS__)
 #define _UTL_INDEX_SEQ_HELPER_FUNCTION_PARAMS2(name1, size1)                   \
-    (::utl::index_sequence<name1...>)
+    (::std::index_sequence<name1...>)
 #define _UTL_INDEX_SEQ_HELPER_FUNCTION_PARAMS4(name1, size1, name2, size2)     \
-    (::utl::index_sequence<name1...>, ::utl::index_sequence<name2...>)
+    (::std::index_sequence<name1...>, ::std::index_sequence<name2...>)
 #define _UTL_INDEX_SEQ_HELPER_FUNCTION_PARAMS6(name1, size1, name2, size2,     \
                                                name3, size3)                   \
-    (::utl::index_sequence<name1...>, ::utl::index_sequence<name2...>,         \
-     ::utl::index_sequence<name3...>)
+    (::std::index_sequence<name1...>, ::std::index_sequence<name2...>,         \
+     ::std::index_sequence<name3...>)
 
 #define _UTL_INDEX_SEQ_HELPER_FUNCTION_INVOKE(...)                             \
     UTL_VFUNC(_UTL_INDEX_SEQ_HELPER_FUNCTION_INVOKE, __VA_ARGS__)
 #define _UTL_INDEX_SEQ_HELPER_FUNCTION_INVOKE2(name1, size1)                   \
-    (::utl::make_index_sequence<size1>{})
+    (::std::make_index_sequence<size1>{})
 #define _UTL_INDEX_SEQ_HELPER_FUNCTION_INVOKE4(name1, size1, name2, size2)     \
-    (::utl::make_index_sequence<size1>{}, ::utl::make_index_sequence<size2>{})
+    (::utl::make_index_sequence<size1>{}, ::std::make_index_sequence<size2>{})
 #define _UTL_INDEX_SEQ_HELPER_FUNCTION_INVOKE6(name1, size1, name2, size2,     \
                                                name3, size3)                   \
-    (::utl::make_index_sequence<size1>{}, ::utl::make_index_sequence<size2>{}, \
-     ::utl::make_index_sequence<size3>{})
+    (::std::make_index_sequence<size1>{}, ::std::make_index_sequence<size2>{}, \
+     ::std::make_index_sequence<size3>{})
 
 #define UTL_WITH_INDEX_SEQUENCE(params, ...)                                   \
     [&] _UTL_INDEX_SEQ_HELPER_TEMPLATE_PARAMS params                           \
@@ -196,17 +191,6 @@
 
 namespace utl {
 
-/// MARK: Integer Typedefs
-using uint8_t = std::uint8_t;
-using uint16_t = std::uint16_t;
-using uint32_t = std::uint32_t;
-using uint64_t = std::uint64_t;
-
-using int8_t = std::int8_t;
-using int16_t = std::int16_t;
-using int32_t = std::int32_t;
-using int64_t = std::int64_t;
-
 #if (defined(__GNUC__) || defined(__clang__)) // && ...
 #define UTL_128_BIT_ARITHMETIC
 #endif
@@ -226,24 +210,6 @@ struct tag {
     using type = T;
 };
 
-/// MARK: Empty
-struct empty {};
-
-// MARK: as_const / as_mutable
-template <typename T>
-constexpr typename std::add_const<T>::type& as_const(T& t) noexcept {
-    return t;
-}
-template <typename T>
-void as_const(T const&&) = delete;
-
-template <typename T>
-constexpr typename std::remove_const<T>::type& as_mutable(T& t) noexcept {
-    return const_cast<typename std::remove_const<T>::type&>(t);
-}
-template <typename T>
-void as_mutable(T const&&) = delete;
-
 /// MARK: to_underlying
 template <typename Enum>
 requires(std::is_enum_v<Enum>)
@@ -251,9 +217,8 @@ constexpr std::underlying_type_t<Enum> to_underlying(Enum t) {
     return static_cast<std::underlying_type_t<Enum>>(t);
 }
 
-/// MARK: strlen
-/// because constexpr
-constexpr std::size_t strlen(char const* str) {
+/// MARK: constexpr_strlen
+constexpr std::size_t constexpr_strlen(char const* str) {
     if (!str)
         return 0;
     std::size_t result = 0;
@@ -263,58 +228,6 @@ constexpr std::size_t strlen(char const* str) {
     }
     return result;
 }
-
-/// MARK: destroy
-template <typename T>
-void destroy(T& t) noexcept {
-    t.~T();
-}
-
-/// MARK: index_sequence
-template <std::size_t... I>
-using index_sequence = std::index_sequence<I...>;
-
-template <std::size_t N>
-using make_index_sequence = std::make_index_sequence<N>;
-
-/// MARK: type_sequence
-template <typename U, typename... T>
-constexpr std::size_t __utl_index_of_impl() {
-    std::size_t result = 0;
-    return (... || (++result, std::is_same_v<T, U>)) ? result - 1 :
-                                                       (std::size_t)-1;
-};
-
-template <typename... T>
-struct type_sequence {
-    template <typename U>
-    static constexpr std::size_t occurence_count = (std::is_same_v<T, U> + ...);
-    template <typename U>
-    static constexpr bool contains = std::disjunction_v<std::is_same<T, U>...>;
-    ;
-    static constexpr bool unique = ((occurence_count<T> == 1) && ...);
-    template <typename U>
-    static constexpr std::size_t index_of = __utl_index_of_impl<U, T...>();
-    static constexpr std::size_t size = sizeof...(T);
-    template <std::size_t I>
-    using at = std::tuple_element_t<I, std::tuple<T...>>;
-    static constexpr bool all_equal =
-        std::conjunction_v<std::is_same<at<0>, T>...>;
-};
-
-template <typename T, std::size_t N, typename... R>
-struct __utl_make_type_sequence_impl {
-    using type =
-        typename __utl_make_type_sequence_impl<T, N - 1, R..., T>::type;
-};
-
-template <typename T, typename... R>
-struct __utl_make_type_sequence_impl<T, 0, R...> {
-    using type = type_sequence<R...>;
-};
-
-template <typename T, std::size_t N>
-using make_type_sequence = typename __utl_make_type_sequence_impl<T, N>::type;
 
 /// MARK: UTL_CTPRINT
 template <auto...>

@@ -18,11 +18,6 @@
 #error Unsupported Language
 #endif
 
-/// MARK: Systems
-#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
-#define UTL_POSIX 1 // TODO: delete this
-#endif
-
 #ifdef UTL_CPP // guard here because general purpose header may be included in
                // shader source
 

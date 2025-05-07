@@ -390,7 +390,7 @@ private:
     }
 
     void* storagePtr() noexcept {
-        return const_cast<void*>(utl::as_const(*this).storagePtr());
+        return const_cast<void*>(std::as_const(*this).storagePtr());
     }
 
     void const* storagePtr() const noexcept { return _functionStorage; }
@@ -483,7 +483,7 @@ private:
 
     template <typename F>
     static R staticInvokePtr(void const* obj, Args... args) {
-        return static_cast<F*>(as_mutable(obj))
+        return static_cast<F*>(const_cast<void*>(obj))
             ->operator()(std::forward<Args>(args)...);
     };
 
