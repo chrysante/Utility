@@ -161,3 +161,9 @@ TEST_CASE("hashing", "[ptr-union]") {
     CHECK(!m.contains(&y));
     CHECK(!m.contains(&z));
 }
+
+TEST_CASE("construct union with repeated types", "[ptr-union]") {
+    double d = 0;
+    utl::ptr_union<int*, int*, double*> u = &d;
+    CHECK(u.index() == 2);
+}

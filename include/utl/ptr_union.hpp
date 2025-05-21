@@ -70,11 +70,11 @@ inline constexpr std::size_t index_of = [] {
 template <std::size_t I, typename... Args>
 using type_at = std::tuple_element_t<I, std::tuple<Args...>>;
 
-template <typename T, typename Union>
+template <typename T, size_t Index, typename Union>
 struct __construct_base;
 
-template <typename T, typename... Types>
-struct __construct_base<T, ptr_union<Types...>> {
+template <typename T, size_t Index, typename... Types>
+struct __construct_base<T, Index, ptr_union<Types...>> {
     static_assert(std::is_pointer_v<T>);
     using __base = std::remove_pointer_t<T>;
     static constexpr ptr_union<Types...>::__ipp_type impl(T p) {
@@ -83,13 +83,13 @@ struct __construct_base<T, ptr_union<Types...>> {
     }
 };
 
-template <typename Union>
+template <typename Union, typename IdxSeq = Union::__indices>
 struct __construct;
 
-template <typename... Types>
-struct __construct<ptr_union<Types...>>:
-    __construct_base<Types, ptr_union<Types...>>... {
-    using __construct_base<Types, ptr_union<Types...>>::impl...;
+template <typename... Types, size_t... Indices>
+struct __construct<ptr_union<Types...>, std::index_sequence<Indices...>>:
+    __construct_base<Types, Indices, ptr_union<Types...>>... {
+    using __construct_base<Types, Indices, ptr_union<Types...>>::impl...;
 };
 
 template <typename T, typename Union>
@@ -178,6 +178,8 @@ public:
     static_assert(sizeof...(Types) > 0, "Empty ptr_union is ill-formed");
     static constexpr std::size_t __num_types = sizeof...(Types);
     static constexpr std::size_t __log2_num_types = std::bit_width(__num_types);
+
+    using __indices = std::make_index_sequence<sizeof...(Types)>;
 
     using __ipp_type = ipp<void*, unsigned, __log2_num_types>;
 
