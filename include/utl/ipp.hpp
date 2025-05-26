@@ -3,6 +3,7 @@
 
 #include <bit>
 #include <concepts>
+#include <memory> // For std::hash
 
 #include <utl/__base.hpp>
 #include <utl/__debug.hpp>
@@ -90,6 +91,11 @@ public:
         _m_ptr = (pointer_type)((raw_int_type)integer() | (raw_int_type)ptr);
     }
 
+    /// The raw packed value
+    std::uintptr_t raw_value() const {
+        return reinterpret_cast<std::uintptr_t>(_m_ptr);
+    }
+
     constexpr bool operator==(ipp const& rhs) const = default;
 
 private:
@@ -122,5 +128,12 @@ template <typename Pointer, typename IntType, size_t NumBits>
 struct std::tuple_element<1, utl::ipp<Pointer, IntType, NumBits>>:
     std::type_identity<
         typename utl::ipp<Pointer, IntType, NumBits>::pointer_type> {};
+
+template <typename Pointer, typename IntType, size_t NumIntBits>
+struct std::hash<utl::ipp<Pointer, IntType, NumIntBits>> {
+    size_t operator()(utl::ipp<Pointer, IntType, NumIntBits> arg) const {
+        return std::hash<uintptr_t>{}(arg.raw_value());
+    }
+};
 
 #endif // UTL_IPP_HPP_
