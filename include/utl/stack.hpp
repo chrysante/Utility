@@ -60,10 +60,17 @@ public:
 
     using container_type::clear;
 
+    /// Pop and return the top element
     T pop() {
         T result = top();
         this->pop_back();
         return result;
+    }
+
+    /// Pop the \p count top elements
+    void pop(size_t count) {
+        __utl_expect(count <= size());
+        this->erase(end() - count, end());
     }
 
     T& top() { return this->back(); }
@@ -73,6 +80,8 @@ public:
     void swap(stack& rhs) {
         this->container_type::swap(static_cast<container_type&>(rhs));
     }
+
+    bool operator==(stack const&) const = default;
 };
 
 } // namespace utl
