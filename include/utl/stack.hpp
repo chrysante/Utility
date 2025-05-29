@@ -31,6 +31,7 @@ public:
     using container_type::empty;
     [[deprecated]] explicit operator bool() const { return !empty(); }
     using container_type::size;
+    using container_type::operator[];
     [[nodiscard]] container_type const& container() const& { return *this; }
     [[nodiscard]] container_type& container() & { return *this; }
     [[nodiscard]] container_type const&& container() const&& {
