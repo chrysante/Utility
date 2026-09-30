@@ -499,7 +499,7 @@ public:
     template <typename... Args>
     requires std::constructible_from<value_type, Args...>
     iterator emplace(const_iterator pos, Args&&... args) {
-        insert(pos, value_type(std::forward<Args>(args)...));
+        return insert(pos, value_type(std::forward<Args>(args)...));
     }
 
     /// (1)

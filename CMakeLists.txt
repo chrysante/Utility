@@ -82,6 +82,7 @@ set(utility_headers
   include/utl/thread.hpp
   include/utl/tinyptrset.hpp
   include/utl/tiny_ptr_vector.hpp
+  include/utl/type_erased_object_storage.hpp
   include/utl/type_traits.hpp
   include/utl/typeinfo.hpp
   include/utl/utility.hpp
@@ -166,6 +167,7 @@ set(utility_test_sources
   test/utl/thread_pool.t.cpp
   test/utl/tiny_ptr_vector.t.cpp
   test/utl/tinyptrset.t.cpp
+  test/utl/type_erased_object_storage.t.cpp
   test/utl/type_traits.t.cpp
   test/utl/utility.t.cpp
   test/utl/uuid.t.cpp
