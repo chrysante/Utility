@@ -1,3 +1,6 @@
+#ifndef UTL_TYPE_ERASED_OBJECT_STORAGE_HPP_
+#define UTL_TYPE_ERASED_OBJECT_STORAGE_HPP_
+
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -207,3 +210,5 @@ private:
 };
 
 } // namespace utl
+
+#endif // UTL_TYPE_ERASED_OBJECT_STORAGE_HPP_
