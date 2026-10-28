@@ -2,8 +2,7 @@
 #define UTL_IPP_HPP_
 
 #include <bit>
-#include <concepts>
-#include <memory> // For std::hash
+#include <memory> // IWYU pragma: keep (for std::hash)
 
 #include <utl/__base.hpp>
 #include <utl/__debug.hpp>
@@ -86,7 +85,8 @@ public:
 
     /// Set the stored pointer to \p ptr
     constexpr void set_pointer(pointer_type ptr) {
-        __utl_assert(std::countr_zero((raw_int_type)ptr) >= num_int_bits &&
+        __utl_assert((std::size_t)std::countr_zero((raw_int_type)ptr) >=
+                         num_int_bits &&
                      "Invalidly aligned pointer");
         _m_ptr = (pointer_type)((raw_int_type)integer() | (raw_int_type)ptr);
     }

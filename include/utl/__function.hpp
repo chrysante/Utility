@@ -519,7 +519,8 @@ struct NullFunctionStorage {
     void destroy() { this->~NullFunctionStorage(); }
 
 private: // data
-    std::nullptr_t _placeholder[_UTL_LOCAL_FUNCTION_SIZE_IN_WORDS + 1] = {};
+    [[maybe_unused]] std::nullptr_t
+        _placeholder[_UTL_LOCAL_FUNCTION_SIZE_IN_WORDS + 1] = {};
 };
 
 // MARK: - FunctionStorage

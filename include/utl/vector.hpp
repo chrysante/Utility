@@ -3,8 +3,6 @@
 
 #include <algorithm>
 #include <bit>
-#include <compare>
-#include <exception>
 #include <iosfwd>
 #include <memory>
 #include <ranges>
@@ -932,7 +930,7 @@ struct vector {
             /// We rely on undefined behaviour of `memcpy` here if `begin ==
             /// nullptr` It should however not be a problem since in that case
             /// size is zero.
-            std::memcpy(out, begin, size);
+            std::memcpy((void*)out, (void const*)begin, size);
         }
         else {
             __relocate_by_move(begin, end, out);
@@ -975,7 +973,8 @@ struct vector {
         }
     }
 
-    __utl_noinline void __throw_out_of_range_error(std::size_t pos) const {
+    __utl_noinline void
+    __throw_out_of_range_error([[maybe_unused]] std::size_t pos) const {
         throw std::out_of_range("utl::vector out of range");
     }
 

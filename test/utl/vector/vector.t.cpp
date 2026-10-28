@@ -166,3 +166,11 @@ VECTOR_TEST_CASE2(X, TRX, "vector-iterate", "[vector]") {
     }
     CHECK(i == -1);
 }
+
+TEST_CASE("Large value type -> zero inline capacity for small vector",
+          "[vector]") {
+    struct Large {
+        char data[256];
+    };
+    utl::small_vector<Large> vec;
+}

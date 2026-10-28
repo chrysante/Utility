@@ -15,6 +15,20 @@ if(WIN32)
   add_compile_options("/MP")
 endif()
 
+function(utl_enable_warnings TARGET)
+    if(MSVC)
+        target_compile_options(${TARGET} PRIVATE
+            /W4
+        )
+    else()
+        target_compile_options(${TARGET} PRIVATE
+            -Wall
+            -Wextra
+            -Wpedantic
+        )
+    endif()
+endfunction()
+
 if(utility_SHARED)
   add_library(utility SHARED)
 else()
@@ -105,6 +119,8 @@ source_group(TREE ${PROJECT_SOURCE_DIR}/src FILES ${utility_sources})
 if(NOT PROJECT_IS_TOP_LEVEL)
   return()
 endif()
+
+utl_enable_warnings(utility)
 
 # download CPM.cmake
 file(

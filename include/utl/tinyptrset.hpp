@@ -172,7 +172,7 @@ public:
 
     tinyptrset& operator=(tinyptrset&& other) noexcept {
         if (this == &other) {
-            return;
+            return *this;
         }
         _deallocateIfLarge();
         switch (other._state()) {
